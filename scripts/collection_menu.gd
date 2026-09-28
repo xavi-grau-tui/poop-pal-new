@@ -153,8 +153,8 @@ func _pal_slot(row: Control, id: String, at: Vector2) -> void:
 		box.add_child(icon)
 	var name_label := _label(at + Vector2(118, 0), Vector2(150, 114), 32, TEXT, row)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	name_label.text = PetState.FORMS[id]["name"] if found else "???"
+	_fit_one_line(name_label, 32)
 
 func _fill_background_row(row: Control, id: String) -> void:
 	var bg: Dictionary = Collection.BACKGROUNDS[id]
@@ -174,6 +174,7 @@ func _fill_background_row(row: Control, id: String) -> void:
 	var name_label := _label(Vector2(140, 14), Vector2(440, 60), 44, TEXT, row)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	name_label.text = bg["name"]
+	_fit_one_line(name_label, 44)
 	var state := _label(Vector2(140, 70), Vector2(440, 50), 32, TEXT_DARK, row)
 	state.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	if not owned:
@@ -287,6 +288,13 @@ func _label(pos: Vector2, sz: Vector2, font_size: int, color: Color, parent: Nod
 		l.z_index = 2
 	parent.add_child(l)
 	return l
+
+## Keeps a label on one line: if the text is too wide, shrink the font until it fits.
+func _fit_one_line(l: Label, max_size: int, min_size := 16) -> void:
+	var size := max_size
+	while size > min_size and font.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > l.size.x:
+		size -= 1
+	l.add_theme_font_size_override("font_size", size)
 
 func _form_icon(id: String) -> Texture2D:
 	var frames := PetState.build_sprite_frames(id)

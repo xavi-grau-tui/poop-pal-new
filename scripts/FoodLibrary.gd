@@ -45,7 +45,7 @@ var all_foods = [
 		"tags": ["unhealthy"]
 	},
 	{
-		"name": "Brown Rice & Veg",
+		"name": "Rice and Vegs",
 		"family": "green",
 		"icon": preload("res://textures/food/brownricevegs.png"),
 		"kcal": 320,
