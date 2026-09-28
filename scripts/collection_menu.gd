@@ -1,7 +1,8 @@
 extends Node2D
 ## Gear-button menu: a hub of cards, each opening its own view.
 ##
-##   HUB          cards: Poop-Pedia, Backgrounds, (future) Collectables
+##   HUB          one big card per menu, exactly like the Games menu (forward = next card,
+##                page dots, hold = open). Cards are clones of the Games menu card.
 ##   PEDIA        grid of pals, 9 per page, many pages; hold a pal to open its card
 ##   DETAIL       one pal's card: number, name, description / hint, evolution link
 ##   BACKGROUNDS  hold to equip (closes the menu, back to the pet)
@@ -13,9 +14,8 @@ extends Node2D
 enum View { HUB, PEDIA, DETAIL, BACKGROUNDS }
 
 const HUB_CARDS := [
-	{ "view": View.PEDIA, "title": "Poop-Pedia", "sub": "Every pal you have met" },
-	{ "view": View.BACKGROUNDS, "title": "Backgrounds", "sub": "Change the sky" },
-	{ "view": -1, "title": "Collectables", "sub": "Coming soon" },
+	{ "view": View.PEDIA, "logo": "res://textures/menus/poopedia.png", "pattern": "res://textures/menus/pooploopbackground.png" },
+	{ "view": View.BACKGROUNDS, "logo": "res://textures/menus/backgrounds.png", "pattern": "res://textures/menus/cloudloopbackground.png" },
 ]
 const PEDIA_PER_PAGE := 9
 
@@ -35,6 +35,12 @@ var selection := -1
 var items: Array[Control] = []     # selectable things in the current view, in tap order
 var detail_id := ""
 var return_selection := -1         # where to land when coming back from a pal card
+var hub_index := 0                 # which hub card is showing
+
+var hub_root: Node2D
+var hub_cards: Array[Node] = []
+var hub_dots: Node2D
+var hub_hint: Node2D
 
 var content: Node2D
 var title: Label
@@ -67,6 +73,8 @@ func _ready() -> void:
 	page_hint.z_index = 2
 	menu.add_child(page_hint)
 
+	_build_hub_cards(menu)
+
 	Collection.background_changed.connect(func(_id): _apply_background())
 	_apply_background()
 	_open(View.HUB)
@@ -74,6 +82,8 @@ func _ready() -> void:
 # ================================================================== MENU INTERFACE (main / forward buttons)
 
 func select_next() -> void:
+	if view == View.HUB:
+		return   # like the Games menu: forward flips cards, hold opens
 	if view == View.DETAIL:
 		_open(View.PEDIA, return_selection)   # tap on a pal card = back to the grid
 		return
@@ -84,6 +94,9 @@ func select_next() -> void:
 
 func flip_page() -> void:
 	match view:
+		View.HUB:
+			hub_index = (hub_index + 1) % hub_cards.size()
+			_open(View.HUB)
 		View.PEDIA:
 			page = (page + 1) % _pedia_pages()
 			_open(View.PEDIA)
@@ -95,6 +108,8 @@ func flip_page() -> void:
 			_show_detail(order[i])
 
 func get_selected_option() -> Node:
+	if view == View.HUB:
+		return hub_cards[hub_index]
 	if selection >= 0 and selection < items.size():
 		return items[selection]
 	return null
@@ -114,13 +129,11 @@ func confirm_selected(sel: Node) -> bool:
 	var action: Dictionary = sel.get_meta("action", {})
 	match action.get("type", ""):
 		"open":
-			_click()
-			page = 0
+			page = 0              # (the card's own ConfirmSound already played)
 			_open(action["view"])
 		"back":
 			_click()
-			var came_from := view
-			_open(View.HUB, 0 if came_from == View.PEDIA else 1)
+			_open(View.HUB)
 		"pal":
 			_click()
 			return_selection = selection
@@ -139,6 +152,12 @@ func confirm_selected(sel: Node) -> bool:
 func _open(v: int, select := -1) -> void:
 	view = v
 	_clear()
+	var in_hub := v == View.HUB
+	hub_root.visible = in_hub
+	hub_dots.visible = in_hub
+	hub_hint.visible = in_hub
+	title.visible = not in_hub
+	status.visible = not in_hub
 	match v:
 		View.HUB:
 			_build_hub()
@@ -155,27 +174,73 @@ func _clear() -> void:
 		c.queue_free()
 	items.clear()
 
+func _build_hub_cards(menu: Node) -> void:
+	## Clone the Games menu card (frame, scrolling pattern, logo, info panel, hold ring,
+	## confirm sound) and its page dots / forward hint, so both menus look identical.
+	var games := get_node("../GameMenu/Menu")
+	hub_root = Node2D.new()
+	menu.add_child(hub_root)
+	var template := games.get_node("VBoxGame1/Game")
+	for info in HUB_CARDS:
+		var card := template.duplicate()
+		card.get_node("TopFrame/Control/GameLogo").texture = load(info["logo"])
+		card.get_node("TopFrame/Control/Background").texture = load(info["pattern"])
+		card.set_meta("action", { "type": "open", "view": info["view"] })
+		hub_root.add_child(card)
+		hub_cards.append(card)
+
+	hub_hint = games.get_node("ForwardHint").duplicate()
+	menu.add_child(hub_hint)
+	hub_dots = games.get_node("Dots").duplicate()
+	menu.add_child(hub_dots)
+	var dots := hub_dots.get_children()
+	for i in range(dots.size() - 1, HUB_CARDS.size() - 1, -1):
+		dots[i].queue_free()
+	# re-centre the remaining dots under the card
+	var step: float = dots[1].position.x - dots[0].position.x
+	hub_dots.position.x += step * (dots.size() - HUB_CARDS.size()) / 2.0
+
 func _build_hub() -> void:
-	title.text = "MENU"
-	status.text = "Tap to choose, hold to open"
+	for i in hub_cards.size():
+		hub_cards[i].visible = i == hub_index
+	var dots := hub_dots.get_children()
 	for i in HUB_CARDS.size():
-		var info: Dictionary = HUB_CARDS[i]
-		var row := _card(Vector2(INNER.position.x + 29, INNER.position.y + 92 + i * 158), Vector2(600, 142))
-		var box := _icon_box(row, Vector2(14, 14), Vector2(114, 114))
-		var locked: bool = info["view"] == -1
-		var icon := _icon(box, _hub_icon(info["view"]), Vector2(102, 102))
-		if locked:
-			icon.texture = load("res://textures/menus/mistery_pink.png")
-		_add_doughnut(row, box)
-		var t := _label(Vector2(140, 14), Vector2(440, 60), 44, TEXT, row)
-		t.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		t.text = info["title"]
-		_fit_one_line(t, 44)
-		var sub := _label(Vector2(140, 70), Vector2(440, 50), 30, TEXT_DARK, row)
-		sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		sub.text = info["sub"]
-		row.set_meta("action", { "type": "locked" } if locked else { "type": "open", "view": info["view"] })
-		_add_item(row)
+		dots[i].modulate = Color(1, 1, 1, 1) if i == hub_index else Color(1, 1, 1, 0.3)
+	_update_hub_card_info()
+
+func _update_hub_card_info() -> void:
+	# Info panel = the Games card's "Max Score / Progress" lines
+	var order := PetState.pedia_order()
+	var found := 0
+	for id in order:
+		if id in PetState.discovered:
+			found += 1
+	var owned := 0
+	for id in Collection.BACKGROUND_ORDER:
+		if Collection.is_owned("backgrounds", id):
+			owned += 1
+	var lines := {
+		View.PEDIA: ["Found", "%d/%d" % [found, order.size()], "Progress", "%d%%" % int(100.0 * found / maxf(order.size(), 1))],
+		View.BACKGROUNDS: ["Unlocked", "%d/%d" % [owned, Collection.BACKGROUND_ORDER.size()], "In use", Collection.BACKGROUNDS[Collection.equipped_background]["name"]],
+	}
+	for i in HUB_CARDS.size():
+		var t: Array = lines[HUB_CARDS[i]["view"]]
+		var bottom := hub_cards[i].get_node("BottomFrame")
+		var pairs := [[bottom.get_node("MaxScore"), bottom.get_node("MaxScore/Score")], [bottom.get_node("Progress"), bottom.get_node("Progress/Progress")]]
+		for k in 2:
+			for j in 2:
+				var l: Label = pairs[k][j]
+				l.text = t[k * 2 + j]
+				if j == 1:
+					# values: right-aligned to where the Games card's "000000" ends
+					var score_label: Label = pairs[0][1]
+					if not score_label.has_meta("x0"):
+						score_label.set_meta("x0", score_label.position.x)   # template position, measured once
+					var right: float = score_label.get_meta("x0") + font.get_string_size("000000", HORIZONTAL_ALIGNMENT_LEFT, -1, 25).x
+					l.size.x = 150
+					l.position.x = right - l.size.x
+					l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+				_fit_one_line(l, 25, 12)
 
 func _build_pedia() -> void:
 	title.text = "POOP-PEDIA"
@@ -295,6 +360,8 @@ func _add_item(c: Control) -> void:
 	items.append(c)
 
 func _refresh_selection() -> void:
+	if view == View.HUB:
+		return
 	for i in items.size():
 		var sel := i == selection
 		items[i].scale = Vector2.ONE * (1.03 if sel else 1.0)
@@ -304,7 +371,7 @@ func _refresh_pager() -> void:
 	var pages := _pedia_pages() if view in [View.PEDIA, View.DETAIL] else 1
 	var many := view == View.PEDIA and pages > 1
 	page_label.visible = many
-	page_hint.visible = many or view == View.DETAIL
+	page_hint.visible = (many or view == View.DETAIL) and view != View.HUB
 	page_label.text = "%d/%d" % [page + 1, pages]
 
 func _pedia_pages() -> int:
@@ -318,14 +385,6 @@ func _evolution_link(id: String) -> String:
 		if PetState.FORMS[other]["from"] == id:
 			return "Evolves into " + (PetState.FORMS[other]["name"] if other in PetState.discovered else "???")
 	return ""
-
-func _hub_icon(v: int) -> Texture2D:
-	match v:
-		View.PEDIA:
-			return _form_icon(PetState.form_id if PetState.has_poop() else "sprig")
-		View.BACKGROUNDS:
-			return _background_preview(Collection.BACKGROUNDS[Collection.equipped_background]["layers"])
-	return null
 
 # ================================================================== BACKGROUND APPLY
 
