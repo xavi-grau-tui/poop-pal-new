@@ -22,6 +22,12 @@ const GRAVITY := 500.0
 const PLAYER_SIZE := Vector2(75, 60)
 const HITBOX_OFFSET := Vector2(0, 40)
 
+# Visual size: every pal is scaled so its body matches the classic poo1 body.
+# The hitbox above is fixed, so gameplay is identical whichever pal is playing.
+const PLAYER_SCALE := 1.4
+const CLASSIC_BODY := Vector2(76, 69)  # poo1 opaque bounds inside its 232x196 texture
+const CLASSIC_BOTTOM := 55.0          # poo1 body bottom, relative to texture centre
+
 # Toggle to see the hitbox in-game
 const DEBUG_HITBOX := false
 
@@ -140,23 +146,42 @@ func _create_background() -> void:
 
 func _create_player() -> void:
 	player = AnimatedSprite2D.new()
-	var frames = SpriteFrames.new()
-	frames.add_animation("idle")
-	frames.set_animation_speed("idle", 1.0)
-	frames.set_animation_loop("idle", true)
-	var tex1 = load("res://textures/pet/poo1-1.png")
-	var tex2 = load("res://textures/pet/poo1-2.png")
-	if tex1:
-		frames.add_frame("idle", tex1)
-	if tex2:
-		frames.add_frame("idle", tex2)
+	# Play as the current pal; fall back to the classic poop before the first meal
+	var frames: SpriteFrames = PetState.build_sprite_frames() if PetState.has_poop() else null
+	var fit := 1.0
+	if frames:
+		fit = _fit_to_classic_size(frames.get_frame_texture("idle", 0))
+	else:
+		frames = SpriteFrames.new()
+		frames.add_animation("idle")
+		frames.set_animation_speed("idle", 1.0)
+		frames.set_animation_loop("idle", true)
+		var tex1 = load("res://textures/pet/poo1-1.png")
+		var tex2 = load("res://textures/pet/poo1-2.png")
+		if tex1:
+			frames.add_frame("idle", tex1)
+		if tex2:
+			frames.add_frame("idle", tex2)
 	player.sprite_frames = frames
 	player.play("idle")
-	player.scale = Vector2(1.4, 1.4)
+	player.scale = Vector2(PLAYER_SCALE, PLAYER_SCALE) * fit
+	# Keep the body's bottom where poo1's is, so the (unchanged) hitbox still lines up
+	player.offset = Vector2(0, CLASSIC_BOTTOM * (1.0 / fit - 1.0))
 	player.z_index = 0  # default, game over overlay renders on top by add order
 	player.position = Vector2(CENTER_X, CENTER_Y)
 	add_child(player)
 	_start_breathing()
+
+func _fit_to_classic_size(tex: Texture2D) -> float:
+	if not tex:
+		return 1.0
+	var img := tex.get_image()
+	if not img:
+		return 1.0
+	var used := img.get_used_rect()
+	if used.size.x <= 0 or used.size.y <= 0:
+		return 1.0
+	return minf(CLASSIC_BODY.x / used.size.x, CLASSIC_BODY.y / used.size.y)
 
 func _start_breathing() -> void:
 	var base_scale := player.scale
@@ -224,7 +249,7 @@ func _update_player(delta: float) -> void:
 
 	# Clamp to play area using visual sprite size (not hitbox)
 	# Use smaller factor since PNG has transparent padding around the poop
-	var visual_half_h := 196.0 * player.scale.y * 0.28
+	var visual_half_h := 196.0 * PLAYER_SCALE * 0.28
 	if player.position.y - visual_half_h < PLAY_TOP:
 		player.position.y = PLAY_TOP + visual_half_h
 		player_vy = 0

@@ -12,6 +12,9 @@ signal fed(food: Dictionary)
 
 const SAVE_PATH := "user://pet_state.json"
 
+## Prototype/testing: every launch starts from zero (no poop). Discovered forms are kept.
+const FRESH_START_ON_LAUNCH := true
+
 const FORMS := {
 	"sprig":        { "name": "Sprig",        "stage": 1, "family": "green",  "frames": ["res://textures/pet/forms/sprig-1.png", "res://textures/pet/forms/sprig-2.png"] },
 	"swirlet":      { "name": "Swirlet",      "stage": 1, "family": "sweet",  "frames": ["res://textures/pet/forms/swirlet-1.png", "res://textures/pet/forms/swirlet-2.png"] },
@@ -30,6 +33,10 @@ var discovered: Array = [] # every form ever reached
 
 func _ready() -> void:
 	load_data()
+	if FRESH_START_ON_LAUNCH:
+		form_id = ""
+		meals.clear()
+		save_data()
 
 func has_poop() -> bool:
 	return form_id != ""

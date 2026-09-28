@@ -149,7 +149,7 @@ func set_flush_charge(value: float) -> void:
 
 func _spawn_mystery() -> void:
 	mystery = Sprite2D.new()
-	mystery.texture = load("res://textures/menus/mistery.png")
+	mystery.texture = load("res://textures/menus/mistery_pink.png")
 	mystery.scale = Vector2(0.9, 0.9)
 	mystery.position = base_position + body_offset
 	get_parent().add_child(mystery)
