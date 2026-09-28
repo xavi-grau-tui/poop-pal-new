@@ -1,0 +1,26 @@
+# Godot 4
+.import/
+.export/
+.godot/
+*.godot-import
+*.translation
+*.tmp
+
+# Build files
+export_presets.cfg
+*.pck
+*.exe
+*.apk
+*.zip
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE/editor settings (optional)
+.vscode/
+.idea/
+
+# Android export folder (optional)
+android/build/
+android/.cinterop/

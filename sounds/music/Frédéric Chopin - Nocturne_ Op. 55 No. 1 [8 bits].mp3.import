@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bh1lsboum3xd7"
+path="res://.godot/imported/Frédéric Chopin - Nocturne_ Op. 55 No. 1 [8 bits].mp3-f349a64da5406a2827d099adde3de9b0.mp3str"
+
+[deps]
+
+source_file="res://sounds/music/Frédéric Chopin - Nocturne_ Op. 55 No. 1 [8 bits].mp3"
+dest_files=["res://.godot/imported/Frédéric Chopin - Nocturne_ Op. 55 No. 1 [8 bits].mp3-f349a64da5406a2827d099adde3de9b0.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

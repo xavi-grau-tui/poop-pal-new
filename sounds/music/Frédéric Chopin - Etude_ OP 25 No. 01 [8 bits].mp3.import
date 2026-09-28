@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dsfig0nj0om0w"
+path="res://.godot/imported/Frédéric Chopin - Etude_ OP 25 No. 01 [8 bits].mp3-01bb598e21562038c67e1c87c336540d.mp3str"
+
+[deps]
+
+source_file="res://sounds/music/Frédéric Chopin - Etude_ OP 25 No. 01 [8 bits].mp3"
+dest_files=["res://.godot/imported/Frédéric Chopin - Etude_ OP 25 No. 01 [8 bits].mp3-01bb598e21562038c67e1c87c336540d.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,167 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://scripts/game_screen.gd" id="1_game"]
+[ext_resource type="Shader" path="res://scripts/shaders/scroll.gdshader" id="2_scroll"]
+[ext_resource type="Shader" path="res://scripts/shaders/scroll2.gdshader" id="3_scroll2"]
+[ext_resource type="Texture2D" path="res://textures/pet-background/clouds3.png" id="4_clouds3"]
+[ext_resource type="Texture2D" path="res://textures/pet-background/clouds2.png" id="5_clouds2"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_clouds_a"]
+shader = ExtResource("2_scroll")
+shader_parameter/scroll_speed = 0.07
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_clouds_b"]
+shader = ExtResource("3_scroll2")
+shader_parameter/scroll_speed = 0.14
+
+[sub_resource type="Animation" id="Animation_reset"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_in1"]
+resource_name = "menu_slide_in_right_1"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(475, 0), Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_in2"]
+resource_name = "menu_slide_in_right_2"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(-475, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_out1"]
+resource_name = "menu_slide_out_left_1"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-475, 0), Vector2(-950, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_out2"]
+resource_name = "menu_slide_out_left_2"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-950, 0), Vector2(-1425, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_quick_out"]
+resource_name = "menu_slide_out_left_quick"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-475, 0), Vector2(-1425, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_quick_in"]
+resource_name = "menu_slide_in_right_quick"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(950, 0), Vector2(-475, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_gs"]
+_data = {
+&"RESET": SubResource("Animation_reset"),
+&"menu_slide_in_right_1": SubResource("Animation_in1"),
+&"menu_slide_in_right_2": SubResource("Animation_in2"),
+&"menu_slide_in_right_quick": SubResource("Animation_quick_in"),
+&"menu_slide_out_left_1": SubResource("Animation_out1"),
+&"menu_slide_out_left_2": SubResource("Animation_out2"),
+&"menu_slide_out_left_quick": SubResource("Animation_quick_out")
+}
+
+[node name="GameScreen" type="Node2D"]
+script = ExtResource("1_game")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_gs")
+}
+
+[node name="Menu" type="Node2D" parent="."]
+
+[node name="Background" type="ColorRect" parent="Menu"]
+offset_left = 534.0
+offset_top = -1300.0
+offset_right = 1484.0
+offset_bottom = -352.0
+color = Color(0.7, 0.85, 0.9, 1)
+
+[node name="CloudA" type="Sprite2D" parent="Menu"]
+texture_repeat = 2
+material = SubResource("ShaderMaterial_clouds_a")
+position = Vector2(1009, -826)
+texture = ExtResource("4_clouds3")
+
+[node name="CloudB" type="Sprite2D" parent="Menu"]
+texture_repeat = 2
+material = SubResource("ShaderMaterial_clouds_b")
+position = Vector2(1009, -826)
+texture = ExtResource("5_clouds2")
+
+[node name="GameContainer" type="Control" parent="Menu"]
+clip_contents = true
+offset_left = 534.0
+offset_top = -1300.0
+offset_right = 1484.0
+offset_bottom = -352.0

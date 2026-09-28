@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://d0ibl8p2202bb"
+path="res://.godot/imported/Frédéric Chopin - Etude_ Op. 10 No. 01 [8 bits].mp3-215282ba223ea781b26127c0ba88d959.mp3str"
+
+[deps]
+
+source_file="res://sounds/music/Frédéric Chopin - Etude_ Op. 10 No. 01 [8 bits].mp3"
+dest_files=["res://.godot/imported/Frédéric Chopin - Etude_ Op. 10 No. 01 [8 bits].mp3-215282ba223ea781b26127c0ba88d959.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

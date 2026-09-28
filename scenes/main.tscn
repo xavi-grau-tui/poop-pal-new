@@ -1,0 +1,2563 @@
+[gd_scene load_steps=102 format=4 uid="uid://ddvdpi5i0hjuf"]
+
+[ext_resource type="Texture2D" uid="uid://1ih05ji667nr" path="res://textures/pet-background/background.png" id="2_lquwl"]
+[ext_resource type="Script" uid="uid://duenauvyyugd4" path="res://scripts/audio_stream_player_2d.gd" id="2_ryguw"]
+[ext_resource type="Texture2D" uid="uid://lvdmc0nspjgu" path="res://textures/pet-background/intestine-back.png" id="3_7mycd"]
+[ext_resource type="Texture2D" uid="uid://x4x5j2vopj02" path="res://textures/pet-background/clouds3.png" id="3_dg77c"]
+[ext_resource type="Shader" uid="uid://b7encxmvpvcij" path="res://scripts/shaders/scroll.gdshader" id="3_ycdy4"]
+[ext_resource type="Texture2D" uid="uid://brjrx55x1j472" path="res://textures/pet-background/clouds2.png" id="4_ycdy4"]
+[ext_resource type="Texture2D" uid="uid://baf4itxfwkpnr" path="res://textures/pet-background/intestine-front.png" id="5_272bh"]
+[ext_resource type="Shader" uid="uid://b73jwdjv8e3er" path="res://scripts/shaders/scroll2.gdshader" id="5_w48qg"]
+[ext_resource type="Script" uid="uid://bhkatjryax6rm" path="res://scripts/intestine_back.gd" id="6_dg77c"]
+[ext_resource type="Script" uid="uid://d0i6tyd3o0tpy" path="res://scripts/intestine_front.gd" id="8_efxa6"]
+[ext_resource type="Texture2D" uid="uid://kekouwscgwi4" path="res://textures/pet/poo1-1.png" id="8_kek77"]
+[ext_resource type="Texture2D" uid="uid://c24yumidbjs7b" path="res://textures/pet/poo1-2.png" id="9_4c57u"]
+[ext_resource type="AudioStream" uid="uid://boq0qlo8pm2ey" path="res://sounds/fx/Retro-Vehicle-Motor-02.mp3" id="9_ntx8l"]
+[ext_resource type="Script" uid="uid://dk85wd7r2subj" path="res://scripts/food_rain_spawner.gd" id="9_pjyto"]
+[ext_resource type="Texture2D" uid="uid://crbl0bd8434m8" path="res://textures/pet-background/frame1.png" id="9_w48qg"]
+[ext_resource type="PackedScene" uid="uid://clyiu2u4kg233" path="res://scenes/food_chunk.tscn" id="10_sm6fg"]
+[ext_resource type="AudioStream" uid="uid://crq3f0vlvoyp" path="res://sounds/fx/underwater-247531.mp3" id="10_wu3dr"]
+[ext_resource type="AudioStream" uid="uid://b17qd7e7no2a3" path="res://sounds/fx/sfx_sounds_falling4.mp3" id="12_ntx8l"]
+[ext_resource type="Script" uid="uid://085wfurgco0v" path="res://scripts/poop.gd" id="14_sm6fg"]
+[ext_resource type="AudioStream" uid="uid://dperpp2keq0fy" path="res://sounds/fx/water-pouring-98795.mp3" id="15_1vm84"]
+[ext_resource type="Texture2D" uid="uid://ccsrgmwdyw8pc" path="res://textures/console/frame3.png" id="17_jq2sk"]
+[ext_resource type="Texture2D" uid="uid://bekeyyrnegxm7" path="res://textures/console/mid.png" id="18_4k2k6"]
+[ext_resource type="Texture2D" uid="uid://mk4gltnwfd5h" path="res://textures/console/lcd.png" id="18_qsp4k"]
+[ext_resource type="Texture2D" uid="uid://c56fhxxodqwas" path="res://textures/console/top.png" id="19_0rl1p"]
+[ext_resource type="Texture2D" uid="uid://cxq3s1liusywx" path="res://textures/buttons/buttonfoodnormal.png" id="19_kq58d"]
+[ext_resource type="Texture2D" uid="uid://t3sb1dh8c3o7" path="res://textures/console/logomain.png" id="19_lswn8"]
+[ext_resource type="Script" uid="uid://bvd7oqo78fu4j" path="res://scripts/drink_waterfall_spawner.gd" id="19_rqtf5"]
+[ext_resource type="Texture2D" uid="uid://5aujn1j8tr7a" path="res://textures/console/v1.png" id="20_htxhm"]
+[ext_resource type="Texture2D" uid="uid://cruansk1dyuml" path="res://textures/buttons/buttonfoodpressed.png" id="20_seu75"]
+[ext_resource type="PackedScene" uid="uid://b64fisv655so0" path="res://scenes/drink_waterfall.tscn" id="21_1vm84"]
+[ext_resource type="Script" uid="uid://clwouwwqcaiqx" path="res://scripts/menu_buttons.gd" id="21_jq2sk"]
+[ext_resource type="Texture2D" uid="uid://b8h71hpc8doc0" path="res://textures/console/speakerholes.png" id="22_jq2sk"]
+[ext_resource type="Texture2D" uid="uid://tbrnlnot1a6d" path="res://textures/console/bottom.png" id="22_ok6jj"]
+[ext_resource type="FontFile" uid="uid://cgf3e0duedwp5" path="res://fonts/pixChicago.ttf" id="23_come4"]
+[ext_resource type="Script" uid="uid://vel1aqw0jh8x" path="res://scripts/lcd_screen.gd" id="23_gngh3"]
+[ext_resource type="Texture2D" uid="uid://bwb81whgmqdjs" path="res://textures/console/screw.png" id="24_4k2k6"]
+[ext_resource type="Texture2D" uid="uid://bw7i7oysmnc8f" path="res://textures/buttons/padbuttonnormal.png" id="28_0rl1p"]
+[ext_resource type="AudioStream" uid="uid://c6pc64j50ei8u" path="res://sounds/fx/clack.mp3" id="28_b1qrp"]
+[ext_resource type="Texture2D" uid="uid://gix55acf7jdc" path="res://textures/buttons/padbuttonpressed.png" id="29_ok6jj"]
+[ext_resource type="Texture2D" uid="uid://c7bho0rds0awv" path="res://textures/buttons/settingsbuttonnormal.png" id="31_facbu"]
+[ext_resource type="Texture2D" uid="uid://cosb2phptq26b" path="res://textures/buttons/settingsbuttonpressed.png" id="32_b1qrp"]
+[ext_resource type="Texture2D" uid="uid://ddg8qove38kiy" path="res://textures/buttons/soundbuttonnormal.png" id="33_b1qrp"]
+[ext_resource type="Texture2D" uid="uid://bcuuvbsa02bbs" path="res://textures/buttons/soundbuttonpressed.png" id="34_come4"]
+[ext_resource type="Script" uid="uid://c0m3mi2xdslgk" path="res://scripts/sound_button.gd" id="35_h8e4i"]
+[ext_resource type="Texture2D" uid="uid://g5c2y7iv4f7j" path="res://textures/buttons/forwardbuttonnormal.png" id="36_b1qrp"]
+[ext_resource type="Script" uid="uid://cuy6wqihtmngh" path="res://scripts/forward_button.gd" id="37_b1qrp"]
+[ext_resource type="Texture2D" uid="uid://draa87514bx6o" path="res://textures/buttons/forwardbuttonpressed.png" id="37_come4"]
+[ext_resource type="Texture2D" uid="uid://dj06bmjhg4oj5" path="res://textures/menus/diapositive1.png" id="40_4lmeg"]
+[ext_resource type="Script" uid="uid://b8mnbyrm0d4rs" path="res://scripts/menu_manager.gd" id="40_h8e4i"]
+[ext_resource type="Texture2D" uid="uid://dugynklb3cvxw" path="res://textures/buttons/mainbuttonnormal.png" id="40_hrvbo"]
+[ext_resource type="Texture2D" uid="uid://cqxku4o1ltwxv" path="res://textures/menus/diapositive2.png" id="41_d2t1y"]
+[ext_resource type="Texture2D" uid="uid://diy5hvjw8p57s" path="res://textures/buttons/mainbuttonpressed.png" id="41_uypp3"]
+[ext_resource type="Texture2D" uid="uid://biban86smu8yk" path="res://textures/menus/diapositive3.png" id="42_gngh3"]
+[ext_resource type="Texture2D" uid="uid://bjbe6x1h881vk" path="res://textures/menus/foodmenulabel.png" id="42_qnost"]
+[ext_resource type="Script" uid="uid://sj3tr7wnc0av" path="res://scripts/main_button.gd" id="42_uypp3"]
+[ext_resource type="Script" uid="uid://s1y2o8orygci" path="res://scripts/foodmenudebug.gd" id="43_blkrb"]
+[ext_resource type="AudioStream" uid="uid://dyc1fdh4i137e" path="res://sounds/fx/eating-sound-effect-36186.mp3" id="43_vke2r"]
+[ext_resource type="Texture2D" uid="uid://cremlxsyf3ed0" path="res://textures/food/saladbowl.png" id="43_wnkbs"]
+[ext_resource type="FontFile" uid="uid://ddojmxvwhshhk" path="res://fonts/Pixellari.ttf" id="44_wnkbs"]
+[ext_resource type="Texture2D" uid="uid://bk7rorpfk25kr" path="res://textures/food/clubsandwich.png" id="45_0cbny"]
+[ext_resource type="Texture2D" uid="uid://d4kbq40qfcjsx" path="res://textures/buttons/logoforward.png" id="45_rnkwl"]
+[ext_resource type="Texture2D" uid="uid://c7epgrxvdphe1" path="res://textures/food/cucumbersushi.png" id="46_hrvbo"]
+[ext_resource type="Texture2D" uid="uid://basi5vf5w31id" path="res://textures/menus/circle.png" id="49_uit24"]
+[ext_resource type="Texture2D" uid="uid://c01xpua0qmi0c" path="res://textures/drinks/water.png" id="51_rnkwl"]
+[ext_resource type="Texture2D" uid="uid://crlvikgtuhloe" path="res://textures/drinks/soda.png" id="52_vke2r"]
+[ext_resource type="Texture2D" uid="uid://vlgm8ilweffj" path="res://textures/menus/circleborder.png" id="53_rm4vd"]
+[ext_resource type="AudioStream" uid="uid://d20ug1ajpp3ex" path="res://sounds/fx/ES_Human, Swallow, Gulp - Epidemic Sound.mp3" id="53_ruth0"]
+[ext_resource type="Texture2D" uid="uid://dmsg2pbdv7wah" path="res://textures/drinks/energydrink.png" id="53_uit24"]
+[ext_resource type="Texture2D" uid="uid://dl6ap32bbe376" path="res://textures/menus/dot1.png" id="54_rnkwl"]
+[ext_resource type="Script" uid="uid://crwrg0vkorbix" path="res://scripts/game_menu_switcher.gd" id="67_cyx1q"]
+[ext_resource type="Texture2D" uid="uid://do78y48ob3vdi" path="res://textures/menus/gametoplabel.png" id="69_jx0wj"]
+[ext_resource type="Texture2D" uid="uid://cokgphp31klxn" path="res://textures/menus/pooploopbackground.png" id="70_34ol3"]
+[ext_resource type="Shader" uid="uid://c6pfr2y3h7sew" path="res://scripts/shaders/gamebackgroundloop.gdshader" id="70_c2n8d"]
+[ext_resource type="Texture2D" uid="uid://67vt0l0gotfs" path="res://textures/menus/gamebottomlabel.png" id="70_kkkcx"]
+[ext_resource type="Texture2D" uid="uid://cmfcqacindo6f" path="res://textures/menus/superpuff.png" id="72_c2n8d"]
+[ext_resource type="AudioStream" uid="uid://b8myo5w4mj6ph" path="res://sounds/fx/gamecoin.wav" id="74_2s0kr"]
+[ext_resource type="Texture2D" uid="uid://dmy44mo4sx3s8" path="res://textures/menus/questionloopbackground.png" id="74_gx4rg"]
+[ext_resource type="Texture2D" uid="uid://cnotd4icjss62" path="res://textures/menus/mistery.png" id="75_5dllo"]
+[ext_resource type="PackedScene" path="res://scenes/game_screen.tscn" id="78_ygd8o"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_w48qg"]
+shader = ExtResource("3_ycdy4")
+shader_parameter/scroll_speed = 0.07
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vivmo"]
+shader = ExtResource("5_w48qg")
+shader_parameter/scroll_speed = 0.14
+
+[sub_resource type="Animation" id="Animation_0cp0l"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(-475, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_4lmeg"]
+resource_name = "slide_in_from_left_cancel"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-475, 0), Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_qnost"]
+resource_name = "slide_in_right_1"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(950, 0), Vector2(475, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_0n3wm"]
+resource_name = "slide_in_right_2"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(475, 0), Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_rnkwl"]
+resource_name = "slide_in_right_quick"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(950, 0), Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_h8e4i"]
+resource_name = "slide_out_from_right_cancel"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(475, 0), Vector2(950, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_gngh3"]
+resource_name = "slide_out_left_1"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(-475, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_d2t1y"]
+resource_name = "slide_out_left_2"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-475, 0), Vector2(-950, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_0n3wm"]
+_data = {
+&"RESET": SubResource("Animation_0cp0l"),
+&"slide_in_from_left_cancel": SubResource("Animation_4lmeg"),
+&"slide_in_right_1": SubResource("Animation_qnost"),
+&"slide_in_right_2": SubResource("Animation_0n3wm"),
+&"slide_in_right_quick": SubResource("Animation_rnkwl"),
+&"slide_out_from_right_cancel": SubResource("Animation_h8e4i"),
+&"slide_out_left_1": SubResource("Animation_gngh3"),
+&"slide_out_left_2": SubResource("Animation_d2t1y")
+}
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_efxa6"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_kek77")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_4c57u")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 1.0
+}]
+
+[sub_resource type="AudioStreamMP3" id="AudioStreamMP3_seu75"]
+data = PackedByteArray("SUQzBAAAAAAxR1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMABQUklWAAAhJAAAWE1QADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+Cjx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ0IDc5LjE2MjA0NSwgMjAxOC8wMS8yMy0wNjowNTo1MiAgICAgICAgIj4KIDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+CiAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgIHhtbG5zOnhtcERNPSJodHRwOi8vbnMuYWRvYmUuY29tL3htcC8xLjAvRHluYW1pY01lZGlhLyIKICAgIHhtbG5zOnhtcD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyIKICAgIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIgogICAgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIKICAgIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIgogICAgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIgogICB4bXA6TWV0YWRhdGFEYXRlPSIyMDIxLTA2LTIxVDE0OjE0OjU5LTA0OjAwIgogICB4bXA6TW9kaWZ5RGF0ZT0iMjAyMS0wNi0yMVQxNDoxNDo1OS0wNDowMCIKICAgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo1OWFjNDNmMy01NTRjLTYxNDAtYTY4Ny00ZDllYWI4ZjEwYjMiCiAgIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NTlhYzQzZjMtNTU0Yy02MTQwLWE2ODctNGQ5ZWFiOGYxMGIzIgogICB4bXBNTTpPcmlnaW5hbERvY3VtZW50SUQ9InhtcC5kaWQ6OWY2ODk5ZjktZjQ5MC02NTQwLTgwYzEtNjcyYTk0NjQ2OWE5IgogICBkYzpmb3JtYXQ9ImF1ZGlvL21wZWciPgogICA8eG1wRE06VHJhY2tzPgogICAgPHJkZjpCYWc+CiAgICAgPHJkZjpsaQogICAgICB4bXBETTp0cmFja05hbWU9IkN1ZVBvaW50IE1hcmtlcnMiCiAgICAgIHhtcERNOnRyYWNrVHlwZT0iQ3VlIgogICAgICB4bXBETTpmcmFtZVJhdGU9ImY0ODAwMCIvPgogICAgIDxyZGY6bGkKICAgICAgeG1wRE06dHJhY2tOYW1lPSJDRCBUcmFjayBNYXJrZXJzIgogICAgICB4bXBETTp0cmFja1R5cGU9IlRyYWNrIgogICAgICB4bXBETTpmcmFtZVJhdGU9ImY0ODAwMCIvPgogICAgIDxyZGY6bGkKICAgICAgeG1wRE06dHJhY2tOYW1lPSJTdWJjbGlwIE1hcmtlcnMiCiAgICAgIHhtcERNOnRyYWNrVHlwZT0iSW5PdXQiCiAgICAgIHhtcERNOmZyYW1lUmF0ZT0iZjQ4MDAwIi8+CiAgICA8L3JkZjpCYWc+CiAgIDwveG1wRE06VHJhY2tzPgogICA8eG1wTU06SGlzdG9yeT4KICAgIDxyZGY6U2VxPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJzYXZlZCIKICAgICAgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo5ZjY4OTlmOS1mNDkwLTY1NDAtODBjMS02NzJhOTQ2NDY5YTkiCiAgICAgIHN0RXZ0OndoZW49IjIwMjEtMDYtMjFUMTQ6MTQ6NTktMDQ6MDAiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIEF1ZGl0aW9uIENDIDIwMTguMSAoV2luZG93cykiCiAgICAgIHN0RXZ0OmNoYW5nZWQ9Ii9tZXRhZGF0YSIvPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJzYXZlZCIKICAgICAgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo1OWFjNDNmMy01NTRjLTYxNDAtYTY4Ny00ZDllYWI4ZjEwYjMiCiAgICAgIHN0RXZ0OndoZW49IjIwMjEtMDYtMjFUMTQ6MTQ6NTktMDQ6MDAiCiAgICAgIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIEF1ZGl0aW9uIENDIDIwMTguMSAoV2luZG93cykiCiAgICAgIHN0RXZ0OmNoYW5nZWQ9Ii8iLz4KICAgIDwvcmRmOlNlcT4KICAgPC94bXBNTTpIaXN0b3J5PgogICA8eG1wTU06RGVyaXZlZEZyb20KICAgIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6OWY2ODk5ZjktZjQ5MC02NTQwLTgwYzEtNjcyYTk0NjQ2OWE5IgogICAgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5ZjY4OTlmOS1mNDkwLTY1NDAtODBjMS02NzJhOTQ2NDY5YTkiCiAgICBzdFJlZjpvcmlnaW5hbERvY3VtZW50SUQ9InhtcC5kaWQ6OWY2ODk5ZjktZjQ5MC02NTQwLTgwYzEtNjcyYTk0NjQ2OWE5Ii8+CiAgPC9yZGY6RGVzY3JpcHRpb24+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgCjw/eHBhY2tldCBlbmQ9InciPz4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/+7RAAAAEkABLgAAACAAACXAAAAEAAAEuAAAAIAAAJcAAAAT//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7QEsQAAXcAAADb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RAwAAP/ABLgAAACByACXAAAAEAAAEuAAAAIAAAJcAAAAT///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8EgAAAShT////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////6ualXq7wuXA0czzAOQGKPCBifW2Yc0BhJpikCq2KGmHEmHDmSWZIYCDRRMstHpXjhrDrXcCQrBoL31K1Y2QLolsXlb/z9JAaParwIMNUGYgXxNOMSzMwowbydc6tAEBBSwtmFBiA1PJMwwY8GhDMCk0kHEiFspnGKIFwQUTZAxpGUxodryj6zwoATxLxpiKWmRLhcgaIklSX/+7RgwAAHPABGoAAACAAACXAAAAEmhYEhLWdNgAAAJcAAAASbLtsaL1113vswRw3bBoFK4yI8w4FEsyDArWHF2gs8dzYaomdqAIkpWfMoQJBIONrQYg1Ut5FFMF4lm0w3GAAZNUxQgt4qqYkOSgCYCWvTIXqXEaq3+M/Zctujqp0N3eeMV2kPzB7kLnYMYAMlgutuDqSiDWrLHWAbVCW37sMMe1ExQRYjwpFsvkbAG0YA6kTehkiabH1hIS7lDPgAExIt0yhcRT4ZWpcxWGmMtCA1UxxDoCkDoqGEIUvm4tSnGOp9CAFOhoSajYn6gjMOPR9jDUoba+TGo+slRWS9HgVEx0pLJGUMCLyjwIJCR/Mwk1YCFcmgmcMipwxoEBOTAhiECGGTElCwNCAYGMylVQtcsOYQaSGCZ8ZEQBCIiDFrwgiWeRSFBIYEZIDC5hhhrTRIVMwFdpVQIBPs/KmzvNtHy8KAgIDIzDAUVFApMCEpsh5r7xqVJwjYWOmcCmLNBUCCjIhCKFPqXtUDSBFhQADigKGy8ytYIDsPTARdDBAQaAAkqhBYGGDVyzlqlrXXBR6UTWuuVpUPtNacla0qSJ0iMURBzICWqMXSBTGbjEU9E+i2KVCun1tRFRNKB3n/ijrMFd5srfp0xxhzPVVWVV1NWsgWq13pJpuW2krkvx4QRUOELIeJBuuCWoPusXwUOAIzcgfEBgi+pgmEIqnSY6PCijchkQcLC8Q4WIjFBBGGIliUMv2haosmORAKHKb/+7RgwAAJrV9MYxnTagAACXAAAAEifYEzVYyAIAAAJcKAAATITRAEWwEk1CGBPu7LqprlrBJBK6MqdKZlAivpZJn2d513/j7ZWAJdjQIKBUOXEFg0ZkH0gS61cSKSMrrkd+QRNdSj7K04LEdeBxFUlg1FHMEQhbcCDsOVkZ2rCkgyhO8QDF82svulql2w1/bbJkG0RF7oIVtJJu8BRRwpW9XKwTCk/QUUp0j81mBJG8rcGdIYwuCadc6ei90ySIJK1FBgRERCVXzz+F1m7wauOGWuralrscj7YodqW5ytTW/jOqaYhqMvS6skpLWgRVXnmraThbLabUbEAIJAAIBDBBwZGDFlFKAOBzdjwIRDsYU8QmZUlmXNcAys7Hg0wbBBLUuRHjGYWggWDAoAVhHtL7lALg4KGoGDAQA0IxwAC97DQMCI0GBgsBRgqPhjkPQKKFXBgkBwYHiDZgMAgcFLKDDEMzDMFzDQBzA8CRAD4CEIw8CAwRABK5Mhlq+rQQBJnGkJqWUJpwJ5unL5v+eprIG6aYYCbLyACgoDJfFSqSGCwINMZfD6sZkqTZkmF5iOOphWFIQARjOIY6CBg2BKR4YAhgyDqjwcD7EVRsHAwAEwAJYI8q3MUMLgYAoQg0DBkAC1phqNJiCDZheN7aiMATAsHQcCYjBNJMOEQiDJAMhNQEtAh2TTCl8MtQMkR7MUQHMihWMBAAMLgeFAATpTRTTMIwnMCASAwAlAgoqFgCS9LlsXbZLlEgaFQaBMvQT/+7RgqQAMzF9Q1m+khAAACXDAAAAdEXdNuawAAAAAJcMAAABBIYHgylWXVhWLT1N0izBMCTEIDxoI4oYNiKEB0CgcDhrU+zstInARAWYKgGYYgaYPBIYRAKYUA+YegWJAINAIpu77XEe2bcJaRRBkTibdjtms3u9/LAAxaaB1rLlYia/0YsoY8kZQ+lumCa80RAw5So2nU66WYcF0Hch1qTYH7WFiTsLfwbnBTR4ZYk7rWqSIxhmCXtOpSg7MOxHIFhmYh1djO6nWLQK4Lwv65U3N1KsGxWhg2UM2l76PWgld5RU0PttdnG7v9P0c2+sB+3zmffvvy5MeiUNuCkcjq/MahW70pUxmOSm5LZTIMrCmLMl3M2XzHrbix1waV4ZFEqbnM9Zu/AUud6M1am8sowhNSgL/O1nV3frYW5TJJyipo72lpruPauMugKL1LG8c+2NLzSJTu+++3/68IyLGZpWR5R5TqHAMFISK/AgUfUVVYWgpzKAK3POZVIXLSj7AnDpouyFzGKOWzBj82ypg68S3JuSLJFRCU2wSSCC6Txdd5/qNYrxsOUymEJTR44FQGEE6mUkK/7mxVYdqClTGlh29dlnywb6QhS4tStmGGtPDCm8krtSdujp0EqLxJeyGPMiglpsDLMjumAqKOqyiFue4Dprqok3VY3RYm7AGCyFVZ7S/y0EFxZL1I/va6qmS+6OCYFutdsT/ICnKzxs+lUZgaW2YbxdqMU0ij8Ucalyt3K2PN49z5QxmpS8y7Oj/+7RgdgAHfVtQb2MACgAACXDgAAEc1U0nrGcNqAAAJcAAAARhJNfUSJKuu11kbSEYA5QWKpYBjEw0fTgcKACChYqXivgdd2XFEIQGCLghXI7Qm7u79x916t2koIBJqACEXeLnBgTWUPhZJ72aQ08SEp20jWRKDl1SIgLmDw0JR3Tpc5YrJVTOWpkvuKNwLqokpDLBtMaoz1zVrpZMreFmEAKrwXKmUqbRBtHBcRaIKKDQKibq8UPPzOw5QU1aQu0/bgtYZ1BrdtwRFH6qvFD0Aw0wF5ZJVYK7UTaazNuL7N3wYdF4ZrQ88N2IUd/88Lt65lg+tSNS+ivct9lutwzPS65zcOoK6j/AuEDkZ37AaASUkbjbaaL+RIRFU5ICoPBcg8QWSrMwU3DISEJlF1MEhSgI6u0oICnPAxlynIpYfoZa/7NIOa46M2EDXasM5TM6CxHIo/sOWIYlbMV5qfaYRl8yb0Vz58r1FFcDvg+AHICoXaRNgsDyJlxRs6oZT7TiGyPlNDVL6j++sT0j1bjiTEfenrvTlDgKOi2czOyKnVDdSrQ78CDD1BV2XlsX+d4zS1NVg/WY+G2P7LqSzdsPA5RcmFP////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////kRJMscccbSVEztbr/+7RgmIAJKlLHaxh7YAAACXAAAAEU7UsfrD3tgAAAJcAAAAQkRJkMuCaKWgEZQIY41skGJAaAGpuCpIEBBBijWEeRyFvEa+ZLi8VSYIOO09mdBwU/FZXOqeXLKTFPMxPSHFFefsMNcQG6I4tD6AyFyeL7gPovqBNwXMvKcVcUwJrHStqDKHIbldX1B1EtqakkOsBmjJNnjQY80KkO1uuLz5vems7xm1v9ar7f4r/94ra99Q3z6e9ZsTfwgaJUq1BwAlSRyRxto8mTEZyl7jzYFBhxEPaQw8oQvAX4cQY9Avw4BOlsYZ4GJCYmpsXey5JxLHkKEsQ+S2C4IqLtWq58piWqOCqy5EmQhRNWYaF0ThOVD3ivbkKU5EplWHqLWznGp4RmNEkJU9zVD8nsVPkvUD+uqSwNaxGfahrKPV8aC3v1fl+5s6vkQmK+1Gw2Ubs4tbEHEGLrfz92z/9ffv67gU3u0sZ4Lm/rq///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAMBlFH6w97YAAACXAAAAETaUEbLL2NiAAAJcAAAAT/ha/u6qSUQ0pmSCQgskOFBlo0at4yEyMkadCA2DhKFQPsoCLJA0HKdCSXcZwmTZCVWaJYSfpc8XJsa5W6LAXKmOUnrkrMjnhLKG2ojk4SmKdpdA0xRhCLKtBFKVnjVk5acI6QJDxBQll/pn4tz7zSTlMTD9Pe66bsOqTpgtXRGXzAfJNbr340qa3pnprMz2/PR7NnbzVpFoFj2v11FOSRxtttI1ZUSEioIEJAtD2FCR8WgUAeEQCAUUzDnnaxdQyj0CFCZo5Rne4tr1hevjSVqhVCjIsWNL0mUzJrLBBm2xsy5Rb0hnIzcGBPpxiw0Lxe1Vw7jZQtEAYsUVJqZ4lGwfzAPJDl5kztz167e85Q6yUP1Mlp6E2XbIW09CzeWd193x/Mxzy9rvmbtl/u1z5JVHV/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAMZVLH6y9bYAAACXAAAAER7UMbjL0tiAAAJcAAAAT////////////////6hKcbS6qlMYwFAQUEsYCjw+BaSgtTJlQ0YFhD4TgJ6cxYzKGyaDm1OUO8tEknWFWKdfLYhyGszMZUOLG1GW3KFGXUU848FT7c9RK7RVdSIsxTIIN4C5h6HFGWDZKQEwraBxA2ZyEsqF6niJYwTzbnGbNWajT5txh5dOV+9q6r3//W7flvln8VY144pHB9W+RNJKJpXNKnIW2NaxirkXZdEePOMqWFByN4OHLvo/ceLmrFQT0jNG6vvATTfMpYrMqnYE6SxIqdSusq+rZerXIpTtZvS0MVgXvOIsOFGLkFQ3pKmTBQY5JpKZQoyqgQKD66ZuV1/LxpRZmW+/ck562pKLDP6VXGo//392v//fjeXt/wio17FkdH////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAM6U7G4y9LYAAACXAAAAEP3UMbLD0NgAAAJcAAAAT//////////////////////////////////////9j19VVKkpwWYAkpOiARlIDiJfmEaAkaU5wy6Wm8LGq6nIhxxNUtoWZVqjY6Zm6KxoewOL+Pa7hLH8640nVlSmCUWIdYD8RzRhyqETaAoDkeQEw+hFpc4VcVFkBe484uJ1it6d3WNC0mlUjccdFMhTmTSynD//H//wzcQ08OPYpslyyNyNxtpYXEdBUqtpNIs0XhN3kARbFQsRaBUyKDNY9KpfDLQJXY7l9jcZpYtLpbqktVH5ikNyW39OkpUGo9ARQuMorXRiSzpjZRrCIESRqiKSMyuxcF2W0zJ+c4XW5kc9/roKyt3IXGdZclVK/1oHAoiDrVWPxMou9ARWH9LfR/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAM/T9IaxhK4AAACXAAAAEPiREdjOELgAAAJcAAAAT/////////////////////////////////////////+oVE4muqqXUhS8CphCMwlEMLwgptK9DqgMEcQwqvXAR9bfWVtlr8xHH94Y5U0YllmCbuNe9NSjHHUbEFiWUFKHpNUhdKUVRoog5mGEDhJaJV0LickWHhC5gd41drTrjLwoJzoWZ95khVU9lVTp5l3siXy/qWlTpcPPqf19RwlSSNfVUlM7a8QjABoZ4hjSyQxRAYh8GBNTE53lbYQjX+/rtJhV3jfzLl+xbpJFGo7XgG23V7H2mpFd5JWe/+REWZWrI5v1aF5R1VmOUQslkeFUOdeKuoD4iJjXlD/PVeF+pGtn7j4ZJVrrbqLfss9yu5J+ny+oKiqSGj////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAANpkVHYxhK4AAACXAAAAEM5NcdjDDLQAAAJcAAAAT//////////////////////////////////////////////////////////////////////TJUbbdVUpuSywZM544hMwClGqiw11CowbgmwpDcjEmxYFjahFA4iTF9lHatrg3p5lnw9PHOPMx+33mpGTGeS7LsBoqYUgXcgcaxAgnD6tv//td9vGQYw8Fj4sgDBhJNbVP/QsUF3RhySORtVVKmmkrEQQpHijqIBE2A7AEs3xVGWwXxORAw5R+KtBqEyVTauJYcWNEbYPt7B7AIF9LjGg6CL7OfIZQtJ4bnoX1KPkwtRpNi8K9pIrLhYxC1PkIWCou6gcYKoCt/WJtGoWPgSwf/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAANvS3HYy8y0AAACXAAAAEMjK8djL0LQAAAJcAAAAT/////////////////////////////////////////////////////////////////////////+pHJG2qqlTsyw1LAABrRNVA0bkDCUIEjNbBVD5Xa8llzKSpVF1UsGl5s6tTTuF6yFQ9V5Win3JmhcwKSmPFRx0M4x8YNSj+Bl2MZqtz4MYGxKKIUhUQDnhAVj5k0QEmi//SVGZd5rqqmlTfWZgEAMQDHgkAOkGtVEyIiYj6dCO2VbbBUni8BC84JxJZoaSUmgICEjgtkNXlablweifDGGEITO8OnGCJxBQ46jxEXMCQMDCYkcgmABlEzKj15LncRHMivWdWIIkILtci67Ue99W/6b8OKyDf/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAN5lLGywkrYAAACXAAAAEL4NkdjDzLQAAAJcAAAAT////////////////////////////////////////////////////////////////////////////////9NJONJVVKn0rSQScv2ZwqYhZoIK4QMAJNAyA21wl1YS2S7kqafdNaZL11nUCiA63P3/P+1sf80yMbJmk95lJkzBEabF3FqZ3vUaIKv4+/f+7966bu0OaC5Zxspv/7NiR5r+qlVDXYon8caGSMMgQ4GOUGOoU6AAoE6HphFsEuX0+xumk2xI2nPbHjscBXR3gGOYQHVOKWJBGUwoHwQCbfmoIpL3qD57OMuL657zSTo6X/++p+1HJaUudGG3+52zvZ7///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAONTTGyw9C0gAACXAAAAEKqJMbLGEJQAAAJcAAAAT//////////////////////////////////////////////////////////////////////////////////////////////a/1NSohlMLDNqwkSUh6VwIQJMmIqa0PGMTtzWMSlmEZjNLTWefzOwqHDwUoNEJ8bFnqLD0RA8POi/fguOZ8dcQcgSIrPMHGAUOM9RNe9AOEyosgc9BNOSNpVVKmpp5oiSle0LmFzGoKdTBUrSEZdaJSOBLFqLxC1X7zWfbefMrFS9bU+II/kMw/12E3rROvSfu/Qoj7OZ2IE/Cv/3KVBqdXrT///Pfr1yDEabDjngGnTf+ksZ//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAOKDVHYxgy0AAACXAAAAEK4LMbjDyrQAAAJcAAAAT///////////////////////////////////////////////////////////////////////////////////////////9SORtJUqqFayiejomWAFL7XmJJSQJxjQDLHEMVFIegIsRIHK+16udrwry7jvnIKOUehTHZY0O1tdD3d5XXZqneJCvRSOylMJHOTrV8cBTtTFpJrKMGypZ7vpeg1p5jDAi44EADVE45sBB4BM7wjoKIYRwS9jrUUQjcASivlz9Z74kpaYeegVnrOQcp26mxFuP9blVl3lfHZVoAXQByTgXNOPt6VoBQ9GV3g5tT////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAOUyRGQ1hKUAAACXAAAAEKLLEZLGCrQAAAJcAAAAT//////////////////////////////////////////////////////////////////////////////////////////////////+4NWsogB8EMrLJrFEbBswVKPZQkhZUsEMSAVKwVmnV8ssbs/Ny/9z8I93cvlONNKg0FRxZSC5BarCIggttolrORBJI1hxiGvq/iLCY86nfDNKxRtyNtVUqG6AuWIDAKBdsEGRcFBjQS0gQwYeAyu260cksWzhl3Led/eF2pmfBSCjB4GrtB3VUijra6Nplehj1dTEIsKYiOcpkqYMn0G8Y7JngUTbsYsAf/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAOVSbHYxhCUAAACXAAAAEKILUZDGFrQAAAJcAAAAT///////////////////////////////////////////////////////////////////////////////////////////////////uq1T+G69AMqLTo9GharR0YYGDgwuZEaLw9DlZ3I+9722pRf1+Nn6/ztHdwHcJF2uruk5chbFTq9cXUHev3NYvcvY99Rd1VtUXexx1SU9I90AgRJtts1SoH+6qX6kCJEsIUgN6SLSq4OAkqLAvVjwZuj4eNvzO9r15xvAsFEA+IkldUQYU8eLlVNFUhNeqOSl++fQcehuV3x3//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAOVS1HYwwq0AAACXAAAAEKINUdjGELSAAAJcAAAAT///////////////////////////////////////////////////////////////////////////////////////////////////mEqSNqqVA/tKAlBUgVKKRHECqlvhCUfgtIFEfcvW0J7YAcaicm1M1+b1b33uGHMggCkuXxZzDxjoUIM9I81B/t/fE0v+8cX7Ixfz//N/O0FNhRNyNpNVIGeTwIDIFAwQHUPKYAK3DIU1ASAfPKIw9kO2o+4OOOHcst77w8uAAQ1pLxoHBMokTlalM6czDmTJihNuGiYSgqDfyh9iP/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAOfiVHYxgaUAAACXAAAAEJhIsbbDzJQAAAJcAAAAT//////////////////////////////////////////////////////////////////////////////////////////////////////////USbaaP8ZXljCy00BUgYYkYIAFsC/izkDF0MhUuMViQssbu8DFt+TS+wEewJHin/eq86znZuZbuzNuPRBi4WHseomMYE1fEwqD5zU1ZKRyNJVKqH28biXizE4xQlhRMF8F4OgMlGIVdn+mR7F33lu8rsODVSVK9h4IwbJnjZkvY4iAWKCpVq0gY23+NvoLPZo///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAOqhlHYw8aQAAACXAAAAEI2JMbjGBpQAAAJcAAAAT/////////////////////////////////////////////////////////////////////////////////////////////////////////////////0k04klKqAYx2dtF3CQJ0Uex3o0VKJmFpwtFPqxXqW689KeYa5hnqndxkCEMV5kRk6G52u3DneEeQfIhmLh86D40LmDJfR5m+rqfw5QqpL3jLIIWAMggT2AMoIE6QZxL60dq+LEknrcFmpTq1AaEq2krxFC3QVXLDjXkAKkUJDWjCqJU79BJP////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RgwAAP+RvGww8aQBAACXAAAAEBkBkYgBjCYAAAJcAAAAT//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////4BSIAAmAEeAXR95USj/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+7RAwAAP/ABLgAAACByACXAAAAEAAAEuAAAAIAAAJcAAAAT///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABUQUcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==")
+
+[sub_resource type="AudioStreamMP3" id="AudioStreamMP3_htxhm"]
+data = PackedByteArray("AAAAFGZ0eXBxdCAgAAAAAHF0ICAAAAAId2lkZQAAKIhtZGF0//u0QMAAD/wAS4AAAAgcgAlwAAABAAABLgAAACAAACXAAAAE////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+lVVkkm420SCnLkUhK1EsjfS5f0epGRjjKgHNAbLBiIrfk5oEBASTUOk6grNCiIjA2cJBQfJIChkLhcN2j4gMEUv6PJ4eBbCWPSVljJgCoL6BnH6CrN4fkrHCTigZkMYVfHYGSBSArImIkNcE4VItiGi5q4bgmB6kvjErJefBeE+vLD/akZEWdcZ5V/uPeRkRZpxnlXmsUxTKvc2NXx+uCcLJpud4DzO7394mb79NYlelvVxcHGP8apEy/sIjs0qqskk3G2iQU5cikJWolkb6XL+j1IyMcZUA5oDZYMRFb8n//u0QMAABPwAS4AAAAgAAAlwAAABF8VzK0el7Yr4LmVo9L2xNAgICRdQ6J1BWaFERGBs4SCg+SQFDIXC4btHxAYIpf0eTw8C2EsekrLGTAFQX0DOP0FWbw/JWOEnFAzIYwq+OwMkCkBWRPEhrgnCpFsQ0XNXDcEwPUl8YlZLz4Lwn15Yf7UjgizrjPKv9x7yMiLLnGeVeaxTFMq9zY1fH64Jwsmm53gPM7vf5iZvv01iV6W9XFwcY/x6RMv7CI7ICTUrd1cSjadkEATBHEfFFR0EvoHGBksZ4KYeACqx3MpUOCoFabeAqYLHFqmnMcIsTNKFQEiS2CeggQgIq5iTDkm4ODQjfMScRyVMouhIEJhimCEMWEKowkkNBgQc3AzMZLgA0RS+6+yaT9peiQkZGAJsYBOREy5IKEoGgwMaE0CgZom5qDRyGIEQHBYBRGNOUSgEREJwxocyIARBR4CLAAaIWcjiMBAErFhTQRoKkMl8GBgMFc0cEhy83EUFJDWoCIkCBZnhK0TGggIPCpwzYIAKwc8M6KTFEAEu+ikYYCAAZgWgcmS5XysxAdWp2kKTBhcwgox4JsqlsJeRizJYAVqUxasBSAQFYYxJhRgQBQCNMdDjiLUFYQy7t7F9p5/XjZbLI9GpdNuCwULEwUYNOaFSY8FYdTRaIy6PrtdBd1PGXZijOY5PFEpRuay1tpJuYs0fgJqwA5VW0OXYoqmNIiEAEBAIBlaqJKAFAkJw4EFwlmqgLZEAgWFHA0emIAll//u0YMAACjlgSmtZ02gAAAlwAAABIYV9JaznLaAAACXAAAAEHsAjpXiINoYMBC56ZD3BgRKiuh3WG0pZcvSKkJyGiAMimTIFVSKYsqTAgUYLgiR69guAIUETlKQsQ7tAhQQonQDFYirJAZQEIgE/0qWROU2VHByUHBGARPiMRQMKiQoQHuiyxNFbcWdMDBp5DKDlLoFBQgFqSdiYK/3BUVfxtigwZBCA1zqnWbP3ntT9QJt/HmZt878bf1/byCLBaNirL4DnbdLe1EXKh6ej0UuobiAEWBqztqz+N65Nw1D0u3j3HXJTuHmQU8ty+3bvU9BUp8M7l8AlNuXWSONxONlCAF3W0aWhspSoxTGl6lyYIlgvITsYYsJDICICBAKjpxFP1Y8uRsXOwRH9AGmMLEZizRS5UggIBAMgLYALi3FkykDPTrY1SjoTalLoGILSCIGARAjKYGBmKhIBDjGhgxgOBRAX0bAWQMEIjJCQaQDASsyUXCAtj6RBkCIagdGYGxmh0Z0TBBoFwkFADIUQBAAJmvS466yQBLAKZKjmpoZkZOYqQmrrZsL6cjHm4oJvC4bAuAAtNfWTQQMxhCNWYDTiIwERFB0OUzGlQ3aSOyqDgDALkJj42YmCiwRBSeixGpxyNPZXa5EAoAA4EBgAjBDDkO5LaSkjEshixYiCJ7E13wPC0OiFimkR5KHEk0rgNp7/y+xqxb1SWKkYecuoCgQwgCSsnY3DcP0S73Lce2+7lwQmIpfF8iSiTG0kSCpI//u0YKQACgBgSusY22gAAAlwAAABIU1/J6fnLYAAACXAAAAE3BhgM5/BAVeKQLoHMCMAnT/Abi/n+DwlRhUNRpha6mzxNKJcTot0YoW6TWXIpc0pQMrEabMMHZWuluihiJwCGTmEAacryOo10uSW1QxWF6qiECoBYFL2rddpYy+XdXa7K0C3QGKQBLaUxCgKfK+C5QBCNlo4WjdUMYUFGigJakuSprFVMREKYZhlkFrlTM2jgkM2dnbZ0ejNASuZilaxxCUgOXKX9LYl0VMAKQCQkBySi6VAXMeblW4sMrcsK11hq6WVGCEXKXMyp3YdnYy7Lsym7XztTdSJyBcbIHKobFqRSfVTLK7vLXPuSqVMNXa12CaLK9Mv7A09XlMOy2Mv7IauIC1W2rG0kQpbKCQBMDGzMycwkNAAUcNgH/cRRInHXR4DwMJ5qpaWbMdGzEjyYMY4we26dE2YBkZwwYIIFiwCKJCO476XiRAMCGOKGSODSBRVOeUoIEBjOC7DOJtuSgiQgcAcmOOApQkI0lLNCYjAjIJEKTQAKrt+w+idyIrnk8EtfrvSCBAMAkQmI6hf+FsrbgxpN9EdVdHONwxFF5g4CTmIAneggHYwqgIlQCULXhdcinS1QuYCh2VY3Rkzit2SsdRmDETJXMkkDOIqMtV1DMaord6afy3Jkq4+qeeict5qkpJRUx7Bjuyp9WJqrgoNfbU5vLO3g3RtLEoi9+vG7WdfLn8mKmpREKSXyyMRikw3bqZquNEpKRtt//u0YIyACJley+t6y2IAAAlwAAABH2V1S6zjDbgAACXAAAAEIpy4xtQ8vgSBGjYkk0UADmWgYB4tSgs4r3r0NYn+dhCpFJtXcSTXbG08QaZnReQ7uHjiwTkU2BkavIyqopcpSgBg5W1gLKorfcbB3UAq9XtaU6UAgoqYKKLaq5c1saPKRLuwJJIDVtUBXVAyVJZlB1WGEO0WeMAQEVACzRwmHT6cqAVSqRsNSpLssRcBL4EgLktopkXGLXIPKmcZmK7k6pFEVbS/qgJmKoIWdQpdVs1SeqwzexpXRd1wYzZxpqWl5PwC5LuxmWvEw6BnRR9gAoEZwIDr2FzucqlU9als7UszsxTd7QSqvOU1qZf1rL7Ra7LaXENAkaJSczcrjabYgqlH5DnCkOghUSEAQx1gZ9kQc5JpxX+McIOCQuSiUXBgitQGHWmZggCFMQUHAGUCNKhgoxGaxIsY/xZVFEyBUiUEpe1OVfoRM6EaRHhhBVIYSPStNtZGQJoQZrg5mApnigOKmBFGNBGDJCASywFAV+kw3NgymD5IahhVHlNFmLMQIKGg4wVEZdBPAYJPAI0YcMSlw5ismSmREg0YYIM+5bgFKTCg6oyTBApNtTZboKZtKiypQIClAYGLLtgflqYGFqYrWbu1pk1ycm6VyIq015JTEIrSzj6NrZgCLXeX6Ses5bzjMjgSRuLVyqSqjoOasbo+X7f1/z7yK8x593GsyuMktuSSRtIp6i5JtHEdSDaN4VBWCSQCI0aTJGFR//u0YJMACEdXz2sZ024AAAlwAAABHjFxN6zjDbAAACXAAAAEKdHhNQGxUREZh6CoCAKHZZKtBbhnCWABDdAxD2AVacwHR6ySxUTKSBIDvYhAWcVapijYytKkIkmOiimuW5BEF2gqyiw9FKgXcyxiyihf9B1eLegZQcqaXULGGSItA6KqZdgW1AS1VKREFQWIoJV0pEszDDLjFTLvcdq4YtQEHNclr6yGDspJAQw7rKIdbk2rKGWr9f1pCGyKqElWZ0IxjqrLaeKRWEunSZYZ1M4xQV8r/cLsxv8O40zoxSXVqb/r/jlzHcsr61v7FfGn/uH///Z6qHUgTJJct1+21bdGYowscluUA2TIFRWHRkAoTCRDAp1/S6JVIRHSEWcQDC5hbSxnfYsLRWkuYCANDaIsmykOotJJpLcuYrCw8siBDsjg4eENGaGqEDBWaCnITUEyVo4sISW8CHOgBjP+oE4kBjJioU0kL/j3VDzAAdLBaKbJkr0ZAqxSQ0tBCgOMIFayBIMqJARTROflka2YUyMKBAJCziKTCi8ZgQuMOWZFv7GFg35i5ZAokzkKgSBYTak1iiq4fPSuzOY2bfeZfX+emozlWzy7Lc6a1bv16Wk7v8M6WvhQ3/yu83zu8ccLQYqPJFvmxy////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////u0YKOACmBXSus4w2oAAAlwAAABEuDrH6xh64gAACXAAAAE//////+2Um2ORxttIMxMgwRU/TGmp3IDgMYGqDoAEStbFACJI4yiNxUBsBrRcl+r9uWwU0pL15GDZuSravJp1uU0tWM4yeIuyHCjoR/EGOrS9HTydcX2pV6z1lhNSulg61GV0FnfP2GA5RmF9VuVydVqdNFUwMtsGKqZM6jro6o8DwP4ceM1q2W7bVQI6CsP/KZw133m6hiO+33yTbkbaMqqhuNI+vatmQFqUEIaKMMAQEDDk1gmUItEUZRoBCHOkDWNbkiPWlilpFgfdfCzpIczPCkRUSQMjoI+s5Oy+GOCSmCdk9VkCIKBGZQBNjwJs3s1MMR0kzr///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////u0YMAADqo6xuMvGuAAAAlwAAABCNTFG2wka0gAACXAAAAE/////////////////////////////////////////////////////////////////////////////////////////////////////////////////9JtxJI/xdwj+cXdKCWYXyhJhImoJqKjBlcTEuSnCPjlSau5eilpNw+bHYTddG4UzK+6V2nCVD6S8mR6QOUB9gFjmfCVCj/2SccSQP8Xo7F8ok1FLZIpO0qHN1ggQLWYKA4NOEUz723ii3aR3zaTkcvKVSsvTLfynC4y7c11xoKvjb1JjQxzfuw3v/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////u0YMAADxgrxtsIGtIAAAlwAAABBxSdHWe8SUAAACXAAAAE////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////LbjTaP8e6ma5UvCSQFUHyPBZcq4aUVDXak1NmXX+dct2fq1uld9Kcn9ke8jxryZoviRD3Ij1OYxQSUbTRP8EqBFQ5BgKlQx1Ar2LIjy0C3EElAGLoudVWh8A3fJfVl5QkrJ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////u0YMAAD5sKx1hvMSAAAAlwAAABBRAvHYE8xMAAACXAAAAE/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+knI0kZVACGBiAZXtwbIZwIJKrbBDpQ6zAMqQKViUyImIz2p8W/lhYsABBBAHOlWVf///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////u0YMAAD/kAxqAAAAgcgAlwAAABAAABLgAAACAAACXAAAAE///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////4//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////u0QMAAD/wAS4AAAAgcgAlwAAABAAABLgAAACAAACXAAAAE//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////u0QMAAD/wAS4AAAAgcgAlwAAABAAABLgAAACAAACXAAAAE//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////u0QMAAD/wAS4AAAAgcgAlwAAABAAABLgAAACAAACXAAAAE//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////u0QMAAD/wAS4AAAAgcgAlwAAABAAABLgAAACAAACXAAAAE//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////u0QMAAD/wAS4AAAAgcgAlwAAABAAABLgAAACAAACXAAAAE//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////u0QMAAD/wAS4AAAAgcgAlwAAABAAABLgAAACAAACXAAAAE//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////u0QMAAD/wAS4AAAAgcgAlwAAABAAABLgAAACAAACXAAAAE////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACuW1vb3YAAABsbXZoZAAAAADkD3ja5A942gAAu4AAAEoAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAJFdHJhawAAAFx0a2hkAAAAD+QPeNrkD3jaAAAAAQAAAAAAAEoAAAAAAAAAAAAAAAAAAQAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAJGVkdHMAAAAcZWxzdAAAAAAAAAABAABKAAAABv8AAQAAAAABvW1kaWEAAAAgbWRoZAAAAADkD3ja5A942gAAu4AAAFEAVcQAAAAAADFoZGxyAAAAAG1obHJzb3VuYXBwbAAAAAAAAAAAEENvcmUgTWVkaWEgQXVkaW8AAAFkbWluZgAAABBzbWhkAAAAAAAAAAAAAAA4aGRscgAAAABkaGxyYWxpc2FwcGwAAAAAAAAAABdDb3JlIE1lZGlhIERhdGEgSGFuZGxlcgAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAxhbGlzAAAAAQAAAPBzdGJsAAAARHN0c2QAAAAAAAAAAQAAADQubXAzAAAAAAAAAAEAAQAAAAAAAAACABD//gAAu4AAAAAABIAAAAABAAAAAgAAAAIAAAAYc3R0cwAAAAAAAAABAAAAEgAABIAAAAAcc3RzYwAAAAAAAAABAAAAAQAAABIAAAABAAAAXHN0c3oAAAAAAAAAAAAAABIAAAJAAAACQAAAAkAAAAJAAAACQAAAAkAAAAJAAAACQAAAAkAAAAJAAAACQAAAAkAAAAJAAAACQAAAAkAAAAJAAAACQAAAAkAAAAAUc3RjbwAAAAAAAAABAAAAJA==")
+
+[sub_resource type="Animation" id="Animation_wnkbs"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_f6a44"]
+resource_name = "menu_slide_in_right_1"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(475, 0), Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_0cbny"]
+resource_name = "menu_slide_in_right_2"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(-475, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_hrvbo"]
+resource_name = "menu_slide_out_left_1"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-475, 0), Vector2(-950, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_uypp3"]
+resource_name = "menu_slide_out_left_2"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-950, 0), Vector2(-1425, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_vke2r"]
+resource_name = "menu_slide_out_left_quick"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Menu:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-475, 0), Vector2(-1425, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_blkrb"]
+_data = {
+&"RESET": SubResource("Animation_wnkbs"),
+&"menu_slide_in_right_1": SubResource("Animation_f6a44"),
+&"menu_slide_in_right_2": SubResource("Animation_0cbny"),
+&"menu_slide_out_left_1": SubResource("Animation_hrvbo"),
+&"menu_slide_out_left_2": SubResource("Animation_uypp3"),
+&"menu_slide_out_left_quick": SubResource("Animation_vke2r")
+}
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wy5fy"]
+shader = ExtResource("70_c2n8d")
+shader_parameter/scroll_speed = Vector2(-20, 20)
+shader_parameter/screen_size = Vector2(128, 128)
+
+[node name="PoopPal" type="Node2D"]
+position = Vector2(-1, -38)
+rotation = 0.000849863
+
+[node name="MusicController" type="AudioStreamPlayer2D" parent="." node_paths=PackedStringArray("sound_button")]
+pitch_scale = 0.85
+autoplay = true
+script = ExtResource("2_ryguw")
+sound_button = NodePath("../Main UI/SoundButtons/SoundButton")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(541.19, -953.46)
+rotation = -0.0138495
+scale = Vector2(1.00495, 0.99997)
+
+[node name="Main UI" type="Sprite2D" parent="."]
+z_index = -1
+
+[node name="PetBackground" type="Node2D" parent="Main UI"]
+
+[node name="PinkBackground" type="Sprite2D" parent="Main UI/PetBackground"]
+z_index = -5
+position = Vector2(541.937, -813.125)
+scale = Vector2(1.07689, 1.08036)
+texture = ExtResource("2_lquwl")
+
+[node name="CloudA" type="Sprite2D" parent="Main UI/PetBackground"]
+z_index = -4
+texture_repeat = 2
+material = SubResource("ShaderMaterial_w48qg")
+position = Vector2(538.867, -827.258)
+scale = Vector2(1.00922, 1.0027)
+texture = ExtResource("3_dg77c")
+
+[node name="CloudB" type="Sprite2D" parent="Main UI/PetBackground"]
+z_index = -3
+texture_repeat = 2
+material = SubResource("ShaderMaterial_vivmo")
+position = Vector2(534.277, -821.115)
+scale = Vector2(1.02674, 1.01489)
+texture = ExtResource("4_ycdy4")
+
+[node name="PetView" type="Node2D" parent="Main UI"]
+position = Vector2(-475, 0)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Main UI/PetView"]
+libraries = {
+&"": SubResource("AnimationLibrary_0n3wm")
+}
+
+[node name="Intestine-back" type="Sprite2D" parent="Main UI/PetView" node_paths=PackedStringArray("food_sound", "drink_sound")]
+z_index = -2
+position = Vector2(523.459, -834.166)
+scale = Vector2(1.11264, 1.11444)
+texture = ExtResource("3_7mycd")
+script = ExtResource("6_dg77c")
+food_blink_loops = 10
+food_blink_duration = 0.5
+food_sound_time = 0.0
+food_sound = NodePath("DigestionSoundFood")
+drink_blink_loops = 8
+drink_blink_duration = 0.5
+drink_sound_time = 0.0
+drink_sound = NodePath("DigestionSoundDrink")
+poop_blink_delay_food = 2.0
+poop_blink_times_food = 60
+poop_blink_speed_food = 1.0
+poop_blink_delay_drink = 4.0
+poop_blink_times_drink = 9
+poop_blink_speed_drink = 0.5
+
+[node name="DigestionSoundFood" type="AudioStreamPlayer2D" parent="Main UI/PetView/Intestine-back"]
+stream = ExtResource("9_ntx8l")
+volume_db = -10.0
+pitch_scale = 0.5
+
+[node name="DigestionSoundDrink" type="AudioStreamPlayer2D" parent="Main UI/PetView/Intestine-back"]
+stream = ExtResource("10_wu3dr")
+
+[node name="FoodRainSpawner" type="Node2D" parent="Main UI/PetView" node_paths=PackedStringArray("fall_sound")]
+z_index = -2
+position = Vector2(530.904, -1290.05)
+script = ExtResource("9_pjyto")
+chunk_scene = ExtResource("10_sm6fg")
+fall_area_width = 100
+fall_duration = 2.0
+chunk_scale = 4.0
+fall_sound = NodePath("FallSound")
+
+[node name="FallSound" type="AudioStreamPlayer2D" parent="Main UI/PetView/FoodRainSpawner"]
+stream = ExtResource("12_ntx8l")
+volume_db = -17.0
+pitch_scale = 0.4
+
+[node name="DrinkWaterfallSpawner" type="Node2D" parent="Main UI/PetView" node_paths=PackedStringArray("fall_sound")]
+z_index = -2
+position = Vector2(530.904, -1290.05)
+script = ExtResource("19_rqtf5")
+stream_scene = ExtResource("21_1vm84")
+hold_time = 2.5
+fade_time = 1.0
+fall_sound = NodePath("FallSound")
+
+[node name="FallSound" type="AudioStreamPlayer2D" parent="Main UI/PetView/DrinkWaterfallSpawner"]
+stream = ExtResource("15_1vm84")
+volume_db = -1.0
+pitch_scale = 1.1
+
+[node name="PoopCam" type="Sprite2D" parent="Main UI/PetView"]
+z_index = -1
+position = Vector2(512.006, -815.171)
+scale = Vector2(1.2707, 1.2788)
+texture = ExtResource("9_w48qg")
+
+[node name="Poop" type="AnimatedSprite2D" parent="Main UI/PetView"]
+position = Vector2(542.274, -854.461)
+rotation = -0.000616398
+scale = Vector2(2.64681, 2.77288)
+sprite_frames = SubResource("SpriteFrames_efxa6")
+animation = &"idle"
+frame_progress = 0.977582
+script = ExtResource("14_sm6fg")
+blink_times = 40
+initial_blink_speed = 1.2
+blink_opacity = 0.1
+breathing_time = 1.0
+
+[node name="Intestine-front" type="Sprite2D" parent="Main UI/PetView"]
+z_index = 1
+position = Vector2(523.187, -836.446)
+scale = Vector2(1.0206, 1.08803)
+texture = ExtResource("5_272bh")
+script = ExtResource("8_efxa6")
+
+[node name="Console" type="Node2D" parent="Main UI"]
+
+[node name="MainScreen" type="Sprite2D" parent="Main UI/Console"]
+z_index = 3
+y_sort_enabled = true
+position = Vector2(539.902, -823.234)
+scale = Vector2(1.37129, 1.39224)
+texture = ExtResource("17_jq2sk")
+
+[node name="TopFrame" type="Sprite2D" parent="Main UI/Console"]
+z_index = 2
+y_sort_enabled = true
+position = Vector2(540.676, -1640.79)
+scale = Vector2(1.37112, 2.51252)
+texture = ExtResource("18_4k2k6")
+
+[node name="Top" type="Sprite2D" parent="Main UI/Console"]
+z_index = 2
+y_sort_enabled = true
+position = Vector2(540.734, -1894.46)
+scale = Vector2(1.37117, 1.28481)
+texture = ExtResource("19_0rl1p")
+
+[node name="LogoMain" type="Sprite2D" parent="Main UI/Console"]
+z_index = 4
+y_sort_enabled = true
+position = Vector2(799.523, -1738.68)
+scale = Vector2(0.873274, 0.991457)
+texture = ExtResource("19_lswn8")
+
+[node name="V1" type="Sprite2D" parent="Main UI/Console"]
+z_index = 4
+y_sort_enabled = true
+position = Vector2(687.536, -1722.58)
+scale = Vector2(0.958082, 0.821741)
+texture = ExtResource("20_htxhm")
+
+[node name="BottomFrame" type="Sprite2D" parent="Main UI/Console"]
+z_index = 2
+y_sort_enabled = true
+position = Vector2(540.475, -145.086)
+scale = Vector2(1.37141, 1.11772)
+texture = ExtResource("18_4k2k6")
+
+[node name="Bottom" type="Sprite2D" parent="Main UI/Console"]
+z_index = 2
+y_sort_enabled = true
+position = Vector2(540.654, -16.4615)
+scale = Vector2(1.37122, 1.521)
+texture = ExtResource("22_ok6jj")
+
+[node name="Speaker1" type="Sprite2D" parent="Main UI/Console"]
+z_index = 4
+y_sort_enabled = true
+position = Vector2(234.907, -109.2)
+scale = Vector2(0.354854, 0.320924)
+texture = ExtResource("22_jq2sk")
+
+[node name="Speaker2" type="Sprite2D" parent="Main UI/Console"]
+z_index = 4
+y_sort_enabled = true
+position = Vector2(839.908, -108.714)
+scale = Vector2(0.354854, 0.315763)
+texture = ExtResource("22_jq2sk")
+
+[node name="Screw" type="Sprite2D" parent="Main UI/Console"]
+z_index = 4
+position = Vector2(49.4141, -1866.04)
+texture = ExtResource("24_4k2k6")
+
+[node name="Screw2" type="Sprite2D" parent="Main UI/Console"]
+z_index = 4
+position = Vector2(1029.42, -1863.88)
+texture = ExtResource("24_4k2k6")
+
+[node name="Screw3" type="Sprite2D" parent="Main UI/Console"]
+z_index = 4
+position = Vector2(49.966, -40.0425)
+texture = ExtResource("24_4k2k6")
+
+[node name="Screw4" type="Sprite2D" parent="Main UI/Console"]
+z_index = 4
+position = Vector2(1028.96, -43.8745)
+texture = ExtResource("24_4k2k6")
+
+[node name="LCD Screen" type="Node2D" parent="Main UI" node_paths=PackedStringArray("food_timer_label", "drink_timer_label", "score_counter_label")]
+script = ExtResource("23_gngh3")
+food_timer_label = NodePath("FoodTimer/FoodTimer")
+drink_timer_label = NodePath("DrinkTimer/DrinkTimer")
+score_counter_label = NodePath("ScoreCounter/ScoreCounter")
+
+[node name="CountdownTimer" type="Timer" parent="Main UI/LCD Screen"]
+autostart = true
+
+[node name="Background" type="Sprite2D" parent="Main UI/LCD Screen"]
+z_index = 2
+y_sort_enabled = true
+position = Vector2(314.53, -1734.56)
+scale = Vector2(0.729394, 0.594307)
+texture = ExtResource("18_qsp4k")
+
+[node name="StaticLabels" type="Node2D" parent="Main UI/LCD Screen"]
+z_index = 3
+
+[node name="ScoreTextLabel" type="Label" parent="Main UI/LCD Screen/StaticLabels"]
+z_index = 3
+offset_left = 127.0
+offset_top = -1810.0
+offset_right = 267.0
+offset_bottom = -1746.0
+theme_override_colors/font_color = Color(0.435294, 0.352941, 0.141176, 1)
+theme_override_fonts/font = ExtResource("23_come4")
+theme_override_font_sizes/font_size = 34
+text = "SCORE"
+
+[node name="FoodTextLabel" type="Label" parent="Main UI/LCD Screen/StaticLabels"]
+z_index = 3
+offset_left = 128.0
+offset_top = -1762.0
+offset_right = 243.0
+offset_bottom = -1698.0
+theme_override_colors/font_color = Color(0.435294, 0.352941, 0.141176, 1)
+theme_override_fonts/font = ExtResource("23_come4")
+theme_override_font_sizes/font_size = 34
+text = "Food
+"
+
+[node name="DrinkTextLabel" type="Label" parent="Main UI/LCD Screen/StaticLabels"]
+z_index = 3
+offset_left = 128.0
+offset_top = -1714.0
+offset_right = 260.0
+offset_bottom = -1650.0
+theme_override_colors/font_color = Color(0.435294, 0.352941, 0.141176, 1)
+theme_override_fonts/font = ExtResource("23_come4")
+theme_override_font_sizes/font_size = 34
+text = "Drink"
+
+[node name="ScoreCounter" type="Node2D" parent="Main UI/LCD Screen"]
+z_index = 3
+
+[node name="ScoreCounter" type="Label" parent="Main UI/LCD Screen/ScoreCounter"]
+z_index = 3
+offset_left = 287.462
+offset_top = -1810.24
+offset_right = 481.462
+offset_bottom = -1742.24
+theme_override_colors/font_color = Color(0.435294, 0.352941, 0.141176, 1)
+theme_override_fonts/font = ExtResource("23_come4")
+theme_override_font_sizes/font_size = 33
+text = "000245"
+
+[node name="FoodTimer" type="Node2D" parent="Main UI/LCD Screen"]
+z_index = 3
+
+[node name="FoodTimer" type="Label" parent="Main UI/LCD Screen/FoodTimer"]
+z_index = 3
+offset_left = 287.502
+offset_top = -1762.24
+offset_right = 503.502
+offset_bottom = -1694.24
+theme_override_colors/font_color = Color(0.435294, 0.352941, 0.141176, 1)
+theme_override_fonts/font = ExtResource("23_come4")
+theme_override_font_sizes/font_size = 33
+text = "00:00:00"
+
+[node name="DrinkTimer" type="Node2D" parent="Main UI/LCD Screen"]
+z_index = 3
+
+[node name="DrinkTimer" type="Label" parent="Main UI/LCD Screen/DrinkTimer"]
+z_index = 3
+offset_left = 287.543
+offset_top = -1714.24
+offset_right = 535.543
+offset_bottom = -1629.25
+theme_override_colors/font_color = Color(0.435294, 0.352941, 0.141176, 1)
+theme_override_fonts/font = ExtResource("23_come4")
+theme_override_font_sizes/font_size = 33
+text = "00:00:00"
+
+[node name="MenuButtons" type="Node2D" parent="Main UI"]
+z_index = 2
+
+[node name="FoodButton" type="TextureButton" parent="Main UI/MenuButtons" node_paths=PackedStringArray("click_sound", "release_sound", "clack_sound", "menu_manager", "target_menu")]
+z_index = 3
+anchors_preset = -1
+anchor_left = 0.384399
+anchor_top = 0.0500488
+anchor_right = 0.38501
+anchor_bottom = 0.0500488
+offset_left = 57.0
+offset_top = -1629.0
+offset_right = 375.999
+offset_bottom = -1329.0
+toggle_mode = true
+texture_normal = ExtResource("19_kq58d")
+texture_pressed = ExtResource("20_seu75")
+script = ExtResource("21_jq2sk")
+normal_texture = ExtResource("19_kq58d")
+pressed_texture = ExtResource("20_seu75")
+click_sound = NodePath("ClickSound")
+release_sound = NodePath("ReleaseSound")
+clack_sound = NodePath("ClackSound")
+menu_manager = NodePath("../../MenuManager")
+target_menu = NodePath("../../Menus/FoodMenu")
+metadata/_edit_use_anchors_ = true
+
+[node name="ClickSound" type="AudioStreamPlayer2D" parent="Main UI/MenuButtons/FoodButton"]
+stream = SubResource("AudioStreamMP3_seu75")
+volume_db = 7.374
+pitch_scale = 2.0
+
+[node name="ReleaseSound" type="AudioStreamPlayer2D" parent="Main UI/MenuButtons/FoodButton"]
+stream = SubResource("AudioStreamMP3_htxhm")
+volume_db = 8.559
+pitch_scale = 2.0
+
+[node name="ClackSound" type="AudioStreamPlayer2D" parent="Main UI/MenuButtons/FoodButton"]
+stream = ExtResource("28_b1qrp")
+volume_db = -7.0
+pitch_scale = 2.0
+
+[node name="GameButton" type="TextureButton" parent="Main UI/MenuButtons" node_paths=PackedStringArray("click_sound", "release_sound", "clack_sound", "menu_manager", "target_menu")]
+z_index = 3
+offset_left = 387.616
+offset_top = -1628.33
+offset_right = 706.616
+offset_bottom = -1328.33
+toggle_mode = true
+texture_normal = ExtResource("28_0rl1p")
+texture_pressed = ExtResource("29_ok6jj")
+script = ExtResource("21_jq2sk")
+normal_texture = ExtResource("28_0rl1p")
+pressed_texture = ExtResource("29_ok6jj")
+click_sound = NodePath("ClickSound")
+release_sound = NodePath("ReleaseSound")
+clack_sound = NodePath("ClackSound")
+menu_manager = NodePath("../../MenuManager")
+target_menu = NodePath("../../Menus/GameMenu")
+metadata/_edit_use_anchors_ = true
+
+[node name="ClickSound" type="AudioStreamPlayer2D" parent="Main UI/MenuButtons/GameButton"]
+stream = SubResource("AudioStreamMP3_seu75")
+volume_db = 7.374
+pitch_scale = 2.0
+
+[node name="ReleaseSound" type="AudioStreamPlayer2D" parent="Main UI/MenuButtons/GameButton"]
+stream = SubResource("AudioStreamMP3_htxhm")
+volume_db = 8.559
+pitch_scale = 2.0
+
+[node name="ClackSound" type="AudioStreamPlayer2D" parent="Main UI/MenuButtons/GameButton"]
+position = Vector2(-331, -0.720215)
+stream = ExtResource("28_b1qrp")
+volume_db = -7.0
+pitch_scale = 2.0
+
+[node name="SettingsButton" type="TextureButton" parent="Main UI/MenuButtons" node_paths=PackedStringArray("click_sound", "release_sound", "clack_sound", "menu_manager", "target_menu")]
+z_index = 3
+offset_left = 714.619
+offset_top = -1625.61
+offset_right = 1033.62
+offset_bottom = -1325.61
+toggle_mode = true
+texture_normal = ExtResource("31_facbu")
+texture_pressed = ExtResource("32_b1qrp")
+script = ExtResource("21_jq2sk")
+normal_texture = ExtResource("31_facbu")
+pressed_texture = ExtResource("32_b1qrp")
+click_sound = NodePath("ClickSound")
+release_sound = NodePath("ReleaseSound")
+clack_sound = NodePath("ClackSound")
+menu_manager = NodePath("../../MenuManager")
+target_menu = NodePath("../../Menus/Settings Menu")
+metadata/_edit_use_anchors_ = true
+
+[node name="ClickSound" type="AudioStreamPlayer2D" parent="Main UI/MenuButtons/SettingsButton"]
+stream = SubResource("AudioStreamMP3_seu75")
+volume_db = 7.374
+pitch_scale = 2.0
+
+[node name="ReleaseSound" type="AudioStreamPlayer2D" parent="Main UI/MenuButtons/SettingsButton"]
+stream = SubResource("AudioStreamMP3_htxhm")
+volume_db = 8.559
+pitch_scale = 2.0
+
+[node name="ClackSound" type="AudioStreamPlayer2D" parent="Main UI/MenuButtons/SettingsButton"]
+position = Vector2(-658.003, -3.44006)
+stream = ExtResource("28_b1qrp")
+volume_db = -7.0
+pitch_scale = 2.0
+
+[node name="SoundButtons" type="Node2D" parent="Main UI"]
+z_index = 2
+
+[node name="SoundButton" type="TextureButton" parent="Main UI/SoundButtons" node_paths=PackedStringArray("click_sound", "release_sound", "clack_sound", "music_node")]
+z_index = 2
+offset_left = 144.0
+offset_top = -297.0
+offset_right = 324.0
+offset_bottom = -175.0
+toggle_mode = true
+texture_normal = ExtResource("33_b1qrp")
+texture_pressed = ExtResource("34_come4")
+script = ExtResource("35_h8e4i")
+sound_on_texture = ExtResource("33_b1qrp")
+sound_off_texture = ExtResource("34_come4")
+click_sound = NodePath("ClickSound")
+release_sound = NodePath("ReleaseSound")
+clack_sound = NodePath("ClackSound")
+music_node = NodePath("../../../MusicController")
+
+[node name="ClickSound" type="AudioStreamPlayer2D" parent="Main UI/SoundButtons/SoundButton"]
+position = Vector2(714.619, -1625.61)
+stream = SubResource("AudioStreamMP3_seu75")
+volume_db = 6.374
+pitch_scale = 2.5
+
+[node name="ReleaseSound" type="AudioStreamPlayer2D" parent="Main UI/SoundButtons/SoundButton"]
+position = Vector2(714.619, -1625.61)
+stream = SubResource("AudioStreamMP3_htxhm")
+volume_db = 7.559
+pitch_scale = 2.5
+
+[node name="ClackSound" type="AudioStreamPlayer2D" parent="Main UI/SoundButtons/SoundButton"]
+position = Vector2(-87.1315, -1331.93)
+stream = ExtResource("28_b1qrp")
+volume_db = -7.0
+pitch_scale = 2.5
+
+[node name="ForwardButton" type="TextureButton" parent="Main UI/SoundButtons" node_paths=PackedStringArray("music_controller", "click_sound", "release_sound")]
+z_index = 2
+offset_left = 745.0
+offset_top = -298.0
+offset_right = 925.0
+offset_bottom = -176.0
+texture_normal = ExtResource("36_b1qrp")
+texture_pressed = ExtResource("37_come4")
+script = ExtResource("37_b1qrp")
+music_controller = NodePath("../../../MusicController")
+click_sound = NodePath("ClickSound")
+release_sound = NodePath("ReleaseSound")
+
+[node name="ClickSound" type="AudioStreamPlayer2D" parent="Main UI/SoundButtons/ForwardButton"]
+position = Vector2(714.619, -1625.61)
+stream = SubResource("AudioStreamMP3_seu75")
+volume_db = 6.374
+pitch_scale = 2.5
+
+[node name="ReleaseSound" type="AudioStreamPlayer2D" parent="Main UI/SoundButtons/ForwardButton"]
+position = Vector2(714.619, -1625.61)
+stream = SubResource("AudioStreamMP3_htxhm")
+volume_db = 7.559
+pitch_scale = 2.5
+
+[node name="MainButton" type="TextureButton" parent="Main UI" node_paths=PackedStringArray("click_sound", "release_sound")]
+z_index = 3
+offset_left = 449.0
+offset_top = -297.0
+offset_right = 634.0
+offset_bottom = -122.0
+texture_normal = ExtResource("40_hrvbo")
+texture_pressed = ExtResource("41_uypp3")
+script = ExtResource("42_uypp3")
+click_sound = NodePath("ClickSound")
+release_sound = NodePath("ReleaseSound")
+
+[node name="ClickSound" type="AudioStreamPlayer2D" parent="Main UI/MainButton"]
+position = Vector2(714.619, -1625.61)
+stream = SubResource("AudioStreamMP3_seu75")
+volume_db = 6.374
+pitch_scale = 2.25
+
+[node name="ReleaseSound" type="AudioStreamPlayer2D" parent="Main UI/MainButton"]
+position = Vector2(714.619, -1625.61)
+stream = SubResource("AudioStreamMP3_htxhm")
+volume_db = 7.559
+pitch_scale = 2.25
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/MainButton"]
+stream = ExtResource("43_vke2r")
+
+[node name="Menus" type="Control" parent="Main UI"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="FoodMenu" type="Node2D" parent="Main UI/Menus"]
+script = ExtResource("43_blkrb")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Main UI/Menus/FoodMenu"]
+libraries = {
+&"": SubResource("AnimationLibrary_blkrb")
+}
+
+[node name="Menu" type="Node2D" parent="Main UI/Menus/FoodMenu"]
+
+[node name="Background" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu"]
+z_index = 1
+position = Vector2(1018.06, -826.462)
+scale = Vector2(2.19606, 2.30562)
+texture = ExtResource("40_4lmeg")
+
+[node name="VBoxFood" type="VBoxContainer" parent="Main UI/Menus/FoodMenu/Menu"]
+offset_right = 40.0
+offset_bottom = 40.0
+alignment = 1
+
+[node name="FoodOption1" type="Node2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood"]
+
+[node name="Frame" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption1"]
+z_index = 2
+position = Vector2(1016.1, -1058.86)
+scale = Vector2(1.5018, 1.49093)
+texture = ExtResource("42_qnost")
+
+[node name="Icon" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption1"]
+z_index = 2
+position = Vector2(800.101, -1058.68)
+scale = Vector2(3.61564, 3.41524)
+texture = ExtResource("43_wnkbs")
+
+[node name="Name" type="Label" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption1"]
+z_index = 2
+offset_left = 888.053
+offset_top = -1114.76
+offset_right = 1039.05
+offset_bottom = -940.751
+theme_override_colors/font_color = Color(0.65098, 0.505882, 0.368627, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 55
+text = "Salad 
+ Bowl
+"
+
+[node name="Kcal" type="Label" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption1"]
+z_index = 2
+offset_left = 1136.11
+offset_top = -1042.97
+offset_right = 1241.11
+offset_bottom = -997.966
+theme_override_colors/font_color = Color(0.65098, 0.505882, 0.368627, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 40
+text = "160kc"
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption1"]
+z_index = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 740.0
+offset_top = -1123.0
+offset_right = 863.0
+offset_bottom = -1004.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption1/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption1"]
+stream = ExtResource("43_vke2r")
+
+[node name="FoodOption2" type="Node2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="Frame" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption2"]
+z_index = 2
+position = Vector2(1015.27, -856.863)
+scale = Vector2(1.5018, 1.49093)
+texture = ExtResource("42_qnost")
+
+[node name="Icon" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption2"]
+z_index = 2
+position = Vector2(799.265, -864.68)
+scale = Vector2(3.61564, 3.41524)
+texture = ExtResource("45_0cbny")
+
+[node name="Name" type="Label" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption2"]
+z_index = 2
+offset_left = 879.225
+offset_top = -912.748
+offset_right = 1113.22
+offset_bottom = -738.748
+theme_override_colors/font_color = Color(0.65098, 0.505882, 0.368627, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 55
+text = "  Club 
+Sandwich
+"
+
+[node name="Kcal" type="Label" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption2"]
+z_index = 2
+offset_left = 1135.29
+offset_top = -840.965
+offset_right = 1240.29
+offset_bottom = -795.965
+theme_override_colors/font_color = Color(0.65098, 0.505882, 0.368627, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 40
+text = "580kc"
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption2"]
+z_index = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 739.0
+offset_top = -921.0
+offset_right = 860.0
+offset_bottom = -802.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption2/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption2"]
+position = Vector2(-0.9983, 2.00085)
+stream = ExtResource("43_vke2r")
+
+[node name="FoodOption3" type="Node2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="Frame" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption3"]
+z_index = 2
+position = Vector2(1015.44, -656.863)
+scale = Vector2(1.5018, 1.49093)
+texture = ExtResource("42_qnost")
+
+[node name="Icon" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption3"]
+z_index = 2
+position = Vector2(799.442, -656.68)
+scale = Vector2(3.61564, 3.41524)
+texture = ExtResource("46_hrvbo")
+
+[node name="Name" type="Label" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption3"]
+z_index = 2
+offset_left = 871.395
+offset_top = -712.741
+offset_right = 1115.39
+offset_bottom = -538.741
+theme_override_colors/font_color = Color(0.65098, 0.505882, 0.368627, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 55
+text = "Cucumber
+   Sushi
+"
+
+[node name="Kcal" type="Label" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption3"]
+z_index = 2
+offset_left = 1135.46
+offset_top = -640.965
+offset_right = 1240.46
+offset_bottom = -595.965
+theme_override_colors/font_color = Color(0.65098, 0.505882, 0.368627, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 40
+text = "320kc"
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption3"]
+z_index = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 740.0
+offset_top = -720.0
+offset_right = 860.0
+offset_bottom = -602.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption3/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption3"]
+position = Vector2(-0.9983, 2.00085)
+stream = ExtResource("43_vke2r")
+
+[node name="VBoxDrink" type="VBoxContainer" parent="Main UI/Menus/FoodMenu/Menu"]
+offset_top = 20.0
+offset_right = 40.0
+offset_bottom = 20.0
+alignment = 1
+
+[node name="DrinkOption1" type="Node2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink"]
+position = Vector2(-7.0017, -21.994)
+
+[node name="Frame" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption1"]
+z_index = 2
+position = Vector2(1023.1, -1056.87)
+scale = Vector2(1.5018, 1.49093)
+texture = ExtResource("42_qnost")
+
+[node name="Icon" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption1"]
+z_index = 2
+position = Vector2(800.101, -1058.68)
+scale = Vector2(3.61564, 3.41524)
+texture = ExtResource("51_rnkwl")
+
+[node name="Name" type="Label" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption1"]
+z_index = 2
+offset_left = 895.055
+offset_top = -1112.76
+offset_right = 1046.05
+offset_bottom = -938.757
+theme_override_colors/font_color = Color(0.65098, 0.505882, 0.368627, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 55
+text = "Water
+"
+
+[node name="Kcal" type="Label" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption1"]
+z_index = 2
+offset_left = 1144.0
+offset_top = -1041.0
+offset_right = 1248.0
+offset_bottom = -996.0
+theme_override_colors/font_color = Color(0.65098, 0.505882, 0.368627, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 40
+text = "0kcal"
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption1"]
+z_index = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 747.0
+offset_top = -1121.0
+offset_right = 869.0
+offset_bottom = -1002.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption1/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption1"]
+position = Vector2(8, -0.00684977)
+stream = ExtResource("53_ruth0")
+volume_db = 2.0
+pitch_scale = 0.75
+
+[node name="DrinkOption2" type="Node2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink"]
+position = Vector2(0.9983, -22.0009)
+
+[node name="Frame" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption2"]
+z_index = 2
+position = Vector2(1015.27, -856.863)
+scale = Vector2(1.5018, 1.49093)
+texture = ExtResource("42_qnost")
+
+[node name="Icon" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption2"]
+z_index = 2
+position = Vector2(799.265, -864.68)
+scale = Vector2(3.61564, 3.41524)
+texture = ExtResource("52_vke2r")
+
+[node name="Name" type="Label" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption2"]
+z_index = 2
+offset_left = 879.225
+offset_top = -912.748
+offset_right = 1113.22
+offset_bottom = -738.748
+theme_override_colors/font_color = Color(0.65098, 0.505882, 0.368627, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 55
+text = "Cola
+"
+
+[node name="Kcal" type="Label" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption2"]
+z_index = 2
+offset_left = 1135.29
+offset_top = -840.965
+offset_right = 1240.29
+offset_bottom = -795.965
+theme_override_colors/font_color = Color(0.65098, 0.505882, 0.368627, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 40
+text = "150kc"
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption2"]
+z_index = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 739.0
+offset_top = -921.0
+offset_right = 861.0
+offset_bottom = -802.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption2/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption2"]
+position = Vector2(-0.9983, 2.00091)
+stream = ExtResource("53_ruth0")
+volume_db = 2.0
+pitch_scale = 0.75
+
+[node name="DrinkOption3" type="Node2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink"]
+position = Vector2(0.9983, -22.0009)
+
+[node name="Frame" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption3"]
+z_index = 2
+position = Vector2(1015.44, -656.863)
+scale = Vector2(1.5018, 1.49093)
+texture = ExtResource("42_qnost")
+
+[node name="Icon" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption3"]
+z_index = 2
+position = Vector2(799.442, -656.68)
+scale = Vector2(3.61564, 3.41524)
+texture = ExtResource("53_uit24")
+
+[node name="Name" type="Label" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption3"]
+z_index = 2
+offset_left = 871.395
+offset_top = -712.741
+offset_right = 1115.39
+offset_bottom = -538.741
+theme_override_colors/font_color = Color(0.65098, 0.505882, 0.368627, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 55
+text = "Energy
+ Drink
+"
+
+[node name="Kcal" type="Label" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption3"]
+z_index = 2
+offset_left = 1135.46
+offset_top = -640.965
+offset_right = 1240.46
+offset_bottom = -595.965
+theme_override_colors/font_color = Color(0.65098, 0.505882, 0.368627, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 40
+text = "110kc"
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption3"]
+z_index = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 739.0
+offset_top = -721.0
+offset_right = 861.0
+offset_bottom = -602.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption3/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption3"]
+position = Vector2(-0.9983, 2.00091)
+stream = ExtResource("53_ruth0")
+volume_db = 2.0
+pitch_scale = 0.75
+
+[node name="ForwardHint" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu"]
+z_index = 2
+position = Vector2(1272.61, -459.082)
+scale = Vector2(1.16715, 1.00655)
+texture = ExtResource("45_rnkwl")
+
+[node name="Dots" type="Node2D" parent="Main UI/Menus/FoodMenu/Menu"]
+
+[node name="Dot1" type="TextureRect" parent="Main UI/Menus/FoodMenu/Menu/Dots"]
+z_index = 2
+offset_left = 1144.6
+offset_top = -474.973
+offset_right = 1171.6
+offset_bottom = -447.973
+texture = ExtResource("54_rnkwl")
+
+[node name="Dot2" type="TextureRect" parent="Main UI/Menus/FoodMenu/Menu/Dots"]
+z_index = 2
+offset_left = 1184.6
+offset_top = -475.007
+offset_right = 1211.6
+offset_bottom = -448.007
+texture = ExtResource("54_rnkwl")
+
+[node name="GameMenu" type="Node2D" parent="Main UI/Menus"]
+script = ExtResource("67_cyx1q")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Main UI/Menus/GameMenu"]
+libraries = {
+&"": SubResource("AnimationLibrary_blkrb")
+}
+
+[node name="Menu" type="Node2D" parent="Main UI/Menus/GameMenu"]
+
+[node name="Background" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu"]
+z_index = 1
+position = Vector2(1018.06, -826.462)
+scale = Vector2(2.19606, 2.30562)
+texture = ExtResource("41_d2t1y")
+
+[node name="VBoxGame1" type="VBoxContainer" parent="Main UI/Menus/GameMenu/Menu"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Game" type="Node2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1"]
+
+[node name="TopFrame" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game"]
+z_index = 2
+offset_left = 712.019
+offset_top = -1154.61
+offset_right = 1000.02
+offset_bottom = -984.605
+scale = Vector2(2.13793, 2.29135)
+texture = ExtResource("69_jx0wj")
+
+[node name="Control" type="Control" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game/TopFrame"]
+clip_contents = true
+anchors_preset = 0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 281.0
+offset_bottom = 160.0
+
+[node name="Background" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game/TopFrame/Control"]
+material = SubResource("ShaderMaterial_wy5fy")
+position = Vector2(191.297, -35.0884)
+texture = ExtResource("70_34ol3")
+
+[node name="GameLogo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game/TopFrame/Control"]
+position = Vector2(135.27, 76.6806)
+texture = ExtResource("72_c2n8d")
+
+[node name="BottomFrame" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game"]
+z_index = 2
+position = Vector2(1023.28, -660.865)
+scale = Vector2(2.13875, 2.29618)
+texture = ExtResource("70_kkkcx")
+
+[node name="MaxScore" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.191
+offset_top = -27.7746
+offset_right = -9.19137
+offset_bottom = 27.2254
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Max Score
+"
+
+[node name="Score" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game/BottomFrame/MaxScore"]
+z_index = 2
+layout_mode = 0
+offset_left = 160.842
+offset_top = -0.127321
+offset_right = 277.842
+offset_bottom = 54.8727
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "000000"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.166
+offset_top = 0.097723
+offset_right = -9.16593
+offset_bottom = 55.0977
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Progress"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game/BottomFrame/Progress"]
+z_index = 2
+layout_mode = 0
+offset_left = 209.468
+offset_top = -0.165814
+offset_right = 326.468
+offset_bottom = 54.8342
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "0%"
+
+[node name="Logo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game"]
+
+[node name="LogoBackground" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game"]
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game"]
+z_index = 5
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 958.0
+offset_top = -969.0
+offset_right = 1081.0
+offset_bottom = -850.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game"]
+position = Vector2(0.9983, -2.00085)
+stream = ExtResource("74_2s0kr")
+
+[node name="VBoxGame2" type="VBoxContainer" parent="Main UI/Menus/GameMenu/Menu"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Game" type="Node2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="TopFrame" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game"]
+z_index = 2
+offset_left = 712.019
+offset_top = -1154.61
+offset_right = 1000.02
+offset_bottom = -984.605
+scale = Vector2(2.13793, 2.29135)
+texture = ExtResource("69_jx0wj")
+
+[node name="Control" type="Control" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game/TopFrame"]
+clip_contents = true
+anchors_preset = 0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 281.0
+offset_bottom = 160.0
+
+[node name="Background" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game/TopFrame/Control"]
+material = SubResource("ShaderMaterial_wy5fy")
+position = Vector2(191.297, -35.0884)
+texture = ExtResource("74_gx4rg")
+
+[node name="GameLogo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game/TopFrame/Control"]
+position = Vector2(135.27, 76.6806)
+texture = ExtResource("75_5dllo")
+
+[node name="BottomFrame" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game"]
+z_index = 2
+position = Vector2(1022.28, -658.864)
+scale = Vector2(2.13875, 2.29618)
+texture = ExtResource("70_kkkcx")
+
+[node name="MaxScore" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.191
+offset_top = -27.7746
+offset_right = -9.19137
+offset_bottom = 27.2254
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Max Score
+"
+
+[node name="Score" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game/BottomFrame/MaxScore"]
+z_index = 2
+layout_mode = 0
+offset_left = 160.842
+offset_top = -0.127321
+offset_right = 277.842
+offset_bottom = 54.8727
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "000000"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.166
+offset_top = 0.097723
+offset_right = -9.16593
+offset_bottom = 55.0977
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Progress"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game/BottomFrame/Progress"]
+z_index = 2
+layout_mode = 0
+offset_left = 209.468
+offset_top = -0.165814
+offset_right = 326.468
+offset_bottom = 54.8342
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "0%"
+
+[node name="Logo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game"]
+
+[node name="LogoBackground" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game"]
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game"]
+z_index = 5
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 958.0
+offset_top = -969.0
+offset_right = 1081.0
+offset_bottom = -850.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="VBoxGame3" type="VBoxContainer" parent="Main UI/Menus/GameMenu/Menu"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Game" type="Node2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="TopFrame" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game"]
+z_index = 2
+offset_left = 712.019
+offset_top = -1154.61
+offset_right = 1000.02
+offset_bottom = -984.605
+scale = Vector2(2.13793, 2.29135)
+texture = ExtResource("69_jx0wj")
+
+[node name="Control" type="Control" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game/TopFrame"]
+clip_contents = true
+anchors_preset = 0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 281.0
+offset_bottom = 160.0
+
+[node name="Background" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game/TopFrame/Control"]
+material = SubResource("ShaderMaterial_wy5fy")
+position = Vector2(191.297, -35.0884)
+texture = ExtResource("74_gx4rg")
+
+[node name="GameLogo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game/TopFrame/Control"]
+position = Vector2(135.27, 76.6806)
+texture = ExtResource("75_5dllo")
+
+[node name="BottomFrame" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game"]
+z_index = 2
+position = Vector2(1022.28, -658.864)
+scale = Vector2(2.13875, 2.29618)
+texture = ExtResource("70_kkkcx")
+
+[node name="MaxScore" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.191
+offset_top = -27.7746
+offset_right = -9.19137
+offset_bottom = 27.2254
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Max Score
+"
+
+[node name="Score" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game/BottomFrame/MaxScore"]
+z_index = 2
+layout_mode = 0
+offset_left = 160.842
+offset_top = -0.127321
+offset_right = 277.842
+offset_bottom = 54.8727
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "000000"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.166
+offset_top = 0.097723
+offset_right = -9.16593
+offset_bottom = 55.0977
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Progress"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game/BottomFrame/Progress"]
+z_index = 2
+layout_mode = 0
+offset_left = 209.468
+offset_top = -0.165814
+offset_right = 326.468
+offset_bottom = 54.8342
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "0%"
+
+[node name="Logo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game"]
+
+[node name="LogoBackground" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game"]
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game"]
+z_index = 5
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 958.0
+offset_top = -969.0
+offset_right = 1081.0
+offset_bottom = -850.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="VBoxGame4" type="VBoxContainer" parent="Main UI/Menus/GameMenu/Menu"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Game" type="Node2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="TopFrame" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game"]
+z_index = 2
+offset_left = 712.019
+offset_top = -1154.61
+offset_right = 1000.02
+offset_bottom = -984.605
+scale = Vector2(2.13793, 2.29135)
+texture = ExtResource("69_jx0wj")
+
+[node name="Control" type="Control" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game/TopFrame"]
+clip_contents = true
+anchors_preset = 0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 281.0
+offset_bottom = 160.0
+
+[node name="Background" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game/TopFrame/Control"]
+material = SubResource("ShaderMaterial_wy5fy")
+position = Vector2(191.297, -35.0884)
+texture = ExtResource("74_gx4rg")
+
+[node name="GameLogo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game/TopFrame/Control"]
+position = Vector2(135.27, 76.6806)
+texture = ExtResource("75_5dllo")
+
+[node name="BottomFrame" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game"]
+z_index = 2
+position = Vector2(1022.28, -658.864)
+scale = Vector2(2.13875, 2.29618)
+texture = ExtResource("70_kkkcx")
+
+[node name="MaxScore" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.191
+offset_top = -27.7746
+offset_right = -9.19137
+offset_bottom = 27.2254
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Max Score
+"
+
+[node name="Score" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game/BottomFrame/MaxScore"]
+z_index = 2
+layout_mode = 0
+offset_left = 160.842
+offset_top = -0.127321
+offset_right = 277.842
+offset_bottom = 54.8727
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "000000"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.166
+offset_top = 0.097723
+offset_right = -9.16593
+offset_bottom = 55.0977
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Progress"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game/BottomFrame/Progress"]
+z_index = 2
+layout_mode = 0
+offset_left = 209.468
+offset_top = -0.165814
+offset_right = 326.468
+offset_bottom = 54.8342
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "0%"
+
+[node name="Logo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game"]
+
+[node name="LogoBackground" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game"]
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game"]
+z_index = 5
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 958.0
+offset_top = -969.0
+offset_right = 1081.0
+offset_bottom = -850.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="VBoxGame5" type="VBoxContainer" parent="Main UI/Menus/GameMenu/Menu"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Game" type="Node2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="TopFrame" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game"]
+z_index = 2
+offset_left = 712.019
+offset_top = -1154.61
+offset_right = 1000.02
+offset_bottom = -984.605
+scale = Vector2(2.13793, 2.29135)
+texture = ExtResource("69_jx0wj")
+
+[node name="Control" type="Control" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game/TopFrame"]
+clip_contents = true
+anchors_preset = 0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 281.0
+offset_bottom = 160.0
+
+[node name="Background" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game/TopFrame/Control"]
+material = SubResource("ShaderMaterial_wy5fy")
+position = Vector2(191.297, -35.0884)
+texture = ExtResource("74_gx4rg")
+
+[node name="GameLogo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game/TopFrame/Control"]
+position = Vector2(135.27, 76.6806)
+texture = ExtResource("75_5dllo")
+
+[node name="BottomFrame" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game"]
+z_index = 2
+position = Vector2(1022.28, -658.864)
+scale = Vector2(2.13875, 2.29618)
+texture = ExtResource("70_kkkcx")
+
+[node name="MaxScore" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.191
+offset_top = -27.7746
+offset_right = -9.19137
+offset_bottom = 27.2254
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Max Score
+"
+
+[node name="Score" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game/BottomFrame/MaxScore"]
+z_index = 2
+layout_mode = 0
+offset_left = 160.842
+offset_top = -0.127321
+offset_right = 277.842
+offset_bottom = 54.8727
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "000000"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.166
+offset_top = 0.097723
+offset_right = -9.16593
+offset_bottom = 55.0977
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Progress"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game/BottomFrame/Progress"]
+z_index = 2
+layout_mode = 0
+offset_left = 209.468
+offset_top = -0.165814
+offset_right = 326.468
+offset_bottom = 54.8342
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "0%"
+
+[node name="Logo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game"]
+
+[node name="LogoBackground" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game"]
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game"]
+z_index = 5
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 958.0
+offset_top = -969.0
+offset_right = 1081.0
+offset_bottom = -850.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="VBoxGame6" type="VBoxContainer" parent="Main UI/Menus/GameMenu/Menu"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Game" type="Node2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="TopFrame" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game"]
+z_index = 2
+offset_left = 712.019
+offset_top = -1154.61
+offset_right = 1000.02
+offset_bottom = -984.605
+scale = Vector2(2.13793, 2.29135)
+texture = ExtResource("69_jx0wj")
+
+[node name="Control" type="Control" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game/TopFrame"]
+clip_contents = true
+anchors_preset = 0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 281.0
+offset_bottom = 160.0
+
+[node name="Background" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game/TopFrame/Control"]
+material = SubResource("ShaderMaterial_wy5fy")
+position = Vector2(191.297, -35.0884)
+texture = ExtResource("74_gx4rg")
+
+[node name="GameLogo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game/TopFrame/Control"]
+position = Vector2(135.27, 76.6806)
+texture = ExtResource("75_5dllo")
+
+[node name="BottomFrame" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game"]
+z_index = 2
+position = Vector2(1022.28, -658.864)
+scale = Vector2(2.13875, 2.29618)
+texture = ExtResource("70_kkkcx")
+
+[node name="MaxScore" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.191
+offset_top = -27.7746
+offset_right = -9.19137
+offset_bottom = 27.2254
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Max Score
+"
+
+[node name="Score" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game/BottomFrame/MaxScore"]
+z_index = 2
+layout_mode = 0
+offset_left = 160.842
+offset_top = -0.127321
+offset_right = 277.842
+offset_bottom = 54.8727
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "000000"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.166
+offset_top = 0.097723
+offset_right = -9.16593
+offset_bottom = 55.0977
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Progress"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game/BottomFrame/Progress"]
+z_index = 2
+layout_mode = 0
+offset_left = 209.468
+offset_top = -0.165814
+offset_right = 326.468
+offset_bottom = 54.8342
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "0%"
+
+[node name="Logo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game"]
+
+[node name="LogoBackground" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game"]
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game"]
+z_index = 5
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 958.0
+offset_top = -969.0
+offset_right = 1081.0
+offset_bottom = -850.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="VBoxGame7" type="VBoxContainer" parent="Main UI/Menus/GameMenu/Menu"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Game" type="Node2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="TopFrame" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game"]
+z_index = 2
+offset_left = 712.019
+offset_top = -1154.61
+offset_right = 1000.02
+offset_bottom = -984.605
+scale = Vector2(2.13793, 2.29135)
+texture = ExtResource("69_jx0wj")
+
+[node name="Control" type="Control" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game/TopFrame"]
+clip_contents = true
+anchors_preset = 0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 281.0
+offset_bottom = 160.0
+
+[node name="Background" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game/TopFrame/Control"]
+material = SubResource("ShaderMaterial_wy5fy")
+position = Vector2(191.297, -35.0884)
+texture = ExtResource("74_gx4rg")
+
+[node name="GameLogo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game/TopFrame/Control"]
+position = Vector2(135.27, 76.6806)
+texture = ExtResource("75_5dllo")
+
+[node name="BottomFrame" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game"]
+z_index = 2
+position = Vector2(1022.28, -658.864)
+scale = Vector2(2.13875, 2.29618)
+texture = ExtResource("70_kkkcx")
+
+[node name="MaxScore" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.191
+offset_top = -27.7746
+offset_right = -9.19137
+offset_bottom = 27.2254
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Max Score
+"
+
+[node name="Score" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game/BottomFrame/MaxScore"]
+z_index = 2
+layout_mode = 0
+offset_left = 160.842
+offset_top = -0.127321
+offset_right = 277.842
+offset_bottom = 54.8727
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "000000"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.166
+offset_top = 0.097723
+offset_right = -9.16593
+offset_bottom = 55.0977
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Progress"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game/BottomFrame/Progress"]
+z_index = 2
+layout_mode = 0
+offset_left = 209.468
+offset_top = -0.165814
+offset_right = 326.468
+offset_bottom = 54.8342
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "0%"
+
+[node name="Logo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game"]
+
+[node name="LogoBackground" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game"]
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game"]
+z_index = 5
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 958.0
+offset_top = -969.0
+offset_right = 1081.0
+offset_bottom = -850.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="VBoxGame8" type="VBoxContainer" parent="Main UI/Menus/GameMenu/Menu"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Game" type="Node2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="TopFrame" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game"]
+z_index = 2
+offset_left = 712.019
+offset_top = -1154.61
+offset_right = 1000.02
+offset_bottom = -984.605
+scale = Vector2(2.13793, 2.29135)
+texture = ExtResource("69_jx0wj")
+
+[node name="Control" type="Control" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game/TopFrame"]
+clip_contents = true
+anchors_preset = 0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 281.0
+offset_bottom = 160.0
+
+[node name="Background" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game/TopFrame/Control"]
+material = SubResource("ShaderMaterial_wy5fy")
+position = Vector2(191.297, -35.0884)
+texture = ExtResource("74_gx4rg")
+
+[node name="GameLogo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game/TopFrame/Control"]
+position = Vector2(135.27, 76.6806)
+texture = ExtResource("75_5dllo")
+
+[node name="BottomFrame" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game"]
+z_index = 2
+position = Vector2(1022.28, -658.864)
+scale = Vector2(2.13875, 2.29618)
+texture = ExtResource("70_kkkcx")
+
+[node name="MaxScore" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.191
+offset_top = -27.7746
+offset_right = -9.19137
+offset_bottom = 27.2254
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Max Score
+"
+
+[node name="Score" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game/BottomFrame/MaxScore"]
+z_index = 2
+layout_mode = 0
+offset_left = 160.842
+offset_top = -0.127321
+offset_right = 277.842
+offset_bottom = 54.8727
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "000000"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game/BottomFrame"]
+z_index = 2
+offset_left = -126.166
+offset_top = 0.097723
+offset_right = -9.16593
+offset_bottom = 55.0977
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "Progress"
+
+[node name="Progress" type="Label" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game/BottomFrame/Progress"]
+z_index = 2
+layout_mode = 0
+offset_left = 209.468
+offset_top = -0.165814
+offset_right = 326.468
+offset_bottom = 54.8342
+theme_override_colors/font_color = Color(0.552941, 0.427451, 0.309804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("44_wnkbs")
+theme_override_font_sizes/font_size = 25
+text = "0%"
+
+[node name="Logo" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game"]
+
+[node name="LogoBackground" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game"]
+
+[node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game"]
+z_index = 5
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 958.0
+offset_top = -969.0
+offset_right = 1081.0
+offset_bottom = -850.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("49_uit24")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+
+[node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game/Doughnut"]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+fill_mode = 4
+nine_patch_stretch = true
+texture_progress = ExtResource("53_rm4vd")
+tint_under = Color(1, 1, 1, 0.560784)
+tint_over = Color(1, 1, 1, 0.309804)
+tint_progress = Color(0.290196, 0.184314, 0.121569, 1)
+
+[node name="ConfirmSound" type="AudioStreamPlayer2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game"]
+position = Vector2(0.9983, -2.00085)
+
+[node name="ForwardHint" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu"]
+z_index = 2
+position = Vector2(1272.61, -459.082)
+scale = Vector2(1.16715, 1.00655)
+texture = ExtResource("45_rnkwl")
+
+[node name="Dots" type="Node2D" parent="Main UI/Menus/GameMenu/Menu"]
+
+[node name="Dot1" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/Dots"]
+z_index = 2
+offset_left = 904.597
+offset_top = -474.769
+offset_right = 931.597
+offset_bottom = -447.769
+texture = ExtResource("54_rnkwl")
+
+[node name="Dot2" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/Dots"]
+z_index = 2
+offset_left = 944.597
+offset_top = -474.803
+offset_right = 971.597
+offset_bottom = -447.803
+texture = ExtResource("54_rnkwl")
+
+[node name="Dot3" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/Dots"]
+z_index = 2
+offset_left = 984.597
+offset_top = -474.837
+offset_right = 1011.6
+offset_bottom = -447.837
+texture = ExtResource("54_rnkwl")
+
+[node name="Dot4" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/Dots"]
+z_index = 2
+offset_left = 1024.6
+offset_top = -474.871
+offset_right = 1051.6
+offset_bottom = -447.871
+texture = ExtResource("54_rnkwl")
+
+[node name="Dot5" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/Dots"]
+z_index = 2
+offset_left = 1064.6
+offset_top = -474.905
+offset_right = 1091.6
+offset_bottom = -447.905
+texture = ExtResource("54_rnkwl")
+
+[node name="Dot6" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/Dots"]
+z_index = 2
+offset_left = 1104.6
+offset_top = -474.939
+offset_right = 1131.6
+offset_bottom = -447.939
+texture = ExtResource("54_rnkwl")
+
+[node name="Dot7" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/Dots"]
+z_index = 2
+offset_left = 1144.6
+offset_top = -474.973
+offset_right = 1171.6
+offset_bottom = -447.973
+texture = ExtResource("54_rnkwl")
+
+[node name="Dot8" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/Dots"]
+z_index = 2
+offset_left = 1184.6
+offset_top = -475.007
+offset_right = 1211.6
+offset_bottom = -448.007
+texture = ExtResource("54_rnkwl")
+
+[node name="Settings Menu" type="Node2D" parent="Main UI/Menus"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Main UI/Menus/Settings Menu"]
+libraries = {
+&"": SubResource("AnimationLibrary_blkrb")
+}
+
+[node name="Menu" type="Node2D" parent="Main UI/Menus/Settings Menu"]
+
+[node name="Sprite2D" type="Sprite2D" parent="Main UI/Menus/Settings Menu/Menu"]
+z_index = 1
+position = Vector2(1024.3, -826.871)
+scale = Vector2(2.19606, 2.30562)
+texture = ExtResource("42_gngh3")
+
+[node name="MenuManager" type="Node2D" parent="Main UI" node_paths=PackedStringArray("menus_root", "pet_view", "pet_view_animation_player", "game_screen")]
+script = ExtResource("40_h8e4i")
+menus_root = NodePath("../Menus")
+pet_view = NodePath("../PetView")
+pet_view_animation_player = NodePath("../PetView/AnimationPlayer")
+game_screen = NodePath("../GameScreen")
+
+[node name="GameScreen" parent="Main UI" instance=ExtResource("78_ygd8o")]

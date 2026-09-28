@@ -1,0 +1,32 @@
+[gd_scene load_steps=7 format=3 uid="uid://b64fisv655so0"]
+
+[ext_resource type="Shader" uid="uid://dl0a1bsxvwcu5" path="res://drink_stream.gdshader" id="1_iv1x3"]
+[ext_resource type="Texture2D" uid="uid://chiwx1b65qnpc" path="res://textures/drinks/stream.png" id="2_pmwyi"]
+[ext_resource type="Script" uid="uid://b8rmlnnxu4mr5" path="res://drink_waterfall.gd" id="3_pmwyi"]
+[ext_resource type="Texture2D" uid="uid://chgsfo780crqm" path="res://textures/drinks/white_stream_texture.png" id="4_m5v52"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0dhbp"]
+shader = ExtResource("1_iv1x3")
+shader_parameter/speed = 0.6
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pmwyi"]
+shader = ExtResource("1_iv1x3")
+shader_parameter/speed = 0.6
+
+[node name="DrinkStream" type="Sprite2D"]
+z_index = -2
+material = SubResource("ShaderMaterial_0dhbp")
+scale = Vector2(4.04582, 1.79759)
+script = ExtResource("3_pmwyi")
+
+[node name="Foam" type="Sprite2D" parent="."]
+z_index = 1
+material = SubResource("ShaderMaterial_pmwyi")
+position = Vector2(0, -293.727)
+scale = Vector2(1.23584, 5.63236)
+texture = ExtResource("2_pmwyi")
+
+[node name="Body" type="Sprite2D" parent="."]
+position = Vector2(9.53674e-07, -291.501)
+scale = Vector2(3.29558, 11.3346)
+texture = ExtResource("4_m5v52")

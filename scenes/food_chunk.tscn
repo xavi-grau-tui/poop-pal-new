@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://clyiu2u4kg233"]
+
+[ext_resource type="Script" uid="uid://64j2xuhp74jn" path="res://food_chunk.gd" id="1_w8y0s"]
+
+[node name="FoodChunk" type="Sprite2D"]
+region_enabled = true
+script = ExtResource("1_w8y0s")

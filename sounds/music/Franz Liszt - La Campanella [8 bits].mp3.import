@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://ekd47nit4mvl"
+path="res://.godot/imported/Franz Liszt - La Campanella [8 bits].mp3-b5418cd2b1e47ced64f96c9df6370383.mp3str"
+
+[deps]
+
+source_file="res://sounds/music/Franz Liszt - La Campanella [8 bits].mp3"
+dest_files=["res://.godot/imported/Franz Liszt - La Campanella [8 bits].mp3-b5418cd2b1e47ced64f96c9df6370383.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
