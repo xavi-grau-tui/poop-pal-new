@@ -16,6 +16,7 @@ var fx_tween: Tween
 var base_scale := Vector2.ONE
 var base_position := Vector2.ZERO
 
+const MYSTERY_SCALE := 2.2   # the "EAT" sign shown before the first meal
 var mystery: Sprite2D
 var mystery_tween: Tween
 var flush_charge := 0.0
@@ -149,8 +150,8 @@ func set_flush_charge(value: float) -> void:
 
 func _spawn_mystery() -> void:
 	mystery = Sprite2D.new()
-	mystery.texture = load("res://textures/menus/mistery_pink.png")
-	mystery.scale = Vector2(0.9, 0.9)
+	mystery.texture = load("res://textures/menus/eat_pink.png")
+	mystery.scale = Vector2(MYSTERY_SCALE, MYSTERY_SCALE)
 	mystery.position = base_position + body_offset
 	get_parent().add_child(mystery)
 	get_parent().move_child(mystery, get_index() + 1)
@@ -181,11 +182,11 @@ func _hide_mystery() -> void:
 	if mystery_tween:
 		mystery_tween.kill()
 	mystery_tween = create_tween()
-	mystery_tween.tween_property(mystery, "scale", Vector2(1.3, 1.3), 0.1)
+	mystery_tween.tween_property(mystery, "scale", Vector2(MYSTERY_SCALE, MYSTERY_SCALE) * 1.4, 0.1)
 	mystery_tween.parallel().tween_property(mystery, "modulate:a", 0.0, 0.15)
 	mystery_tween.tween_callback(func():
 		mystery.visible = false
-		mystery.scale = Vector2(0.9, 0.9))
+		mystery.scale = Vector2(MYSTERY_SCALE, MYSTERY_SCALE))
 
 func _play_sfx(path: String, volume_db: float) -> void:
 	var stream = load(path) as AudioStream

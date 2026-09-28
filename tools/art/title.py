@@ -19,10 +19,17 @@ G = {
 'U': ["##...##","##...##","##...##","##...##","##...##","##...##","##...##","#######",".#####."],
 'N': ["##...##","###..##","####.##","##.####","##..###","##...##","##...##","##...##","##...##"],
 'S': [".######","#######","##.....","######.",".######",".....##",".....##","#######","######."],
+'T': ["######","######","..##..","..##..","..##..","..##..","..##..","..##..","..##.."],
+}
+# Colour schemes: backdrop, drop line, fill, light band, dark base
+PALETTES = {
+    'brown': ((98, 69, 62), (150, 120, 110), (180, 114, 100), (196, 128, 112), (156, 96, 84)),
+    'pink':  ((96, 28, 58), (190, 120, 140), (226, 104, 140), (246, 150, 180), (176, 62, 100)),
 }
 lines = sys.argv[1].split('|')
 out_path = sys.argv[2]
 U = int(sys.argv[3]) if len(sys.argv) > 3 else 5   # px per unit (SUPER PUFF strokes are ~10px = 2 units)
+BACK, DROP, BASE, LIGHT, DARK = PALETTES[sys.argv[4] if len(sys.argv) > 4 else 'brown']
 
 def word_mask(w):
     cols = sum(len(G[ch][0]) for ch in w) + (len(w) - 1)
@@ -54,9 +61,9 @@ def dil(m, r):
 back = dil(F, U)                                  # merged dark backdrop (SUPER PUFF's thick outline)
 shadow = np.zeros_like(back); shadow[2:, :] = back[:-2, :]
 img = np.zeros((H, W, 4), np.uint8)
-img[shadow & ~back] = (150, 120, 110, 255)        # faint lighter drop line under the blob
-img[back] = (98, 69, 62, 255)
-base = np.array([180, 114, 100]); light = np.array([196, 128, 112]); dark = np.array([156, 96, 84])
+img[shadow & ~back] = (*DROP, 255)               # faint lighter drop line under the blob
+img[back] = (*BACK, 255)
+base = np.array(BASE); light = np.array(LIGHT); dark = np.array(DARK)
 rng = np.random.default_rng(1)
 col = np.where((R < 4*U)[..., None], light, base)
 col = np.where((R >= 8*U + 2)[..., None], dark, col)
