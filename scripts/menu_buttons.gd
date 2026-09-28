@@ -14,7 +14,15 @@ const DrinkWaterfallSpawner = preload("res://scripts/drink_waterfall_spawner.gd"
 
 var pending_deactivation_button: TextureButton = null
 
+## Darker when untoggled, brighter when toggled (swaps the two textures set in the scene)
+const DARK_WHEN_UNTOGGLED := true
+
 func _ready():
+	if DARK_WHEN_UNTOGGLED:
+		var bright := normal_texture
+		normal_texture = pressed_texture
+		pressed_texture = bright
+		texture_pressed = pressed_texture   # shown by the button itself while toggled
 	texture_normal = normal_texture
 	toggle_mode = true
 	add_to_group("menu_toggle_buttons")
