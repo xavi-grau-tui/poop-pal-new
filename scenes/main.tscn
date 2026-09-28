@@ -79,8 +79,8 @@
 [ext_resource type="Texture2D" uid="uid://dmy44mo4sx3s8" path="res://textures/menus/questionloopbackground.png" id="74_gx4rg"]
 [ext_resource type="Texture2D" uid="uid://cnotd4icjss62" path="res://textures/menus/mistery.png" id="75_5dllo"]
 [ext_resource type="PackedScene" path="res://scenes/game_screen.tscn" id="78_ygd8o"]
-[ext_resource type="Script" path="res://scripts/boot_sequence.gd" id="99_boot"]
 [ext_resource type="Script" path="res://scripts/collection_menu.gd" id="98_coll"]
+[ext_resource type="Script" path="res://scripts/boot_sequence.gd" id="99_boot"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_w48qg"]
 shader = ExtResource("3_ycdy4")

@@ -103,19 +103,16 @@ func reset_selection() -> void:
 func reset_active_options() -> void:
 	show_page(page)  # rebuild: discoveries / unlocks may have changed
 
-func confirm_selected(sel: Node) -> void:
+## Returns true when something was applied (the main button then closes the menu).
+func confirm_selected(sel: Node) -> bool:
 	if page != 1 or sel == null:
-		return
+		return false
 	var id: String = sel.get_meta("id", "")
 	if Collection.equip_background(id):
 		_sfx("res://sounds/fx/gamecoin.wav", -8.0)
-		var keep := selection
-		_build_rows()
-		selection = keep
-		_update_selection()
-		_update_status()
-	else:
-		_sfx("res://sounds/fx/error.mp3", -10.0)
+		return true
+	_sfx("res://sounds/fx/error.mp3", -10.0)
+	return false
 
 # ------------------------------------------------------------------ ROWS
 

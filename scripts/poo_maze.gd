@@ -436,7 +436,7 @@ func _create_static_nodes() -> void:
 	box.size = frame.size - Vector2(10, 10)
 	box.z_index = 19
 	add_child(box)
-	score_label = _make_label(box.position + Vector2(6, 0), box.size - Vector2(18, 0), 52, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
+	score_label = _make_label(box.position + Vector2(6, 0), box.size - Vector2(18, 0), 38, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
 
 	banner = _make_label(Vector2(0, PLAY_HEIGHT / 2 - 60), Vector2(PLAY_WIDTH, 120), 54, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
 	banner.add_theme_color_override("font_outline_color", OUTLINE)
@@ -591,6 +591,8 @@ func _process(delta: float) -> void:
 	hud_level.text = "LV %d" % level
 	hud_time.text = "%d:%02d" % [int(level_time) / 60, int(level_time) % 60]
 	score_label.text = str(score)
+	# Shrink long numbers so they always fit the LCD box
+	score_label.add_theme_font_size_override("font_size", 38 if score < 10000 else (32 if score < 100000 else 27))
 
 func _collide_walls() -> void:
 	var tx0 := int(floor((ball_pos.x - BALL_R - ORIGIN.x) / TILE))

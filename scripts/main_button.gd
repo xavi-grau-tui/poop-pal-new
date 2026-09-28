@@ -137,7 +137,8 @@ func _handle_hold_confirm(sel: Node) -> void:
 
 	var menu = _get_active_menu()
 	if menu and menu.has_method("confirm_selected"):
-		menu.confirm_selected(sel)
+		if menu.confirm_selected(sel):
+			_untoggle_current_menu()  # back to the pet, like after eating
 		return
 
 	# No poop yet: the first thing it gets must be food
