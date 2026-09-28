@@ -72,6 +72,8 @@ func freeze() -> void:
 
 func add_score(points: int) -> void:
 	score += points
+	# Points flow into the main LCD score as they are earned (not lost if the player quits mid-round)
+	PetState.add_score(points)
 
 # --- Error sound ---
 

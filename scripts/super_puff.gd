@@ -198,7 +198,6 @@ func _create_score_label() -> void:
 	frame.color = Color(0, 0, 0)
 	frame.position = Vector2(PLAY_LEFT + 795, PLAY_TOP + 45)
 	frame.size = Vector2(110, 70)
-	frame.z_index = 9
 	add_child(frame)
 	
 	# Background square matching LCD screen background (darker)
@@ -206,13 +205,11 @@ func _create_score_label() -> void:
 	score_bg.color = Color(0.65, 0.72, 0.6)  # darker LCD green
 	score_bg.position = Vector2(PLAY_LEFT + 800, PLAY_TOP + 50)
 	score_bg.size = Vector2(100, 60)  # sized for 3 digits
-	score_bg.z_index = 10
 	add_child(score_bg)
 	
 	# Score label with LCD font - right-aligned in box
 	score_label = Label.new()
 	score_label.position = Vector2(PLAY_LEFT + 810, PLAY_TOP + 50)
-	score_label.z_index = 11
 	score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	score_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	score_label.size = Vector2(80, 60)

@@ -383,7 +383,6 @@ func _create_static_nodes() -> void:
 	var bg := ColorRect.new()
 	bg.color = OUTLINE
 	bg.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT)
-	bg.z_index = -10
 	add_child(bg)
 
 	board = Sprite2D.new()
@@ -421,20 +420,17 @@ func _create_static_nodes() -> void:
 	lives_box = HBoxContainer.new()
 	lives_box.position = Vector2(160, 24)
 	lives_box.add_theme_constant_override("separation", 6)
-	lives_box.z_index = 20
 	add_child(lives_box)
 
 	var frame := ColorRect.new()
 	frame.color = Color(0, 0, 0)
 	frame.position = Vector2(PLAY_WIDTH - 230, 12)
 	frame.size = Vector2(205, 78)
-	frame.z_index = 19
 	add_child(frame)
 	var box := ColorRect.new()
 	box.color = Color(0.65, 0.72, 0.6)   # LCD green, like Super Puff
 	box.position = frame.position + Vector2(5, 5)
 	box.size = frame.size - Vector2(10, 10)
-	box.z_index = 19
 	add_child(box)
 	score_label = _make_label(box.position + Vector2(6, 0), box.size - Vector2(18, 0), 38, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
 
@@ -453,7 +449,6 @@ func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: C
 		l.add_theme_font_override("font", lcd_font)
 	l.add_theme_font_size_override("font_size", font_size)
 	l.add_theme_color_override("font_color", color)
-	l.z_index = 20
 	add_child(l)
 	return l
 

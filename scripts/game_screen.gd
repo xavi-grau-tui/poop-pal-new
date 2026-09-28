@@ -85,10 +85,9 @@ func set_game_music_volume(volume: float) -> void:
 		game_music_player.volume_db = linear_to_db(volume)
 
 func _on_game_ended(final_score: int) -> void:
-	# Per-game best score + progress/unlocks (game cards)
+	# Per-game best score + progress/unlocks (game cards).
+	# (The main LCD score already received these points live, via BaseMinigame.add_score.)
 	GameData.report_score(current_game_index, final_score)
-	# Every round's points add up in the main LCD score
-	PetState.add_score(final_score)
 
 func _on_restart_requested() -> void:
 	var page = current_game_index
@@ -120,6 +119,9 @@ func stop_game() -> void:
 	visible = false
 
 func stop_game_internal() -> void:
+	# Quitting mid-round still counts towards the game's best score
+	if current_game and current_game_index >= 0 and not current_game.is_game_over and current_game.score > 0:
+		GameData.report_score(current_game_index, current_game.score)
 	if current_game:
 		if current_game.has_method("freeze"):
 			current_game.freeze()
