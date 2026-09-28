@@ -111,17 +111,7 @@ func _is_food_button(b: Node) -> bool:
 	return b.target_menu != null and b.target_menu.has_method("populate_foods")
 
 func _refuse_until_first_meal() -> void:
-	var stream = load("res://sounds/fx/error.mp3") as AudioStream
-	if stream:
-		var sfx = AudioStreamPlayer.new()
-		sfx.stream = stream
-		sfx.volume_db = -10.0
-		var sound_btn = get_node_or_null("/root/PoopPal/Main UI/SoundButtons/SoundButton")
-		if sound_btn and sound_btn.button_pressed:
-			sfx.volume_db = linear_to_db(0.0)
-		add_child(sfx)
-		sfx.play()
-		sfx.finished.connect(sfx.queue_free)
+	# Silent refusal: a short buzz and the food button blinks
 	Input.vibrate_handheld(40)
 	# Point the player to the food button: it blinks bright/dark 3 times, like an LED
 	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
