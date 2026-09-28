@@ -17,14 +17,40 @@ const SAVE_PATH := "user://pet_state.json"
 ## Prototype/testing: every launch starts from zero — no poop, score 0, empty Poop-Pedia.
 const FRESH_START_ON_LAUNCH := true
 
+## Every pal. "no" = Poop-Pedia number, "from" = what it evolves from,
+## "desc" = shown once discovered, "hint" = shown while it is still "???".
 const FORMS := {
-	"sprig":        { "name": "Sprig",        "stage": 1, "family": "green",  "frames": ["res://textures/pet/forms/sprig-1.png", "res://textures/pet/forms/sprig-2.png"] },
-	"swirlet":      { "name": "Swirlet",      "stage": 1, "family": "sweet",  "frames": ["res://textures/pet/forms/swirlet-1.png", "res://textures/pet/forms/swirlet-2.png"] },
-	"nugget":       { "name": "Nugget",       "stage": 1, "family": "greasy", "frames": ["res://textures/pet/forms/nugget-1.png", "res://textures/pet/forms/nugget-2.png"] },
-	"broccolump":   { "name": "Broccolump",   "stage": 2, "family": "green",  "frames": ["res://textures/pet/forms/broccolump-1.png", "res://textures/pet/forms/broccolump-2.png"] },
-	"neapoolitan":  { "name": "Neapoolitan",  "stage": 2, "family": "sweet",  "frames": ["res://textures/pet/forms/neapoolitan-1.png", "res://textures/pet/forms/neapoolitan-2.png"] },
-	"greasy_chonk": { "name": "Greasy Chonk", "stage": 2, "family": "greasy", "frames": ["res://textures/pet/forms/greasy_chonk-1.png", "res://textures/pet/forms/greasy_chonk-2.png"] },
+	"sprig":        { "no": 1, "name": "Sprig",        "stage": 1, "family": "green",  "from": "",
+		"desc": "Hatched from a salad. Photosynthesises when nobody is looking.",
+		"hint": "Start a pal with something green.",
+		"frames": ["res://textures/pet/forms/sprig-1.png", "res://textures/pet/forms/sprig-2.png"] },
+	"broccolump":   { "no": 2, "name": "Broccolump",   "stage": 2, "family": "green",  "from": "sprig",
+		"desc": "Grown on greens. Proudly fibrous, faintly smug.",
+		"hint": "A Sprig that keeps eating its greens...",
+		"frames": ["res://textures/pet/forms/broccolump-1.png", "res://textures/pet/forms/broccolump-2.png"] },
+	"swirlet":      { "no": 3, "name": "Swirlet",      "stage": 1, "family": "sweet",  "from": "",
+		"desc": "Born from sugar. Hums when it is happy, which is always.",
+		"hint": "Start a pal with something sweet.",
+		"frames": ["res://textures/pet/forms/swirlet-1.png", "res://textures/pet/forms/swirlet-2.png"] },
+	"neapoolitan":  { "no": 4, "name": "Neapoolitan",  "stage": 2, "family": "sweet",  "from": "swirlet",
+		"desc": "Three flavours, one cherry, zero regrets.",
+		"hint": "Something sweet, then something sweeter...",
+		"frames": ["res://textures/pet/forms/neapoolitan-1.png", "res://textures/pet/forms/neapoolitan-2.png"] },
+	"nugget":       { "no": 5, "name": "Nugget",       "stage": 1, "family": "greasy", "from": "",
+		"desc": "Deep-fried at birth. Squeaks when poked.",
+		"hint": "Start a pal with something greasy.",
+		"frames": ["res://textures/pet/forms/nugget-1.png", "res://textures/pet/forms/nugget-2.png"] },
+	"greasy_chonk": { "no": 6, "name": "Greasy Chonk", "stage": 2, "family": "greasy", "from": "nugget",
+		"desc": "Glistening. Content. Do not squeeze.",
+		"hint": "What happens if a Nugget never stops eating junk?",
+		"frames": ["res://textures/pet/forms/greasy_chonk-1.png", "res://textures/pet/forms/greasy_chonk-2.png"] },
 }
+
+## Pedia order (by number)
+func pedia_order() -> Array:
+	var ids := FORMS.keys()
+	ids.sort_custom(func(a, b): return FORMS[a]["no"] < FORMS[b]["no"])
+	return ids
 
 const STARTERS := { "green": "sprig", "sweet": "swirlet", "greasy": "nugget" }
 const EVOLUTIONS := { "green": "broccolump", "sweet": "neapoolitan", "greasy": "greasy_chonk" }
