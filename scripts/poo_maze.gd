@@ -8,16 +8,17 @@ extends BaseMinigame
 ## Main button: set the current phone angle as "flat" (recalibrate).
 
 # --- Board geometry (all logic runs in play-area coordinates, 950x948) ---
-const PX := 4                         # world px per board pixel (chunky look)
+const PX := 2                         # world px per board pixel
 const TILE := 48                      # world px per tile
-const TILE_PX := TILE / PX            # 12 board px per tile
+const TILE_PX := TILE / PX            # 24 board px per tile
 const GRID := 19                      # tiles per side
 const CELLS := 6                      # maze cells per side: 2-tile corridors + 1-tile walls
-const BOARD_PX := GRID * TILE_PX      # 228
+const BOARD_PX := GRID * TILE_PX      # 456
 const ORIGIN := Vector2(19, 18)       # board top-left inside the play area
 
 # --- Ball physics ---
-const BALL_R := 17.0
+const BALL_R := 18.0
+const DETAIL := 2                     # world px per texture px for small sprites (coins, swirl)
 const ACCEL := 1500.0                 # px/s² at full tilt
 const FRICTION := 1.1                 # velocity damping per second
 const MAX_SPEED := 720.0
@@ -256,39 +257,76 @@ func _is_wall_tile(x: int, y: int) -> bool:
 
 # ================================================================== BOARD PAINTING
 
-func _is_wall_px(x: int, y: int) -> bool:
-	if x < 0 or y < 0 or x >= BOARD_PX or y >= BOARD_PX:
-		return true
-	return tiles[(y / TILE_PX) * GRID + (x / TILE_PX)] == 1
-
 func _paint_board() -> Image:
-	var img := Image.create(BOARD_PX, BOARD_PX, false, Image.FORMAT_RGBA8)
+	var n := BOARD_PX
+	var t := TILE_PX
+	# Per-tile: which sides face open floor (for bevels / outlines)
+	var up := PackedByteArray(); up.resize(GRID * GRID)
+	var dn := PackedByteArray(); dn.resize(GRID * GRID)
+	var lf := PackedByteArray(); lf.resize(GRID * GRID)
+	var rt := PackedByteArray(); rt.resize(GRID * GRID)
+	for ty in GRID:
+		for tx in GRID:
+			var i := ty * GRID + tx
+			up[i] = int(not _is_wall_tile(tx, ty - 1))
+			dn[i] = int(not _is_wall_tile(tx, ty + 1))
+			lf[i] = int(not _is_wall_tile(tx - 1, ty))
+			rt[i] = int(not _is_wall_tile(tx + 1, ty))
+
+	var data := PackedByteArray()
+	data.resize(n * n * 4)
 	var noise := RandomNumberGenerator.new()
 	noise.seed = 99
-	for y in BOARD_PX:
-		for x in BOARD_PX:
+	var k := 0
+	for y in n:
+		var ty := y / t
+		var ly := y % t
+		var grain_row := sin(y * 0.45)
+		for x in n:
+			var tx := x / t
+			var lx := x % t
+			var i := ty * GRID + tx
 			var c: Color
-			if _is_wall_px(x, y):
-				if not _is_wall_px(x, y + 1) or not _is_wall_px(x, y + 2):
-					c = WALL_SIDE                                   # front face (gives height)
-				elif not _is_wall_px(x, y - 1) or not _is_wall_px(x - 1, y):
-					c = WALL_TOP                                    # lit top/left edge
-				else:
-					c = WALL_MID
-				if not _is_wall_px(x + 1, y) or not _is_wall_px(x - 1, y) or not _is_wall_px(x, y + 1) or not _is_wall_px(x, y - 1):
+			if tiles[i] == 1:
+				var d_up := ly if up[i] else 99
+				var d_dn := (t - 1 - ly) if dn[i] else 99
+				var d_lf := lx if lf[i] else 99
+				var d_rt := (t - 1 - lx) if rt[i] else 99
+				var m := mini(mini(d_up, d_dn), mini(d_lf, d_rt))
+				if m == 0:
 					c = OUTLINE
+				elif d_dn <= 6:
+					c = WALL_SIDE.darkened(0.12 * (6 - d_dn) / 6.0)      # front face, darker at the base
+				elif d_up <= 2 or d_lf <= 2:
+					c = WALL_TOP
+				elif d_rt <= 2:
+					c = WALL_MID.darkened(0.08)
+				else:
+					c = WALL_MID.lerp(WALL_TOP, 0.25 + 0.15 * sin(x * 0.2 + y * 0.05))
 			else:
-				# Wood floor with soft horizontal grain
-				var g := 0.5 + 0.5 * sin(y * 0.9 + sin(x * 0.07 + y * 0.013) * 3.0)
-				c = WOOD.lerp(WOOD_GRAIN, g * 0.55 + noise.randf() * 0.12)
-				if _is_wall_px(x - 2, y - 3) or _is_wall_px(x - 1, y - 2):
-					c = c.darkened(0.18)                            # drop shadow
-			img.set_pixel(x, y, c)
+				var g := 0.5 + 0.5 * sin(grain_row + sin(x * 0.035 + y * 0.006) * 3.0)
+				c = WOOD.lerp(WOOD_GRAIN, g * 0.5 + noise.randf() * 0.08)
+				# Soft two-step drop shadow (light from the top-left)
+				var sx := x - 3
+				var sy := y - 6
+				if sx < 0 or sy < 0 or tiles[(sy / t) * GRID + sx / t] == 1:
+					c = c.darkened(0.2)
+				else:
+					sx = x - 6
+					sy = y - 11
+					if sx < 0 or sy < 0 or tiles[(sy / t) * GRID + sx / t] == 1:
+						c = c.darkened(0.09)
+			data[k] = c.r8
+			data[k + 1] = c.g8
+			data[k + 2] = c.b8
+			data[k + 3] = 255
+			k += 4
+	var img := Image.create_from_data(n, n, false, Image.FORMAT_RGBA8, data)
 
 	# Route line, like the ink line on a real labyrinth board
-	for i in range(path_cells.size() - 1):
-		_ink_line(img, _to_px(_cell_center(path_cells[i])), _to_px(_cell_center(path_cells[i + 1])))
-	_ink_ring(img, _to_px(start_pos), 6.5)
+	for j in range(path_cells.size() - 1):
+		_ink_line(img, _to_px(_cell_center(path_cells[j])), _to_px(_cell_center(path_cells[j + 1])))
+	_ink_ring(img, _to_px(start_pos), 13.0)
 
 	for h in holes:
 		_paint_hole(img, _to_px(h))
@@ -297,35 +335,47 @@ func _paint_board() -> Image:
 func _to_px(p: Vector2) -> Vector2:
 	return (p - ORIGIN) / PX
 
+func _blend(img: Image, x: int, y: int, col: Color, amount: float) -> void:
+	if x < 0 or y < 0 or x >= BOARD_PX or y >= BOARD_PX or amount <= 0.0:
+		return
+	img.set_pixel(x, y, img.get_pixel(x, y).lerp(col, clampf(amount, 0.0, 1.0)))
+
 func _ink_line(img: Image, a: Vector2, b: Vector2) -> void:
 	var steps := int(maxf(absf(b.x - a.x), absf(b.y - a.y)))
 	for i in steps + 1:
 		var p := a.lerp(b, float(i) / maxf(steps, 1))
-		var x := int(p.x)
-		var y := int(p.y)
-		if not _is_wall_px(x, y):
-			img.set_pixel(x, y, img.get_pixel(x, y).lerp(PATH_INK, 0.75))
+		for o: Vector2i in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
+			var x := int(p.x) + o.x
+			var y := int(p.y) + o.y
+			if not _is_wall_px(x, y):
+				_blend(img, x, y, PATH_INK, 0.7)
 
 func _ink_ring(img: Image, center: Vector2, r: float) -> void:
-	for y in range(int(center.y - r - 1), int(center.y + r + 2)):
-		for x in range(int(center.x - r - 1), int(center.x + r + 2)):
+	for y in range(int(center.y - r - 2), int(center.y + r + 3)):
+		for x in range(int(center.x - r - 2), int(center.x + r + 3)):
 			var d := Vector2(x + 0.5, y + 0.5).distance_to(center)
-			if absf(d - r) < 0.6 and not _is_wall_px(x, y):
-				img.set_pixel(x, y, img.get_pixel(x, y).lerp(PATH_INK, 0.75))
+			if not _is_wall_px(x, y):
+				_blend(img, x, y, PATH_INK, 0.75 * (1.0 - clampf(absf(d - r) - 0.5, 0.0, 1.0)))
 
 func _paint_hole(img: Image, center: Vector2) -> void:
 	var r := HOLE_R / PX
-	for y in range(int(center.y - r - 2), int(center.y + r + 2)):
-		for x in range(int(center.x - r - 2), int(center.x + r + 2)):
+	for y in range(int(center.y - r - 3), int(center.y + r + 4)):
+		for x in range(int(center.x - r - 3), int(center.x + r + 4)):
 			var off := Vector2(x + 0.5, y + 0.5) - center
 			var d := off.length()
-			if d <= r:
-				var c := HOLE_DARK
-				if d > r - 1.0 and off.y > 0:
-					c = HOLE_RIM                                    # far lip catches the light
-				img.set_pixel(x, y, c)
-			elif d <= r + 1.0 and off.y < 0:
-				img.set_pixel(x, y, img.get_pixel(x, y).darkened(0.3))
+			# darker toward the centre, lip lit on the far (lower) edge
+			var depth := clampf(d / r, 0.0, 1.0)
+			var col := HOLE_DARK.lerp(HOLE_DARK.lightened(0.25), depth * depth)
+			if d > r - 2.0 and off.y > 0:
+				col = HOLE_RIM
+			_blend(img, x, y, col, r + 0.5 - d)                  # anti-aliased edge
+			if d > r - 0.5 and d < r + 2.0 and off.y < 0:
+				_blend(img, x, y, OUTLINE, 0.35 * (1.0 - absf(d - r - 0.5) / 1.5))
+
+func _is_wall_px(x: int, y: int) -> bool:
+	if x < 0 or y < 0 or x >= BOARD_PX or y >= BOARD_PX:
+		return true
+	return tiles[(y / TILE_PX) * GRID + (x / TILE_PX)] == 1
 
 # ================================================================== NODES
 
@@ -348,45 +398,45 @@ func _create_static_nodes() -> void:
 
 	finish_sprite = Sprite2D.new()
 	finish_sprite.texture = _make_swirl_texture()
-	finish_sprite.scale = Vector2(PX, PX)
+	finish_sprite.scale = Vector2(DETAIL, DETAIL)
 	finish_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(finish_sprite)
 
 	shadow = Sprite2D.new()
 	shadow.texture = _make_shadow_texture()
-	shadow.scale = Vector2(PX, PX)
+	shadow.scale = Vector2(DETAIL, DETAIL)
 	shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(shadow)
 
 	ball = Sprite2D.new()
 	ball.texture = ball_texture
-	ball.scale = Vector2(2, 2)
+	ball.scale = Vector2.ONE
 	ball.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(ball)
 
 	# HUD lives on the top wall strip
-	hud_level = _make_label(Vector2(34, 22), Vector2(140, 44), 30, HORIZONTAL_ALIGNMENT_LEFT, Color(0.98, 0.93, 0.84))
-	hud_time = _make_label(Vector2(PLAY_WIDTH / 2 - 80, 22), Vector2(160, 44), 30, HORIZONTAL_ALIGNMENT_CENTER, Color(0.98, 0.93, 0.84))
+	hud_level = _make_label(Vector2(30, 18), Vector2(150, 52), 38, HORIZONTAL_ALIGNMENT_LEFT, Color(0.98, 0.93, 0.84))
+	hud_time = _make_label(Vector2(PLAY_WIDTH / 2 - 60, 18), Vector2(170, 52), 38, HORIZONTAL_ALIGNMENT_CENTER, Color(0.98, 0.93, 0.84))
 
 	lives_box = HBoxContainer.new()
-	lives_box.position = Vector2(150, 26)
+	lives_box.position = Vector2(160, 24)
 	lives_box.add_theme_constant_override("separation", 6)
 	lives_box.z_index = 20
 	add_child(lives_box)
 
 	var frame := ColorRect.new()
 	frame.color = Color(0, 0, 0)
-	frame.position = Vector2(PLAY_WIDTH - 155, 20)
-	frame.size = Vector2(120, 50)
+	frame.position = Vector2(PLAY_WIDTH - 230, 12)
+	frame.size = Vector2(205, 78)
 	frame.z_index = 19
 	add_child(frame)
 	var box := ColorRect.new()
 	box.color = Color(0.65, 0.72, 0.6)   # LCD green, like Super Puff
-	box.position = frame.position + Vector2(4, 4)
-	box.size = frame.size - Vector2(8, 8)
+	box.position = frame.position + Vector2(5, 5)
+	box.size = frame.size - Vector2(10, 10)
 	box.z_index = 19
 	add_child(box)
-	score_label = _make_label(box.position + Vector2(4, 0), box.size - Vector2(12, 0), 30, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
+	score_label = _make_label(box.position + Vector2(6, 0), box.size - Vector2(18, 0), 52, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
 
 	banner = _make_label(Vector2(0, PLAY_HEIGHT / 2 - 60), Vector2(PLAY_WIDTH, 120), 54, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
 	banner.add_theme_color_override("font_outline_color", OUTLINE)
@@ -416,7 +466,7 @@ func _spawn_level_nodes() -> void:
 		var cp: Dictionary = checkpoints[i]
 		var s := Sprite2D.new()
 		s.texture = coin
-		s.scale = Vector2(PX, PX)
+		s.scale = Vector2(DETAIL, DETAIL)
 		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		s.position = cp["pos"]
 		level_nodes.add_child(s)
@@ -438,7 +488,7 @@ func _refresh_lives() -> void:
 		var t := TextureRect.new()
 		t.texture = ball_texture
 		t.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		t.custom_minimum_size = Vector2(36, 36)
+		t.custom_minimum_size = Vector2(40, 40)
 		t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		t.modulate = Color(1, 1, 1, 1) if i < lives else Color(0, 0, 0, 0.35)
 		lives_box.add_child(t)
@@ -446,55 +496,16 @@ func _refresh_lives() -> void:
 # ================================================================== GENERATED TEXTURES
 
 func _make_ball_texture() -> Texture2D:
-	## The current pal, curled into a ball: squish its sprite into a circle and outline it.
-	var tex: Texture2D = null
-	if PetState.has_poop():
-		var frames := PetState.build_sprite_frames()
-		if frames:
-			tex = frames.get_frame_texture("idle", 0)
-	if not tex:
-		tex = load("res://textures/pet/poo1-1.png")
-	var src := tex.get_image()
-	if src.is_compressed():
-		src.decompress()
-	src.convert(Image.FORMAT_RGBA8)
-	src = src.get_region(src.get_used_rect())
-
-	# Average body colour fills the transparent corners of the squished sprite
-	var avg := Color(0, 0, 0, 0)
-	var count := 0
-	for y in range(0, src.get_height(), 2):
-		for x in range(0, src.get_width(), 2):
-			var p := src.get_pixel(x, y)
-			if p.a > 0.9 and p.get_luminance() > 0.25:
-				avg += p
-				count += 1
-	avg = (avg / maxf(count, 1)) if count > 0 else Color8(210, 120, 72)
-	avg.a = 1.0
-
-	const D := 18
-	src.resize(D, D, Image.INTERPOLATE_BILINEAR)
-	var out := Image.create(D, D, false, Image.FORMAT_RGBA8)
-	var c := Vector2(D / 2.0, D / 2.0)
-	for y in D:
-		for x in D:
-			var d := Vector2(x + 0.5, y + 0.5).distance_to(c)
-			if d > D / 2.0:
-				continue
-			if d > D / 2.0 - 1.2:
-				out.set_pixel(x, y, OUTLINE)
-				continue
-			var p := src.get_pixel(x, y)
-			var col := avg.lerp(p, p.a)
-			col.a = 1.0
-			# round-ball shading: light from the top-left
-			var light := 1.0 - ((x + y) / float(2 * D) - 0.35) * 0.45
-			out.set_pixel(x, y, Color(col.r * light, col.g * light, col.b * light, 1.0))
-	return ImageTexture.create_from_image(out)
+	## The current pal curled into a ball (pre-rendered per form in textures/minigames/balls/).
+	var id := PetState.form_id if PetState.has_poop() else "classic"
+	var path := "res://textures/minigames/balls/%s.png" % id
+	if not ResourceLoader.exists(path):
+		path = "res://textures/minigames/balls/classic.png"
+	return load(path)
 
 func _make_swirl_texture() -> Texture2D:
 	## The goal: a little flush swirl.
-	const S := 17
+	const S := 32
 	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
 	var c := Vector2(S / 2.0, S / 2.0)
 	for y in S:
@@ -503,20 +514,20 @@ func _make_swirl_texture() -> Texture2D:
 			var d := off.length()
 			if d > S / 2.0:
 				continue
-			var col := Color8(84, 150, 206)
-			if d > S / 2.0 - 1.1:
+			var col := Color8(84, 150, 206).lerp(Color8(40, 90, 150), 1.0 - d / (S / 2.0))
+			if d > S / 2.0 - 1.6:
 				col = OUTLINE
 			else:
-				var arm := fposmod(off.angle() * 2.0 / TAU * 3.0 + d * 0.55, 1.0)
-				if arm < 0.28:
+				var arm := fposmod(off.angle() * 3.0 / TAU + d * 0.28, 1.0)
+				if arm < 0.3:
 					col = Color8(214, 240, 252)
-				elif d < 2.2:
+				elif d < 3.5:
 					col = Color8(30, 70, 120)
 			img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
 
 func _make_coin_texture() -> Texture2D:
-	const S := 11
+	const S := 22
 	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
 	var c := Vector2(S / 2.0, S / 2.0)
 	for y in S:
@@ -525,21 +536,23 @@ func _make_coin_texture() -> Texture2D:
 			var d := off.length()
 			if d > S / 2.0:
 				continue
-			var col := Color8(230, 110, 150)
-			if d > S / 2.0 - 1.1:
+			var shade := clampf(0.5 - (off.x + off.y) / S, 0.0, 1.0)
+			var col := Color8(196, 76, 118).lerp(Color8(248, 150, 182), shade)
+			if d > S / 2.0 - 1.6:
 				col = Color8(110, 36, 70)
-			elif off.x + off.y < -2.5:
-				col = Color8(255, 196, 214)
+			elif Vector2(off.x + 3.5, off.y + 3.5).length() < 2.6:
+				col = Color8(255, 222, 232)
 			img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
 
 func _make_shadow_texture() -> Texture2D:
-	var img := Image.create(10, 6, false, Image.FORMAT_RGBA8)
-	for y in 6:
-		for x in 10:
-			var off := Vector2((x + 0.5 - 5.0) / 5.0, (y + 0.5 - 3.0) / 3.0)
-			if off.length() <= 1.0:
-				img.set_pixel(x, y, Color(0.2, 0.1, 0.05, 0.35))
+	var img := Image.create(20, 12, false, Image.FORMAT_RGBA8)
+	for y in 12:
+		for x in 20:
+			var off := Vector2((x + 0.5 - 10.0) / 10.0, (y + 0.5 - 6.0) / 6.0)
+			var l := off.length()
+			if l <= 1.0:
+				img.set_pixel(x, y, Color(0.2, 0.1, 0.05, 0.4 * (1.0 - l * l)))
 	return ImageTexture.create_from_image(img)
 
 # ================================================================== LOOP
@@ -562,14 +575,18 @@ func _process(delta: float) -> void:
 			vel = vel.limit_length(MAX_SPEED)
 			ball_pos += vel * dt
 			_collide_walls()
-		ball.rotation += vel.x * delta / BALL_R
+		var speed := vel.length()
+		if speed > 60.0:
+			ball.rotation += vel.x * delta / BALL_R
+		else:
+			ball.rotation = lerp_angle(ball.rotation, 0.0, minf(1.0, delta * 6.0))
 		_check_checkpoints()
 		_check_finish()
 		_check_holes()
 
 	if state != State.FALLING:
 		ball.position = ball_pos
-	shadow.position = ball.position + Vector2(5, 12) * (ball.scale.x / 2.0)
+	shadow.position = ball.position + Vector2(5, 14) * ball.scale.x
 	shadow.visible = state != State.FALLING
 	hud_level.text = "LV %d" % level
 	hud_time.text = "%d:%02d" % [int(level_time) / 60, int(level_time) % 60]
@@ -624,8 +641,8 @@ func _check_checkpoints() -> void:
 		Input.vibrate_handheld(20)
 		var s: Sprite2D = cp["node"]
 		var t := create_tween()
-		t.tween_property(s, "scale", Vector2(PX, PX) * 1.6, 0.12)
-		t.tween_property(s, "scale", Vector2(PX, PX), 0.15)
+		t.tween_property(s, "scale", Vector2(DETAIL, DETAIL) * 1.6, 0.12)
+		t.tween_property(s, "scale", Vector2(DETAIL, DETAIL), 0.15)
 		t.parallel().tween_property(s, "modulate", Color(0.45, 0.35, 0.3, 0.55), 0.3)
 		(cp["label"] as Label).modulate.a = 0.4
 		_float_text("+10", cp["pos"])
@@ -643,14 +660,14 @@ func _check_finish() -> void:
 	var t := create_tween()
 	t.tween_property(ball, "position", finish_pos, 0.25)
 	t.parallel().tween_property(ball, "rotation", ball.rotation + TAU * 3.0, 1.0)
-	t.parallel().tween_property(ball, "scale", Vector2(0.2, 0.2), 1.0).set_ease(Tween.EASE_IN)
+	t.parallel().tween_property(ball, "scale", Vector2(0.1, 0.1), 1.0).set_ease(Tween.EASE_IN)
 	_show_banner("LEVEL %d CLEAR!\n+%d" % [level, bonus], 1.6)
 	t.tween_interval(1.0)
 	t.tween_callback(func():
 		if not is_running:
 			return
 		level += 1
-		ball.scale = Vector2(2, 2)
+		ball.scale = Vector2.ONE
 		_build_level()
 		_show_banner("LEVEL %d" % level, 1.0))
 
@@ -663,7 +680,7 @@ func _fall_into(h: Vector2) -> void:
 	Input.vibrate_handheld(90)
 	var t := create_tween()
 	t.tween_property(ball, "position", h, 0.12)
-	t.tween_property(ball, "scale", Vector2(0.3, 0.3), 0.45).set_ease(Tween.EASE_IN)
+	t.tween_property(ball, "scale", Vector2(0.15, 0.15), 0.45).set_ease(Tween.EASE_IN)
 	t.parallel().tween_property(ball, "modulate", Color(0.2, 0.15, 0.1, 1), 0.45)
 	t.tween_callback(func():
 		if lives <= 0:
@@ -671,7 +688,7 @@ func _fall_into(h: Vector2) -> void:
 			return
 		ball_pos = respawn_pos
 		ball.position = ball_pos
-		ball.scale = Vector2(2, 2)
+		ball.scale = Vector2.ONE
 		ball.modulate = Color(1, 1, 1, 1)
 		state = State.PLAY
 		var blink := create_tween()

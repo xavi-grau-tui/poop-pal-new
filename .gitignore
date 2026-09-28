@@ -24,3 +24,6 @@ Thumbs.db
 # Android export folder (optional)
 android/build/
 android/.cinterop/
+# Art generator output
+tools/art/out/
+.venv/
