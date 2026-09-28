@@ -4,11 +4,13 @@ extends TextureButton
 @export var release_sound    : AudioStreamPlayer2D
 @export var hold_duration    := 1.0
 @export var fill_start_delay := 0.25
+@export var flush_hold_duration := 2.0  # hold on the pet view (no menu open) to flush
 
 var was_pressed        := false
 var hold_timer         := 0.0
 var filling            := false
 var selected_doughnut  : TextureProgressBar = null
+var _flushing          := false
 
 func _ready() -> void:
 	toggle_mode = false
@@ -81,6 +83,20 @@ func _process(delta: float) -> void:
 
 	hold_timer += delta
 
+	# Pet view, no menu open: hold to flush the poop
+	if not _any_menu_toggled():
+		if not PetState.has_poop() or _flushing or FoodRainSpawner.is_locked or DrinkWaterfallSpawner.is_locked:
+			return
+		var poop = get_node_or_null("../PetView/Poop")
+		var charge = clamp((hold_timer - fill_start_delay) / (flush_hold_duration - fill_start_delay), 0.0, 1.0)
+		if poop and poop.has_method("set_flush_charge"):
+			poop.set_flush_charge(charge)
+		if hold_timer >= flush_hold_duration:
+			filling = false
+			_reset_hold()
+			_flush_poop()
+		return
+
 	# Update doughnut visual if we have one (food/drink)
 	if selected_doughnut and hold_timer >= fill_start_delay:
 		var ratio = (hold_timer - fill_start_delay) / (hold_duration - fill_start_delay)
@@ -117,6 +133,11 @@ func _handle_hold_confirm(sel: Node) -> void:
 		if not _is_current_game_unlocked():
 			return
 		_launch_game()
+		return
+
+	# No poop yet: the first thing it gets must be food
+	if PetState.needs_first_meal() and not _is_food_option(sel):
+		_play_sfx("res://sounds/fx/error.mp3", -10.0)
 		return
 
 	_spawn_food_or_drink_effect(sel)
@@ -157,7 +178,7 @@ func _spawn_food_or_drink_effect(sel: Node) -> void:
 	if vbox_food and sel.get_parent() == vbox_food and sel.has_node("Icon"):
 		var icon = sel.get_node("Icon")
 		if icon.texture:
-			pet_view.get_node("FoodRainSpawner").spawn_food_chunks(icon.texture)
+			_feed_after_fall(pet_view.get_node("FoodRainSpawner"), icon.texture, sel.get_meta("food", {}))
 		return
 
 	var vbox_drink = get_node_or_null("/root/PoopPal/Main UI/Menus/FoodMenu/Menu/VBoxDrink")
@@ -171,11 +192,59 @@ func _spawn_food_or_drink_effect(sel: Node) -> void:
 			drink_spawner.stream_color = col
 			drink_spawner.spawn_drink_stream()
 
+# ------------------------------------------------------------------ PET CYCLE
+func _feed_after_fall(spawner: Node, texture: Texture2D, food: Dictionary) -> void:
+	# Let the food fall and digest first, then hatch / evolve the poop
+	await spawner.spawn_food_chunks(texture)
+	if not food.is_empty():
+		PetState.feed(food)
+	var food_menu = get_node_or_null("../Menus/FoodMenu")
+	if food_menu and food_menu.has_method("populate_foods"):
+		food_menu.populate_foods()  # fresh menu for the next meal
+
+func _flush_poop() -> void:
+	_flushing = true
+	_play_sfx("res://sounds/fx/sfx_sounds_falling8.mp3", -6.0)
+	Input.vibrate_handheld(80)
+	var poop = get_node_or_null("../PetView/Poop")
+	if poop and poop.has_method("play_flush"):
+		await poop.play_flush()
+	PetState.flush()
+	_flushing = false
+
+func _is_food_option(sel: Node) -> bool:
+	var vbox_food = get_node_or_null("/root/PoopPal/Main UI/Menus/FoodMenu/Menu/VBoxFood")
+	return vbox_food != null and sel.get_parent() == vbox_food
+
+func _any_menu_toggled() -> bool:
+	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
+		if b.button_pressed:
+			return true
+	return false
+
+func _play_sfx(path: String, volume_db: float) -> void:
+	var stream = load(path) as AudioStream
+	if not stream:
+		return
+	var sfx = AudioStreamPlayer.new()
+	sfx.stream = stream
+	sfx.volume_db = volume_db
+	var sound_btn = get_node_or_null("../SoundButtons/SoundButton")
+	if sound_btn and sound_btn.button_pressed:
+		sfx.volume_db = linear_to_db(0.0)
+	add_child(sfx)
+	sfx.play()
+	sfx.finished.connect(sfx.queue_free)
+
 # ------------------------------------------------------------------ RESET
 func _reset_hold() -> void:
 	filling     = false
 	hold_timer  = 0.0
 	was_pressed = false
+
+	var poop = get_node_or_null("../PetView/Poop")
+	if poop and poop.has_method("set_flush_charge"):
+		poop.set_flush_charge(0.0)
 
 	if selected_doughnut:
 		selected_doughnut.visible = false

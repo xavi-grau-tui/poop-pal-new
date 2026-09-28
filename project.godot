@@ -20,6 +20,8 @@ config/icon="res://icon.svg"
 FoodLibrary="*res://scripts/FoodLibrary.gd"
 DrinkLibrary="*res://scripts/DrinkLibrary.gd"
 GameData="*res://scripts/game_data.gd"
+PetState="*res://scripts/pet_state.gd"
+PetState="*res://scripts/pet_state.gd"
 
 [display]
 

@@ -56,16 +56,8 @@ func _ready():
 	populate_foods()
 
 func populate_foods():
-	var healthy = FoodLibrary.all_foods.filter(func(f): return "healthy" in f.tags)
-	var neutral = FoodLibrary.all_foods.filter(func(f): return "neutral" in f.tags)
-	var unhealthy = FoodLibrary.all_foods.filter(func(f): return "unhealthy" in f.tags)
-
-	var food_pool = []
-	if healthy.size() > 0: food_pool.append(healthy[randi() % healthy.size()])
-	if neutral.size() > 0: food_pool.append(neutral[randi() % neutral.size()])
-	if unhealthy.size() > 0: food_pool.append(unhealthy[randi() % unhealthy.size()])
-
-	food_pool.shuffle()
+	# One food per family (green / sweet / greasy) — the family drives poop evolution
+	var food_pool = FoodLibrary.get_menu_set()
 	var options = [food_option_1, food_option_2, food_option_3]
 
 	for i in range(options.size()):
@@ -74,6 +66,7 @@ func populate_foods():
 		option_node.get_node("Icon").texture = food_data.icon
 		option_node.get_node("Name").text = food_data.name
 		option_node.get_node("Kcal").text = str(food_data.kcal) + " kcal"
+		option_node.set_meta("food", food_data)
 
 func populate_drinks():
 	var healthy = DrinkLibrary.all_drinks.filter(func(d): return "healthy" in d.tags)
