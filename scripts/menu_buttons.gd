@@ -123,14 +123,25 @@ func _refuse_until_first_meal() -> void:
 		sfx.play()
 		sfx.finished.connect(sfx.queue_free)
 	Input.vibrate_handheld(40)
-	# Nudge the food button so the player knows where to go
+	# Point the player to the food button: it blinks bright/dark 3 times, like an LED
 	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
 		if _is_food_button(b):
-			b.pivot_offset = b.size / 2.0
-			var tw = b.create_tween()
-			tw.tween_property(b, "scale", Vector2(1.08, 1.08), 0.08)
-			tw.tween_property(b, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			b.blink_hint()
 			break
+
+var _blink_tween: Tween
+
+func blink_hint(times := 3, step := 0.12) -> void:
+	if _blink_tween and _blink_tween.is_running():
+		return
+	_blink_tween = create_tween()
+	for i in times:
+		_blink_tween.tween_callback(func(): texture_normal = pressed_texture)   # bright
+		_blink_tween.tween_interval(step)
+		_blink_tween.tween_callback(func(): texture_normal = normal_texture)    # dark
+		_blink_tween.tween_interval(step)
+	# settle on whatever the real toggle state is
+	_blink_tween.tween_callback(func(): texture_normal = pressed_texture if button_pressed else normal_texture)
 
 func deactivate_with_clack():
 	button_pressed = false
