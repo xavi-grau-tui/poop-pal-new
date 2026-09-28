@@ -8,6 +8,10 @@ signal background_changed(id: String)
 
 const SAVE_PATH := "user://collection.json"
 
+## Every launch starts on the default background (unlocked ones stay unlocked)
+const DEFAULT_BACKGROUND := "clouds"
+const RESET_BACKGROUND_ON_LAUNCH := true
+
 ## "layers": [far layer (CloudA), near layer (CloudB)] — drop-in replacements for the cloud textures.
 ## "unlock": how it is obtained (shown on the locked card). Default unlocked = true/false.
 const BACKGROUNDS := {
@@ -33,13 +37,16 @@ const BACKGROUNDS := {
 const BACKGROUND_ORDER := ["clouds", "tp_rolls", "mystery_1"]
 
 var owned := { "backgrounds": [] }
-var equipped_background := "clouds"
+var equipped_background := DEFAULT_BACKGROUND
 
 func _ready() -> void:
 	for id in BACKGROUNDS:
 		if BACKGROUNDS[id]["unlocked"] and id not in owned["backgrounds"]:
 			owned["backgrounds"].append(id)
 	load_data()
+	if RESET_BACKGROUND_ON_LAUNCH and equipped_background != DEFAULT_BACKGROUND:
+		equipped_background = DEFAULT_BACKGROUND
+		save_data()
 
 func is_owned(category: String, id: String) -> bool:
 	return id in owned.get(category, [])
