@@ -14,6 +14,7 @@ var game_music_player: AudioStreamPlayer2D = null
 # Map page indices to minigame scene paths.
 var game_scenes := {
 	0: "res://scenes/minigames/super_puff.tscn",
+	1: "res://scenes/minigames/poo_maze.tscn",
 }
 
 func _ready() -> void:

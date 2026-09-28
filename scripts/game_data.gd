@@ -19,7 +19,11 @@ var unlock_thresholds := {
 # Target score for 100% progress per game
 var progress_target := {
 	0: 300,  # Super Puff: 300 pipes = 100%
+	1: 1500, # Poo Maze: 1500 points = 100%
 }
+
+## Prototype/testing: games unlocked regardless of progress
+const DEBUG_UNLOCKED := [1]
 
 func _ready() -> void:
 	_init_game(0, true)   # Super Puff — unlocked by default
@@ -31,6 +35,8 @@ func _ready() -> void:
 	_init_game(6, false)
 	_init_game(7, false)
 	load_data()
+	for idx in DEBUG_UNLOCKED:
+		games[idx]["unlocked"] = true
 
 func _init_game(index: int, unlocked: bool) -> void:
 	if index not in games:

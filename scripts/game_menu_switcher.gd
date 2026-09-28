@@ -16,6 +16,12 @@ class_name GameMenuSwitcher
 
 var current_page := 0
 
+# Card art for games whose cards are still "?" placeholders in the scene.
+# Shown once the game is unlocked.
+const CARD_ART := {
+	1: { "logo": "res://textures/menus/poomaze.png", "background": "res://textures/menus/pooploopbackground.png" },
+}
+
 func _ready():
 	show_page(current_page)
 
@@ -57,6 +63,14 @@ func _update_game_card_labels(index: int) -> void:
 	var game_node = page.get_node_or_null("Game")
 	if not game_node:
 		return
+	if index in CARD_ART and GameData.is_unlocked(index):
+		var art: Dictionary = CARD_ART[index]
+		var logo = game_node.get_node_or_null("TopFrame/Control/GameLogo")
+		var bg = game_node.get_node_or_null("TopFrame/Control/Background")
+		if logo:
+			logo.texture = load(art["logo"])
+		if bg:
+			bg.texture = load(art["background"])
 	var bottom = game_node.get_node_or_null("BottomFrame")
 	if not bottom:
 		return
