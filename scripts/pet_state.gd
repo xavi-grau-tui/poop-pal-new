@@ -14,7 +14,7 @@ signal score_changed(total: int)
 
 const SAVE_PATH := "user://pet_state.json"
 
-## Prototype/testing: every launch starts from zero (no poop). Discovered forms are kept.
+## Prototype/testing: every launch starts from zero — no poop, score 0, empty Poop-Pedia.
 const FRESH_START_ON_LAUNCH := true
 
 const FORMS := {
@@ -40,6 +40,7 @@ func _ready() -> void:
 		form_id = ""
 		meals.clear()
 		score = 0
+		discovered.clear()
 		save_data()
 
 func has_poop() -> bool:
