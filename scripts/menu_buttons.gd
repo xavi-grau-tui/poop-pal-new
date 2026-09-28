@@ -135,13 +135,20 @@ func blink_hint(times := 3, step := 0.12) -> void:
 	if _blink_tween and _blink_tween.is_running():
 		return
 	_blink_tween = create_tween()
+	# Swap both textures, so it also blinks while the button is toggled (food menu open)
 	for i in times:
-		_blink_tween.tween_callback(func(): texture_normal = pressed_texture)   # bright
+		_blink_tween.tween_callback(func(): _show(pressed_texture))   # bright
 		_blink_tween.tween_interval(step)
-		_blink_tween.tween_callback(func(): texture_normal = normal_texture)    # dark
+		_blink_tween.tween_callback(func(): _show(normal_texture))    # dark
 		_blink_tween.tween_interval(step)
 	# settle on whatever the real toggle state is
-	_blink_tween.tween_callback(func(): texture_normal = pressed_texture if button_pressed else normal_texture)
+	_blink_tween.tween_callback(func():
+		texture_pressed = pressed_texture
+		texture_normal = pressed_texture if button_pressed else normal_texture)
+
+func _show(tex: Texture2D) -> void:
+	texture_normal = tex
+	texture_pressed = tex
 
 func deactivate_with_clack():
 	button_pressed = false
