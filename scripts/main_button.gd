@@ -135,6 +135,11 @@ func _handle_hold_confirm(sel: Node) -> void:
 		_launch_game()
 		return
 
+	var menu = _get_active_menu()
+	if menu and menu.has_method("confirm_selected"):
+		menu.confirm_selected(sel)
+		return
+
 	# No poop yet: the first thing it gets must be food
 	if PetState.needs_first_meal() and not _is_food_option(sel):
 		_play_sfx("res://sounds/fx/error.mp3", -10.0)
@@ -190,7 +195,7 @@ func _spawn_food_or_drink_effect(sel: Node) -> void:
 				col = sel.get_meta("color")
 				col.a = 1.0
 			drink_spawner.stream_color = col
-			drink_spawner.spawn_drink_stream()
+			_drink_after_pour(drink_spawner, sel.get_meta("drink", {}))
 
 # ------------------------------------------------------------------ PET CYCLE
 func _feed_after_fall(spawner: Node, texture: Texture2D, food: Dictionary) -> void:
@@ -201,6 +206,10 @@ func _feed_after_fall(spawner: Node, texture: Texture2D, food: Dictionary) -> vo
 	var food_menu = get_node_or_null("../Menus/FoodMenu")
 	if food_menu and food_menu.has_method("populate_foods"):
 		food_menu.populate_foods()  # fresh menu for the next meal
+
+func _drink_after_pour(spawner: Node, drink: Dictionary) -> void:
+	await spawner.spawn_drink_stream()
+	PetState.drink(drink)
 
 func _flush_poop() -> void:
 	_flushing = true
@@ -215,6 +224,12 @@ func _flush_poop() -> void:
 func _is_food_option(sel: Node) -> bool:
 	var vbox_food = get_node_or_null("/root/PoopPal/Main UI/Menus/FoodMenu/Menu/VBoxFood")
 	return vbox_food != null and sel.get_parent() == vbox_food
+
+func _get_active_menu() -> Node:
+	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
+		if b.button_pressed and b.target_menu:
+			return b.target_menu
+	return null
 
 func _any_menu_toggled() -> bool:
 	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):

@@ -1,4 +1,4 @@
-[gd_scene load_steps=103 format=4 uid="uid://ddvdpi5i0hjuf"]
+[gd_scene load_steps=104 format=4 uid="uid://ddvdpi5i0hjuf"]
 
 [ext_resource type="Texture2D" uid="uid://1ih05ji667nr" path="res://textures/pet-background/background.png" id="2_lquwl"]
 [ext_resource type="Script" uid="uid://duenauvyyugd4" path="res://scripts/audio_stream_player_2d.gd" id="2_ryguw"]
@@ -80,6 +80,7 @@
 [ext_resource type="Texture2D" uid="uid://cnotd4icjss62" path="res://textures/menus/mistery.png" id="75_5dllo"]
 [ext_resource type="PackedScene" path="res://scenes/game_screen.tscn" id="78_ygd8o"]
 [ext_resource type="Script" path="res://scripts/boot_sequence.gd" id="99_boot"]
+[ext_resource type="Script" path="res://scripts/collection_menu.gd" id="98_coll"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_w48qg"]
 shader = ExtResource("3_ycdy4")
@@ -2540,6 +2541,7 @@ offset_bottom = -448.007
 texture = ExtResource("54_rnkwl")
 
 [node name="Settings Menu" type="Node2D" parent="Main UI/Menus"]
+script = ExtResource("98_coll")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Main UI/Menus/Settings Menu"]
 libraries = {

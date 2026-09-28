@@ -28,8 +28,8 @@ func _gui_input(event):
 		get_viewport().set_input_as_handled()
 		return
 
-	# No poop yet: only the food menu can be opened
-	if PetState.needs_first_meal() and not button_pressed and not _is_food_button(self):
+	# No poop yet: games stay closed until the first meal
+	if PetState.needs_first_meal() and not button_pressed and target_menu is GameMenuSwitcher:
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			_refuse_until_first_meal()
 		accept_event()

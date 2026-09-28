@@ -89,6 +89,7 @@ func populate_drinks():
 		option_node.get_node("Name").text = drink_data.name
 		option_node.get_node("Kcal").text = str(drink_data.kcal) + " kcal"
 		option_node.set_meta("is_drink", true)
+		option_node.set_meta("drink", drink_data)
 
 		var col: Color = drink_data.color if drink_data.has("color") else Color(1, 1, 1, 0.3)
 		option_node.set_meta("color", col)

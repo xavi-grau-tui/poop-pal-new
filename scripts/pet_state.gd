@@ -9,6 +9,8 @@ extends Node
 
 signal form_changed(form_id: String, reason: String)  # reason: "hatch" | "evolve" | "flush" | "load"
 signal fed(food: Dictionary)
+signal drank(drink: Dictionary)
+signal score_changed(total: int)
 
 const SAVE_PATH := "user://pet_state.json"
 
@@ -30,12 +32,14 @@ const EVOLUTIONS := { "green": "broccolump", "sweet": "neapoolitan", "greasy": "
 var form_id := ""          # "" = no poop yet, waiting for the first meal
 var meals: Array = []      # food families eaten this cycle, in order
 var discovered: Array = [] # every form ever reached
+var score := 0             # main LCD score: every minigame round adds its points
 
 func _ready() -> void:
 	load_data()
 	if FRESH_START_ON_LAUNCH:
 		form_id = ""
 		meals.clear()
+		score = 0
 		save_data()
 
 func has_poop() -> bool:
@@ -77,6 +81,16 @@ func feed(food: Dictionary) -> void:
 	else:
 		save_data()
 
+func drink(drink_data: Dictionary) -> void:
+	drank.emit(drink_data)
+
+func add_score(points: int) -> void:
+	if points <= 0:
+		return
+	score += points
+	save_data()
+	score_changed.emit(score)
+
 func flush() -> void:
 	if form_id == "":
 		return
@@ -107,7 +121,7 @@ func _set_form(id: String, reason: String) -> void:
 func save_data() -> void:
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({ "form_id": form_id, "meals": meals, "discovered": discovered }))
+		file.store_string(JSON.stringify({ "form_id": form_id, "meals": meals, "discovered": discovered, "score": score }))
 
 func load_data() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
@@ -122,3 +136,4 @@ func load_data() -> void:
 			form_id = ""
 		meals = parsed.get("meals", [])
 		discovered = parsed.get("discovered", [])
+		score = int(parsed.get("score", 0))

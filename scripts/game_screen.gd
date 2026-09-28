@@ -85,10 +85,10 @@ func set_game_music_volume(volume: float) -> void:
 		game_music_player.volume_db = linear_to_db(volume)
 
 func _on_game_ended(final_score: int) -> void:
-	var delta = GameData.report_score(current_game_index, final_score)
-	var score_label = get_node_or_null("/root/PoopPal/Main UI/LCD Screen/ScoreCounter/ScoreCounter")
-	if score_label:
-		score_label.text = "%06d" % GameData.get_total_score()
+	# Per-game best score + progress/unlocks (game cards)
+	GameData.report_score(current_game_index, final_score)
+	# Every round's points add up in the main LCD score
+	PetState.add_score(final_score)
 
 func _on_restart_requested() -> void:
 	var page = current_game_index
