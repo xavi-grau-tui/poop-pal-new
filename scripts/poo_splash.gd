@@ -80,6 +80,7 @@ var bubbles: Array[Dictionary] = []
 var tex := {}
 var lcd_font: Font
 var world: Node2D
+var net_layer: Node2D
 var bubble_layer: Node2D
 var hud_level: Label
 var hud_time: Label
@@ -143,14 +144,13 @@ func _place_cups() -> void:
 		cups.append(c)
 
 func _make_cup(center: Vector2, points: int) -> Dictionary:
-	# see-through net + solid rim, both drawn over the balls so a ball is seen falling
-	# through the basket and dropping out of the bottom of the net
+	# see-through net + solid rim, drawn over the balls (net_layer comes after world) so a
+	# ball is seen falling through the basket and dropping out of the bottom of the net.
+	# (Layering by tree order only: a z_index would escape the game screen's clip.)
 	var net := _sprite(tex["cup_net"], center)
-	net.z_index = 1
-	world.add_child(net)
+	net_layer.add_child(net)
 	var rim := _sprite(tex["cup_rim"], center)
-	rim.z_index = 1
-	world.add_child(rim)
+	net_layer.add_child(rim)
 	var label := _make_label(center + Vector2(-45, -CUP_H / 2.0 - 34), Vector2(90, 30), 22, HORIZONTAL_ALIGNMENT_CENTER, Color(0.2, 0.3, 0.38))
 	label.text = str(points)
 	return { "pos": center, "rim": center.y - CUP_H / 2.0 + 12.0, "full": false, "points": points, "net": net, "rim_node": rim, "label": label }
@@ -412,8 +412,9 @@ func _create_static_nodes() -> void:
 
 	world = Node2D.new()
 	add_child(world)
+	net_layer = Node2D.new()
+	add_child(net_layer)
 	bubble_layer = Node2D.new()
-	bubble_layer.z_index = 2
 	add_child(bubble_layer)
 
 	hud_level = _make_label(Vector2(40, 34), Vector2(160, 52), 38, HORIZONTAL_ALIGNMENT_LEFT, Color(0.2, 0.3, 0.38))
@@ -434,7 +435,6 @@ func _create_static_nodes() -> void:
 	banner.add_theme_color_override("font_outline_color", OUTLINE)
 	banner.add_theme_constant_override("outline_size", 14)
 	banner.modulate.a = 0.0
-	banner.z_index = 3
 
 func _refresh_hud() -> void:
 	hud_time.text = "%d" % ceili(time_left)
@@ -474,7 +474,6 @@ func _float_text(text: String, at: Vector2) -> void:
 	var l := _make_label(at + Vector2(-60, -70), Vector2(120, 40), 28, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.95, 0.85))
 	l.add_theme_color_override("font_outline_color", OUTLINE)
 	l.add_theme_constant_override("outline_size", 10)
-	l.z_index = 3
 	l.text = text
 	var t := create_tween()
 	t.tween_property(l, "position:y", l.position.y - 40, 0.6)
@@ -530,11 +529,4 @@ func _pump(i: int, down: bool) -> void:
 func end_game() -> void:
 	jets[0]["held"] = false
 	jets[1]["held"] = false
-	super.end_game()
-	# the game over screen goes over the baskets (their nets are drawn on a higher layer)
-	if game_over_overlay:
-		game_over_overlay.z_index = 10
-		for k in ["title", "score_text", "restart_label", "exit_label"]:
-			var n = game_over_overlay.get_meta(k)
-			if is_instance_valid(n):
-				n.z_index = 11
+	super.end_game()        # (its overlay is added last, so it covers the baskets)
