@@ -1,40 +1,42 @@
 extends BaseMinigame
-## Poo Splash — the classic water ring toy. Two nozzles at the bottom of a water tank
-## blow jets of bubbles; float the rings onto the pegs (odd levels) or the balls into
-## the cups (even levels) before the timer runs out.
+## Poo Splash — the classic water toy. Two pumps at the bottom of a water tank blow jets
+## of bubbles; shoot the balls up into the baskets before the timer runs out. Higher
+## baskets are worth more. The bottom is a pachinko: balls that miss bounce down through
+## the pins and the sloped floor always rolls them back onto a pump.
 ##
-## Main button: LEFT jet (hold to keep pumping, the pump runs dry after a moment).
-## Forward button: a quick burst from the RIGHT jet.
-## Desktop: also Left/Right arrow keys (or A / D) for the two jets.
+## Main button: LEFT pump (hold to keep pumping, it runs dry after a moment).
+## Forward button: a quick burst from the RIGHT pump.
+## Desktop: also Left/Right arrow keys (or A / D) for the two pumps.
 
 const S := 3.0                          # world px per art pixel (sprites are drawn x3)
 const TANK_L := 24.0                    # water area inside the plastic frame
 const TANK_R := 926.0
 const TANK_T := 24.0
+
+# Funnel floor (matches tools/art/minigame_art.py): lowest at each nozzle
+const NOZZLES := [237.0, 713.0]
 const FLOOR_Y := 866.0
+const FLOOR_SLOPE := 0.42
 
 # --- Water physics ---
-const GRAVITY := 230.0                  # things sink slowly
-const DRAG := 1.5                       # velocity damping per second
-const MAX_SPEED := 760.0
-const JET_FORCE := 1500.0
-const JET_REACH := 760.0                # height where the jet has faded out
+const GRAVITY := 260.0                  # things sink slowly
+const DRAG := 1.4                       # velocity damping per second
+const MAX_SPEED := 800.0
+const JET_FORCE := 1850.0
+const JET_REACH := 780.0                # height where the jet has faded out
 const JET_SPREAD := 0.42                # cone widening per px of height
-const PUMP_TIME := 0.9                  # held main jet runs dry after this long
-const BURST_TIME := 0.45                # forward burst length
+const PUMP_TIME := 0.9                  # held main pump runs dry after this long
+const BURST_TIME := 0.6                 # forward burst length
+const BOUNCE := 0.45
 
 # --- Pieces ---
-const RING_R := 30.0                    # collision radius (ring 22 art px wide)
 const BALL_R := 16.0
-const PEG_HALF := 7.0                   # half width of the peg stick
-const PEG_H := 180.0                    # peg height (60 art px)
-const HOOK_TOL := 16.0                  # how centred a ring must be to hook
+const PIN_R := 9.0
 const CUP_W := 90.0
 const CUP_H := 78.0
-const RING_STACK := 16.0
+const JET_CLEAR := 95.0                 # no pins this close to a nozzle column
 const LEVEL_TIME := 60.0
 
-const RING_COLORS := ["pink", "yellow", "mint", "blue"]
 const BALL_COLORS := ["pink", "yellow", "mint"]
 const OUTLINE := Color8(74, 44, 32)
 
@@ -44,16 +46,18 @@ var state := State.PLAY
 var level := 1
 var time_left := LEVEL_TIME
 var jets := [
-	{ "x": 190.0, "power": 0.0, "held": false, "hold_time": 0.0, "burst": 0.0 },
-	{ "x": 760.0, "power": 0.0, "held": false, "hold_time": 0.0, "burst": 0.0 },
+	{ "x": NOZZLES[0], "power": 0.0, "held": false, "hold_time": 0.0, "burst": 0.0 },
+	{ "x": NOZZLES[1], "power": 0.0, "held": false, "hold_time": 0.0, "burst": 0.0 },
 ]
-var pieces: Array[Dictionary] = []      # { kind, pos, vel, r, node, tumble, spin, done }
-var targets: Array[Dictionary] = []     # { kind, pos, count, back, front }
+var balls: Array[Dictionary] = []       # { pos, vel, node, done }
+var cups: Array[Dictionary] = []        # { pos, rim, full, points, back, front, label }
+var pins: Array[Vector2] = []
 var bubbles: Array[Dictionary] = []
 
 var tex := {}
 var lcd_font: Font
 var world: Node2D
+var pin_layer: Node2D
 var bubble_layer: Node2D
 var hud_level: Label
 var hud_time: Label
@@ -65,10 +69,8 @@ var _key_jets := [false, false]
 func _ready() -> void:
 	game_music_path = "res://sounds/music/Frédéric Chopin - Nocturne： Op. 9 No. 2 [8 bits].mp3"
 	lcd_font = load("res://fonts/pixChicago.ttf")
-	for n in ["tank", "peg", "cup_back", "cup_front", "nozzle", "bubble_big", "bubble_small"]:
+	for n in ["tank", "cup_back", "cup_front", "nozzle", "bubble_big", "bubble_small", "pin"]:
 		tex[n] = load("res://textures/minigames/splash/%s.png" % n)
-	for c in RING_COLORS:
-		tex["ring_" + c] = load("res://textures/minigames/splash/ring_%s.png" % c)
 	for c in BALL_COLORS:
 		tex["ball_" + c] = load("res://textures/minigames/splash/ball_%s.png" % c)
 	_create_static_nodes()
@@ -82,62 +84,79 @@ func start_game() -> void:
 
 # ================================================================== LEVEL
 
+func floor_at(x: float) -> float:
+	var d := minf(absf(x - NOZZLES[0]), absf(x - NOZZLES[1]))
+	return FLOOR_Y - FLOOR_SLOPE * d
+
 func _build_level() -> void:
-	for p in pieces:
-		p["node"].queue_free()
-	for t in targets:
-		for k in ["back", "front", "stick"]:
-			if t.has(k):
-				t[k].queue_free()
-	pieces.clear()
-	targets.clear()
+	for b in balls:
+		b["node"].queue_free()
+	for c in cups:
+		for k in ["back", "front", "label"]:
+			c[k].queue_free()
+	for p in pin_layer.get_children():
+		p.queue_free()
+	balls.clear()
+	cups.clear()
+	pins.clear()
 	rng.seed = 4271 * level + 3
 
-	var rings := level % 2 == 1
-	var n_targets := 2 + int(level >= 3) + int(level >= 7)
-	var n_pieces := mini(2 + (level + 1) / 2, 8)
-	time_left = LEVEL_TIME + n_pieces * 4.0
+	var n_balls := mini(3 + level, 9)
+	var n_cups := mini(n_balls + 3, 12)
+	time_left = LEVEL_TIME + n_balls * 3.0
+	_place_cups(n_cups)
+	_place_pins()
 
-	# targets spread across the tank, a bit of random height for variety
-	var span := (TANK_R - TANK_L) / n_targets
-	for i in n_targets:
-		var x := TANK_L + span * (i + 0.5) + rng.randf_range(-span * 0.15, span * 0.15)
-		if rings:
-			var base_y := FLOOR_Y - rng.randf_range(0.0, 140.0) * float(level > 2)
-			targets.append(_make_peg(Vector2(x, base_y)))
-		else:
-			var y := rng.randf_range(330.0, 560.0)
-			targets.append(_make_cup(Vector2(x, y)))
-
-	for i in n_pieces:
-		var pos := Vector2(rng.randf_range(TANK_L + 60, TANK_R - 60), FLOOR_Y - 40 - rng.randf() * 30)
-		if rings:
-			pieces.append(_make_piece("ring", RING_COLORS[i % RING_COLORS.size()], pos, RING_R))
-		else:
-			pieces.append(_make_piece("ball", BALL_COLORS[i % BALL_COLORS.size()], pos, BALL_R))
+	for i in n_balls:
+		var jx: float = NOZZLES[i % 2]
+		var pos := Vector2(jx + rng.randf_range(-120, 120), 640.0 - rng.randf() * 80.0)
+		var s := _sprite(tex["ball_" + BALL_COLORS[i % BALL_COLORS.size()]], pos)
+		world.add_child(s)
+		balls.append({ "pos": pos, "vel": Vector2.ZERO, "node": s, "done": false })
 	hud_level.text = "LV %d" % level
 	state = State.PLAY
 
-func _make_piece(kind: String, color: String, pos: Vector2, r: float) -> Dictionary:
-	var s := _sprite(tex[kind + "_" + color], pos)
-	world.add_child(s)
-	return { "kind": kind, "pos": pos, "vel": Vector2.ZERO, "r": r, "node": s,
-		"tumble": rng.randf() * TAU, "spin": 0.0, "done": false }
+func _place_cups(n: int) -> void:
+	# spread over the upper tank on a jittered grid; higher = more points
+	var cols := 4
+	var slots: Array[Vector2] = []
+	for r in 3:
+		for c in cols:
+			var x := TANK_L + 90.0 + c * (TANK_R - TANK_L - 180.0) / (cols - 1)
+			slots.append(Vector2(x + (60.0 if r % 2 == 1 else 0.0) - 30.0, 190.0 + r * 150.0))
+	for i in range(slots.size() - 1, 0, -1):             # seeded shuffle: same layout per level
+		var j := rng.randi_range(0, i)
+		var tmp := slots[i]
+		slots[i] = slots[j]
+		slots[j] = tmp
+	for i in mini(n, slots.size()):
+		var p := slots[i] + Vector2(rng.randf_range(-25, 25), rng.randf_range(-20, 20))
+		var points := 300 if p.y < 280 else (200 if p.y < 430 else 100)
+		cups.append(_make_cup(p, points))
 
-func _make_peg(base: Vector2) -> Dictionary:
-	var stick := _sprite(tex["peg"], base - Vector2(0, PEG_H / 2.0))
-	world.add_child(stick)
-	world.move_child(stick, 0)
-	return { "kind": "peg", "pos": base, "top": base.y - PEG_H + 6.0, "count": 0, "stick": stick }
+func _place_pins() -> void:
+	# pachinko rows above the funnels, leaving a clear column over each pump
+	for r in 4:
+		var y := 600.0 + r * 46.0
+		var x := TANK_L + 36.0 + (34.0 if r % 2 == 1 else 0.0)
+		while x < TANK_R - 20.0:
+			var near_jet := absf(x - NOZZLES[0]) < JET_CLEAR or absf(x - NOZZLES[1]) < JET_CLEAR
+			var near_wall := x < TANK_L + 50.0 or x > TANK_R - 50.0
+			if not near_jet and not near_wall and y < floor_at(x) - 75.0:   # room for balls to roll under
+				pins.append(Vector2(x, y))
+				pin_layer.add_child(_sprite(tex["pin"], Vector2(x, y)))
+			x += 68.0
 
-func _make_cup(center: Vector2) -> Dictionary:
+func _make_cup(center: Vector2, points: int) -> Dictionary:
 	var back := _sprite(tex["cup_back"], center)
 	world.add_child(back)
 	world.move_child(back, 0)
 	var front := _sprite(tex["cup_front"], center)
-	front.z_index = 1                                   # in front of the balls it catches
+	front.z_index = 1                                   # in front of the ball it catches
 	world.add_child(front)
-	return { "kind": "cup", "pos": center, "rim": center.y - CUP_H / 2.0 + 12.0, "count": 0, "back": back, "front": front }
+	var label := _make_label(center + Vector2(-45, -CUP_H / 2.0 - 34), Vector2(90, 30), 22, HORIZONTAL_ALIGNMENT_CENTER, Color(0.2, 0.3, 0.38))
+	label.text = str(points)
+	return { "pos": center, "rim": center.y - CUP_H / 2.0 + 12.0, "full": false, "points": points, "back": back, "front": front, "label": label }
 
 # ================================================================== LOOP
 
@@ -153,12 +172,14 @@ func _process(delta: float) -> void:
 			_refresh_hud()
 			end_game()
 			return
-		const STEPS := 3
+		const STEPS := 4
 		for i in STEPS:
 			_physics(delta / STEPS)
-		_check_targets()
-	for p in pieces:
-		_draw_piece(p, delta)
+		_check_cups()
+	for b in balls:
+		if not b["done"]:
+			b["node"].position = b["pos"]
+			b["node"].rotation += b["vel"].x * delta / BALL_R
 	_refresh_hud()
 
 func _update_jets(delta: float) -> void:
@@ -176,7 +197,6 @@ func _update_jets(delta: float) -> void:
 			want = maxf(want, clampf(j["burst"] / BURST_TIME * 1.6, 0.0, 1.0))
 		var rate := 14.0 if want > j["power"] else 5.0
 		j["power"] = move_toward(j["power"], want, rate * delta)
-		# bubbles
 		if j["power"] > 0.05 and rng.randf() < j["power"] * delta * 40.0:
 			_spawn_bubble(Vector2(j["x"] + rng.randf_range(-10, 10), FLOOR_Y - 20))
 
@@ -192,36 +212,38 @@ func _jet_force(p: Vector2) -> Vector2:
 		var w := 40.0 + h * JET_SPREAD
 		var fall := clampf(1.0 - h / JET_REACH, 0.15, 1.0)
 		var k: float = j["power"] * exp(-(dx / w) * (dx / w)) * fall
-		f += Vector2(signf(dx) * 0.35 + rng.randf_range(-0.25, 0.25), -1.0) * JET_FORCE * k
+		# straight up at the nozzle, fanning out higher up (so balls leave the pit upwards)
+		var fan := clampf((h - 120.0) / 350.0, 0.0, 1.0)
+		f += Vector2((signf(dx) * 0.4 + randf_range(-0.25, 0.25)) * fan, -1.0) * JET_FORCE * k
 		# the whole tank churns a little: a wide, weak current that swirls away from the jet
-		var wide: float = j["power"] * exp(-(dx / (w * 4.0)) * (dx / (w * 4.0))) * 0.22
-		f += Vector2(signf(dx) * 0.8, -0.6) * JET_FORCE * wide
+		var wide: float = j["power"] * exp(-(dx / (w * 4.0)) * (dx / (w * 4.0))) * 0.2
+		f += Vector2(signf(dx) * 0.8 * fan, -0.6) * JET_FORCE * wide
 	return f
 
 func _physics(dt: float) -> void:
-	for p in pieces:
-		if p["done"]:
+	for b in balls:
+		if b["done"]:
 			continue
-		var v: Vector2 = p["vel"]
+		var v: Vector2 = b["vel"]
 		v.y += GRAVITY * dt
-		v += _jet_force(p["pos"]) * dt
+		v += _jet_force(b["pos"]) * dt
 		v *= maxf(0.0, 1.0 - DRAG * dt)
 		v = v.limit_length(MAX_SPEED)
-		var prev: Vector2 = p["pos"]
-		p["pos"] = prev + v * dt
-		p["vel"] = v
-		p["prev"] = prev
-		_collide_tank(p)
-		_collide_targets(p)
-	# pieces bump into each other
-	for a in pieces.size():
-		for b in range(a + 1, pieces.size()):
-			var pa: Dictionary = pieces[a]
-			var pb: Dictionary = pieces[b]
+		b["prev"] = b["pos"]
+		b["pos"] += v * dt
+		b["vel"] = v
+		_collide_tank(b, dt)
+		_collide_pins(b)
+		_collide_cups(b)
+	# balls bump into each other
+	for a in balls.size():
+		for c in range(a + 1, balls.size()):
+			var pa: Dictionary = balls[a]
+			var pb: Dictionary = balls[c]
 			if pa["done"] or pb["done"]:
 				continue
 			var d: Vector2 = pb["pos"] - pa["pos"]
-			var min_d: float = (pa["r"] + pb["r"]) * 0.8
+			var min_d := BALL_R * 2.0
 			if d.length_squared() < min_d * min_d and d.length_squared() > 0.01:
 				var n := d.normalized()
 				var push := (min_d - d.length()) / 2.0
@@ -232,83 +254,90 @@ func _physics(dt: float) -> void:
 					pa["vel"] += n * rel * 0.5
 					pb["vel"] -= n * rel * 0.5
 
-func _collide_tank(p: Dictionary) -> void:
-	var r: float = p["r"]
-	var pos: Vector2 = p["pos"]
-	var v: Vector2 = p["vel"]
-	if pos.x < TANK_L + r:
-		pos.x = TANK_L + r; v.x = absf(v.x) * 0.4
-	elif pos.x > TANK_R - r:
-		pos.x = TANK_R - r; v.x = -absf(v.x) * 0.4
-	if pos.y < TANK_T + r:
-		pos.y = TANK_T + r; v.y = absf(v.y) * 0.3
-	var floor_r := r * (0.45 if p["kind"] == "ring" else 1.0)   # rings lie flat on the sand
-	if pos.y > FLOOR_Y - floor_r:
-		pos.y = FLOOR_Y - floor_r
-		v.y = minf(v.y, 0.0)
-		v.x *= 0.92
-	p["pos"] = pos
-	p["vel"] = v
+func _collide_tank(b: Dictionary, dt: float) -> void:
+	var pos: Vector2 = b["pos"]
+	var v: Vector2 = b["vel"]
+	if pos.x < TANK_L + BALL_R:
+		pos.x = TANK_L + BALL_R; v.x = absf(v.x) * BOUNCE
+	elif pos.x > TANK_R - BALL_R:
+		pos.x = TANK_R - BALL_R; v.x = -absf(v.x) * BOUNCE
+	if pos.y < TANK_T + BALL_R:
+		pos.y = TANK_T + BALL_R; v.y = absf(v.y) * 0.3
+	# sloped floor: everything rolls down to the nearest pump
+	var fy := floor_at(pos.x)
+	if pos.y > fy - BALL_R:
+		pos.y = fy - BALL_R
+		var near: float = NOZZLES[0] if absf(pos.x - NOZZLES[0]) < absf(pos.x - NOZZLES[1]) else NOZZLES[1]
+		var side := signf(pos.x - near)
+		var n := Vector2(side * FLOOR_SLOPE, -1.0).normalized()   # surface normal (up)
+		var into := v.dot(n)
+		if into < 0.0:
+			v -= n * into * (1.0 + BOUNCE * 0.3)
+		v.x -= side * 420.0 * dt                                  # roll down the slope
+		if absf(pos.x - near) < 8.0:
+			v.x *= 0.85                                           # settle right over the nozzle
+	b["pos"] = pos
+	b["vel"] = v
 
-func _collide_targets(p: Dictionary) -> void:
-	for t in targets:
-		if t["kind"] == "peg":
-			# the stick is solid for anything not threaded on it
-			var dx: float = p["pos"].x - t["pos"].x
-			var r: float = p["r"] * (0.35 if p["kind"] == "ring" else 1.0)
-			if p["pos"].y > t["top"] and absf(dx) < PEG_HALF + r:
-				if p["kind"] == "ring" and absf(dx) < HOOK_TOL:
-					continue                                    # centred: it's being threaded
-				p["pos"].x = t["pos"].x + signf(dx if dx != 0 else 1.0) * (PEG_HALF + r)
-				p["vel"].x *= -0.3
-		else:
-			# cup walls are solid; only the open top lets things in
-			var c: Vector2 = t["pos"]
-			var half := Vector2(CUP_W / 2.0, CUP_H / 2.0)
-			var d: Vector2 = p["pos"] - c
-			if absf(d.x) < half.x + p["r"] and absf(d.y) < half.y + p["r"]:
-				var inside_mouth: bool = p["kind"] == "ball" and absf(d.x) < half.x - p["r"] and p["pos"].y < t["rim"] + 6
-				if inside_mouth:
-					continue
-				var ox: float = half.x + p["r"] - absf(d.x)
-				var oy: float = half.y + p["r"] - absf(d.y)
-				if ox < oy:
-					p["pos"].x += signf(d.x) * ox
-					p["vel"].x *= -0.35
-				else:
-					p["pos"].y += signf(d.y) * oy
-					p["vel"].y *= -0.35
+func _collide_pins(b: Dictionary) -> void:
+	for p in pins:
+		var d: Vector2 = b["pos"] - p
+		var min_d := BALL_R + PIN_R
+		if d.length_squared() < min_d * min_d:
+			var n := d.normalized() if d.length_squared() > 0.01 else Vector2.UP
+			b["pos"] = p + n * min_d
+			var v: Vector2 = b["vel"]
+			var into := v.dot(n)
+			if into < 0.0:
+				v -= n * into * (1.0 + BOUNCE)
+				v.x += randf_range(-30, 30)                        # pachinko chaos
+			if absf(n.x) < 0.35 and n.y < 0.0:
+				v.x += (1.0 if randf() < 0.5 else -1.0) * 60.0     # never balance on top of a pin
+			b["vel"] = v
 
-func _check_targets() -> void:
-	for p in pieces:
-		if p["done"] or not p.has("prev"):
+func _collide_cups(b: Dictionary) -> void:
+	# cup walls are solid; only the open top of an empty cup lets a ball in
+	for c in cups:
+		var half := Vector2(CUP_W / 2.0, CUP_H / 2.0)
+		var d: Vector2 = b["pos"] - c["pos"]
+		if absf(d.x) >= half.x + BALL_R or absf(d.y) >= half.y + BALL_R:
 			continue
-		for t in targets:
-			if t["kind"] == "peg" and p["kind"] == "ring":
-				var dx: float = absf(p["pos"].x - t["pos"].x)
-				if p["vel"].y > 0 and dx < HOOK_TOL and p["prev"].y <= t["top"] and p["pos"].y > t["top"]:
-					_score_piece(p, t, Vector2(t["pos"].x, t["pos"].y - 16 - t["count"] * RING_STACK))
-					break
-			elif t["kind"] == "cup" and p["kind"] == "ball":
-				var dx: float = absf(p["pos"].x - t["pos"].x)
-				if p["vel"].y > 0 and dx < CUP_W / 2.0 - BALL_R and p["prev"].y <= t["rim"] and p["pos"].y > t["rim"]:
-					var slot: int = t["count"]
-					var rest: Vector2 = t["pos"] + Vector2((slot % 3 - 1) * 24.0, CUP_H / 2.0 - 26.0 - (slot / 3) * 22.0)
-					_score_piece(p, t, rest)
-					break
+		var in_mouth: bool = not c["full"] and absf(d.x) < half.x - BALL_R and b["pos"].y < c["rim"] + 6
+		if in_mouth:
+			continue
+		var ox: float = half.x + BALL_R - absf(d.x)
+		var oy: float = half.y + BALL_R - absf(d.y)
+		if ox < oy:
+			b["pos"].x += signf(d.x) * ox
+			b["vel"].x *= -BOUNCE
+		else:
+			b["pos"].y += signf(d.y) * oy
+			b["vel"].y *= -BOUNCE
 
-func _score_piece(p: Dictionary, t: Dictionary, rest: Vector2) -> void:
-	p["done"] = true
-	t["count"] += 1
-	p["vel"] = Vector2.ZERO
-	var node: Sprite2D = p["node"]
+func _check_cups() -> void:
+	for b in balls:
+		if b["done"] or not b.has("prev"):
+			continue
+		for c in cups:
+			if c["full"]:
+				continue
+			var dx: float = absf(b["pos"].x - c["pos"].x)
+			if b["vel"].y > 0 and dx < CUP_W / 2.0 - BALL_R and b["prev"].y <= c["rim"] and b["pos"].y > c["rim"]:
+				_score_ball(b, c)
+				break
+
+func _score_ball(b: Dictionary, c: Dictionary) -> void:
+	b["done"] = true
+	c["full"] = true
+	var rest: Vector2 = c["pos"] + Vector2(0, CUP_H / 2.0 - 30.0)
 	var tw := create_tween()
-	tw.tween_property(node, "position", rest, 0.35).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
-	p["pos"] = rest
-	add_score(100)
-	_float_text("+100", rest)
+	tw.tween_property(b["node"], "position", rest, 0.3).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	b["pos"] = rest
+	c["label"].modulate.a = 0.3
+	add_score(c["points"])
+	_float_text("+%d" % c["points"], rest)
 	_sfx("res://sounds/fx/gamecoin.wav", -9.0)
-	for q in pieces:
+	for q in balls:
 		if not q["done"]:
 			return
 	_level_clear()
@@ -326,33 +355,13 @@ func _level_clear() -> void:
 	_build_level()
 	_show_banner("Level %d" % level, 1.0)
 
-# ================================================================== DRAWING
-
-func _draw_piece(p: Dictionary, delta: float) -> void:
-	var node: Sprite2D = p["node"]
-	if p["done"]:
-		if p["kind"] == "ring":
-			node.scale.y = lerpf(node.scale.y, S * 0.38, minf(1.0, delta * 10.0))   # lies flat on the peg
-			node.rotation = lerp_angle(node.rotation, 0.0, minf(1.0, delta * 10.0))
-		return
-	node.position = p["pos"]
-	if p["kind"] == "ring":
-		# tumbling in the water: the ring turns in 3D, faked by squashing it
-		var v: Vector2 = p["vel"]
-		p["tumble"] += (v.length() * 0.012 + 0.3) * delta
-		var on_floor: bool = p["pos"].y >= FLOOR_Y - p["r"] * 0.45 - 0.5
-		var flat := S * 0.38
-		var target_y: float = flat if on_floor and v.length() < 40.0 else S * (0.38 + 0.62 * absf(cos(p["tumble"])))
-		node.scale = Vector2(S, lerpf(node.scale.y, target_y, minf(1.0, delta * 8.0)))
-		node.rotation = lerp_angle(node.rotation, clampf(v.x * 0.0012, -0.5, 0.5), minf(1.0, delta * 6.0))
-	else:
-		node.rotation += p["vel"].x * delta / BALL_R
+# ================================================================== BUBBLES
 
 func _spawn_bubble(at: Vector2) -> void:
-	var big := rng.randf() < 0.35
+	var big := randf() < 0.35
 	var s := _sprite(tex["bubble_big" if big else "bubble_small"], at)
 	bubble_layer.add_child(s)
-	bubbles.append({ "node": s, "vy": -rng.randf_range(260, 420), "phase": rng.randf() * TAU, "x": at.x })
+	bubbles.append({ "node": s, "vy": -randf_range(260, 420), "phase": randf() * TAU, "x": at.x })
 
 func _update_bubbles(delta: float) -> void:
 	for i in range(bubbles.size() - 1, -1, -1):
@@ -384,10 +393,11 @@ func _create_static_nodes() -> void:
 		print_art.modulate = Color(1, 1, 1, 0.16)
 		add_child(print_art)
 
-	for j in jets:
-		var nz := _sprite(tex["nozzle"], Vector2(j["x"], FLOOR_Y - 12))
-		add_child(nz)
+	for x in NOZZLES:
+		add_child(_sprite(tex["nozzle"], Vector2(x, FLOOR_Y - 12)))
 
+	pin_layer = Node2D.new()
+	add_child(pin_layer)
 	world = Node2D.new()
 	add_child(world)
 	bubble_layer = Node2D.new()
@@ -417,8 +427,7 @@ func _create_static_nodes() -> void:
 func _refresh_hud() -> void:
 	hud_time.text = "%d" % ceili(time_left)
 	hud_time.add_theme_color_override("font_color", Color(0.75, 0.15, 0.2) if time_left < 10.0 else Color(0.2, 0.3, 0.38))
-	var digits := str(score).length()
-	score_label.add_theme_font_size_override("font_size", 36 if digits <= 5 else 30)
+	score_label.add_theme_font_size_override("font_size", 36 if str(score).length() <= 5 else 30)
 	score_label.text = str(score)
 
 func _sprite(t: Texture2D, pos: Vector2) -> Sprite2D:

@@ -130,6 +130,24 @@ def bubble(path, r):
     return done(c, path, line=False, alpha_cut=90)
 
 
+NOZZLES_ART = (79.0, 237.7)          # nozzle x in art px (x3 = 237, 713 in the game)
+FLOOR_ART = 866.0 / 3                 # floor height right at a nozzle
+SLOPE = 0.42
+
+
+def funnel_floor(x):
+    d = np.minimum(np.abs(x - NOZZLES_ART[0]), np.abs(x - NOZZLES_ART[1]))
+    return FLOOR_ART - SLOPE * d
+
+
+def pin(path):
+    c = canvas(7, 7)
+    d = np.hypot(c.x - 3.5, c.y - 3.5)
+    m = d < 2.6
+    material(c, np.sqrt(np.clip(1 - (d / 2.6) ** 2, 0, 1)), m, WHITE_PLASTIC, bump=3, spec_amt=.8, spec_pow=12, grain=0)
+    return done(c, path)
+
+
 def tank(path, W=317, H=316):
     """Water tank backdrop: plastic frame, water gradient, light rays, sandy floor."""
     y = np.arange(H)[:, None].repeat(W, 1).astype(np.float32)
@@ -144,14 +162,15 @@ def tank(path, W=317, H=316):
     for k, yy in enumerate((18, 30, 44)):
         wave = np.abs(y - (yy + 2.5 * np.sin(x * .09 + k))) < .8
         img[wave] = img[wave] * .7 + np.array([235, 250, 250]) * .3
-    # sandy floor
-    floor = y > H - 26 + 2 * np.sin(x * .07)
-    sand = np.array([236, 206, 160]) + (np.random.default_rng(3).random((H, W, 1)) - .5) * 22
-    img[floor] = sand[floor]
-    rng = np.random.default_rng(5)
-    for _ in range(40):
-        px_, py_ = rng.integers(8, W - 8), rng.integers(H - 20, H - 6)
-        img[py_:py_ + 2, px_:px_ + 3] = [200, 164, 120] if rng.random() < .6 else [250, 230, 196]
+    # two funnels: the floor slopes down to each nozzle, so balls always roll back to a pump
+    fy = funnel_floor(x)
+    floor = y > fy
+    plastic = np.array([236, 140, 170]) * (1 - (y - fy)[..., None].clip(0, 40) / 160)
+    img[floor] = plastic[floor]
+    top_line = (y > fy) & (y <= fy + 2)
+    img[top_line] = [255, 196, 214]
+    edge = (y > fy - 1.2) & (y <= fy)
+    img[edge] = OUT
     img = np.clip(img, 0, 255).astype(np.uint8)
     out = Image.fromarray(img, 'RGB').convert('RGBA')
     # plastic frame (pink, like the console's accents) with a dark outline
@@ -371,6 +390,7 @@ if __name__ == '__main__':
     sheet.append(Image.open(os.path.join(SPLASH, 'cup_back.png')))
     sheet.append(Image.open(os.path.join(SPLASH, 'cup_front.png')))
     sheet.append(nozzle(os.path.join(SPLASH, 'nozzle.png')))
+    sheet.append(pin(os.path.join(SPLASH, 'pin.png')))
     sheet.append(bubble(os.path.join(SPLASH, 'bubble_big.png'), 3.2))
     sheet.append(bubble(os.path.join(SPLASH, 'bubble_small.png'), 2.0))
     tank(os.path.join(SPLASH, 'tank.png'))
