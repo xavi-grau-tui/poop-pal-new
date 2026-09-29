@@ -1,8 +1,8 @@
 extends BaseMinigame
 ## Poo Splash — the classic water toy. Two pumps at the bottom of a water tank blow jets
 ## of bubbles; shoot the balls up into the baskets before the timer runs out. Higher
-## baskets are worth more. The bottom is a pachinko: balls that miss bounce down through
-## the pins and the sloped floor always rolls them back onto a pump.
+## baskets are worth more. The floor slopes down to the pumps, so balls that miss always
+## roll back next to a pump.
 ##
 ## Main button: LEFT pump (hold to keep pumping, it runs dry after a moment).
 ## Forward button: a quick burst from the RIGHT pump.
@@ -19,10 +19,10 @@ const FLOOR_Y := 866.0
 const FLOOR_SLOPE := 0.42
 
 # --- Water physics ---
-const GRAVITY := 260.0                  # things sink slowly
+const GRAVITY := 380.0                  # things sink slowly
 const DRAG := 1.4                       # velocity damping per second
 const MAX_SPEED := 800.0
-const JET_FORCE := 1850.0
+const JET_FORCE := 2250.0
 const JET_REACH := 780.0                # height where the jet has faded out
 const JET_SPREAD := 0.42                # cone widening per px of height
 const PUMP_TIME := 0.9                  # held main pump runs dry after this long
@@ -31,10 +31,18 @@ const BOUNCE := 0.45
 
 # --- Pieces ---
 const BALL_R := 16.0
-const PIN_R := 9.0
 const CUP_W := 90.0
 const CUP_H := 78.0
-const JET_CLEAR := 95.0                 # no pins this close to a nozzle column
+## Basket spots: staggered rows, low baskets kept out of the columns above the pumps so
+## rising balls don't crash into their bottoms. Filled in this order (level 1 uses the first).
+const CUP_SLOTS := [
+	Vector2(110, 180), Vector2(840, 180),      # mirrored pairs, so every level looks balanced
+	Vector2(385, 330), Vector2(565, 330),
+	Vector2(95, 330), Vector2(855, 330),
+	Vector2(295, 180), Vector2(655, 180),
+	Vector2(100, 480), Vector2(850, 480),
+	Vector2(475, 180), Vector2(475, 470),
+]
 const LEVEL_TIME := 60.0
 
 const BALL_COLORS := ["pink", "yellow", "mint"]
@@ -51,13 +59,11 @@ var jets := [
 ]
 var balls: Array[Dictionary] = []       # { pos, vel, node, done }
 var cups: Array[Dictionary] = []        # { pos, rim, full, points, back, front, label }
-var pins: Array[Vector2] = []
 var bubbles: Array[Dictionary] = []
 
 var tex := {}
 var lcd_font: Font
 var world: Node2D
-var pin_layer: Node2D
 var bubble_layer: Node2D
 var hud_level: Label
 var hud_time: Label
@@ -69,7 +75,7 @@ var _key_jets := [false, false]
 func _ready() -> void:
 	game_music_path = "res://sounds/music/Frédéric Chopin - Nocturne： Op. 9 No. 2 [8 bits].mp3"
 	lcd_font = load("res://fonts/pixChicago.ttf")
-	for n in ["tank", "cup_back", "cup_front", "nozzle", "bubble_big", "bubble_small", "pin"]:
+	for n in ["tank", "cup_back", "cup_front", "nozzle", "bubble_big", "bubble_small"]:
 		tex[n] = load("res://textures/minigames/splash/%s.png" % n)
 	for c in BALL_COLORS:
 		tex["ball_" + c] = load("res://textures/minigames/splash/ball_%s.png" % c)
@@ -94,22 +100,18 @@ func _build_level() -> void:
 	for c in cups:
 		for k in ["back", "front", "label"]:
 			c[k].queue_free()
-	for p in pin_layer.get_children():
-		p.queue_free()
 	balls.clear()
 	cups.clear()
-	pins.clear()
 	rng.seed = 4271 * level + 3
 
-	var n_balls := mini(3 + level, 9)
-	var n_cups := mini(n_balls + 3, 12)
+	var n_balls := mini(4 + 2 * level, 10)          # 3 per pump on level 1, +1 per pump each level
+	var n_cups := mini(n_balls + 2, CUP_SLOTS.size())
 	time_left = LEVEL_TIME + n_balls * 3.0
 	_place_cups(n_cups)
-	_place_pins()
 
 	for i in n_balls:
 		var jx: float = NOZZLES[i % 2]
-		var pos := Vector2(jx + rng.randf_range(-120, 120), 640.0 - rng.randf() * 80.0)
+		var pos := Vector2(jx + (i / 2 - 1) * 40.0, floor_at(jx) - 120.0 - (i / 2) * 30.0)
 		var s := _sprite(tex["ball_" + BALL_COLORS[i % BALL_COLORS.size()]], pos)
 		world.add_child(s)
 		balls.append({ "pos": pos, "vel": Vector2.ZERO, "node": s, "done": false })
@@ -117,35 +119,11 @@ func _build_level() -> void:
 	state = State.PLAY
 
 func _place_cups(n: int) -> void:
-	# spread over the upper tank on a jittered grid; higher = more points
-	var cols := 4
-	var slots: Array[Vector2] = []
-	for r in 3:
-		for c in cols:
-			var x := TANK_L + 90.0 + c * (TANK_R - TANK_L - 180.0) / (cols - 1)
-			slots.append(Vector2(x + (60.0 if r % 2 == 1 else 0.0) - 30.0, 190.0 + r * 150.0))
-	for i in range(slots.size() - 1, 0, -1):             # seeded shuffle: same layout per level
-		var j := rng.randi_range(0, i)
-		var tmp := slots[i]
-		slots[i] = slots[j]
-		slots[j] = tmp
-	for i in mini(n, slots.size()):
-		var p := slots[i] + Vector2(rng.randf_range(-25, 25), rng.randf_range(-20, 20))
-		var points := 300 if p.y < 280 else (200 if p.y < 430 else 100)
+	# fixed, well spread spots with a little per-level jitter; higher = more points
+	for i in n:
+		var p: Vector2 = CUP_SLOTS[i] + Vector2(rng.randf_range(-15, 15), rng.randf_range(-12, 12))
+		var points := 300 if p.y < 250 else (200 if p.y < 400 else 100)
 		cups.append(_make_cup(p, points))
-
-func _place_pins() -> void:
-	# pachinko rows above the funnels, leaving a clear column over each pump
-	for r in 4:
-		var y := 600.0 + r * 46.0
-		var x := TANK_L + 36.0 + (34.0 if r % 2 == 1 else 0.0)
-		while x < TANK_R - 20.0:
-			var near_jet := absf(x - NOZZLES[0]) < JET_CLEAR or absf(x - NOZZLES[1]) < JET_CLEAR
-			var near_wall := x < TANK_L + 50.0 or x > TANK_R - 50.0
-			if not near_jet and not near_wall and y < floor_at(x) - 75.0:   # room for balls to roll under
-				pins.append(Vector2(x, y))
-				pin_layer.add_child(_sprite(tex["pin"], Vector2(x, y)))
-			x += 68.0
 
 func _make_cup(center: Vector2, points: int) -> Dictionary:
 	var back := _sprite(tex["cup_back"], center)
@@ -233,7 +211,6 @@ func _physics(dt: float) -> void:
 		b["pos"] += v * dt
 		b["vel"] = v
 		_collide_tank(b, dt)
-		_collide_pins(b)
 		_collide_cups(b)
 	# balls bump into each other
 	for a in balls.size():
@@ -278,22 +255,6 @@ func _collide_tank(b: Dictionary, dt: float) -> void:
 			v.x *= 0.85                                           # settle right over the nozzle
 	b["pos"] = pos
 	b["vel"] = v
-
-func _collide_pins(b: Dictionary) -> void:
-	for p in pins:
-		var d: Vector2 = b["pos"] - p
-		var min_d := BALL_R + PIN_R
-		if d.length_squared() < min_d * min_d:
-			var n := d.normalized() if d.length_squared() > 0.01 else Vector2.UP
-			b["pos"] = p + n * min_d
-			var v: Vector2 = b["vel"]
-			var into := v.dot(n)
-			if into < 0.0:
-				v -= n * into * (1.0 + BOUNCE)
-				v.x += randf_range(-30, 30)                        # pachinko chaos
-			if absf(n.x) < 0.35 and n.y < 0.0:
-				v.x += (1.0 if randf() < 0.5 else -1.0) * 60.0     # never balance on top of a pin
-			b["vel"] = v
 
 func _collide_cups(b: Dictionary) -> void:
 	# cup walls are solid; only the open top of an empty cup lets a ball in
@@ -396,8 +357,6 @@ func _create_static_nodes() -> void:
 	for x in NOZZLES:
 		add_child(_sprite(tex["nozzle"], Vector2(x, FLOOR_Y - 12)))
 
-	pin_layer = Node2D.new()
-	add_child(pin_layer)
 	world = Node2D.new()
 	add_child(world)
 	bubble_layer = Node2D.new()
