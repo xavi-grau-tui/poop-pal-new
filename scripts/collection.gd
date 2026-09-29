@@ -12,6 +12,8 @@ const SAVE_PATH := "user://collection.json"
 ## Every launch starts on the default background (unlocked ones stay unlocked)
 const DEFAULT_BACKGROUND := "clouds"
 const RESET_BACKGROUND_ON_LAUNCH := true
+## Prototype: every launch also starts with no accessory and no gut decor (unlocks are kept)
+const RESET_EQUIPPED_ON_LAUNCH := true
 
 ## "layers": [far layer (CloudA), near layer (CloudB)] — drop-in replacements for the cloud textures.
 ## "unlock": how it is obtained (shown on the locked card). Default unlocked = true/false.
@@ -68,6 +70,10 @@ func _ready() -> void:
 	load_data()
 	if RESET_BACKGROUND_ON_LAUNCH and equipped_background != DEFAULT_BACKGROUND:
 		equipped_background = DEFAULT_BACKGROUND
+		save_data()
+	if RESET_EQUIPPED_ON_LAUNCH and (equipped_accessory != "none" or equipped_decor != "none"):
+		equipped_accessory = "none"
+		equipped_decor = "none"
 		save_data()
 
 func is_owned(category: String, id: String) -> bool:
