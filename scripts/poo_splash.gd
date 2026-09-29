@@ -24,8 +24,9 @@ const FLOOR_SLOPE := 0.42
 const GRAVITY := 380.0                  # things sink slowly
 const DRAG := 1.4                       # velocity damping per second
 const MAX_SPEED := 800.0
-const JET_FORCE := 2000.0
-const JET_REACH := 780.0                # height where the jet has faded out
+const JET_FORCE := 2600.0
+const JET_TOP := 474.0                  # the thrust only acts below mid-screen; above it balls
+                                        # fly on their momentum and just fall back down
 const JET_SPREAD := 0.42                # cone widening per px of height
 const PUMP_TIME := 0.9                  # held main pump runs dry after this long
 const BOUNCE := 0.45
@@ -192,22 +193,19 @@ func _update_jets(delta: float) -> void:
 
 func _jet_force(p: Vector2) -> Vector2:
 	var f := Vector2.ZERO
+	if p.y < JET_TOP:
+		return f
+	var h := FLOOR_Y - p.y
+	var fade := clampf((p.y - JET_TOP) / 60.0, 0.0, 1.0)     # soft edge at mid-screen
 	for j in jets:
 		if j["power"] <= 0.01:
 			continue
-		var h := FLOOR_Y - p.y
-		if h < 0:
-			continue
 		var dx: float = p.x - j["x"]
 		var w := 40.0 + h * JET_SPREAD
-		var fall := clampf(1.0 - h / JET_REACH, 0.15, 1.0)
-		var k: float = j["power"] * exp(-(dx / w) * (dx / w)) * fall
-		# straight up at the nozzle, fanning out higher up (so balls leave the pit upwards)
-		var fan := clampf((h - 120.0) / 350.0, 0.0, 1.0)
-		f += Vector2((signf(dx) * 0.4 + randf_range(-0.25, 0.25)) * fan, -1.0) * JET_FORCE * k
-		# the whole tank churns a little: a wide, weak current that swirls away from the jet
-		var wide: float = j["power"] * exp(-(dx / (w * 4.0)) * (dx / (w * 4.0))) * 0.2
-		f += Vector2(signf(dx) * 0.8 * fan, -0.6) * JET_FORCE * wide
+		var k: float = j["power"] * exp(-(dx / w) * (dx / w)) * fade
+		# straight up at the nozzle, fanning out a little higher up
+		var fan := clampf((h - 120.0) / 250.0, 0.0, 1.0)
+		f += Vector2((signf(dx) * 0.3 + randf_range(-0.2, 0.2)) * fan, -1.0) * JET_FORCE * k
 	return f
 
 func _physics(dt: float) -> void:
@@ -265,50 +263,62 @@ func _collide_tank(b: Dictionary, dt: float) -> void:
 	b["pos"] = pos
 	b["vel"] = v
 
+## Basket colliders, relative to the basket centre (from the basket art, x3):
+## the two ends of the rim are round knobs; the net's slanted sides are solid walls (both
+## sides: outside they push balls away, inside they guide a ball down through the net);
+## the bottom of the net is open for balls falling out but blocks balls coming from below.
+const RIM_KNOB_L := Vector2(-40, -22)
+const RIM_KNOB_R := Vector2(40, -22)
+const RIM_KNOB_R_SIZE := 8.0
+const NET_WALL_L := [Vector2(-38, -12), Vector2(-27, 36)]
+const NET_WALL_R := [Vector2(38, -12), Vector2(27, 36)]
+const NET_WALL_THICK := 3.0
+const NET_BOTTOM_Y := 36.0
+const RIM_LINE_Y := -16.0                # crossing this line downward between the knobs = in
+
 func _collide_cups(b: Dictionary) -> void:
-	# Baskets are solid. Only the open top lets a ball in: it drops through the basket
-	# (filling it if it was empty) and falls out of the bottom, back down to the pumps.
-	var half := Vector2(CUP_W / 2.0, CUP_H / 2.0)
-	var mouth := half.x - 2.0                          # a ball touching the inner rim still drops in
 	for c in cups:
-		var d: Vector2 = b["pos"] - c["pos"]
-		if b.get("through") == c:
-			if d.y > half.y + BALL_R or absf(d.x) > half.x:
-				b["through"] = null                        # out of the bottom
-			else:
-				# inside the net: kept between its tapering walls on the way down
-				var depth := clampf((d.y + half.y) / CUP_H, 0.0, 1.0)
-				var inner := lerpf(half.x - BALL_R, 27.0 - BALL_R * 0.6, depth)
-				b["pos"].x = clampf(b["pos"].x, c["pos"].x - inner, c["pos"].x + inner)
-				b["vel"].x *= 0.9
-				continue
-		if absf(d.x) >= half.x + BALL_R or absf(d.y) >= half.y + BALL_R:
+		var cp: Vector2 = c["pos"]
+		var d: Vector2 = b["pos"] - cp
+		if absf(d.x) > 80.0 or absf(d.y) > 80.0:
 			continue
-		var prev_y: float = b.get("prev", b["pos"]).y
-		if absf(d.x) < mouth:
-			if b["pos"].y <= c["rim"]:
-				continue                                    # above the opening: nothing to hit
-			if prev_y <= c["rim"] and b["vel"].y > 0:
-				b["through"] = c                            # dropped in through the top
-				if not c["full"]:
-					_fill_cup(b, c)
-				continue
-		# otherwise bounce off the basket like a solid box
-		var ox: float = half.x + BALL_R - absf(d.x)
-		var oy: float = half.y + BALL_R - absf(d.y)
-		if ox < oy:
-			b["pos"].x += signf(d.x) * ox
-			b["vel"].x = signf(d.x) * absf(b["vel"].x) * BOUNCE
-		else:
-			b["pos"].y += signf(d.y) * oy
-			b["vel"].y = signf(d.y) * absf(b["vel"].y) * BOUNCE
-			if d.y < 0.0:
-				# landed on a rim: roll off it instead of balancing there
-				b["vel"].x += signf(d.x if absf(d.x) > 1.0 else randf() - 0.5) * 90.0
+		# scoring: dropped in over the rim, between the knobs
+		var prev_d: Vector2 = b.get("prev", b["pos"]) - cp
+		if not c["full"] and b["vel"].y > 0 and prev_d.y <= RIM_LINE_Y and d.y > RIM_LINE_Y and absf(d.x) < RIM_KNOB_R.x - RIM_KNOB_R_SIZE:
+			_fill_cup(b, c)
+		# rim knobs
+		for k in [RIM_KNOB_L, RIM_KNOB_R]:
+			_bounce_off_point(b, cp + k, RIM_KNOB_R_SIZE)
+		# net walls
+		for w in [NET_WALL_L, NET_WALL_R]:
+			var a: Vector2 = cp + w[0]
+			var e: Vector2 = cp + w[1]
+			var q := Geometry2D.get_closest_point_to_segment(b["pos"], a, e)
+			_bounce_off_point(b, q, NET_WALL_THICK)
+		# net bottom: one-way, only stops balls coming up from below
+		if b["vel"].y < 0 and absf(d.x) < 27.0 + BALL_R * 0.5 and d.y > NET_BOTTOM_Y and d.y < NET_BOTTOM_Y + BALL_R:
+			b["pos"].y = cp.y + NET_BOTTOM_Y + BALL_R
+			b["vel"].y = absf(b["vel"].y) * BOUNCE
+
+func _bounce_off_point(b: Dictionary, q: Vector2, r: float) -> void:
+	var d: Vector2 = b["pos"] - q
+	var min_d := BALL_R + r
+	if d.length_squared() >= min_d * min_d:
+		return
+	var n := d.normalized() if d.length_squared() > 0.01 else Vector2.UP
+	b["pos"] = q + n * min_d
+	var v: Vector2 = b["vel"]
+	var into := v.dot(n)
+	if into < 0.0:
+		v -= n * into * (1.0 + BOUNCE)
+	if n.y < -0.9 and absf(v.x) < 40.0:
+		# sitting right on top of a knob: tip it off, in or out
+		v.x += (1.0 if randf() < 0.5 else -1.0) * 90.0
+	b["vel"] = v
 
 func _fill_cup(_b: Dictionary, c: Dictionary) -> void:
 	c["full"] = true
-	c["net"].modulate = Color(1.0, 0.82, 0.45)       # a filled basket lights up gold
+	c["net"].modulate = Color(1.7, 1.3, 0.55)        # a filled basket lights up gold
 	var tw := create_tween()
 	tw.tween_property(c["rim_node"], "scale", Vector2(S * 1.15, S * 0.85), 0.08)
 	tw.tween_property(c["rim_node"], "scale", Vector2(S, S), 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
