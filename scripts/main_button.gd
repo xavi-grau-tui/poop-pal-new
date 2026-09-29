@@ -219,6 +219,11 @@ func _flush_poop() -> void:
 	var poop = get_node_or_null("../PetView/Poop")
 	if poop and poop.has_method("play_flush"):
 		await poop.play_flush()
+	# ...and out it comes: a little sparkle + cling at the end of the gut
+	var gut = get_node_or_null("../PetView/Intestine-front")
+	if gut and gut.has_method("play_flush_sparkle"):
+		_play_sfx("res://sounds/fx/flush_cling.wav", -12.0)
+		gut.play_flush_sparkle()
 	PetState.flush()
 	_flushing = false
 

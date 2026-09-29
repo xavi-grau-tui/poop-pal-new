@@ -4,6 +4,12 @@ extends Sprite2D
 ## they breathe with it. Frames are cycled for the twinkle.
 const DECOR_FRAME_TIME := 0.6
 
+## Flush finale: sparkle at the end of the colon (texture coords of the tip, from the centre)
+const SPARKLE_TEXTURE := preload("res://textures/pet/fx/flush_sparkle.png")
+const SPARKLE_POS := Vector2(9, 420)
+const SPARKLE_PIXEL := 8.0          # one sparkle pixel = one chunky pixel of the gut art
+const SPARKLE_FRAME_TIME := 0.07
+
 var decor: Sprite2D
 var _decor_frames: Array[Texture2D] = []
 var _decor_frame := 0
@@ -48,3 +54,17 @@ func _next_decor_frame() -> void:
 		return
 	_decor_frame = (_decor_frame + 1) % _decor_frames.size()
 	decor.texture = _decor_frames[_decor_frame]
+
+func play_flush_sparkle() -> void:
+	var sparkle := Sprite2D.new()
+	sparkle.texture = SPARKLE_TEXTURE
+	sparkle.hframes = 5
+	sparkle.position = SPARKLE_POS
+	sparkle.scale = Vector2.ONE * SPARKLE_PIXEL
+	add_child(sparkle)
+	var tween := create_tween()
+	for f in sparkle.hframes:
+		tween.tween_callback(func(): sparkle.frame = f)
+		tween.tween_interval(SPARKLE_FRAME_TIME * (2.0 if f == 2 else 1.0))   # hold the big star a beat
+	tween.tween_callback(sparkle.queue_free)
+	await tween.finished
