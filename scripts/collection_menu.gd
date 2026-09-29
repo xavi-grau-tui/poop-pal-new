@@ -5,18 +5,26 @@ extends Node2D
 ##                page dots, hold = open). Cards are clones of the Games menu card.
 ##   PEDIA        grid of pals, 9 per page, many pages; hold a pal to open its card
 ##   DETAIL       one pal's card: number, name, description / hint, evolution link
-##   BACKGROUNDS  hold to equip (closes the menu, back to the pet)
+##   BACKGROUNDS / ACCESSORIES / DECOR  cosmetics lists: hold to use (closes the menu, back to the pet)
 ##
 ## Controls, same everywhere: main button TAP = next item, HOLD = open / confirm,
 ## FORWARD = next page (in a pal card: next pal). Every sub-view has a "Back" item.
 ## Built in code on top of the existing golden frame (Menu/Sprite2D).
 
-enum View { HUB, PEDIA, DETAIL, BACKGROUNDS }
+enum View { HUB, PEDIA, DETAIL, BACKGROUNDS, ACCESSORIES, DECOR }
 
 const HUB_CARDS := [
 	{ "view": View.PEDIA, "logo": "res://textures/menus/poopedia.png", "pattern": "res://textures/menus/pooploopbackground.png" },
+	{ "view": View.ACCESSORIES, "logo": "res://textures/menus/dressup.png", "pattern": "res://textures/menus/glassesloopbackground.png" },
+	{ "view": View.DECOR, "logo": "res://textures/menus/gutdecor.png", "pattern": "res://textures/menus/bulbloopbackground.png" },
 	{ "view": View.BACKGROUNDS, "logo": "res://textures/menus/backgrounds.png", "pattern": "res://textures/menus/cloudloopbackground.png" },
 ]
+## Cosmetic list views: Collection category, title, verb shown on usable rows
+const LISTS := {
+	View.BACKGROUNDS: { "category": "backgrounds", "title": "BACKGROUNDS", "verb": "Hold to use" },
+	View.ACCESSORIES: { "category": "accessories", "title": "DRESS UP", "verb": "Hold to wear" },
+	View.DECOR: { "category": "decor", "title": "GUT DECOR", "verb": "Hold to hang" },
+}
 const PEDIA_PER_PAGE := 9
 
 # Inner (brown) area of the golden frame, in Menu-local coordinates
@@ -138,8 +146,8 @@ func confirm_selected(sel: Node) -> bool:
 			_click()
 			return_selection = selection
 			_show_detail(action["id"])
-		"bg":
-			if Collection.equip_background(action["id"]):
+		"equip":
+			if Collection.equip(action["category"], action["id"]):
 				_sfx("res://sounds/fx/gamecoin.wav", -8.0)
 				return true
 			_sfx("res://sounds/fx/error.mp3", -10.0)
@@ -163,8 +171,8 @@ func _open(v: int, select := -1) -> void:
 			_build_hub()
 		View.PEDIA:
 			_build_pedia()
-		View.BACKGROUNDS:
-			_build_backgrounds()
+		View.BACKGROUNDS, View.ACCESSORIES, View.DECOR:
+			_build_list(v)
 	selection = select if select < items.size() else -1
 	_refresh_selection()
 	_refresh_pager()
@@ -215,14 +223,17 @@ func _update_hub_card_info() -> void:
 	for id in order:
 		if id in PetState.discovered:
 			found += 1
-	var owned := 0
-	for id in Collection.BACKGROUND_ORDER:
-		if Collection.is_owned("backgrounds", id):
-			owned += 1
 	var lines := {
 		View.PEDIA: ["Found", "%d/%d" % [found, order.size()], "Progress", "%d%%" % int(100.0 * found / maxf(order.size(), 1))],
-		View.BACKGROUNDS: ["Unlocked", "%d/%d" % [owned, Collection.BACKGROUND_ORDER.size()], "In use", Collection.BACKGROUNDS[Collection.equipped_background]["name"]],
 	}
+	for v in LISTS:
+		var cat: String = LISTS[v]["category"]
+		var owned := 0
+		for id in Collection.order(cat):
+			if Collection.is_owned(cat, id):
+				owned += 1
+		var cat_catalog := Collection.catalog(cat)
+		lines[v] = ["Unlocked", "%d/%d" % [owned, Collection.order(cat).size()], "In use", cat_catalog[Collection.equipped(cat)]["name"]]
 	for i in HUB_CARDS.size():
 		var t: Array = lines[HUB_CARDS[i]["view"]]
 		var bottom := hub_cards[i].get_node("BottomFrame")
@@ -312,32 +323,37 @@ func _show_detail(id: String) -> void:
 	desc.text = f["desc"] if known else f["hint"]
 	_refresh_pager()
 
-func _build_backgrounds() -> void:
-	title.text = "BACKGROUNDS"
-	status.text = "Hold to use"
-	for i in Collection.BACKGROUND_ORDER.size():
-		var id: String = Collection.BACKGROUND_ORDER[i]
-		var bg: Dictionary = Collection.BACKGROUNDS[id]
-		var owned := Collection.is_owned("backgrounds", id)
+func _build_list(v: int) -> void:
+	var info: Dictionary = LISTS[v]
+	var cat: String = info["category"]
+	var cat_catalog := Collection.catalog(cat)
+	title.text = info["title"]
+	status.text = info["verb"]
+	var ids := Collection.order(cat)
+	for i in ids.size():
+		var id: String = ids[i]
+		var item: Dictionary = cat_catalog[id]
+		var owned := Collection.is_owned(cat, id)
 		var row := _card(Vector2(INNER.position.x + 29, INNER.position.y + 88 + i * 150), Vector2(600, 138))
 		var box := _icon_box(row, Vector2(14, 12), Vector2(114, 110))
 		var icon := _icon(box, null, Vector2(102, 98))
-		icon.texture = _background_preview(bg["layers"]) if owned and not bg["layers"].is_empty() else load("res://textures/menus/mistery_pink.png")
+		var preview: Texture2D = _item_preview(cat, id) if owned else null
+		icon.texture = preview if preview else load("res://textures/menus/mistery_pink.png")
 		_add_doughnut(row, box)
 		var t := _label(Vector2(140, 12), Vector2(440, 60), 44, TEXT, row)
 		t.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		t.text = bg["name"]
+		t.text = item["name"]
 		_fit_one_line(t, 44)
 		var st := _label(Vector2(140, 68), Vector2(440, 50), 30, TEXT_DARK, row)
 		st.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		if not owned:
-			st.text = "Locked - " + bg["unlock"]
-		elif Collection.equipped_background == id:
+			st.text = "Locked - " + item["unlock"]
+		elif Collection.equipped(cat) == id:
 			st.text = "In use"
 			st.add_theme_color_override("font_color", SELECT_BORDER)
 		else:
-			st.text = "Hold to use"
-		row.set_meta("action", { "type": "bg", "id": id } if owned else { "type": "locked" })
+			st.text = info["verb"]
+		row.set_meta("action", { "type": "equip", "category": cat, "id": id } if owned else { "type": "locked" })
 		_add_item(row)
 	_add_back()
 
@@ -504,6 +520,56 @@ func _form_icon(id: String) -> Texture2D:
 	atlas.atlas = tex
 	atlas.region = Rect2(img.get_used_rect())
 	return atlas
+
+func _item_preview(cat: String, id: String) -> Texture2D:
+	match cat:
+		"backgrounds":
+			var layers: Array = Collection.BACKGROUNDS[id]["layers"]
+			return _background_preview(layers) if not layers.is_empty() else null
+		"accessories":
+			return _accessory_preview(id)
+		"decor":
+			return _decor_preview(id)
+	return null
+
+## The current pal (or the first baby if there is none yet) wearing the accessory
+func _accessory_preview(id: String) -> Texture2D:
+	var form := PetState.form_id if PetState.has_poop() else String(PetState.pedia_order()[0])
+	var body := _image("res://textures/pet/forms/%s-1.png" % form)
+	if body == null:
+		return null
+	var dir: String = Collection.ACCESSORIES[id]["dir"]
+	var over := _image("%s%s-1.png" % [dir, form]) if dir != "" else null
+	if over:
+		body.blend_rect(over, Rect2i(Vector2i.ZERO, over.get_size()), Vector2i.ZERO)
+	var used := body.get_used_rect().grow(4)
+	return ImageTexture.create_from_image(body.get_region(used))
+
+## A corner of the colon with the decor on it
+func _decor_preview(id: String) -> Texture2D:
+	var gut := _image("res://textures/pet-background/intestine-front.png")
+	if gut == null:
+		return null
+	var frames: Array = Collection.DECOR[id]["frames"]
+	if not frames.is_empty():
+		var over := _image(frames[0])
+		gut.blend_rect(over, Rect2i(Vector2i.ZERO, over.get_size()), Vector2i.ZERO)
+	var crop := gut.get_region(Rect2i(60, 90, 380, 360))
+	var img := Image.create(crop.get_width(), crop.get_height(), false, Image.FORMAT_RGBA8)
+	img.fill(Color8(236, 170, 170))
+	img.blend_rect(crop, Rect2i(Vector2i.ZERO, crop.get_size()), Vector2i.ZERO)
+	return ImageTexture.create_from_image(img)
+
+func _image(path: String) -> Image:
+	if not ResourceLoader.exists(path):
+		return null
+	var img: Image = (load(path) as Texture2D).get_image()
+	if img == null:
+		return null
+	if img.is_compressed():
+		img.decompress()
+	img.convert(Image.FORMAT_RGBA8)
+	return img
 
 func _background_preview(layers: Array) -> Texture2D:
 	var img := Image.create(200, 200, false, Image.FORMAT_RGBA8)

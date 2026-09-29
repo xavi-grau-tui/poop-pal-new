@@ -22,11 +22,23 @@ var mystery_tween: Tween
 var flush_charge := 0.0
 var _time := 0.0
 
+# Worn accessory (Collection): a child sprite on the same canvas as the form, so it follows
+# every squash, blink, shake and flush for free. It only has to follow the animation frame.
+var accessory: Sprite2D
+
 func _ready():
 	base_scale = scale
 	base_position = position
 	_spawn_mystery.call_deferred()
 	PetState.form_changed.connect(_on_form_changed)
+	accessory = Sprite2D.new()
+	accessory.name = "Accessory"
+	add_child(accessory)
+	frame_changed.connect(_refresh_accessory)
+	animation_changed.connect(_refresh_accessory)
+	Collection.equipped_changed.connect(func(category, _id):
+		if category == "accessories":
+			_refresh_accessory())
 
 	if PetState.has_poop():
 		sprite_frames = PetState.build_sprite_frames()
@@ -34,6 +46,7 @@ func _ready():
 		_start_breathing()
 	else:
 		modulate.a = 0.0
+	_refresh_accessory()
 
 func _process(delta: float) -> void:
 	_time += delta
@@ -76,6 +89,16 @@ func blink(custom_times := -1, custom_opacity := -1.0, custom_speed := -1.0):
 	await blink_tween.finished
 	_start_breathing()
 
+func _refresh_accessory() -> void:
+	if not accessory:
+		return
+	var dir: String = Collection.ACCESSORIES.get(Collection.equipped_accessory, {}).get("dir", "")
+	var path := "%s%s-%d.png" % [dir, PetState.form_id, frame + 1]
+	if dir == "" or not PetState.has_poop() or not ResourceLoader.exists(path):
+		accessory.texture = null
+		return
+	accessory.texture = load(path)
+
 # ------------------------------------------------------------------ PET CYCLE
 
 func _on_form_changed(_form_id: String, reason: String) -> void:
@@ -92,6 +115,7 @@ func _play_hatch() -> void:
 	_hide_mystery()
 	sprite_frames = PetState.build_sprite_frames()
 	play("idle")
+	_refresh_accessory()
 	scale = Vector2.ZERO
 	modulate = Color(1, 1, 1, 1)
 	fx_tween = create_tween()
@@ -120,6 +144,7 @@ func _play_evolve() -> void:
 	fx_tween.tween_callback(func():
 		sprite_frames = PetState.build_sprite_frames()
 		play("idle")
+		_refresh_accessory()
 		_play_sfx("res://sounds/fx/gamecoin.wav", -6.0))
 	# 4) spring back out
 	fx_tween.tween_property(self, "scale", base_scale, 0.8).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
