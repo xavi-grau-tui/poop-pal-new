@@ -5,6 +5,9 @@ extends TextureButton
 @export var hold_duration    := 1.0
 @export var fill_start_delay := 0.25
 @export var flush_hold_duration := 2.0  # hold on the pet view (no menu open) to flush
+@export var flush_sound_db := -11.0     # flush whoosh volume
+@export var flush_fade_time := 0.85     # whoosh fades out within the 0.9 s spin...
+@export var cling_delay := 0.12         # ...then a short silence before the cling
 
 var was_pressed        := false
 var hold_timer         := 0.0
@@ -214,11 +217,17 @@ func _drink_after_pour(spawner: Node, drink: Dictionary) -> void:
 
 func _flush_poop() -> void:
 	_flushing = true
-	_play_sfx("res://sounds/fx/sfx_sounds_falling8.mp3", -6.0)
+	var flush_sfx := _play_sfx("res://sounds/fx/sfx_sounds_falling8.mp3", flush_sound_db)
 	Input.vibrate_handheld(80)
 	var poop = get_node_or_null("../PetView/Poop")
+	# the flush sound is longer than the spin: fade it out so it's gone before the cling
+	if flush_sfx and flush_sfx.volume_db > -50.0:   # (muted = -inf, leave it)
+		var fade := create_tween()
+		fade.tween_property(flush_sfx, "volume_db", -50.0, flush_fade_time).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+		fade.tween_callback(flush_sfx.queue_free)
 	if poop and poop.has_method("play_flush"):
 		await poop.play_flush()
+	await get_tree().create_timer(cling_delay).timeout
 	# ...and out it comes: a little sparkle + cling at the end of the gut
 	var gut = get_node_or_null("../PetView/Intestine-front")
 	if gut and gut.has_method("play_flush_sparkle"):
@@ -243,10 +252,10 @@ func _any_menu_toggled() -> bool:
 			return true
 	return false
 
-func _play_sfx(path: String, volume_db: float) -> void:
+func _play_sfx(path: String, volume_db: float) -> AudioStreamPlayer:
 	var stream = load(path) as AudioStream
 	if not stream:
-		return
+		return null
 	var sfx = AudioStreamPlayer.new()
 	sfx.stream = stream
 	sfx.volume_db = volume_db
@@ -256,6 +265,7 @@ func _play_sfx(path: String, volume_db: float) -> void:
 	add_child(sfx)
 	sfx.play()
 	sfx.finished.connect(sfx.queue_free)
+	return sfx
 
 # ------------------------------------------------------------------ RESET
 func _reset_hold() -> void:
