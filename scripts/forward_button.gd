@@ -10,11 +10,16 @@ func _gui_input(event):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			was_pressed = true
+			# Games that need to know the button is HELD (paddles, ships) get down/up too
+			if GameScreen.is_active:
+				_route_to_minigame("on_forward_button_down")
 			if click_sound:
 				click_sound.stop()
 				click_sound.play()
 			Input.vibrate_handheld(25)
 		elif event.is_released() and was_pressed:
+			if GameScreen.is_active:
+				_route_to_minigame("on_forward_button_up")
 			var mouse_pos = get_local_mouse_position()
 			if mouse_pos.x >= 0 and mouse_pos.y >= 0 and mouse_pos.x <= size.x and mouse_pos.y <= size.y:
 				if release_sound:

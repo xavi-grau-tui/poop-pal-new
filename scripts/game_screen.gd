@@ -15,6 +15,10 @@ var game_music_player: AudioStreamPlayer2D = null
 var game_scenes := {
 	0: "res://scenes/minigames/super_puff.tscn",
 	1: "res://scenes/minigames/poo_maze.tscn",
+	2: "res://scenes/minigames/poo_splash.tscn",
+	3: "res://scenes/minigames/poo_dash.tscn",
+	4: "res://scenes/minigames/poo_break.tscn",
+	5: "res://scenes/minigames/germ_zap.tscn",
 }
 
 func _ready() -> void:

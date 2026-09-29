@@ -20,10 +20,14 @@ var unlock_thresholds := {
 var progress_target := {
 	0: 300,  # Super Puff: 300 pipes = 100%
 	1: 1500, # Poo Maze: 1500 points = 100%
+	2: 2000, # Poo Splash
+	3: 3000, # Poo Dash
+	4: 5000, # Poo Break
+	5: 8000, # Germ Zap
 }
 
 ## Prototype/testing: games unlocked regardless of progress
-const DEBUG_UNLOCKED := [1]
+const DEBUG_UNLOCKED := [1, 2, 3, 4, 5]
 
 func _ready() -> void:
 	_init_game(0, true)   # Super Puff — unlocked by default

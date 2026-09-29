@@ -12,6 +12,7 @@ Needs Python 3 with `pillow` and `numpy`:
     ../../.venv/bin/python food.py     # donut      -> out/donut2.png (copy to textures/food/donut.png)
     ../../.venv/bin/python title.py "POO|MAZE" ../../textures/menus/poomaze.png
     ../../.venv/bin/python accessories.py   # pal accessories, one file per form + frame -> textures/pet/accessories/<item>/
+    ../../.venv/bin/python minigame_art.py  # Splash / Dash / Break / Germ Zap sprites (needs scipy)
     ../../.venv/bin/python decor.py         # gut decor (needs scipy + scikit-image) -> textures/pet/decor/
     ../../.venv/bin/python loop_pattern.py glasses ../../textures/menus/glassesloopbackground.png
 

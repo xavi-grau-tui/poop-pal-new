@@ -20,6 +20,10 @@ var current_page := 0
 # Shown once the game is unlocked.
 const CARD_ART := {
 	1: { "logo": "res://textures/menus/poomaze.png", "background": "res://textures/menus/pooploopbackground.png" },
+	2: { "logo": "res://textures/menus/poosplash.png", "background": "res://textures/menus/droploopbackground.png" },
+	3: { "logo": "res://textures/menus/poodash.png", "background": "res://textures/menus/cornloopbackground.png" },
+	4: { "logo": "res://textures/menus/poobreak.png", "background": "res://textures/menus/brickloopbackground.png" },
+	5: { "logo": "res://textures/menus/germzap.png", "background": "res://textures/menus/germloopbackground.png" },
 }
 
 func _ready():
