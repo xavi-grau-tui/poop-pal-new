@@ -8,6 +8,8 @@ extends BaseMinigame
 
 const S := 3.0
 const TOP := 104.0                      # below the HUD band
+const VIS_L := 18.0                     # edges visible through the console's screen window
+const VIS_R := 945.0
 const PADDLE_Y := 870.0
 const PADDLE_SPEED := 980.0
 const PADDLE_ACCEL := 7000.0
@@ -20,7 +22,7 @@ const LIVES := 3
 const COLS := 12
 const TILE_W := 72.0
 const TILE_H := 33.0
-const GRID_X := (950.0 - COLS * TILE_W) / 2.0
+const GRID_X := (18.0 + 945.0 - COLS * TILE_W) / 2.0   # centred in the visible window
 const GRID_Y := 150.0
 const DROP_CHANCE := 0.13
 const POWER_TIME := 12.0
@@ -181,8 +183,10 @@ func _move_paddle(delta: float) -> void:
 	if right_held or Input.is_key_pressed(KEY_RIGHT) or Input.is_key_pressed(KEY_D):
 		dir += 1.0
 	paddle_v = move_toward(paddle_v, dir * PADDLE_SPEED, PADDLE_ACCEL * delta)
-	paddle_x = clampf(paddle_x + paddle_v * delta, paddle_w / 2.0 + 6.0, PLAY_WIDTH - paddle_w / 2.0 - 6.0)
-	if absf(paddle_x - (paddle_w / 2.0 + 6.0)) < 0.5 or absf(paddle_x - (PLAY_WIDTH - paddle_w / 2.0 - 6.0)) < 0.5:
+	var lo := VIS_L + paddle_w / 2.0
+	var hi := VIS_R - paddle_w / 2.0
+	paddle_x = clampf(paddle_x + paddle_v * delta, lo, hi)
+	if paddle_x <= lo or paddle_x >= hi:
 		paddle_v = 0.0
 
 func _step_balls(dt: float) -> void:
@@ -196,10 +200,10 @@ func _step_balls(dt: float) -> void:
 		v = v.normalized() * speed * mult
 		var p: Vector2 = b["pos"] + v * dt
 		# walls
-		if p.x < BALL_R:
-			p.x = BALL_R; v.x = absf(v.x)
-		elif p.x > PLAY_WIDTH - BALL_R:
-			p.x = PLAY_WIDTH - BALL_R; v.x = -absf(v.x)
+		if p.x < VIS_L + BALL_R:
+			p.x = VIS_L + BALL_R; v.x = absf(v.x)
+		elif p.x > VIS_R - BALL_R:
+			p.x = VIS_R - BALL_R; v.x = -absf(v.x)
 		if p.y < TOP + BALL_R:
 			p.y = TOP + BALL_R; v.y = absf(v.y)
 		# paddle: the bounce angle depends on where the roll is hit

@@ -27,3 +27,4 @@ android/.cinterop/
 # Art generator output
 tools/art/out/
 .venv/
+tools/art/__pycache__/

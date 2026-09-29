@@ -1,17 +1,19 @@
 extends BaseMinigame
 ## Poo Splash — the classic water toy. Two pumps at the bottom of a water tank blow jets
-## of bubbles; shoot the balls up into the baskets before the timer runs out. Higher
-## baskets are worth more. The floor slopes down to the pumps, so balls that miss always
-## roll back next to a pump.
+## of bubbles; drop a ball into every basket before the timer runs out. A ball that lands
+## in a basket lights it up and falls through, and the floor slopes down to the pumps, so
+## every ball always rolls back next to a pump. From level 2 the baskets drift sideways.
 ##
 ## Main button: LEFT pump (hold to keep pumping, it runs dry after a moment).
 ## Forward button: a quick burst from the RIGHT pump.
 ## Desktop: also Left/Right arrow keys (or A / D) for the two pumps.
 
 const S := 3.0                          # world px per art pixel (sprites are drawn x3)
-const TANK_L := 24.0                    # water area inside the plastic frame
-const TANK_R := 926.0
-const TANK_T := 24.0
+# Walls = the edges actually visible through the console's screen window
+# (the window shows x 18..945, y 9..936 of the 950x948 play area)
+const TANK_L := 18.0
+const TANK_R := 945.0
+const TANK_T := 12.0
 
 # Funnel floor (matches tools/art/minigame_art.py): lowest at each nozzle
 const NOZZLES := [237.0, 713.0]
@@ -22,7 +24,7 @@ const FLOOR_SLOPE := 0.42
 const GRAVITY := 380.0                  # things sink slowly
 const DRAG := 1.4                       # velocity damping per second
 const MAX_SPEED := 800.0
-const JET_FORCE := 2250.0
+const JET_FORCE := 2000.0
 const JET_REACH := 780.0                # height where the jet has faded out
 const JET_SPREAD := 0.42                # cone widening per px of height
 const PUMP_TIME := 0.9                  # held main pump runs dry after this long
@@ -33,16 +35,15 @@ const BOUNCE := 0.45
 const BALL_R := 16.0
 const CUP_W := 90.0
 const CUP_H := 78.0
-## Basket spots: staggered rows, low baskets kept out of the columns above the pumps so
-## rising balls don't crash into their bottoms. Filled in this order (level 1 uses the first).
+## Basket spots: none in the jet columns (the main thrust goes straight up through there)
+## and each basket in its own column (never one above another). The jets fan out as they
+## rise: balls thrown outwards land in the two low side baskets, balls thrown inwards in
+## the three middle ones.
 const CUP_SLOTS := [
-	Vector2(110, 180), Vector2(840, 180),      # mirrored pairs, so every level looks balanced
-	Vector2(385, 330), Vector2(565, 330),
-	Vector2(95, 330), Vector2(855, 330),
-	Vector2(295, 180), Vector2(655, 180),
-	Vector2(100, 480), Vector2(850, 480),
-	Vector2(475, 180), Vector2(475, 470),
+	Vector2(345, 410), Vector2(475, 330), Vector2(605, 410),
+	Vector2(130, 545), Vector2(820, 545),
 ]
+const CUP_POINTS := [200, 300, 200, 100, 100]
 const LEVEL_TIME := 60.0
 
 const BALL_COLORS := ["pink", "yellow", "mint"]
@@ -57,8 +58,8 @@ var jets := [
 	{ "x": NOZZLES[0], "power": 0.0, "held": false, "hold_time": 0.0, "burst": 0.0 },
 	{ "x": NOZZLES[1], "power": 0.0, "held": false, "hold_time": 0.0, "burst": 0.0 },
 ]
-var balls: Array[Dictionary] = []       # { pos, vel, node, done }
-var cups: Array[Dictionary] = []        # { pos, rim, full, points, back, front, label }
+var balls: Array[Dictionary] = []       # { pos, vel, node }
+var cups: Array[Dictionary] = []        # { pos, home, rim, full, points, net, rim_node, label }
 var bubbles: Array[Dictionary] = []
 
 var tex := {}
@@ -75,7 +76,7 @@ var _key_jets := [false, false]
 func _ready() -> void:
 	game_music_path = "res://sounds/music/Frédéric Chopin - Nocturne： Op. 9 No. 2 [8 bits].mp3"
 	lcd_font = load("res://fonts/pixChicago.ttf")
-	for n in ["tank", "cup_back", "cup_front", "nozzle", "bubble_big", "bubble_small"]:
+	for n in ["tank", "cup_rim", "cup_net", "nozzle", "bubble_big", "bubble_small"]:
 		tex[n] = load("res://textures/minigames/splash/%s.png" % n)
 	for c in BALL_COLORS:
 		tex["ball_" + c] = load("res://textures/minigames/splash/ball_%s.png" % c)
@@ -98,43 +99,46 @@ func _build_level() -> void:
 	for b in balls:
 		b["node"].queue_free()
 	for c in cups:
-		for k in ["back", "front", "label"]:
+		for k in ["net", "rim_node", "label"]:
 			c[k].queue_free()
 	balls.clear()
 	cups.clear()
 	rng.seed = 4271 * level + 3
 
-	var n_balls := mini(4 + 2 * level, 10)          # 3 per pump on level 1, +1 per pump each level
-	var n_cups := mini(n_balls + 2, CUP_SLOTS.size())
-	time_left = LEVEL_TIME + n_balls * 3.0
-	_place_cups(n_cups)
+	var n_balls := 6                                 # 3 per pump; balls are reused, never used up
+	time_left = LEVEL_TIME
+	_place_cups()
 
 	for i in n_balls:
 		var jx: float = NOZZLES[i % 2]
 		var pos := Vector2(jx + (i / 2 - 1) * 40.0, floor_at(jx) - 120.0 - (i / 2) * 30.0)
 		var s := _sprite(tex["ball_" + BALL_COLORS[i % BALL_COLORS.size()]], pos)
 		world.add_child(s)
-		balls.append({ "pos": pos, "vel": Vector2.ZERO, "node": s, "done": false })
+		balls.append({ "pos": pos, "vel": Vector2.ZERO, "node": s })
 	hud_level.text = "LV %d" % level
 	state = State.PLAY
 
-func _place_cups(n: int) -> void:
-	# fixed, well spread spots with a little per-level jitter; higher = more points
-	for i in n:
-		var p: Vector2 = CUP_SLOTS[i] + Vector2(rng.randf_range(-15, 15), rng.randf_range(-12, 12))
-		var points := 300 if p.y < 250 else (200 if p.y < 400 else 100)
-		cups.append(_make_cup(p, points))
+func _place_cups() -> void:
+	for i in CUP_SLOTS.size():
+		var p: Vector2 = CUP_SLOTS[i]
+		var c := _make_cup(p, CUP_POINTS[i])
+		c["home"] = p
+		c["sway"] = minf(12.0 * (level - 1), 36.0)      # level 2+: baskets wobble a little (stay out of the jets)
+		c["phase"] = i * 1.3
+		cups.append(c)
 
 func _make_cup(center: Vector2, points: int) -> Dictionary:
-	var back := _sprite(tex["cup_back"], center)
-	world.add_child(back)
-	world.move_child(back, 0)
-	var front := _sprite(tex["cup_front"], center)
-	front.z_index = 1                                   # in front of the ball it catches
-	world.add_child(front)
+	# see-through net + solid rim, both drawn over the balls so a ball is seen falling
+	# through the basket and dropping out of the bottom of the net
+	var net := _sprite(tex["cup_net"], center)
+	net.z_index = 1
+	world.add_child(net)
+	var rim := _sprite(tex["cup_rim"], center)
+	rim.z_index = 1
+	world.add_child(rim)
 	var label := _make_label(center + Vector2(-45, -CUP_H / 2.0 - 34), Vector2(90, 30), 22, HORIZONTAL_ALIGNMENT_CENTER, Color(0.2, 0.3, 0.38))
 	label.text = str(points)
-	return { "pos": center, "rim": center.y - CUP_H / 2.0 + 12.0, "full": false, "points": points, "back": back, "front": front, "label": label }
+	return { "pos": center, "rim": center.y - CUP_H / 2.0 + 12.0, "full": false, "points": points, "net": net, "rim_node": rim, "label": label }
 
 # ================================================================== LOOP
 
@@ -150,15 +154,27 @@ func _process(delta: float) -> void:
 			_refresh_hud()
 			end_game()
 			return
+		_move_cups(delta)
 		const STEPS := 4
 		for i in STEPS:
 			_physics(delta / STEPS)
-		_check_cups()
 	for b in balls:
-		if not b["done"]:
-			b["node"].position = b["pos"]
-			b["node"].rotation += b["vel"].x * delta / BALL_R
+		b["node"].position = b["pos"]
+		b["node"].rotation += b["vel"].x * delta / BALL_R
 	_refresh_hud()
+
+func _move_cups(delta: float) -> void:
+	for c in cups:
+		if c["sway"] <= 0.0:
+			continue
+		c["phase"] += delta * 0.8
+		var p: Vector2 = c["home"] + Vector2(sin(c["phase"]) * c["sway"], 0)
+		p.x = clampf(p.x, TANK_L + CUP_W / 2.0, TANK_R - CUP_W / 2.0)
+		c["pos"] = p
+		c["rim"] = p.y - CUP_H / 2.0 + 12.0
+		c["net"].position.x = p.x
+		c["rim_node"].position.x = p.x
+		c["label"].position.x = p.x - 45
 
 func _update_jets(delta: float) -> void:
 	_key_jets = [Input.is_key_pressed(KEY_LEFT) or Input.is_key_pressed(KEY_A), Input.is_key_pressed(KEY_RIGHT) or Input.is_key_pressed(KEY_D)]
@@ -200,8 +216,6 @@ func _jet_force(p: Vector2) -> Vector2:
 
 func _physics(dt: float) -> void:
 	for b in balls:
-		if b["done"]:
-			continue
 		var v: Vector2 = b["vel"]
 		v.y += GRAVITY * dt
 		v += _jet_force(b["pos"]) * dt
@@ -217,8 +231,6 @@ func _physics(dt: float) -> void:
 		for c in range(a + 1, balls.size()):
 			var pa: Dictionary = balls[a]
 			var pb: Dictionary = balls[c]
-			if pa["done"] or pb["done"]:
-				continue
 			var d: Vector2 = pb["pos"] - pa["pos"]
 			var min_d := BALL_R * 2.0
 			if d.length_squared() < min_d * min_d and d.length_squared() > 0.01:
@@ -246,7 +258,8 @@ func _collide_tank(b: Dictionary, dt: float) -> void:
 		pos.y = fy - BALL_R
 		var near: float = NOZZLES[0] if absf(pos.x - NOZZLES[0]) < absf(pos.x - NOZZLES[1]) else NOZZLES[1]
 		var side := signf(pos.x - near)
-		var n := Vector2(side * FLOOR_SLOPE, -1.0).normalized()   # surface normal (up)
+		# the floor rises away from the pump: dy/dx = -side * slope, so its upward normal is:
+		var n := Vector2(-side * FLOOR_SLOPE, -1.0).normalized()
 		var into := v.dot(n)
 		if into < 0.0:
 			v -= n * into * (1.0 + BOUNCE * 0.3)
@@ -257,49 +270,58 @@ func _collide_tank(b: Dictionary, dt: float) -> void:
 	b["vel"] = v
 
 func _collide_cups(b: Dictionary) -> void:
-	# cup walls are solid; only the open top of an empty cup lets a ball in
+	# Baskets are solid. Only the open top lets a ball in: it drops through the basket
+	# (filling it if it was empty) and falls out of the bottom, back down to the pumps.
+	var half := Vector2(CUP_W / 2.0, CUP_H / 2.0)
+	var mouth := half.x - 2.0                          # a ball touching the inner rim still drops in
 	for c in cups:
-		var half := Vector2(CUP_W / 2.0, CUP_H / 2.0)
 		var d: Vector2 = b["pos"] - c["pos"]
+		if b.get("through") == c:
+			if d.y > half.y + BALL_R or absf(d.x) > half.x:
+				b["through"] = null                        # out of the bottom
+			else:
+				# inside the net: kept between its tapering walls on the way down
+				var depth := clampf((d.y + half.y) / CUP_H, 0.0, 1.0)
+				var inner := lerpf(half.x - BALL_R, 27.0 - BALL_R * 0.6, depth)
+				b["pos"].x = clampf(b["pos"].x, c["pos"].x - inner, c["pos"].x + inner)
+				b["vel"].x *= 0.9
+				continue
 		if absf(d.x) >= half.x + BALL_R or absf(d.y) >= half.y + BALL_R:
 			continue
-		var in_mouth: bool = not c["full"] and absf(d.x) < half.x - BALL_R and b["pos"].y < c["rim"] + 6
-		if in_mouth:
-			continue
+		var prev_y: float = b.get("prev", b["pos"]).y
+		if absf(d.x) < mouth:
+			if b["pos"].y <= c["rim"]:
+				continue                                    # above the opening: nothing to hit
+			if prev_y <= c["rim"] and b["vel"].y > 0:
+				b["through"] = c                            # dropped in through the top
+				if not c["full"]:
+					_fill_cup(b, c)
+				continue
+		# otherwise bounce off the basket like a solid box
 		var ox: float = half.x + BALL_R - absf(d.x)
 		var oy: float = half.y + BALL_R - absf(d.y)
 		if ox < oy:
 			b["pos"].x += signf(d.x) * ox
-			b["vel"].x *= -BOUNCE
+			b["vel"].x = signf(d.x) * absf(b["vel"].x) * BOUNCE
 		else:
 			b["pos"].y += signf(d.y) * oy
-			b["vel"].y *= -BOUNCE
+			b["vel"].y = signf(d.y) * absf(b["vel"].y) * BOUNCE
+			if d.y < 0.0:
+				# landed on a rim: roll off it instead of balancing there
+				b["vel"].x += signf(d.x if absf(d.x) > 1.0 else randf() - 0.5) * 90.0
 
-func _check_cups() -> void:
-	for b in balls:
-		if b["done"] or not b.has("prev"):
-			continue
-		for c in cups:
-			if c["full"]:
-				continue
-			var dx: float = absf(b["pos"].x - c["pos"].x)
-			if b["vel"].y > 0 and dx < CUP_W / 2.0 - BALL_R and b["prev"].y <= c["rim"] and b["pos"].y > c["rim"]:
-				_score_ball(b, c)
-				break
-
-func _score_ball(b: Dictionary, c: Dictionary) -> void:
-	b["done"] = true
+func _fill_cup(_b: Dictionary, c: Dictionary) -> void:
 	c["full"] = true
-	var rest: Vector2 = c["pos"] + Vector2(0, CUP_H / 2.0 - 30.0)
+	c["net"].modulate = Color(1.0, 0.82, 0.45)       # a filled basket lights up gold
 	var tw := create_tween()
-	tw.tween_property(b["node"], "position", rest, 0.3).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
-	b["pos"] = rest
+	tw.tween_property(c["rim_node"], "scale", Vector2(S * 1.15, S * 0.85), 0.08)
+	tw.tween_property(c["rim_node"], "scale", Vector2(S, S), 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	c["label"].modulate.a = 0.3
 	add_score(c["points"])
-	_float_text("+%d" % c["points"], rest)
+	_float_text("+%d" % c["points"], c["pos"])
 	_sfx("res://sounds/fx/gamecoin.wav", -9.0)
-	for q in balls:
-		if not q["done"]:
+	for q in cups:
+		if not q["full"]:
 			return
 	_level_clear()
 

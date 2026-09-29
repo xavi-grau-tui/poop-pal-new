@@ -109,6 +109,22 @@ def cup(back_path, front_path):
     done(c, front_path)
 
 
+def cup_rim_net(front_path, rim_path, net_path):
+    """Split the basket front into a solid rim and a see-through mesh net, so balls are
+    seen falling through the basket."""
+    f = np.asarray(Image.open(front_path).convert('RGBA')).copy()
+    H, W = f.shape[:2]
+    rim = f.copy(); rim[10:] = 0
+    body = f.copy(); body[:10] = 0
+    fill = body[..., 3] > 0
+    edge = fill & (body[..., :3].astype(int).sum(-1) < 200)
+    yy, xx = np.mgrid[0:H, 0:W]
+    mesh = ((xx + yy) % 4 == 0) | ((xx - yy) % 4 == 0)
+    body[..., 3] = np.where(edge, 255, np.where(fill & mesh, 230, np.where(fill, 70, 0)))
+    Image.fromarray(rim).save(rim_path)
+    Image.fromarray(body).save(net_path)
+
+
 def nozzle(path):
     c = canvas(22, 11)
     m = hmask(lambda d, s: (d.chord([s(2), s(1), s(20), s(19)], 180, 360, fill=255), d.rectangle([s(0), s(9), s(22), s(11)], fill=255)), c)
@@ -173,12 +189,8 @@ def tank(path, W=317, H=316):
     img[edge] = OUT
     img = np.clip(img, 0, 255).astype(np.uint8)
     out = Image.fromarray(img, 'RGB').convert('RGBA')
-    # plastic frame (pink, like the console's accents) with a dark outline
+    # no frame: the water fills the console screen edge to edge
     d = ImageDraw.Draw(out)
-    d.rectangle([0, 0, W - 1, H - 1], outline=tuple(OUT.astype(int)), width=2)
-    d.rectangle([2, 2, W - 3, H - 3], outline=(236, 130, 160), width=4)
-    d.line([(3, 3), (W - 4, 3)], fill=(255, 190, 210), width=1)
-    d.rectangle([6, 6, W - 7, H - 7], outline=(170, 70, 100), width=1)
     out.save(path)
     return out
 
@@ -389,6 +401,7 @@ if __name__ == '__main__':
     cup(os.path.join(SPLASH, 'cup_back.png'), os.path.join(SPLASH, 'cup_front.png'))
     sheet.append(Image.open(os.path.join(SPLASH, 'cup_back.png')))
     sheet.append(Image.open(os.path.join(SPLASH, 'cup_front.png')))
+    cup_rim_net(os.path.join(SPLASH, 'cup_front.png'), os.path.join(SPLASH, 'cup_rim.png'), os.path.join(SPLASH, 'cup_net.png'))
     sheet.append(nozzle(os.path.join(SPLASH, 'nozzle.png')))
     sheet.append(pin(os.path.join(SPLASH, 'pin.png')))
     sheet.append(bubble(os.path.join(SPLASH, 'bubble_big.png'), 3.2))
