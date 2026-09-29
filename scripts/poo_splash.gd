@@ -4,8 +4,8 @@ extends BaseMinigame
 ## in a basket lights it up and falls through, and the floor slopes down to the pumps, so
 ## every ball always rolls back next to a pump. From level 2 the baskets drift sideways.
 ##
-## Main button: LEFT pump (hold to keep pumping, it runs dry after a moment).
-## Forward button: a quick burst from the RIGHT pump.
+## Main button: LEFT pump. Forward button: RIGHT pump. Both work the same way:
+## hold to keep pumping (a pump runs dry after a moment), release to stop.
 ## Desktop: also Left/Right arrow keys (or A / D) for the two pumps.
 
 const S := 3.0                          # world px per art pixel (sprites are drawn x3)
@@ -28,7 +28,6 @@ const JET_FORCE := 2000.0
 const JET_REACH := 780.0                # height where the jet has faded out
 const JET_SPREAD := 0.42                # cone widening per px of height
 const PUMP_TIME := 0.9                  # held main pump runs dry after this long
-const BURST_TIME := 0.6                 # forward burst length
 const BOUNCE := 0.45
 
 # --- Pieces ---
@@ -55,8 +54,8 @@ var state := State.PLAY
 var level := 1
 var time_left := LEVEL_TIME
 var jets := [
-	{ "x": NOZZLES[0], "power": 0.0, "held": false, "hold_time": 0.0, "burst": 0.0 },
-	{ "x": NOZZLES[1], "power": 0.0, "held": false, "hold_time": 0.0, "burst": 0.0 },
+	{ "x": NOZZLES[0], "power": 0.0, "held": false, "hold_time": 0.0 },
+	{ "x": NOZZLES[1], "power": 0.0, "held": false, "hold_time": 0.0 },
 ]
 var balls: Array[Dictionary] = []       # { pos, vel, node }
 var cups: Array[Dictionary] = []        # { pos, home, rim, full, points, net, rim_node, label }
@@ -186,9 +185,6 @@ func _update_jets(delta: float) -> void:
 			want = clampf(1.0 - (j["hold_time"] - PUMP_TIME) / 0.4, 0.0, 1.0)   # pump runs dry
 		else:
 			j["hold_time"] = 0.0
-		if j["burst"] > 0.0:
-			j["burst"] -= delta
-			want = maxf(want, clampf(j["burst"] / BURST_TIME * 1.6, 0.0, 1.0))
 		var rate := 14.0 if want > j["power"] else 5.0
 		j["power"] = move_toward(j["power"], want, rate * delta)
 		if j["power"] > 0.05 and rng.randf() < j["power"] * delta * 40.0:
@@ -474,19 +470,36 @@ func on_main_button_pressed() -> void:
 	if is_game_over:
 		super.on_main_button_pressed()
 		return
-	jets[0]["held"] = true
-	_sfx("res://sounds/fx/underwater-247531.mp3", -14.0, 0.6)
+	_pump(0, true)
 
 func on_main_button_released() -> void:
-	jets[0]["held"] = false
+	_pump(0, false)
+
+func on_forward_button_down() -> void:
+	if not is_game_over:
+		_pump(1, true)
+
+func on_forward_button_up() -> void:
+	_pump(1, false)
 
 func on_forward_button_pressed() -> void:
+	# (fires on release, after on_forward_button_up) only used on the game over screen
 	if is_game_over:
 		super.on_forward_button_pressed()
-		return
-	jets[1]["burst"] = BURST_TIME
-	_sfx("res://sounds/fx/underwater-247531.mp3", -14.0, 0.5)
+
+func _pump(i: int, down: bool) -> void:
+	jets[i]["held"] = down
+	if down:
+		_sfx("res://sounds/fx/underwater-247531.mp3", -14.0, 0.6)
 
 func end_game() -> void:
 	jets[0]["held"] = false
+	jets[1]["held"] = false
 	super.end_game()
+	# the game over screen goes over the baskets (their nets are drawn on a higher layer)
+	if game_over_overlay:
+		game_over_overlay.z_index = 10
+		for k in ["title", "score_text", "restart_label", "exit_label"]:
+			var n = game_over_overlay.get_meta(k)
+			if is_instance_valid(n):
+				n.z_index = 11
