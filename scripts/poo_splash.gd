@@ -39,7 +39,7 @@ const JET_SPREAD := 0.42                # cone widening per px of height
 const CENTER_X := 475.0                 # between the two pumps
 const MEET_PULL := 14.0                  # both pumps on: the currents pull towards the centre...
 const MEET_DAMP := 4.5                  # ...and cancel each other there (no overshoot)
-const MEET_MIN_H := 470.0               # only above the 200 baskets: balls rise straight up first
+const MEET_MIN_H := 250.0               # (above the pile; baskets can be crossed from below)
 const MEET_LIFT := 1500.0               # where they meet the water rises: a column up the middle
 const MEET_WIDTH := 110.0
 const PUMP_TIME := 0.9                  # held main pump runs dry after this long
@@ -293,14 +293,14 @@ func _collide_tank(b: Dictionary, dt: float) -> void:
 ## Basket colliders, relative to the basket centre (from the basket art, x3):
 ## the two ends of the rim are round knobs; the net's slanted sides are solid walls (both
 ## sides: outside they push balls away, inside they guide a ball down through the net);
-## the bottom of the net is open for balls falling out but blocks balls coming from below.
+## the bottom of the net is an open hole both ways: balls fall out of it, and a ball pushed
+## up from below can pass through the basket (it only scores coming down over the rim).
 const RIM_KNOB_L := Vector2(-40, -22)
 const RIM_KNOB_R := Vector2(40, -22)
 const RIM_KNOB_R_SIZE := 8.0
 const NET_WALL_L := [Vector2(-38, -12), Vector2(-27, 36)]
 const NET_WALL_R := [Vector2(38, -12), Vector2(27, 36)]
 const NET_WALL_THICK := 3.0
-const NET_BOTTOM_Y := 36.0
 const RIM_LINE_Y := -16.0                # crossing this line downward between the knobs = in
 
 func _collide_cups(b: Dictionary) -> void:
@@ -322,10 +322,6 @@ func _collide_cups(b: Dictionary) -> void:
 			var e: Vector2 = cp + w[1]
 			var q := Geometry2D.get_closest_point_to_segment(b["pos"], a, e)
 			_bounce_off_point(b, q, NET_WALL_THICK)
-		# net bottom: one-way, only stops balls coming up from below
-		if b["vel"].y < 0 and absf(d.x) < 27.0 + BALL_R * 0.5 and d.y > NET_BOTTOM_Y and d.y < NET_BOTTOM_Y + BALL_R:
-			b["pos"].y = cp.y + NET_BOTTOM_Y + BALL_R
-			b["vel"].y = absf(b["vel"].y) * BOUNCE
 
 func _bounce_off_point(b: Dictionary, q: Vector2, r: float) -> void:
 	var d: Vector2 = b["pos"] - q
