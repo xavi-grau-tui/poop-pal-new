@@ -5,8 +5,8 @@ extends TextureButton
 @export var hold_duration    := 1.0
 @export var fill_start_delay := 0.25
 @export var flush_hold_duration := 2.0  # hold on the pet view (no menu open) to flush
-@export var flush_sound_db := -11.0     # flush whoosh volume
-@export var flush_fade_time := 0.85     # whoosh fades out within the 0.9 s spin...
+@export var flush_sound_db := -8.5      # flush whoosh volume
+@export var flush_fade_time := 1.4      # whoosh fades out (runs a bit past the 0.9 s spin)...
 @export var cling_delay := 0.12         # ...then a short silence before the cling
 
 var was_pressed        := false
@@ -220,6 +220,7 @@ func _flush_poop() -> void:
 	var flush_sfx := _play_sfx("res://sounds/fx/sfx_sounds_falling8.mp3", flush_sound_db)
 	Input.vibrate_handheld(80)
 	var poop = get_node_or_null("../PetView/Poop")
+	var whoosh_end := Time.get_ticks_msec() + int(flush_fade_time * 1000.0)
 	# the flush sound is longer than the spin: fade it out so it's gone before the cling
 	if flush_sfx and flush_sfx.volume_db > -50.0:   # (muted = -inf, leave it)
 		var fade := create_tween()
@@ -227,7 +228,9 @@ func _flush_poop() -> void:
 		fade.tween_callback(flush_sfx.queue_free)
 	if poop and poop.has_method("play_flush"):
 		await poop.play_flush()
-	await get_tree().create_timer(cling_delay).timeout
+	# wait for the whoosh to die out, then the cling
+	var remaining := maxf(0.0, (whoosh_end - Time.get_ticks_msec()) / 1000.0)
+	await get_tree().create_timer(remaining + cling_delay).timeout
 	# ...and out it comes: a little sparkle + cling at the end of the gut
 	var gut = get_node_or_null("../PetView/Intestine-front")
 	if gut and gut.has_method("play_flush_sparkle"):
