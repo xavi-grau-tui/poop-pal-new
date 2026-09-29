@@ -6,6 +6,14 @@ extends BaseMinigame
 ##
 ## Main button: LEFT pump. Forward button: RIGHT pump. Both work the same way:
 ## hold to keep pumping (a pump runs dry after a moment), release to stop.
+##
+## How the baskets are reached (mapped with tools/design/splash_sim.py, keep it in sync):
+##   100  one pump, on the OUTER ball of the pile (~0.7 s): the jet fans it outwards
+##   200  one pump on the INNER ball, or a short push of both pumps
+##   300  BOTH pumps held together: the two currents meet in the middle, pull balls to the
+##        centre and rise up a column there; let go and the ball drops into the 300.
+##        Too short and it doesn't get high enough.
+## A ball sitting right on a nozzle goes straight up and back down with one pump only.
 ## Desktop: also Left/Right arrow keys (or A / D) for the two pumps.
 
 const S := 3.0                          # world px per art pixel (sprites are drawn x3)
@@ -26,8 +34,14 @@ const DRAG := 1.4                       # velocity damping per second
 const MAX_SPEED := 800.0
 const JET_FORCE := 2600.0
 const JET_TOP := 474.0                  # the thrust only acts below mid-screen; above it balls
-                                        # fly on their momentum and just fall back down
+										# fly on their momentum and just fall back down
 const JET_SPREAD := 0.42                # cone widening per px of height
+const CENTER_X := 475.0                 # between the two pumps
+const MEET_PULL := 14.0                  # both pumps on: the currents pull towards the centre...
+const MEET_DAMP := 4.5                  # ...and cancel each other there (no overshoot)
+const MEET_MIN_H := 470.0               # only above the 200 baskets: balls rise straight up first
+const MEET_LIFT := 1500.0               # where they meet the water rises: a column up the middle
+const MEET_WIDTH := 110.0
 const PUMP_TIME := 0.9                  # held main pump runs dry after this long
 const BOUNCE := 0.45
 
@@ -35,12 +49,13 @@ const BOUNCE := 0.45
 const BALL_R := 16.0
 const CUP_W := 90.0
 const CUP_H := 78.0
-## Basket spots: none in the jet columns (the main thrust goes straight up through there)
-## and each basket in its own column (never one above another). The jets fan out as they
-## rise: balls thrown outwards land in the two low side baskets, balls thrown inwards in
-## the three middle ones.
+## Basket spots (see the reach map at the top): the 300 in the centre, below where the
+## meeting currents lift the balls; the 200s where a single pump drops the inner ball, low
+## enough that a ball carried diagonally to the centre passes over them; the 100s low on
+## the outer sides (where a single pump throws the outer ball). None in the jet columns,
+## none above another.
 const CUP_SLOTS := [
-	Vector2(345, 410), Vector2(475, 330), Vector2(605, 410),
+	Vector2(325, 470), Vector2(475, 330), Vector2(625, 470),
 	Vector2(130, 545), Vector2(820, 545),
 ]
 const CUP_POINTS := [200, 300, 200, 100, 100]
@@ -190,12 +205,23 @@ func _update_jets(delta: float) -> void:
 		j["power"] = move_toward(j["power"], want, rate * delta)
 		if j["power"] > 0.05 and rng.randf() < j["power"] * delta * 40.0:
 			_spawn_bubble(Vector2(j["x"] + rng.randf_range(-10, 10), FLOOR_Y - 20))
+	# both pumps on: bubbles swirl in from both sides towards the middle
+	var both: float = minf(jets[0]["power"], jets[1]["power"])
+	if both > 0.2 and rng.randf() < both * delta * 30.0:
+		var side := -1.0 if rng.randf() < 0.5 else 1.0
+		_spawn_bubble(Vector2(CENTER_X + side * rng.randf_range(160, 260), rng.randf_range(420, 640)), -side * rng.randf_range(160, 260))
 
-func _jet_force(p: Vector2) -> Vector2:
+func _jet_force(p: Vector2, v: Vector2) -> Vector2:
 	var f := Vector2.ZERO
+	var h := FLOOR_Y - p.y
+	# both pumps at once: the two currents meet in the middle of the tank
+	var both: float = minf(jets[0]["power"], jets[1]["power"])
+	if both > 0.01 and h > MEET_MIN_H:
+		f.x += both * (MEET_PULL * (CENTER_X - p.x) - MEET_DAMP * v.x)
+		var cx := (p.x - CENTER_X) / MEET_WIDTH
+		f.y -= both * MEET_LIFT * exp(-cx * cx)
 	if p.y < JET_TOP:
 		return f
-	var h := FLOOR_Y - p.y
 	var fade := clampf((p.y - JET_TOP) / 60.0, 0.0, 1.0)     # soft edge at mid-screen
 	for j in jets:
 		if j["power"] <= 0.01:
@@ -205,6 +231,7 @@ func _jet_force(p: Vector2) -> Vector2:
 		var k: float = j["power"] * exp(-(dx / w) * (dx / w)) * fade
 		# straight up at the nozzle, fanning out a little higher up
 		var fan := clampf((h - 120.0) / 250.0, 0.0, 1.0)
+		fan *= 1.0 - both                                       # meeting currents cancel the fan
 		f += Vector2((signf(dx) * 0.3 + randf_range(-0.2, 0.2)) * fan, -1.0) * JET_FORCE * k
 	return f
 
@@ -212,7 +239,7 @@ func _physics(dt: float) -> void:
 	for b in balls:
 		var v: Vector2 = b["vel"]
 		v.y += GRAVITY * dt
-		v += _jet_force(b["pos"]) * dt
+		v += _jet_force(b["pos"], v) * dt
 		v *= maxf(0.0, 1.0 - DRAG * dt)
 		v = v.limit_length(MAX_SPEED)
 		b["prev"] = b["pos"]
@@ -346,11 +373,11 @@ func _level_clear() -> void:
 
 # ================================================================== BUBBLES
 
-func _spawn_bubble(at: Vector2) -> void:
+func _spawn_bubble(at: Vector2, vx := 0.0) -> void:
 	var big := randf() < 0.35
 	var s := _sprite(tex["bubble_big" if big else "bubble_small"], at)
 	bubble_layer.add_child(s)
-	bubbles.append({ "node": s, "vy": -randf_range(260, 420), "phase": randf() * TAU, "x": at.x })
+	bubbles.append({ "node": s, "vy": -randf_range(260, 420), "vx": vx, "phase": randf() * TAU, "x": at.x })
 
 func _update_bubbles(delta: float) -> void:
 	for i in range(bubbles.size() - 1, -1, -1):
@@ -358,6 +385,8 @@ func _update_bubbles(delta: float) -> void:
 		var n: Sprite2D = b["node"]
 		b["phase"] += delta * 9.0
 		n.position.y += b["vy"] * delta
+		b["x"] += b["vx"] * delta
+		b["vx"] *= maxf(0.0, 1.0 - 1.5 * delta)
 		n.position.x = b["x"] + sin(b["phase"]) * 6.0
 		if n.position.y < TANK_T + 16:
 			n.queue_free()
