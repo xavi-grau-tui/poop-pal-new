@@ -163,7 +163,7 @@ func _tickle() -> void:
 	_tickling = true
 	_stop_all_tweens()
 	scale = base_scale
-	_play_sfx("res://sounds/fx/giggle.wav", -6.0)
+	_play_sfx("res://sounds/fx/giggle.wav", -10.0)
 	_hearts()
 	fx_tween = create_tween()
 	# wriggle, a happy little hop, wriggle again
@@ -199,7 +199,7 @@ func poke() -> void:
 	set_meta("poking", true)
 	position = base_position
 	rotation = 0.0
-	_play_sfx("res://sounds/fx/giggle_short.wav", -8.0, randf_range(0.92, 1.12))
+	_play_sfx("res://sounds/fx/giggle_short.wav", -12.0, randf_range(0.92, 1.12))
 	var lean := 0.07 if randf() < 0.5 else -0.07
 	fx_tween = create_tween()
 	fx_tween.tween_property(self, "scale", base_scale * Vector2(1.1, 0.9), 0.05)

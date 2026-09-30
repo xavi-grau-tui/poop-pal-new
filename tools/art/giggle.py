@@ -39,7 +39,7 @@ def syllable(pitch, dur, breath=0.25):
     return v * env
 
 
-def giggle(path, notes=((620, 0.11), (560, 0.10), (520, 0.10), (470, 0.16))):
+def giggle(path, notes=((810, 0.11), (730, 0.10), (680, 0.10), (610, 0.16))):
     parts = []
     for i, (p, d) in enumerate(notes):
         parts.append(syllable(p, d))
@@ -53,5 +53,5 @@ def giggle(path, notes=((620, 0.11), (560, 0.10), (520, 0.10), (470, 0.16))):
 
 if __name__ == '__main__':
     giggle(os.path.join(PROJ, '..', 'sounds', 'fx', 'giggle.wav'))
-    giggle(os.path.join(PROJ, '..', 'sounds', 'fx', 'giggle_short.wav'), ((600, 0.09), (500, 0.13)))
+    giggle(os.path.join(PROJ, '..', 'sounds', 'fx', 'giggle_short.wav'), ((780, 0.09), (650, 0.13)))
     print('ok')
