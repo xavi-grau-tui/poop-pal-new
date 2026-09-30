@@ -74,6 +74,10 @@ func add_score(points: int) -> void:
 	score += points
 	# Points flow into the main LCD score as they are earned (not lost if the player quits mid-round)
 	PetState.add_score(points)
+	# ...and can unlock rewards right away (Collection.REWARDS)
+	var gs = get_node_or_null("/root/PoopPal/Main UI/GameScreen")
+	if gs and gs.current_game_index >= 0:
+		Collection.report_game_score(gs.current_game_index, score)
 
 # --- Error sound ---
 

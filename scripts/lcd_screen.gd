@@ -16,6 +16,12 @@ var running := false
 var tick_timer := 0.0
 var blink_on := true
 
+# Temporary message over the whole LCD ("ITEM UNLOCKED!")
+const MESSAGE_TIME := 3.5
+var _msg_label: Label
+var _msg_tween: Tween
+var _msg_hidden: Array[CanvasItem] = []
+
 func _ready():
 	_update_score_display()
 	PetState.score_changed.connect(func(_total): _update_score_display())
@@ -24,6 +30,46 @@ func _ready():
 	PetState.form_changed.connect(_on_form_changed)
 	running = PetState.has_poop()
 	_update_labels()
+	Collection.unlocked.connect(func(_c, _id): show_message("ITEM\nUNLOCKED!"))
+
+func show_message(text: String, secs := MESSAGE_TIME) -> void:
+	if not _msg_label:
+		_msg_label = Label.new()
+		_msg_label.z_index = 3
+		_msg_label.position = Vector2(127, -1812)
+		_msg_label.size = Vector2(380, 150)
+		_msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_msg_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		if score_counter_label:
+			_msg_label.add_theme_font_override("font", score_counter_label.get_theme_font("font"))
+			_msg_label.add_theme_color_override("font_color", score_counter_label.get_theme_color("font_color"))
+		_msg_label.add_theme_font_size_override("font_size", 40)
+		add_child(_msg_label)
+	if _msg_hidden.is_empty():
+		for path in ["StaticLabels", "ScoreCounter", "FoodTimer", "DrinkTimer"]:
+			var n := get_node_or_null(path) as CanvasItem
+			if n and n.visible:
+				n.visible = false
+				_msg_hidden.append(n)
+	_msg_label.text = text
+	_msg_label.visible = true
+	if _msg_tween:
+		_msg_tween.kill()
+	_msg_tween = create_tween()
+	var blinks := int(secs / 0.5)
+	for i in blinks:
+		_msg_tween.tween_callback(func(): _msg_label.modulate.a = 1.0)
+		_msg_tween.tween_interval(0.35)
+		_msg_tween.tween_callback(func(): _msg_label.modulate.a = 0.25)
+		_msg_tween.tween_interval(0.15)
+	_msg_tween.tween_callback(_end_message)
+
+func _end_message() -> void:
+	_msg_label.visible = false
+	_msg_label.modulate.a = 1.0
+	for n in _msg_hidden:
+		n.visible = true
+	_msg_hidden.clear()
 
 func _update_score_display() -> void:
 	if score_counter_label:

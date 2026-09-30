@@ -27,6 +27,9 @@ func _ready():
 	toggle_mode = true
 	add_to_group("menu_toggle_buttons")
 	set_process(true)
+	# The gear (collection) button blinks when something new is unlocked
+	if target_menu and target_menu.has_method("confirm_selected"):
+		Collection.unlocked.connect(func(_c, _id): blink_hint(6, 0.18))
 
 func _process(_delta):
 	self.disabled = FoodRainSpawner.is_locked or DrinkWaterfallSpawner.is_locked

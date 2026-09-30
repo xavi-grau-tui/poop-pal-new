@@ -194,6 +194,11 @@ func _build_hub_cards(menu: Node) -> void:
 		card.get_node("TopFrame/Control/GameLogo").texture = load(info["logo"])
 		card.get_node("TopFrame/Control/Background").texture = load(info["pattern"])
 		card.set_meta("action", { "type": "open", "view": info["view"] })
+		# "NEW!" tag on the top-right corner of the picture: something was unlocked inside
+		var badge := _new_badge(38)
+		badge.position = Vector2(1175, -1190)
+		badge.name = "NewBadge"
+		card.add_child(badge)
 		hub_root.add_child(card)
 		hub_cards.append(card)
 
@@ -235,7 +240,9 @@ func _update_hub_card_info() -> void:
 		var cat_catalog := Collection.catalog(cat)
 		lines[v] = ["Unlocked", "%d/%d" % [owned, Collection.order(cat).size()], "In use", cat_catalog[Collection.equipped(cat)]["name"]]
 	for i in HUB_CARDS.size():
-		var t: Array = lines[HUB_CARDS[i]["view"]]
+		var v: int = HUB_CARDS[i]["view"]
+		hub_cards[i].get_node("NewBadge").visible = v in LISTS and Collection.has_new(LISTS[v]["category"])
+		var t: Array = lines[v]
 		var bottom := hub_cards[i].get_node("BottomFrame")
 		var pairs := [[bottom.get_node("MaxScore"), bottom.get_node("MaxScore/Score")], [bottom.get_node("Progress"), bottom.get_node("Progress/Progress")]]
 		for k in 2:
@@ -354,8 +361,41 @@ func _build_list(v: int) -> void:
 		else:
 			st.text = info["verb"]
 		row.set_meta("action", { "type": "equip", "category": cat, "id": id } if owned else { "type": "locked" })
+		if Collection.is_new(cat, id):
+			var tag := _new_badge(26)
+			tag.position = Vector2(470, 8)
+			row.add_child(tag)
 		_add_item(row)
 	_add_back()
+	Collection.mark_seen(cat)          # seen now: the NEW tags are gone next time
+
+func _new_badge(font_size: int) -> Label:
+	var l := Label.new()
+	l.text = "NEW!"
+	l.add_theme_font_override("font", font)
+	l.add_theme_font_size_override("font_size", font_size)
+	l.add_theme_color_override("font_color", CREAM)
+	l.add_theme_color_override("font_outline_color", CARD_BORDER)
+	l.add_theme_constant_override("outline_size", 8)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = SELECT_BORDER
+	sb.border_color = CARD_BORDER
+	sb.set_border_width_all(4)
+	sb.set_corner_radius_all(6)
+	sb.content_margin_left = 10
+	sb.content_margin_right = 10
+	sb.content_margin_top = 2
+	sb.content_margin_bottom = 2
+	sb.anti_aliasing = false
+	l.add_theme_stylebox_override("normal", sb)
+	l.rotation = -0.18
+	l.z_index = 3
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.pivot_offset = Vector2(40, 20)
+	var t := l.create_tween().set_loops()
+	t.tween_property(l, "scale", Vector2(1.1, 1.1), 0.45).set_trans(Tween.TRANS_SINE)
+	t.tween_property(l, "scale", Vector2(1.0, 1.0), 0.45).set_trans(Tween.TRANS_SINE)
+	return l
 
 func _add_back() -> void:
 	var b := _card(Vector2(INNER.position.x + 24, INNER.end.y - 76), Vector2(150, 64))

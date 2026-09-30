@@ -14,6 +14,14 @@ const DEFAULT_BACKGROUND := "clouds"
 const RESET_BACKGROUND_ON_LAUNCH := true
 ## Prototype: every launch also starts with no accessory and no gut decor (unlocks are kept)
 const RESET_EQUIPPED_ON_LAUNCH := true
+## Prototype: every launch forgets earned unlocks (so the unlock flow can be tried again)
+const RESET_UNLOCKS_ON_LAUNCH := true
+
+## Rewards earned in minigames: reaching `score` in one round of `game` unlocks the item.
+## (game = Games menu page index: 0 Super Puff, 1 Poo Maze, 2 Poo Splash, 3 Poo Dash, ...)
+const REWARDS := [
+	{ "game": 0, "score": 5, "category": "decor", "id": "fairy_lights" },
+]
 
 ## "layers": [far layer (CloudA), near layer (CloudB)] — drop-in replacements for the cloud textures.
 ## "unlock": how it is obtained (shown on the locked card). Default unlocked = true/false.
@@ -51,7 +59,7 @@ const ACCESSORY_ORDER := ["none", "round_glasses", "mystery_acc"]
 ## Gut decor. "frames": overlays the size of intestine-front.png, cycled to animate.
 const DECOR := {
 	"none": { "name": "Nothing", "frames": [], "unlocked": true, "unlock": "" },
-	"fairy_lights": { "name": "Fairy Lights", "frames": ["res://textures/pet/decor/fairy_lights-1.png", "res://textures/pet/decor/fairy_lights-2.png"], "unlocked": true, "unlock": "" },
+	"fairy_lights": { "name": "Fairy Lights", "frames": ["res://textures/pet/decor/fairy_lights-1.png", "res://textures/pet/decor/fairy_lights-2.png"], "unlocked": false, "unlock": "Super Puff: 5 pts" },
 	"mystery_decor": { "name": "???", "frames": [], "unlocked": false, "unlock": "Coming soon" },
 }
 const DECOR_ORDER := ["none", "fairy_lights", "mystery_decor"]
@@ -60,6 +68,7 @@ var owned := { "backgrounds": [], "accessories": [], "decor": [] }
 var equipped_background := DEFAULT_BACKGROUND
 var equipped_accessory := "none"
 var equipped_decor := "none"
+var new_items := {}                     # "category/id" -> true: unlocked but not looked at yet
 
 func _ready() -> void:
 	for cat in ["backgrounds", "accessories", "decor"]:
@@ -67,7 +76,8 @@ func _ready() -> void:
 		for id in cat_catalog:
 			if cat_catalog[id]["unlocked"] and id not in owned[cat]:
 				owned[cat].append(id)
-	load_data()
+	if not RESET_UNLOCKS_ON_LAUNCH:
+		load_data()
 	if RESET_BACKGROUND_ON_LAUNCH and equipped_background != DEFAULT_BACKGROUND:
 		equipped_background = DEFAULT_BACKGROUND
 		save_data()
@@ -85,8 +95,31 @@ func unlock(category: String, id: String) -> void:
 	if category not in owned:
 		owned[category] = []
 	owned[category].append(id)
+	new_items["%s/%s" % [category, id]] = true
 	save_data()
 	unlocked.emit(category, id)
+
+## Called by every minigame as points come in (live, mid-round)
+func report_game_score(game: int, score: int) -> void:
+	for r in REWARDS:
+		if r["game"] == game and score >= r["score"] and not is_owned(r["category"], r["id"]):
+			unlock(r["category"], r["id"])
+
+func has_new(category: String) -> bool:
+	for k in new_items:
+		if k.begins_with(category + "/"):
+			return true
+	return false
+
+func is_new(category: String, id: String) -> bool:
+	return new_items.has("%s/%s" % [category, id])
+
+## The player has seen this category's list: its NEW badges go away
+func mark_seen(category: String) -> void:
+	for k in new_items.keys():
+		if k.begins_with(category + "/"):
+			new_items.erase(k)
+	save_data()
 
 func catalog(category: String) -> Dictionary:
 	match category:
@@ -133,7 +166,7 @@ func save_data() -> void:
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify({ "owned": owned, "equipped_background": equipped_background,
-			"equipped_accessory": equipped_accessory, "equipped_decor": equipped_decor }))
+			"equipped_accessory": equipped_accessory, "equipped_decor": equipped_decor, "new_items": new_items.keys() }))
 
 func load_data() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
@@ -153,6 +186,8 @@ func load_data() -> void:
 		var eq := str(parsed.get("equipped_background", "clouds"))
 		if eq in BACKGROUNDS and is_owned("backgrounds", eq):
 			equipped_background = eq
+		for k in parsed.get("new_items", []):
+			new_items[str(k)] = true
 		var acc := str(parsed.get("equipped_accessory", "none"))
 		if acc in ACCESSORIES and is_owned("accessories", acc):
 			equipped_accessory = acc
