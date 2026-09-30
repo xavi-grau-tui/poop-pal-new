@@ -99,6 +99,10 @@ func _ready() -> void:
 				owned[cat].append(id)
 	if not RESET_UNLOCKS_ON_LAUNCH:
 		load_data()
+	# what the pal wears goes down the drain with it
+	PetState.form_changed.connect(func(_id, reason):
+		if reason == "flush" and equipped_accessory != "none":
+			equip("accessories", "none"))
 	if RESET_BACKGROUND_ON_LAUNCH and (equipped_background != DEFAULT_BACKGROUND or equipped_bg_color != ""):
 		equipped_background = DEFAULT_BACKGROUND
 		equipped_bg_color = ""
