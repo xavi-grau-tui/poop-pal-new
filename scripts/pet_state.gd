@@ -190,8 +190,10 @@ func _set_form(id: String, reason: String) -> void:
 	if first_time:
 		Collection.new_items["pedia/" + id] = true     # NEW tag in the Pal-Pedia
 		Collection.save_data()
-		# announce it once the hatch / evolve animation has played
-		get_tree().create_timer(1.0).timeout.connect(func(): pal_discovered.emit(id))
+		# announce it once the pal has appeared: after its "hi!" when it hatches,
+		# after the evolve animation otherwise
+		var delay := 2.0 if reason == "hatch" else 1.6
+		get_tree().create_timer(delay).timeout.connect(func(): pal_discovered.emit(id))
 
 # --- Save / Load ---
 
