@@ -2,56 +2,53 @@
 from PIL import Image
 import numpy as np, sys
 from collections import deque
+# Glyphs are drawn in blocks of BLOCK x BLOCK pixels, like the SUPER PUFF poops (22x13 px)
+BLOCK = 3
 GLYPHS = {
- 'cloud': ["....###.........",
-           "..#.#####.......",
-           ".###########.##.",
-           ".##############.",
-           "################",
-           ".##############."],
- 'glasses': [".####...####.",
-             "##..##.##..##",
-             "##..#####..##",
-             "##..##.##..##",
-             ".####...####."],
- 'ball': ["..###..",
+ 'ball': ["..###..",            # a marble with a little shine (one empty pixel)
           ".#####.",
           "##.####",
           "#######",
           "#######",
           ".#####.",
           "..###.."],
- 'drop': ["...#...",
-          "..###..",
+ 'drop': ["..#..",
+          "..#..",
+          ".###.",
+          "#.###",
+          "#.###",
+          "#####",
+          ".###."],
+ 'germ': ["#..#..#",            # spiky germ with two eyes
           ".#####.",
-          "#######",
+          "##.#.##",
           "#######",
           ".#####.",
-          "..###.."],
+          "#..#..#"],
  'corn': [".###.",
+          "#.###",
           "#####",
           "#####",
           ".###.",
           "..#.."],
- 'brick': ["#######.#######",
-           "#######.#######",
-           "...............",
-           "###.#######.###",
-           "###.#######.###"],
- 'germ': ["#..#..#",
-          ".#####.",
-          "##.#.##",
-          ".#####.",
-          "#..#..#"],
- 'bulb': ["..###..",
-          ".#####.",
-          "#######",
-          "#######",
-          ".#####.",
-          "..###..",
-          "..###..",
-          "..#.#..",
-          "..###.."],
+ 'brick': ["######",            # a shiny bathroom tile
+           "#..###",
+           "#.####",
+           "######",
+           "######"],
+ 'glasses': [".##..##.",
+             "#..##..#",
+             ".##..##."],
+ 'bulb': [".###.",
+          "#.###",
+          "#####",
+          ".###.",
+          "..#..",
+          ".###."],
+ 'cloud': ["...##...",
+           ".######.",
+           "########",
+           ".######."],
 }
 glyph = GLYPHS[sys.argv[1]]; out_path = sys.argv[2]
 # optional colour: "r,g,b" (default: the original warm brown)
@@ -72,9 +69,11 @@ for y in range(H):
                 ys, xs = zip(*pts); centers.append((max(ys), (min(xs) + max(xs)) / 2))
 out = np.zeros_like(src)
 for (bottom, cx) in centers:
-    y0 = bottom + 1 - len(glyph); x0 = int(round(cx)) - len(glyph[0]) // 2
+    y0 = bottom + 1 - len(glyph) * BLOCK; x0 = int(round(cx)) - len(glyph[0]) * BLOCK // 2
     for j, row in enumerate(glyph):
         for i, c in enumerate(row):
             if c == '#':
-                out[(y0 + j) % H, (x0 + i) % W] = COLOR
+                for by in range(BLOCK):
+                    for bx in range(BLOCK):
+                        out[(y0 + j * BLOCK + by) % H, (x0 + i * BLOCK + bx) % W] = COLOR
 Image.fromarray(out, 'RGBA').save(out_path)
