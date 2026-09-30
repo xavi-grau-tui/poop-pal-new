@@ -30,7 +30,21 @@ func _ready():
 	PetState.form_changed.connect(_on_form_changed)
 	running = PetState.has_poop()
 	_update_labels()
-	Collection.unlocked.connect(func(_c, _id): show_message("ITEM\nUNLOCKED!"))
+	Collection.unlocked.connect(func(_c, _id):
+		show_message("ITEM\nUNLOCKED!")
+		_ding())
+
+func _ding() -> void:
+	# a small, soft ding: noticeable, but you keep your focus on the minigame
+	var sfx := AudioStreamPlayer.new()
+	sfx.stream = load("res://sounds/fx/unlock_ding.wav")
+	sfx.volume_db = -14.0
+	var sound_btn = get_node_or_null("/root/PoopPal/Main UI/SoundButtons/SoundButton")
+	if sound_btn and sound_btn.button_pressed:
+		sfx.volume_db = linear_to_db(0.0)
+	add_child(sfx)
+	sfx.play()
+	sfx.finished.connect(sfx.queue_free)
 
 func show_message(text: String, secs := MESSAGE_TIME) -> void:
 	if not _msg_label:

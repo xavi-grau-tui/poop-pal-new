@@ -3,6 +3,7 @@
   -> textures/pet/fx/flush_sparkle.png   5 frames of 17x17 art pixels in one strip
                                           (drawn 1 texel per art pixel, scaled up in game)
   -> sounds/fx/flush_cling.wav           synthesized: two soft bell notes, fast decay
+  -> sounds/fx/unlock_ding.wav           tiny, soft rising "ding-ding" for "ITEM UNLOCKED!"
 """
 import math, os, wave
 import numpy as np
@@ -66,6 +67,25 @@ def cling(path, sr=44100):
         w.writeframes((out * 32767).astype(np.int16).tobytes())
 
 
+def unlock_ding(path, sr=44100):
+    """Two short, soft triangle-ish notes (G6 -> C7): noticeable but not distracting."""
+    def note(f, dur):
+        t = np.arange(int(sr * dur)) / sr
+        tri = 2 / math.pi * np.arcsin(np.sin(2 * math.pi * f * t))       # soft 8-bit-ish tone
+        tone = tri * 0.8 + 0.2 * np.sin(2 * math.pi * f * 2 * t)
+        env = (1 - np.exp(-t * 600)) * np.exp(-t * 14)
+        return tone * env
+    a, b = note(1568.0, 0.12), note(2093.0, 0.2)
+    out = np.zeros(int(sr * 0.3))
+    out[:len(a)] += a
+    start = int(sr * 0.085)
+    out[start:start + len(b)] += b[:len(out) - start]
+    out = out / np.abs(out).max() * 0.5
+    with wave.open(path, 'wb') as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
+        w.writeframes((out * 32767).astype(np.int16).tobytes())
+
+
 if __name__ == '__main__':
     dest = os.path.join(PROJ, 'pet', 'fx')
     os.makedirs(dest, exist_ok=True)
@@ -75,4 +95,5 @@ if __name__ == '__main__':
     prev.alpha_composite(Image.fromarray(strip, 'RGBA'))
     prev.resize((prev.width * 12, prev.height * 12), Image.NEAREST).save(os.path.join(SCR, 'sparkle_preview.png'))
     cling(os.path.join(PROJ, '..', 'sounds', 'fx', 'flush_cling.wav'))
+    unlock_ding(os.path.join(PROJ, '..', 'sounds', 'fx', 'unlock_ding.wav'))
     print('ok')
