@@ -357,8 +357,42 @@ func _play_hatch() -> void:
 	fx_tween = create_tween()
 	fx_tween.tween_property(self, "scale", base_scale, 0.7).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	_play_sfx("res://sounds/fx/gamecoin.wav", -8.0)
+	get_tree().create_timer(0.45).timeout.connect(_say_hi)
 	await fx_tween.finished
 	_start_breathing()
+
+## A new pal greets you: a little "hi!" noise, a tiny hop and "Hi!" floating up the cam
+func _say_hi() -> void:
+	if not PetState.has_poop():
+		return
+	_play_sfx("res://sounds/fx/hi.wav", -9.0, randf_range(0.97, 1.06))
+	var hop := create_tween()
+	hop.tween_property(self, "position:y", base_position.y - 10.0, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	hop.tween_property(self, "position:y", base_position.y, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	var l := Label.new()
+	l.text = "Hi!"
+	var f = load("res://fonts/pixChicago.ttf")
+	if f:
+		l.add_theme_font_override("font", f)
+	l.add_theme_font_size_override("font_size", 46)
+	l.add_theme_color_override("font_color", Color8(250, 244, 214))
+	l.add_theme_color_override("font_outline_color", Color8(74, 44, 32))
+	l.add_theme_constant_override("outline_size", 12)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.size = Vector2(160, 60)
+	l.z_index = 2
+	var start := base_position + Vector2(-80, (_body_rect.position.y) * base_scale.y - 40)
+	l.position = start
+	l.modulate.a = 0.0
+	l.scale = Vector2(0.6, 0.6)
+	l.pivot_offset = l.size / 2.0
+	get_parent().add_child(l)
+	var t := create_tween()
+	t.tween_property(l, "modulate:a", 1.0, 0.12)
+	t.parallel().tween_property(l, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.parallel().tween_property(l, "position:y", start.y - 70.0, 1.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	t.tween_property(l, "modulate:a", 0.0, 0.35)
+	t.tween_callback(l.queue_free)
 
 func _play_evolve() -> void:
 	_stop_all_tweens()
