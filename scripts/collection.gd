@@ -114,6 +114,10 @@ func has_new(category: String) -> bool:
 func is_new(category: String, id: String) -> bool:
 	return new_items.has("%s/%s" % [category, id])
 
+func mark_seen_item(category: String, id: String) -> void:
+	if new_items.erase("%s/%s" % [category, id]):
+		save_data()
+
 ## The player has seen this category's list: its NEW badges go away
 func mark_seen(category: String) -> void:
 	for k in new_items.keys():

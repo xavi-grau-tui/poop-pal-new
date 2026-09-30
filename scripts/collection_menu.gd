@@ -26,13 +26,15 @@ const LISTS := {
 	View.DECOR: { "category": "decor", "title": "GUT DECOR", "verb": "Hold to hang" },
 }
 const PEDIA_PER_PAGE := 9
+const LIST_PER_PAGE := 3              # cosmetics lists: forward flips pages, like the Games menu
 
 # Inner (brown) area of the golden frame, in Menu-local coordinates
 const INNER := Rect2(695, -1182, 658, 641)
 
 const CREAM := Color8(250, 244, 214)
 const CARD_BORDER := Color8(58, 38, 30)
-const SELECT_BORDER := Color8(214, 86, 128)
+const SELECT_BORDER := Color8(200, 140, 78)     # warm caramel frame on the selected item
+const IN_USE := Color8(104, 128, 72)            # moss green: the item in use / NEW tags
 const ICON_BOX := Color8(218, 176, 128)
 const TEXT := Color(0.65098, 0.505882, 0.368627)
 const TEXT_DARK := Color8(74, 48, 34)
@@ -66,8 +68,8 @@ func _ready() -> void:
 
 	title = _label(Vector2(INNER.position.x, INNER.position.y + 8), Vector2(INNER.size.x, 70), 54, CREAM, menu)
 	_outline(title, 12)
-	status = _label(Vector2(INNER.position.x + 180, INNER.end.y - 74), Vector2(INNER.size.x - 200, 66), 30, CREAM, menu)
-	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	status = _label(Vector2(INNER.position.x + 20, INNER.end.y - 78), Vector2(INNER.size.x - 40, 70), 40, CREAM, menu)
+	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_outline(status, 8)
 
@@ -108,6 +110,9 @@ func flip_page() -> void:
 		View.PEDIA:
 			page = (page + 1) % _pedia_pages()
 			_open(View.PEDIA)
+		View.BACKGROUNDS, View.ACCESSORIES, View.DECOR:
+			page = (page + 1) % _list_pages(view)
+			_open(view)
 		View.DETAIL:
 			var order := PetState.pedia_order()
 			var i := (order.find(detail_id) + 1) % order.size()
@@ -291,7 +296,6 @@ func _build_pedia() -> void:
 		_fit_one_line(n, 26)
 		c.set_meta("action", { "type": "pal", "id": id })
 		_add_item(c)
-	_add_back()
 
 func _show_detail(id: String) -> void:
 	view = View.DETAIL
@@ -337,15 +341,19 @@ func _build_list(v: int) -> void:
 	title.text = info["title"]
 	status.text = info["verb"]
 	var ids := Collection.order(cat)
-	for i in ids.size():
+	page = clampi(page, 0, _list_pages(v) - 1)
+	for slot in LIST_PER_PAGE:
+		var i := page * LIST_PER_PAGE + slot
+		if i >= ids.size():
+			break
 		var id: String = ids[i]
 		var item: Dictionary = cat_catalog[id]
 		var owned := Collection.is_owned(cat, id)
-		var row := _card(Vector2(INNER.position.x + 29, INNER.position.y + 88 + i * 150), Vector2(600, 138))
+		var row := _card(Vector2(INNER.position.x + 29, INNER.position.y + 88 + slot * 150), Vector2(600, 138))
 		var box := _icon_box(row, Vector2(14, 12), Vector2(114, 110))
 		var icon := _icon(box, null, Vector2(102, 98))
 		var preview: Texture2D = _item_preview(cat, id) if owned else null
-		icon.texture = preview if preview else load("res://textures/menus/mistery_pink.png")
+		icon.texture = preview if preview else load("res://textures/menus/mistery.png")   # same "?" as locked games
 		_add_doughnut(row, box)
 		var t := _label(Vector2(140, 12), Vector2(440, 60), 44, TEXT, row)
 		t.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -357,17 +365,14 @@ func _build_list(v: int) -> void:
 			st.text = "Locked - " + item["unlock"]
 		elif Collection.equipped(cat) == id:
 			st.text = "In use"
-			st.add_theme_color_override("font_color", SELECT_BORDER)
-		else:
-			st.text = info["verb"]
+			st.add_theme_color_override("font_color", IN_USE)
 		row.set_meta("action", { "type": "equip", "category": cat, "id": id } if owned else { "type": "locked" })
 		if Collection.is_new(cat, id):
 			var tag := _new_badge(26)
 			tag.position = Vector2(470, 8)
 			row.add_child(tag)
+			Collection.mark_seen_item(cat, id)   # seen now: its NEW tag is gone next time
 		_add_item(row)
-	_add_back()
-	Collection.mark_seen(cat)          # seen now: the NEW tags are gone next time
 
 func _new_badge(font_size: int) -> Label:
 	var l := Label.new()
@@ -378,7 +383,7 @@ func _new_badge(font_size: int) -> Label:
 	l.add_theme_color_override("font_outline_color", CARD_BORDER)
 	l.add_theme_constant_override("outline_size", 8)
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = SELECT_BORDER
+	sb.bg_color = IN_USE
 	sb.border_color = CARD_BORDER
 	sb.set_border_width_all(4)
 	sb.set_corner_radius_all(6)
@@ -397,20 +402,6 @@ func _new_badge(font_size: int) -> Label:
 	t.tween_property(l, "scale", Vector2(1.0, 1.0), 0.45).set_trans(Tween.TRANS_SINE)
 	return l
 
-func _add_back() -> void:
-	var b := _card(Vector2(INNER.position.x + 24, INNER.end.y - 76), Vector2(150, 64))
-	var l := _label(Vector2(0, 0), b.size, 32, TEXT, b)
-	l.text = "< Back"
-	# ring hugging the button for hold feedback
-	var ring_anchor := Control.new()
-	ring_anchor.position = Vector2(-4, -8)
-	ring_anchor.size = Vector2(80, 80)
-	ring_anchor.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(ring_anchor)
-	_add_doughnut(b, ring_anchor)
-	b.set_meta("action", { "type": "back" })
-	_add_item(b)
-
 func _add_item(c: Control) -> void:
 	content.add_child(c)
 	items.append(c)
@@ -424,11 +415,18 @@ func _refresh_selection() -> void:
 		(items[i].get_theme_stylebox("panel") as StyleBoxFlat).border_color = SELECT_BORDER if sel else CARD_BORDER
 
 func _refresh_pager() -> void:
-	var pages := _pedia_pages() if view in [View.PEDIA, View.DETAIL] else 1
-	var many := view == View.PEDIA and pages > 1
+	var pages := 1
+	if view in [View.PEDIA, View.DETAIL]:
+		pages = _pedia_pages()
+	elif view in LISTS:
+		pages = _list_pages(view)
+	var many := view != View.DETAIL and view != View.HUB and pages > 1
 	page_label.visible = many
 	page_hint.visible = (many or view == View.DETAIL) and view != View.HUB
 	page_label.text = "%d/%d" % [page + 1, pages]
+
+func _list_pages(v: int) -> int:
+	return maxi(1, ceili(Collection.order(LISTS[v]["category"]).size() / float(LIST_PER_PAGE)))
 
 func _pedia_pages() -> int:
 	return maxi(1, ceili(PetState.FORMS.size() / float(PEDIA_PER_PAGE)))
