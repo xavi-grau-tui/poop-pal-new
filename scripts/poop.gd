@@ -290,7 +290,8 @@ func _on_boost_changed(id: String, animate := true) -> void:
 	boost_badge.position = BOOST_BADGE_POS
 	boost_badge.modulate.a = 1.0
 	boost_badge.show()
-	if animate:                                  # pops in when you drink
+	if animate:                                  # pops in when you drink, with a watery boing
+		_play_sfx("res://sounds/fx/water_boing.wav", -11.0)
 		boost_badge.scale = Vector2.ZERO
 		create_tween().tween_property(boost_badge, "scale", Vector2(5, 5), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_badge_bob = create_tween().set_loops()

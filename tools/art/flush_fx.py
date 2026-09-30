@@ -4,6 +4,7 @@
                                           (drawn 1 texel per art pixel, scaled up in game)
   -> sounds/fx/flush_cling.wav           synthesized: two soft bell notes, fast decay
   -> sounds/fx/unlock_ding.wav           tiny, soft rising "ding-ding" for "ITEM UNLOCKED!"
+  -> sounds/fx/water_boing.wav           watery "boing" when the water boost switches on
 """
 import math, os, wave
 import numpy as np
@@ -86,6 +87,33 @@ def unlock_ding(path, sr=44100):
         w.writeframes((out * 32767).astype(np.int16).tobytes())
 
 
+def water_boing(path, sr=44100):
+    """A springy boing (pitch wobbling and settling) with a bubble 'bloop' on the attack,
+    softened like it happens under water."""
+    dur = 0.55
+    t = np.arange(int(sr * dur)) / sr
+    # boing: base pitch glides up a little while a decaying wobble shakes it
+    base = 260 + 140 * (1 - np.exp(-t * 6))
+    wobble = 1 + 0.35 * np.exp(-t * 7) * np.sin(2 * math.pi * 11 * t)
+    f = base * wobble
+    phase = 2 * math.pi * np.cumsum(f) / sr
+    boing = np.sin(phase) + 0.25 * np.sin(2 * phase)
+    boing *= (1 - np.exp(-t * 400)) * np.exp(-t * 5.5)
+    # bloop: a quick rising bubble at the start
+    tb = t[t < 0.09]
+    fb = 500 + 1400 * (tb / 0.09) ** 1.5
+    bloop = np.sin(2 * math.pi * np.cumsum(fb) / sr) * np.exp(-tb * 25) * (1 - np.exp(-tb * 900))
+    out = boing * 0.8
+    out[:len(bloop)] += bloop * 0.6
+    # 'humid': a soft low-pass (moving average) so it sounds muffled, wet
+    k = np.ones(9) / 9
+    out = np.convolve(out, k, mode='same')
+    out = out / np.abs(out).max() * 0.55
+    with wave.open(path, 'wb') as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
+        w.writeframes((out * 32767).astype(np.int16).tobytes())
+
+
 if __name__ == '__main__':
     dest = os.path.join(PROJ, 'pet', 'fx')
     os.makedirs(dest, exist_ok=True)
@@ -96,4 +124,5 @@ if __name__ == '__main__':
     prev.resize((prev.width * 12, prev.height * 12), Image.NEAREST).save(os.path.join(SCR, 'sparkle_preview.png'))
     cling(os.path.join(PROJ, '..', 'sounds', 'fx', 'flush_cling.wav'))
     unlock_ding(os.path.join(PROJ, '..', 'sounds', 'fx', 'unlock_ding.wav'))
+    water_boing(os.path.join(PROJ, '..', 'sounds', 'fx', 'water_boing.wav'))
     print('ok')
