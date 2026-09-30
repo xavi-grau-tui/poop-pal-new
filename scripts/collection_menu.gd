@@ -505,7 +505,7 @@ func _add_doughnut(parent: Control, around: Control) -> void:
 	d.texture_progress = load("res://textures/menus/circle.png")
 	d.tint_under = Color(1, 1, 1, 0.56)
 	d.tint_over = Color(1, 1, 1, 0.31)
-	d.tint_progress = Color(0.894118, 0.576471, 0.376471, 1)
+	d.tint_progress = Color(0.635294, 0.596078, 0.384314, 1)   # the green of the '?' cards
 	d.position = around.position - Vector2(6, 6)
 	d.size = around.size + Vector2(12, 12)
 	d.visible = false
