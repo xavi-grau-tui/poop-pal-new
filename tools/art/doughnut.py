@@ -13,7 +13,7 @@ from hires import PROJ
 N = 64
 SS = 8                      # supersampling for clean pixel edges
 R_OUT, R_IN = 27.0, 20.5    # the ring that fills up
-BORDER = 3.5                # outline thickness on each side (old 32px ring: ~2x this)
+BORDER = 4.5                # outline thickness on each side (old 32px ring: ~2x this)
 
 
 def ring(r_in, r_out):

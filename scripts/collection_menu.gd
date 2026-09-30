@@ -505,7 +505,7 @@ func _add_doughnut(parent: Control, around: Control) -> void:
 	d.texture_progress = load("res://textures/menus/circle.png")
 	d.tint_under = Color(1, 1, 1, 0.56)
 	d.tint_over = Color(1, 1, 1, 0.31)
-	d.tint_progress = SELECT_BORDER   # same pink as the selected item: 'confirm this one'
+	d.tint_progress = Color8(243, 182, 126)   # pastel apricot, like every hold ring
 	d.position = around.position - Vector2(6, 6)
 	d.size = around.size + Vector2(12, 12)
 	d.visible = false

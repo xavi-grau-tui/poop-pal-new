@@ -947,7 +947,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption1/Doughnut"]
 z_index = -1
@@ -1025,7 +1025,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption2/Doughnut"]
 z_index = -1
@@ -1104,7 +1104,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption3/Doughnut"]
 z_index = -1
@@ -1188,7 +1188,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption1/Doughnut"]
 z_index = -1
@@ -1268,7 +1268,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption2/Doughnut"]
 z_index = -1
@@ -1349,7 +1349,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption3/Doughnut"]
 z_index = -1
@@ -1512,10 +1512,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = 958.0
-offset_top = -969.0
-offset_right = 1081.0
-offset_bottom = -850.0
+offset_left = 870.0
+offset_top = -1110.0
+offset_right = 1170.0
+offset_bottom = -810.0
 grow_horizontal = 2
 grow_vertical = 2
 fill_mode = 4
@@ -1523,7 +1523,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game/Doughnut"]
 z_index = -1
@@ -1645,10 +1645,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = 958.0
-offset_top = -969.0
-offset_right = 1081.0
-offset_bottom = -850.0
+offset_left = 870.0
+offset_top = -1110.0
+offset_right = 1170.0
+offset_bottom = -810.0
 grow_horizontal = 2
 grow_vertical = 2
 fill_mode = 4
@@ -1656,7 +1656,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame2/Game/Doughnut"]
 z_index = -1
@@ -1777,10 +1777,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = 958.0
-offset_top = -969.0
-offset_right = 1081.0
-offset_bottom = -850.0
+offset_left = 870.0
+offset_top = -1110.0
+offset_right = 1170.0
+offset_bottom = -810.0
 grow_horizontal = 2
 grow_vertical = 2
 fill_mode = 4
@@ -1788,7 +1788,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame3/Game/Doughnut"]
 z_index = -1
@@ -1909,10 +1909,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = 958.0
-offset_top = -969.0
-offset_right = 1081.0
-offset_bottom = -850.0
+offset_left = 870.0
+offset_top = -1110.0
+offset_right = 1170.0
+offset_bottom = -810.0
 grow_horizontal = 2
 grow_vertical = 2
 fill_mode = 4
@@ -1920,7 +1920,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame4/Game/Doughnut"]
 z_index = -1
@@ -2041,10 +2041,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = 958.0
-offset_top = -969.0
-offset_right = 1081.0
-offset_bottom = -850.0
+offset_left = 870.0
+offset_top = -1110.0
+offset_right = 1170.0
+offset_bottom = -810.0
 grow_horizontal = 2
 grow_vertical = 2
 fill_mode = 4
@@ -2052,7 +2052,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame5/Game/Doughnut"]
 z_index = -1
@@ -2173,10 +2173,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = 958.0
-offset_top = -969.0
-offset_right = 1081.0
-offset_bottom = -850.0
+offset_left = 870.0
+offset_top = -1110.0
+offset_right = 1170.0
+offset_bottom = -810.0
 grow_horizontal = 2
 grow_vertical = 2
 fill_mode = 4
@@ -2184,7 +2184,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame6/Game/Doughnut"]
 z_index = -1
@@ -2305,10 +2305,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = 958.0
-offset_top = -969.0
-offset_right = 1081.0
-offset_bottom = -850.0
+offset_left = 870.0
+offset_top = -1110.0
+offset_right = 1170.0
+offset_bottom = -810.0
 grow_horizontal = 2
 grow_vertical = 2
 fill_mode = 4
@@ -2316,7 +2316,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame7/Game/Doughnut"]
 z_index = -1
@@ -2437,10 +2437,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = 958.0
-offset_top = -969.0
-offset_right = 1081.0
-offset_bottom = -850.0
+offset_left = 870.0
+offset_top = -1110.0
+offset_right = 1170.0
+offset_bottom = -810.0
 grow_horizontal = 2
 grow_vertical = 2
 fill_mode = 4
@@ -2448,7 +2448,7 @@ nine_patch_stretch = true
 texture_progress = ExtResource("49_uit24")
 tint_under = Color(1, 1, 1, 0.560784)
 tint_over = Color(1, 1, 1, 0.309804)
-tint_progress = Color(0.839216, 0.337255, 0.501961, 1)
+tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/GameMenu/Menu/VBoxGame8/Game/Doughnut"]
 z_index = -1
