@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b6x64ajlf8413"
-path="res://.godot/imported/poobreak.png-3819b2fc3721636ea95b8176c271182e.ctex"
+uid="uid://cdwyblwy4vkkn"
+path="res://.godot/imported/pattern_glasses_cream.png-ce7a0ca6238c861a351f4bea710d5be8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/menus/poobreak.png"
-dest_files=["res://.godot/imported/poobreak.png-3819b2fc3721636ea95b8176c271182e.ctex"]
+source_file="res://textures/menus/pattern_glasses_cream.png"
+dest_files=["res://.godot/imported/pattern_glasses_cream.png-ce7a0ca6238c861a351f4bea710d5be8.ctex"]
 
 [params]
 

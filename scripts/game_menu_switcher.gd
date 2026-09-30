@@ -19,11 +19,11 @@ var current_page := 0
 # Card art for games whose cards are still "?" placeholders in the scene.
 # Shown once the game is unlocked.
 const CARD_ART := {
-	1: { "logo": "res://textures/menus/poomaze.png", "background": "res://textures/menus/pooploopbackground.png" },
-	2: { "logo": "res://textures/menus/poosplash.png", "background": "res://textures/menus/droploopbackground.png" },
-	3: { "logo": "res://textures/menus/poodash.png", "background": "res://textures/menus/cornloopbackground.png" },
-	4: { "logo": "res://textures/menus/poobreak.png", "background": "res://textures/menus/brickloopbackground.png" },
-	5: { "logo": "res://textures/menus/germzap.png", "background": "res://textures/menus/germloopbackground.png" },
+	1: { "logo": "res://textures/menus/tiltmaze.png", "background": "res://textures/menus/pattern_ball_moss.png" },
+	2: { "logo": "res://textures/menus/splashhoops.png", "background": "res://textures/menus/pattern_drop_sage.png" },
+	3: { "logo": "res://textures/menus/paldash.png", "background": "res://textures/menus/pattern_corn_caramel.png" },
+	4: { "logo": "res://textures/menus/tilebreak.png", "background": "res://textures/menus/pattern_brick_terracotta.png" },
+	5: { "logo": "res://textures/menus/germzap.png", "background": "res://textures/menus/pattern_germ_olive.png" },
 }
 
 func _ready():

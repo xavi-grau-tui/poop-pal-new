@@ -15,9 +15,9 @@ enum View { HUB, PEDIA, DETAIL, BACKGROUNDS, ACCESSORIES, DECOR }
 
 const HUB_CARDS := [
 	{ "view": View.PEDIA, "logo": "res://textures/menus/poopedia.png", "pattern": "res://textures/menus/pooploopbackground.png" },
-	{ "view": View.ACCESSORIES, "logo": "res://textures/menus/dressup.png", "pattern": "res://textures/menus/glassesloopbackground.png" },
-	{ "view": View.DECOR, "logo": "res://textures/menus/gutdecor.png", "pattern": "res://textures/menus/bulbloopbackground.png" },
-	{ "view": View.BACKGROUNDS, "logo": "res://textures/menus/backgrounds.png", "pattern": "res://textures/menus/cloudloopbackground.png" },
+	{ "view": View.ACCESSORIES, "logo": "res://textures/menus/dressup.png", "pattern": "res://textures/menus/pattern_glasses_cream.png" },
+	{ "view": View.DECOR, "logo": "res://textures/menus/gutdecor.png", "pattern": "res://textures/menus/pattern_bulb_caramel.png" },
+	{ "view": View.BACKGROUNDS, "logo": "res://textures/menus/backgrounds.png", "pattern": "res://textures/menus/pattern_cloud_sage.png" },
 ]
 ## Cosmetic list views: Collection category, title, verb shown on usable rows
 const LISTS := {

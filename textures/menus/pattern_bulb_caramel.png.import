@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c2fagrf1273"
-path="res://.godot/imported/bulbloopbackground.png-aa69a8f4508114f41b0e7fac4087e2b3.ctex"
+uid="uid://ctofqfyoqsnhw"
+path="res://.godot/imported/pattern_bulb_caramel.png-eba98c5d2b9507c10104eaf256856974.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/menus/bulbloopbackground.png"
-dest_files=["res://.godot/imported/bulbloopbackground.png-aa69a8f4508114f41b0e7fac4087e2b3.ctex"]
+source_file="res://textures/menus/pattern_bulb_caramel.png"
+dest_files=["res://.godot/imported/pattern_bulb_caramel.png-eba98c5d2b9507c10104eaf256856974.ctex"]
 
 [params]
 

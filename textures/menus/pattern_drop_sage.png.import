@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bewlu37255q6o"
-path="res://.godot/imported/droploopbackground.png-80b1fa44eac8caa1703b565deac7f248.ctex"
+uid="uid://b8v4etvxbkogs"
+path="res://.godot/imported/pattern_drop_sage.png-0ed4f1d6f8d4824112ee9b04e80576ce.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/menus/droploopbackground.png"
-dest_files=["res://.godot/imported/droploopbackground.png-80b1fa44eac8caa1703b565deac7f248.ctex"]
+source_file="res://textures/menus/pattern_drop_sage.png"
+dest_files=["res://.godot/imported/pattern_drop_sage.png-0ed4f1d6f8d4824112ee9b04e80576ce.ctex"]
 
 [params]
 

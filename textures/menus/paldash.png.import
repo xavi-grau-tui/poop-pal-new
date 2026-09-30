@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b1i65p54lhaib"
-path="res://.godot/imported/cloudloopbackground.png-e43418c6da471667cd23d16893cc4df8.ctex"
+uid="uid://dtst2uoyl0fvj"
+path="res://.godot/imported/paldash.png-d05eaa0af44c80c63abd76559d1ad54f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/menus/cloudloopbackground.png"
-dest_files=["res://.godot/imported/cloudloopbackground.png-e43418c6da471667cd23d16893cc4df8.ctex"]
+source_file="res://textures/menus/paldash.png"
+dest_files=["res://.godot/imported/paldash.png-d05eaa0af44c80c63abd76559d1ad54f.ctex"]
 
 [params]
 

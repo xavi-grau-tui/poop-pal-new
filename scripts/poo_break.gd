@@ -1,5 +1,5 @@
 extends BaseMinigame
-## Poo Break — bounce your pal (curled into a ball) off a toilet-paper roll and smash
+## Tile Break — bounce your pal (curled into a ball) off a toilet-paper roll and smash
 ## every bathroom tile. Capsules drop sometimes: mint = wide roll, yellow = 3 balls,
 ## pink = slow ball.
 ##

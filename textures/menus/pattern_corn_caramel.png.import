@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b713dbx7ceqg6"
-path="res://.godot/imported/germloopbackground.png-ce372020720e271f64668bef6db6ca63.ctex"
+uid="uid://bk2ysg51fq0d5"
+path="res://.godot/imported/pattern_corn_caramel.png-02fca4f1d9374c77baa703804edf15aa.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/menus/germloopbackground.png"
-dest_files=["res://.godot/imported/germloopbackground.png-ce372020720e271f64668bef6db6ca63.ctex"]
+source_file="res://textures/menus/pattern_corn_caramel.png"
+dest_files=["res://.godot/imported/pattern_corn_caramel.png-02fca4f1d9374c77baa703804edf15aa.ctex"]
 
 [params]
 

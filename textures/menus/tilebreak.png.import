@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b44v7ooeu7ldn"
-path="res://.godot/imported/poomaze.png-181c8e6cced006fb8180469079431528.ctex"
+uid="uid://uquksu0v5wri"
+path="res://.godot/imported/tilebreak.png-fabe093cf406e75e849eead16d711817.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/menus/poomaze.png"
-dest_files=["res://.godot/imported/poomaze.png-181c8e6cced006fb8180469079431528.ctex"]
+source_file="res://textures/menus/tilebreak.png"
+dest_files=["res://.godot/imported/tilebreak.png-fabe093cf406e75e849eead16d711817.ctex"]
 
 [params]
 

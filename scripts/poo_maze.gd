@@ -1,5 +1,5 @@
 extends BaseMinigame
-## Poo Maze — lay the phone flat and tilt it to roll your pal (curled into a ball)
+## Tilt Maze — lay the phone flat and tilt it to roll your pal (curled into a ball)
 ## through a wooden labyrinth. Collect the numbered checkpoints, dodge the holes,
 ## reach the flush swirl. Every level is generated from a fixed seed, so level 1
 ## is always the same board and each level adds more holes.

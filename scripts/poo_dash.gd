@@ -1,5 +1,5 @@
 extends BaseMinigame
-## Poo Dash — your pal runs on its own. Jump the holes and plungers, grab the golden corn,
+## Pal Dash — your pal runs on its own. Jump the holes and plungers, grab the golden corn,
 ## dash through flies. The run gets faster the further you go.
 ##
 ## Main button: JUMP (press again in the air for a double jump; release early = shorter jump).

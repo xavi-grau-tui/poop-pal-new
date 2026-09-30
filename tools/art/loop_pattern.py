@@ -14,6 +14,13 @@ GLYPHS = {
              "##..#####..##",
              "##..##.##..##",
              ".####...####."],
+ 'ball': ["..###..",
+          ".#####.",
+          "##.####",
+          "#######",
+          "#######",
+          ".#####.",
+          "..###.."],
  'drop': ["...#...",
           "..###..",
           ".#####.",
@@ -47,6 +54,8 @@ GLYPHS = {
           "..###.."],
 }
 glyph = GLYPHS[sys.argv[1]]; out_path = sys.argv[2]
+# optional colour: "r,g,b" (default: the original warm brown)
+COLOR = tuple(int(v) for v in sys.argv[3].split(',')) + (255,) if len(sys.argv) > 3 else (141, 109, 79, 255)
 src = np.asarray(Image.open('../../textures/menus/pooploopbackground.png').convert('RGBA'))
 m = src[..., 3] > 0; H, W = m.shape; seen = np.zeros_like(m); centers = []
 for y in range(H):
@@ -67,5 +76,5 @@ for (bottom, cx) in centers:
     for j, row in enumerate(glyph):
         for i, c in enumerate(row):
             if c == '#':
-                out[(y0 + j) % H, (x0 + i) % W] = (141, 109, 79, 255)
+                out[(y0 + j) % H, (x0 + i) % W] = COLOR
 Image.fromarray(out, 'RGBA').save(out_path)

@@ -1,5 +1,5 @@
 extends BaseMinigame
-## Poo Splash — the classic water toy. Two pumps at the bottom of a water tank blow jets
+## Splash Hoops — the classic water toy. Two pumps at the bottom of a water tank blow jets
 ## of bubbles; drop a ball into every basket before the timer runs out. A ball that lands
 ## in a basket lights it up and falls through, and the floor slopes down to the pumps, so
 ## every ball always rolls back next to a pump. From level 2 the baskets drift sideways.

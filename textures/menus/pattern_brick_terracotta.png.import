@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c1r52f0dmnrf0"
-path="res://.godot/imported/poosplash.png-14094cfc6afd3c16a339f3ceb1c48b50.ctex"
+uid="uid://dm4g305wyc6lm"
+path="res://.godot/imported/pattern_brick_terracotta.png-a9a1cb842773f432cb9b6f1cdbdb856b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/menus/poosplash.png"
-dest_files=["res://.godot/imported/poosplash.png-14094cfc6afd3c16a339f3ceb1c48b50.ctex"]
+source_file="res://textures/menus/pattern_brick_terracotta.png"
+dest_files=["res://.godot/imported/pattern_brick_terracotta.png-a9a1cb842773f432cb9b6f1cdbdb856b.ctex"]
 
 [params]
 

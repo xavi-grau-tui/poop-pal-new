@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dmshknnvpkkf5"
-path="res://.godot/imported/poodash.png-ca3d3ef62ec0483298a7715462db556a.ctex"
+uid="uid://c3ifh0jminuh7"
+path="res://.godot/imported/pattern_ball_moss.png-e382faa78f19f930736fa120f5b4f5ac.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/menus/poodash.png"
-dest_files=["res://.godot/imported/poodash.png-ca3d3ef62ec0483298a7715462db556a.ctex"]
+source_file="res://textures/menus/pattern_ball_moss.png"
+dest_files=["res://.godot/imported/pattern_ball_moss.png-e382faa78f19f930736fa120f5b4f5ac.ctex"]
 
 [params]
 

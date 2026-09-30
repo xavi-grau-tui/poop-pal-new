@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cof34tencban5"
-path="res://.godot/imported/brickloopbackground.png-58cc6ab4298e8b3422a77a415fa4248b.ctex"
+uid="uid://boeda2jqewv6f"
+path="res://.godot/imported/tiltmaze.png-daa0dd418ed8e5895bf35b3ce70de6b2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/menus/brickloopbackground.png"
-dest_files=["res://.godot/imported/brickloopbackground.png-58cc6ab4298e8b3422a77a415fa4248b.ctex"]
+source_file="res://textures/menus/tiltmaze.png"
+dest_files=["res://.godot/imported/tiltmaze.png-daa0dd418ed8e5895bf35b3ce70de6b2.ctex"]
 
 [params]
 
