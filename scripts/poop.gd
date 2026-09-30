@@ -24,7 +24,7 @@ var _time := 0.0
 
 # Tickling: rub a finger back and forth over the pal and it giggles
 const TICKLE_STROKES := 4          # back-and-forth strokes needed...
-const TICKLE_WINDOW := 1.3         # ...within this many seconds
+const TICKLE_WINDOW := 2.5         # ...within this many seconds (a relaxed rub is fine)
 const TICKLE_STROKE_MIN := 5.0     # texels of travel for a stroke to count
 const TICKLE_COOLDOWN := 1.4
 var _rub_last := Vector2.ZERO
