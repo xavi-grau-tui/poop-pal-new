@@ -1,5 +1,5 @@
 extends BaseMinigame
-## Super Puff — hold to float, release to sink, dodge obstacles.
+## Pipe Dream (was Super Puff) — hold to float, release to sink, dodge the pipes.
 ## Uses placeholder ColorRects until real art is added.
 
 var player: AnimatedSprite2D

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dc1i37pbt8tvj"
-path="res://.godot/imported/nugget-2.png-0be823a1288861f4f1fe223f724b859c.ctex"
+uid="uid://sl2ombs472o1"
+path="res://.godot/imported/greasy_chonk-2.png-361305c1e75ac2a714baf3157b427f61.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/pet/accessories/round_glasses/nugget-2.png"
-dest_files=["res://.godot/imported/nugget-2.png-0be823a1288861f4f1fe223f724b859c.ctex"]
+source_file="res://textures/pet/accessories/sunglasses/greasy_chonk-2.png"
+dest_files=["res://.godot/imported/greasy_chonk-2.png-361305c1e75ac2a714baf3157b427f61.ctex"]
 
 [params]
 

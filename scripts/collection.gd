@@ -18,7 +18,7 @@ const RESET_EQUIPPED_ON_LAUNCH := true
 const RESET_UNLOCKS_ON_LAUNCH := true
 
 ## Rewards earned in minigames: reaching `score` in one round of `game` unlocks the item.
-## (game = Games menu page index: 0 Super Puff, 1 Poo Maze, 2 Poo Splash, 3 Poo Dash, ...)
+## (game = Games menu page index: 0 Pipe Dream, 1 Tilt Maze, 2 Splash Hoops, 3 Pal Dash, 4 Tile Break, 5 Germ Zap)
 const REWARDS := [
 	{ "game": 0, "score": 5, "category": "decor", "id": "fairy_lights" },
 ]
@@ -35,34 +35,40 @@ const BACKGROUNDS := {
 	"tp_rolls": {
 		"name": "Toilet Rolls",
 		"layers": ["res://textures/pet-background/tprolls_far.png", "res://textures/pet-background/tprolls_near.png"],
-		"unlocked": true,  # prototype: free; later e.g. a Poo Maze reward
+		"unlocked": true,  # prototype: free; later e.g. a Tilt Maze reward
 		"unlock": "",
 	},
-	"mystery_1": {
-		"name": "???",
-		"layers": [],
-		"unlocked": false,
-		"unlock": "Coming soon",
-	},
+	# "?" slots: items still to come (nothing unlocks them yet). A list shows one page more
+	# each time its current last page is fully unlocked.
+	"mystery_1": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
+	"mystery_2": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
+	"mystery_3": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
+	"mystery_4": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 }
-const BACKGROUND_ORDER := ["clouds", "tp_rolls", "mystery_1"]
+const BACKGROUND_ORDER := ["clouds", "tp_rolls", "mystery_1", "mystery_2", "mystery_3", "mystery_4"]
 
 ## Pal accessories. "dir" holds one texture per form and frame: <form>-1.png, <form>-2.png,
 ## drawn on the form's own canvas (see tools/art/accessories.py).
 const ACCESSORIES := {
 	"none": { "name": "Nothing", "dir": "", "unlocked": true, "unlock": "" },
-	"round_glasses": { "name": "Round Glasses", "dir": "res://textures/pet/accessories/round_glasses/", "unlocked": true, "unlock": "" },
-	"mystery_acc": { "name": "???", "dir": "", "unlocked": false, "unlock": "Coming soon" },
+	"sunglasses": { "name": "Sunglasses", "dir": "res://textures/pet/accessories/sunglasses/", "unlocked": true, "unlock": "" },
+	"mystery_acc_1": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
+	"mystery_acc_2": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
+	"mystery_acc_3": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
+	"mystery_acc_4": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
 }
-const ACCESSORY_ORDER := ["none", "round_glasses", "mystery_acc"]
+const ACCESSORY_ORDER := ["none", "sunglasses", "mystery_acc_1", "mystery_acc_2", "mystery_acc_3", "mystery_acc_4"]
 
 ## Gut decor. "frames": overlays the size of intestine-front.png, cycled to animate.
 const DECOR := {
 	"none": { "name": "Nothing", "frames": [], "unlocked": true, "unlock": "" },
-	"fairy_lights": { "name": "Fairy Lights", "frames": ["res://textures/pet/decor/fairy_lights-1.png", "res://textures/pet/decor/fairy_lights-2.png"], "unlocked": false, "unlock": "Super Puff: 5 pts" },
-	"mystery_decor": { "name": "???", "frames": [], "unlocked": false, "unlock": "Coming soon" },
+	"fairy_lights": { "name": "Fairy Lights", "frames": ["res://textures/pet/decor/fairy_lights-1.png", "res://textures/pet/decor/fairy_lights-2.png"], "unlocked": false, "unlock": "Pipe Dream: 5 pts" },
+	"mystery_decor_1": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
+	"mystery_decor_2": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
+	"mystery_decor_3": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
+	"mystery_decor_4": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 }
-const DECOR_ORDER := ["none", "fairy_lights", "mystery_decor"]
+const DECOR_ORDER := ["none", "fairy_lights", "mystery_decor_1", "mystery_decor_2", "mystery_decor_3", "mystery_decor_4"]
 
 var owned := { "backgrounds": [], "accessories": [], "decor": [] }
 var equipped_background := DEFAULT_BACKGROUND

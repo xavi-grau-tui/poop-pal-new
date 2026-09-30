@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ci0btgav1pbpb"
-path="res://.godot/imported/broccolump-1.png-f6d918a1ffcbe54c00447f46f3a9e59d.ctex"
+uid="uid://dkdqdc0hdkpg8"
+path="res://.godot/imported/pattern_cloud_brown.png-7d698ce5da955c8a63900adb681911fd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/pet/accessories/round_glasses/broccolump-1.png"
-dest_files=["res://.godot/imported/broccolump-1.png-f6d918a1ffcbe54c00447f46f3a9e59d.ctex"]
+source_file="res://textures/menus/pattern_cloud_brown.png"
+dest_files=["res://.godot/imported/pattern_cloud_brown.png-7d698ce5da955c8a63900adb681911fd.ctex"]
 
 [params]
 

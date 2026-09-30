@@ -50,6 +50,30 @@ def round_glasses(c, cx, cy, spread, eye_r):
     return frame, lens
 
 
+def sunglasses(c, cx, cy, spread, eye_r):
+    """Cool wayfarer-ish shades: dark lenses, a bold brow bar, two white shine streaks."""
+    k = c.k * c.f
+    frame = Image.new('RGBA', (c.w * c.k, c.h * c.k), (0, 0, 0, 0))
+    lens = Image.new('RGBA', frame.size, (0, 0, 0, 0))
+    fd, ld = ImageDraw.Draw(frame), ImageDraw.Draw(lens)
+    P = c.P
+    ink = (26, 16, 22, 255)
+    r = eye_r * 1.5 + 1.0
+    for e in (cx - spread, cx + spread):
+        box = [*P(e - r * 1.05, cy - r * 0.72), *P(e + r * 1.05, cy + r * 0.72)]
+        ld.rounded_rectangle(box, radius=int(r * 0.5 * k), fill=(44, 34, 58, 255))
+        fd.rounded_rectangle(box, radius=int(r * 0.5 * k), outline=ink, width=int(1.8 * k))
+        # shine: two short diagonal streaks
+        fd.line([P(e - r * .55, cy + r * .1), P(e - r * .1, cy - r * .45)], fill=(255, 255, 255, 255), width=int(1.4 * k))
+        fd.line([P(e - r * .05, cy + r * .15), P(e + r * .2, cy - r * .2)], fill=(255, 255, 255, 255), width=int(0.9 * k))
+    # bold brow bar across both lenses, and short arms
+    fd.line([P(cx - spread - r * 1.1, cy - r * .62), P(cx + spread + r * 1.1, cy - r * .62)], fill=ink, width=int(2.8 * k))
+    for side in (-1, 1):
+        x0 = cx + side * (spread + r * 1.05)
+        fd.line([P(x0, cy - r * .55), P(x0 + side * 4.5, cy - r * .75)], fill=ink, width=int(2.2 * k))
+    return frame, lens
+
+
 def shrink_layers(c, frame, lens, lens_alpha=85):
     W, H = c.w, c.h
     f = np.asarray(frame.resize((W, H), Image.LANCZOS)).copy()
@@ -57,24 +81,27 @@ def shrink_layers(c, frame, lens, lens_alpha=85):
     solid = f[..., 3] > 110
     out = np.zeros_like(f)
     glass = (l[..., 3] > 128) & ~solid
-    out[glass] = [*l[glass][0][:3], lens_alpha] if glass.any() else 0
+    if glass.any():
+        out[glass] = [*l[glass][0][:3], lens_alpha]
     out[solid] = f[solid]
     out[solid, 3] = 255
     return Image.fromarray(out, 'RGBA')
 
 
-ACCESSORIES = {'round_glasses': round_glasses}
+ACCESSORIES = {
+    'sunglasses': (sunglasses, 240),      # (drawing, lens opacity)
+}
 
 if __name__ == '__main__':
     eyes = faces()
-    for acc, draw in ACCESSORIES.items():
+    for acc, (draw, lens_alpha) in ACCESSORIES.items():
         dest = os.path.join(PROJ, 'pet', 'accessories', acc)
         os.makedirs(dest, exist_ok=True)
         prev = Image.new('RGBA', (232 * len(eyes), 196 * 2), (236, 170, 170, 255))
         for col, (form, (cx, cy, spread, eye_r)) in enumerate(eyes.items()):
             for row, sq in enumerate(FRAMES):
                 c = Canvas(forms.W, forms.H, forms.K, forms.F, squash=sq, anchor=(55, 93))
-                small = shrink_layers(c, *draw(c, cx, cy, spread, eye_r))
+                small = shrink_layers(c, *draw(c, cx, cy, spread, eye_r), lens_alpha)
                 out = Image.new('RGBA', (232, 196), (0, 0, 0, 0))
                 out.alpha_composite(small.resize((forms.W * 2, forms.H * 2), Image.NEAREST), (60, 60))
                 out.save(os.path.join(dest, f'{form}-{row + 1}.png'))

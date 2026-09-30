@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://drbawimpjk2ue"
-path="res://.godot/imported/greasy_chonk-1.png-46b10fa91b9cb37aea212469ff36363a.ctex"
+uid="uid://crp15k5lbmtns"
+path="res://.godot/imported/sprig-2.png-ab142b591c1e18332e4f2f931091d8cf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/pet/accessories/round_glasses/greasy_chonk-1.png"
-dest_files=["res://.godot/imported/greasy_chonk-1.png-46b10fa91b9cb37aea212469ff36363a.ctex"]
+source_file="res://textures/pet/accessories/sunglasses/sprig-2.png"
+dest_files=["res://.godot/imported/sprig-2.png-ab142b591c1e18332e4f2f931091d8cf.ctex"]
 
 [params]
 

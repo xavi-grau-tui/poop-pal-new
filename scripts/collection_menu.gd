@@ -50,6 +50,8 @@ var hub_root: Node2D
 var hub_cards: Array[Node] = []
 var hub_dots: Node2D
 var hub_hint: Node2D
+var list_dots: Node2D              # page dots for the cosmetics lists (like the Games menu)
+var _list_dots_x0 := 0.0
 
 var content: Node2D
 var title: Label
@@ -224,6 +226,11 @@ func _build_hub_cards(menu: Node) -> void:
 	# re-centre the remaining dots under the card
 	var step: float = dots[1].position.x - dots[0].position.x
 	hub_dots.position.x += step * (dots.size() - HUB_CARDS.size()) / 2.0
+	# a second, full set of dots for the list pages (shown only when a list has 2+ pages)
+	list_dots = games.get_node("Dots").duplicate()
+	list_dots.visible = false
+	menu.add_child(list_dots)
+	_list_dots_x0 = list_dots.position.x
 
 func _build_hub() -> void:
 	for i in hub_cards.size():
@@ -368,7 +375,9 @@ func _build_list(v: int) -> void:
 		_fit_one_line(t, 44)
 		var st := _label(Vector2(140, 68), Vector2(440, 50), 30, TEXT_DARK, row)
 		st.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		if owned and Collection.equipped(cat) == id:
+		if not owned:
+			st.text = "Play to unlock"
+		elif Collection.equipped(cat) == id:
 			st.text = "In use"
 			st.add_theme_color_override("font_color", IN_USE)
 		row.set_meta("action", { "type": "equip", "category": cat, "id": id } if owned else { "type": "locked" })
@@ -425,12 +434,36 @@ func _refresh_pager() -> void:
 	elif view in LISTS:
 		pages = _list_pages(view)
 	var many := view != View.DETAIL and view != View.HUB and pages > 1
-	page_label.visible = many
+	var is_list := view in LISTS
+	list_dots.visible = is_list and pages > 1
+	if list_dots.visible:
+		var dots := list_dots.get_children()
+		for i in dots.size():
+			dots[i].visible = i < pages
+			dots[i].modulate = Color(1, 1, 1, 1) if i == page else Color(1, 1, 1, 0.3)
+		var step: float = dots[1].position.x - dots[0].position.x
+		list_dots.position.x = _list_dots_x0 + step * (dots.size() - pages) / 2.0
+	page_label.visible = many and not is_list
 	page_hint.visible = (many or view == View.DETAIL) and view != View.HUB
 	page_label.text = "%d/%d" % [page + 1, pages]
 
+## A list shows its first page, plus one more page each time the last one shown is fully
+## unlocked (so a fresh page of '?' appears as a promise of more to unlock).
 func _list_pages(v: int) -> int:
-	return maxi(1, ceili(Collection.order(LISTS[v]["category"]).size() / float(LIST_PER_PAGE)))
+	var cat: String = LISTS[v]["category"]
+	var ids := Collection.order(cat)
+	var total := maxi(1, ceili(ids.size() / float(LIST_PER_PAGE)))
+	var shown := 1
+	while shown < total:
+		var full := true
+		for i in range((shown - 1) * LIST_PER_PAGE, mini(shown * LIST_PER_PAGE, ids.size())):
+			if not Collection.is_owned(cat, ids[i]):
+				full = false
+				break
+		if not full:
+			break
+		shown += 1
+	return shown
 
 func _pedia_pages() -> int:
 	return maxi(1, ceili(PetState.FORMS.size() / float(PEDIA_PER_PAGE)))

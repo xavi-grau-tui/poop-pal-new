@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://3tv86xpi0hle"
-path="res://.godot/imported/neapoolitan-1.png-fda6c54c466e28eec1dad4683d236767.ctex"
+uid="uid://nommjwe5o0js"
+path="res://.godot/imported/neapoolitan-2.png-e1c32796e0ca30e87a8dac040ab28dcc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/pet/accessories/round_glasses/neapoolitan-1.png"
-dest_files=["res://.godot/imported/neapoolitan-1.png-fda6c54c466e28eec1dad4683d236767.ctex"]
+source_file="res://textures/pet/accessories/sunglasses/neapoolitan-2.png"
+dest_files=["res://.godot/imported/neapoolitan-2.png-e1c32796e0ca30e87a8dac040ab28dcc.ctex"]
 
 [params]
 

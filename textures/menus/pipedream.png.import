@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bnw3i1jrhqwpk"
-path="res://.godot/imported/sprig-2.png-5fa7d2e2a20322a077a9ef4196e02ff1.ctex"
+uid="uid://c3mdduhntgjbe"
+path="res://.godot/imported/pipedream.png-b5b95527a96f80575216d9d11b2a60b4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/pet/accessories/round_glasses/sprig-2.png"
-dest_files=["res://.godot/imported/sprig-2.png-5fa7d2e2a20322a077a9ef4196e02ff1.ctex"]
+source_file="res://textures/menus/pipedream.png"
+dest_files=["res://.godot/imported/pipedream.png-b5b95527a96f80575216d9d11b2a60b4.ctex"]
 
 [params]
 

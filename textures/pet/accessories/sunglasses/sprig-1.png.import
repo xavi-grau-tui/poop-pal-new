@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cmyl5nsuxssc7"
-path="res://.godot/imported/neapoolitan-2.png-7dd6ee567a8292d8565ef1b07fb41698.ctex"
+uid="uid://c337bosdma1l4"
+path="res://.godot/imported/sprig-1.png-4b701249db3bf75d799205441ee36d92.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/pet/accessories/round_glasses/neapoolitan-2.png"
-dest_files=["res://.godot/imported/neapoolitan-2.png-7dd6ee567a8292d8565ef1b07fb41698.ctex"]
+source_file="res://textures/pet/accessories/sunglasses/sprig-1.png"
+dest_files=["res://.godot/imported/sprig-1.png-4b701249db3bf75d799205441ee36d92.ctex"]
 
 [params]
 

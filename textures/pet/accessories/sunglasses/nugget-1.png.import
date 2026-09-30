@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://clrfsu0mcj3c6"
-path="res://.godot/imported/nugget-1.png-383cec5a910202fdf19d7d73cdec2c11.ctex"
+uid="uid://cggmbh6nhhnqe"
+path="res://.godot/imported/nugget-1.png-112d4b51f40e8f4f5048d8f9bb487372.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/pet/accessories/round_glasses/nugget-1.png"
-dest_files=["res://.godot/imported/nugget-1.png-383cec5a910202fdf19d7d73cdec2c11.ctex"]
+source_file="res://textures/pet/accessories/sunglasses/nugget-1.png"
+dest_files=["res://.godot/imported/nugget-1.png-112d4b51f40e8f4f5048d8f9bb487372.ctex"]
 
 [params]
 
