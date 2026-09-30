@@ -80,7 +80,7 @@ func _ready() -> void:
 	page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	page_hint = Sprite2D.new()
 	page_hint.texture = load("res://textures/buttons/logoforward.png")
-	page_hint.position = Vector2(1272.61, -476)
+	page_hint.position = Vector2(1272.61, -459.082)   # same spot as the Games menu's sign
 	page_hint.scale = Vector2(1.16715, 1.00655)
 	page_hint.z_index = 2
 	menu.add_child(page_hint)
@@ -93,12 +93,12 @@ func _ready() -> void:
 	var mini := Sprite2D.new()
 	mini.texture = load("res://textures/buttons/mainbuttonnormal.png")
 	mini.scale = Vector2(0.26, 0.26)
-	mini.position = Vector2(1024, -476)         # centre of the frame's bottom band
+	mini.position = Vector2(1024, -459)         # centre of the frame's bottom band
 	detail_legend.add_child(mini)
-	var back_l := _label(Vector2(1054, -500), Vector2(90, 48), 32, TEXT_DARK, detail_legend)
+	var back_l := _label(Vector2(1054, -483), Vector2(90, 48), 32, TEXT_DARK, detail_legend)
 	back_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	back_l.text = "back"
-	var next_l := _label(Vector2(1150, -500), Vector2(90, 48), 32, TEXT_DARK, detail_legend)
+	var next_l := _label(Vector2(1150, -483), Vector2(90, 48), 32, TEXT_DARK, detail_legend)
 	next_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	next_l.text = "next"
 
@@ -247,9 +247,9 @@ func _build_hub_cards(menu: Node) -> void:
 	var dots := hub_dots.get_children()
 	for i in range(dots.size() - 1, HUB_CARDS.size() - 1, -1):
 		dots[i].queue_free()
-	# re-centre the remaining dots under the card
+	# like the Games and Food menus: the last dot sits right before the forward sign
 	var step: float = dots[1].position.x - dots[0].position.x
-	hub_dots.position.x += step * (dots.size() - HUB_CARDS.size()) / 2.0
+	hub_dots.position.x += step * (dots.size() - HUB_CARDS.size())
 	# a second, full set of dots for the list pages (shown only when a list has 2+ pages)
 	list_dots = games.get_node("Dots").duplicate()
 	list_dots.visible = false
@@ -477,7 +477,7 @@ func _refresh_pager() -> void:
 			dots[i].visible = i < pages
 			dots[i].modulate = Color(1, 1, 1, 1) if i == page else Color(1, 1, 1, 0.3)
 		var step: float = dots[1].position.x - dots[0].position.x
-		list_dots.position.x = _list_dots_x0 + step * (dots.size() - pages) / 2.0
+		list_dots.position.x = _list_dots_x0 + step * (dots.size() - pages)   # end at the forward sign
 	page_label.visible = many and not is_list
 	detail_legend.visible = view == View.DETAIL
 	page_hint.visible = (many or view == View.DETAIL) and view != View.HUB
