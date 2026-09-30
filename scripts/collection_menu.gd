@@ -33,7 +33,6 @@ const INNER := Rect2(695, -1182, 658, 641)
 
 const CREAM := Color8(250, 244, 214)
 const CARD_BORDER := Color8(58, 38, 30)
-const SELECT_BORDER := Color8(200, 140, 78)     # warm caramel frame on the selected item
 const IN_USE := Color8(104, 128, 72)            # moss green: the item in use / NEW tags
 const ICON_BOX := Color8(218, 176, 128)
 const TEXT := Color(0.65098, 0.505882, 0.368627)
@@ -357,13 +356,11 @@ func _build_list(v: int) -> void:
 		_add_doughnut(row, box)
 		var t := _label(Vector2(140, 12), Vector2(440, 60), 44, TEXT, row)
 		t.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		t.text = item["name"]
+		t.text = item["name"] if owned else "???"     # locked items stay a mystery
 		_fit_one_line(t, 44)
 		var st := _label(Vector2(140, 68), Vector2(440, 50), 30, TEXT_DARK, row)
 		st.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		if not owned:
-			st.text = "Locked - " + item["unlock"]
-		elif Collection.equipped(cat) == id:
+		if owned and Collection.equipped(cat) == id:
 			st.text = "In use"
 			st.add_theme_color_override("font_color", IN_USE)
 		row.set_meta("action", { "type": "equip", "category": cat, "id": id } if owned else { "type": "locked" })
@@ -409,10 +406,9 @@ func _add_item(c: Control) -> void:
 func _refresh_selection() -> void:
 	if view == View.HUB:
 		return
+	# like the food and drink cards: the selected card just grows a little (no coloured frame)
 	for i in items.size():
-		var sel := i == selection
-		items[i].scale = Vector2.ONE * (1.03 if sel else 1.0)
-		(items[i].get_theme_stylebox("panel") as StyleBoxFlat).border_color = SELECT_BORDER if sel else CARD_BORDER
+		items[i].scale = Vector2.ONE * (1.04 if i == selection else 1.0)
 
 func _refresh_pager() -> void:
 	var pages := 1
