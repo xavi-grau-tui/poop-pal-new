@@ -38,5 +38,5 @@ if __name__ == '__main__':
     # small pixel-art ring (26 px): same proportions, chunky pixels
     k = 26 / N
     ring(R_IN * k, R_OUT * k, 26).save(os.path.join(menus, 'circle_small.png'))
-    ring(R_IN * k - 1.0, R_OUT * k + 1.0, 26).save(os.path.join(menus, 'circleborder_small.png'))
+    ring(R_IN * k - 2.0, R_OUT * k + 2.0, 26).save(os.path.join(menus, 'circleborder_small.png'))   # 2 px outline
     print('ok')

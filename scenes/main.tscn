@@ -1,7 +1,5 @@
-[gd_scene load_steps=104 format=4 uid="uid://ddvdpi5i0hjuf"]
+[gd_scene load_steps=106 format=4 uid="uid://ddvdpi5i0hjuf"]
 
-[ext_resource type="Texture2D" path="res://textures/menus/circle_small.png" id="96_ring_s"]
-[ext_resource type="Texture2D" path="res://textures/menus/circleborder_small.png" id="95_ringb_s"]
 [ext_resource type="Texture2D" uid="uid://1ih05ji667nr" path="res://textures/pet-background/background.png" id="2_lquwl"]
 [ext_resource type="Script" uid="uid://duenauvyyugd4" path="res://scripts/audio_stream_player_2d.gd" id="2_ryguw"]
 [ext_resource type="Texture2D" uid="uid://lvdmc0nspjgu" path="res://textures/pet-background/intestine-back.png" id="3_7mycd"]
@@ -81,6 +79,8 @@
 [ext_resource type="Texture2D" uid="uid://dmy44mo4sx3s8" path="res://textures/menus/questionloopbackground.png" id="74_gx4rg"]
 [ext_resource type="Texture2D" uid="uid://cnotd4icjss62" path="res://textures/menus/mistery.png" id="75_5dllo"]
 [ext_resource type="PackedScene" path="res://scenes/game_screen.tscn" id="78_ygd8o"]
+[ext_resource type="Texture2D" uid="uid://dn61lqgvrem40" path="res://textures/menus/circleborder_small.png" id="95_ringb_s"]
+[ext_resource type="Texture2D" uid="uid://bp0inh6d5hkcq" path="res://textures/menus/circle_small.png" id="96_ring_s"]
 [ext_resource type="Script" uid="uid://br65ke7ejkwg0" path="res://scripts/collection_menu.gd" id="98_coll"]
 [ext_resource type="Script" path="res://scripts/boot_sequence.gd" id="99_boot"]
 
@@ -932,8 +932,8 @@ theme_override_font_sizes/font_size = 40
 text = "160kc"
 
 [node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption1"]
-texture_filter = 1
 z_index = 3
+texture_filter = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -953,8 +953,8 @@ tint_over = Color(1, 1, 1, 0.309804)
 tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption1/Doughnut"]
-texture_filter = 1
 z_index = -1
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1012,8 +1012,8 @@ theme_override_font_sizes/font_size = 40
 text = "580kc"
 
 [node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption2"]
-texture_filter = 1
 z_index = 3
+texture_filter = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -1033,8 +1033,8 @@ tint_over = Color(1, 1, 1, 0.309804)
 tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption2/Doughnut"]
-texture_filter = 1
 z_index = -1
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1093,8 +1093,8 @@ theme_override_font_sizes/font_size = 40
 text = "320kc"
 
 [node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption3"]
-texture_filter = 1
 z_index = 3
+texture_filter = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -1114,8 +1114,8 @@ tint_over = Color(1, 1, 1, 0.309804)
 tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxFood/FoodOption3/Doughnut"]
-texture_filter = 1
 z_index = -1
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1179,8 +1179,8 @@ theme_override_font_sizes/font_size = 40
 text = "0kcal"
 
 [node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption1"]
-texture_filter = 1
 z_index = 3
+texture_filter = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -1200,8 +1200,8 @@ tint_over = Color(1, 1, 1, 0.309804)
 tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption1/Doughnut"]
-texture_filter = 1
 z_index = -1
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1261,8 +1261,8 @@ theme_override_font_sizes/font_size = 40
 text = "150kc"
 
 [node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption2"]
-texture_filter = 1
 z_index = 3
+texture_filter = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -1282,8 +1282,8 @@ tint_over = Color(1, 1, 1, 0.309804)
 tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption2/Doughnut"]
-texture_filter = 1
 z_index = -1
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1344,8 +1344,8 @@ theme_override_font_sizes/font_size = 40
 text = "110kc"
 
 [node name="Doughnut" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption3"]
-texture_filter = 1
 z_index = 3
+texture_filter = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -1365,8 +1365,8 @@ tint_over = Color(1, 1, 1, 0.309804)
 tint_progress = Color(0.952941, 0.713726, 0.494118, 1)
 
 [node name="DoughnutBorder" type="TextureProgressBar" parent="Main UI/Menus/FoodMenu/Menu/VBoxDrink/DrinkOption3/Doughnut"]
-texture_filter = 1
 z_index = -1
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
