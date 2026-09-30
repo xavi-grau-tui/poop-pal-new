@@ -462,7 +462,7 @@ scale = Vector2(1.2707, 1.2788)
 texture = ExtResource("9_w48qg")
 
 [node name="Poop" type="AnimatedSprite2D" parent="Main UI/PetView"]
-position = Vector2(542.274, -854.461)
+position = Vector2(542.274, -884.461)
 rotation = -0.000616398
 scale = Vector2(2.64681, 2.77288)
 sprite_frames = SubResource("SpriteFrames_efxa6")
