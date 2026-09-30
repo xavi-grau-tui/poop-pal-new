@@ -101,6 +101,18 @@ func update_dots(index: int):
 func reset_active_options():
 	show_page(current_page)
 
+## Asked by the main button before the OK sound: no pal yet = the first thing must be food,
+## so a drink is refused (soft error + the Food button blinks)
+func can_confirm(sel: Node) -> bool:
+	if sel and sel.has_meta("drink") and PetState.needs_first_meal():
+		Input.vibrate_handheld(40)
+		for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
+			if b.target_menu == self:
+				b.blink_hint()
+				break
+		return false
+	return true
+
 func get_selected_option():
 	if current_selection >= 0 and current_selection < active_options.size():
 		return active_options[current_selection]
