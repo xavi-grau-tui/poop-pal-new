@@ -14,7 +14,7 @@ extends Node2D
 enum View { HUB, PEDIA, DETAIL, BACKGROUNDS, ACCESSORIES, DECOR }
 
 const HUB_CARDS := [
-	{ "view": View.PEDIA, "logo": "res://textures/menus/poopedia.png", "pattern": "res://textures/menus/pooploopbackground.png" },
+	{ "view": View.PEDIA, "logo": "res://textures/menus/palpedia.png", "pattern": "res://textures/menus/pooploopbackground.png" },
 	{ "view": View.ACCESSORIES, "logo": "res://textures/menus/dressup.png", "pattern": "res://textures/menus/pattern_glasses_cream.png" },
 	{ "view": View.DECOR, "logo": "res://textures/menus/gutdecor.png", "pattern": "res://textures/menus/pattern_bulb_caramel.png" },
 	{ "view": View.BACKGROUNDS, "logo": "res://textures/menus/backgrounds.png", "pattern": "res://textures/menus/pattern_cloud_sage.png" },
@@ -261,7 +261,7 @@ func _update_hub_card_info() -> void:
 				_fit_one_line(l, 25, 12)
 
 func _build_pedia() -> void:
-	title.text = "POOP-PEDIA"
+	title.text = "PAL-PEDIA"
 	var order := PetState.pedia_order()
 	page = clampi(page, 0, _pedia_pages() - 1)
 	var found := 0

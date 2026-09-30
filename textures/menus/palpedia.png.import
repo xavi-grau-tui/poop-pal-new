@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cnm8lpbdydnb1"
-path="res://.godot/imported/poopedia.png-03867f1df0b27dfde1925ad9904f8077.ctex"
+uid="uid://p6i6bql2utic"
+path="res://.godot/imported/palpedia.png-7e84e045e689e806fcb3df02876fa38d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/menus/poopedia.png"
-dest_files=["res://.godot/imported/poopedia.png-03867f1df0b27dfde1925ad9904f8077.ctex"]
+source_file="res://textures/menus/palpedia.png"
+dest_files=["res://.godot/imported/palpedia.png-7e84e045e689e806fcb3df02876fa38d.ctex"]
 
 [params]
 
