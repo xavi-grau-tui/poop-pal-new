@@ -647,10 +647,10 @@ func _item_preview(cat: String, id: String) -> Texture2D:
 	match cat:
 		"backgrounds":
 			var bg: Dictionary = Collection.BACKGROUNDS[id]
-			if bg.get("kind", "") == "color":        # the sky recoloured, with clouds for context
-				return _background_preview(Collection.BACKGROUNDS["clouds"]["layers"], bg.get("hue", 0.0))
-			var layers: Array = bg["layers"]
-			return _background_preview(layers) if not layers.is_empty() else null
+			if bg.get("kind", "") == "color":        # a swatch of the sky colour
+				return _background_preview([], bg.get("hue", 0.0))
+			var layers: Array = bg["layers"]           # patterns: on the card's beige
+			return _background_preview(layers, 0.0, false) if not layers.is_empty() else null
 		"accessories":
 			return _accessory_preview(id)
 		"decor":
@@ -705,11 +705,12 @@ func _image(path: String) -> Image:
 	img.convert(Image.FORMAT_RGBA8)
 	return img
 
-func _background_preview(layers: Array, hue := 0.0) -> Texture2D:
+func _background_preview(layers: Array, hue := 0.0, with_sky := true) -> Texture2D:
 	var img := Image.create(200, 200, false, Image.FORMAT_RGBA8)
-	var sky := Color8(229, 165, 166)
-	sky.h = fposmod(sky.h + hue, 1.0)
-	img.fill(sky)
+	if with_sky:
+		var sky := Color8(229, 165, 166)
+		sky.h = fposmod(sky.h + hue, 1.0)
+		img.fill(sky)
 	for path in layers:
 		var layer_img: Image = (load(path) as Texture2D).get_image()
 		if layer_img.is_compressed():

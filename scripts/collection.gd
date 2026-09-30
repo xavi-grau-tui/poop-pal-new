@@ -49,13 +49,14 @@ const BACKGROUNDS := {
 	},
 	# "?" slots: items still to come (nothing unlocks them yet). A list shows one page more
 	# each time its current last page is fully unlocked.
-	"pastel_yellow": { "name": "Pastel Yellow", "kind": "color", "hue": 0.145, "layers": [], "unlocked": false, "unlock": "Pipe Dream: 30 pts" },
+	"pink": { "name": "Pink", "kind": "color", "hue": 0.0, "layers": [], "unlocked": true, "unlock": "" },
+	"pastel_yellow": { "name": "Yellow", "kind": "color", "hue": 0.145, "layers": [], "unlocked": false, "unlock": "Pipe Dream: 30 pts" },
 	"mystery_1": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 	"mystery_2": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 	"mystery_3": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 	"mystery_4": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 }
-const BACKGROUND_ORDER := ["clouds", "tp_rolls", "pastel_yellow", "mystery_1", "mystery_2", "mystery_3", "mystery_4"]
+const BACKGROUND_ORDER := ["clouds", "tp_rolls", "pink", "pastel_yellow", "mystery_1", "mystery_2", "mystery_3", "mystery_4"]
 
 ## Pal accessories. "dir" holds one texture per form and frame: <form>-1.png, <form>-2.png,
 ## drawn on the form's own canvas (see tools/art/accessories.py).
@@ -85,7 +86,8 @@ const DECOR_ORDER := ["none", "fairy_lights", "purple_gut", "mystery_decor_1", "
 
 var owned := { "backgrounds": [], "accessories": [], "decor": [] }
 var equipped_background := DEFAULT_BACKGROUND
-var equipped_bg_color := ""            # sky colour in use ("" = the natural pink)
+const DEFAULT_BG_COLOR := "pink"
+var equipped_bg_color := DEFAULT_BG_COLOR   # sky colour in use (pink = the natural sky)
 var equipped_accessory := "none"
 var equipped_decor := "none"          # the complement in use
 var equipped_gut_color := ""           # the gut colour in use ("" = the natural pink)
@@ -103,9 +105,9 @@ func _ready() -> void:
 	PetState.form_changed.connect(func(_id, reason):
 		if reason == "flush" and equipped_accessory != "none":
 			equip("accessories", "none"))
-	if RESET_BACKGROUND_ON_LAUNCH and (equipped_background != DEFAULT_BACKGROUND or equipped_bg_color != ""):
+	if RESET_BACKGROUND_ON_LAUNCH and (equipped_background != DEFAULT_BACKGROUND or equipped_bg_color != DEFAULT_BG_COLOR):
 		equipped_background = DEFAULT_BACKGROUND
-		equipped_bg_color = ""
+		equipped_bg_color = DEFAULT_BG_COLOR
 		save_data()
 	if RESET_EQUIPPED_ON_LAUNCH and (equipped_accessory != "none" or equipped_decor != "none" or equipped_gut_color != ""):
 		equipped_accessory = "none"
@@ -205,7 +207,7 @@ func is_in_use(category: String, id: String) -> bool:
 ## Short 'In use' text for a category's card
 func in_use_label(category: String) -> String:
 	if category == "backgrounds":
-		return "2 items" if equipped_bg_color != "" else BACKGROUNDS[equipped_background]["name"]
+		return "2 items" if equipped_bg_color != DEFAULT_BG_COLOR else BACKGROUNDS[equipped_background]["name"]
 	if category == "decor":
 		var names := []
 		if equipped_gut_color != "":
@@ -221,7 +223,7 @@ func equip_background(id: String) -> bool:
 	if not is_owned("backgrounds", id) or id not in BACKGROUNDS:
 		return false
 	if BACKGROUNDS[id].get("kind", "") == "color":
-		equipped_bg_color = "" if equipped_bg_color == id else id
+		equipped_bg_color = id                  # always one sky colour (pink by default)
 	elif BACKGROUNDS[id]["layers"].is_empty():
 		return false
 	else:
@@ -252,7 +254,7 @@ func load_data() -> void:
 					owned[cat] = []
 				if id not in owned[cat]:
 					owned[cat].append(id)
-		var bgc := str(parsed.get("equipped_bg_color", ""))
+		var bgc := str(parsed.get("equipped_bg_color", DEFAULT_BG_COLOR))
 		if bgc in BACKGROUNDS and is_owned("backgrounds", bgc):
 			equipped_bg_color = bgc
 		var eq := str(parsed.get("equipped_background", "clouds"))
