@@ -134,6 +134,14 @@ func reset_active_options() -> void:
 	page = 0
 	_open(View.HUB)   # every visit starts at the hub
 
+## Asked by the main button before the OK sound: false = refuse (it plays a soft error)
+func can_confirm(sel: Node) -> bool:
+	var action: Dictionary = sel.get_meta("action", {}) if sel else {}
+	if action.get("type", "") == "open" and action.get("view", -1) == View.ACCESSORIES and not PetState.has_poop():
+		_point_to_food()          # nobody to dress yet: feed the pal first
+		return false
+	return true
+
 ## Hold on the selected item. Returns true when the menu should close (back to the pet).
 func confirm_selected(sel: Node) -> bool:
 	if sel == null:
@@ -141,9 +149,6 @@ func confirm_selected(sel: Node) -> bool:
 	var action: Dictionary = sel.get_meta("action", {})
 	match action.get("type", ""):
 		"open":
-			if action["view"] == View.ACCESSORIES and not PetState.has_poop():
-				_point_to_food()      # nobody to dress yet: feed the pal first
-				return false
 			page = 0              # (the card's own ConfirmSound already played)
 			_open(action["view"])
 		"back":

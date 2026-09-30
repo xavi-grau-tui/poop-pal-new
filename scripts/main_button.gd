@@ -123,6 +123,13 @@ func _process(delta: float) -> void:
 		filling = false
 
 		var sel = _get_selected_option_node()
+		# A menu can refuse before anything plays (e.g. DRESS UP with no pal yet):
+		# a very soft error blip instead of the OK sound
+		var menu = _get_active_menu()
+		if sel and menu and menu.has_method("can_confirm") and not menu.can_confirm(sel):
+			_play_sfx("res://sounds/fx/error.mp3", -22.0, 1.25)
+			_reset_hold()
+			return
 		if sel and sel.has_node("ConfirmSound"):
 			var csp : AudioStreamPlayer2D = sel.get_node("ConfirmSound")
 			if csp.stream:
@@ -260,13 +267,14 @@ func _any_menu_toggled() -> bool:
 			return true
 	return false
 
-func _play_sfx(path: String, volume_db: float) -> AudioStreamPlayer:
+func _play_sfx(path: String, volume_db: float, pitch := 1.0) -> AudioStreamPlayer:
 	var stream = load(path) as AudioStream
 	if not stream:
 		return null
 	var sfx = AudioStreamPlayer.new()
 	sfx.stream = stream
 	sfx.volume_db = volume_db
+	sfx.pitch_scale = pitch
 	var sound_btn = get_node_or_null("../SoundButtons/SoundButton")
 	if sound_btn and sound_btn.button_pressed:
 		sfx.volume_db = linear_to_db(0.0)
