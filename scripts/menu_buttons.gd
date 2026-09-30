@@ -30,6 +30,7 @@ func _ready():
 	# The gear (collection) button blinks when something new is unlocked
 	if target_menu and target_menu.has_method("confirm_selected"):
 		Collection.unlocked.connect(func(_c, _id): blink_hint(6, 0.18))
+		PetState.pal_discovered.connect(func(_id): blink_hint(6, 0.18))
 
 func _process(_delta):
 	self.disabled = FoodRainSpawner.is_locked or DrinkWaterfallSpawner.is_locked

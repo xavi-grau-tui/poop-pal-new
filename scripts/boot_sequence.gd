@@ -8,13 +8,13 @@ extends Node2D
 signal finished
 
 @export var logo_texture: Texture2D = preload("res://textures/boot/kobaya_logo.png")
-@export var welcome_text := "Welcome to Poop Pal!\n\nFeed it, raise it and watch it evolve through its natural cycle."
+@export var welcome_text := "Welcome to Poop Pal!\n\nFeed it, raise it and watch it evolve through its natural cycle.\n\nPlay to unlock items and pals."
 @export var start_delay := 0.8
 @export var logo_fade_in := 1.3
 @export var logo_hold := 1.4
 @export var logo_fade_out := 1.3
 @export var text_type_time := 2.4
-@export var text_hold := 2.2
+@export var text_hold := 3.0
 @export var screen_on_time := 0.8
 
 const SCREEN_COLOR := Color(0.078, 0.078, 0.078)  # matches the logo's background

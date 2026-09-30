@@ -33,6 +33,9 @@ func _ready():
 	Collection.unlocked.connect(func(_c, _id):
 		show_message("ITEM\nUNLOCKED!")
 		_ding())
+	PetState.pal_discovered.connect(func(_id):
+		show_message("PAL\nUNLOCKED!")
+		_ding())
 
 func _ding() -> void:
 	# a small, soft ding: noticeable, but you keep your focus on the minigame

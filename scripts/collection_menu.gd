@@ -266,7 +266,8 @@ func _update_hub_card_info() -> void:
 		lines[v] = ["Unlocked", "%d/%d" % [owned, Collection.order(cat).size()], "In use", Collection.in_use_label(cat)]
 	for i in HUB_CARDS.size():
 		var v: int = HUB_CARDS[i]["view"]
-		hub_cards[i].get_node("NewBadge").visible = v in LISTS and Collection.has_new(LISTS[v]["category"])
+		var cat_of_card: String = LISTS[v]["category"] if v in LISTS else ("pedia" if v == View.PEDIA else "")
+		hub_cards[i].get_node("NewBadge").visible = cat_of_card != "" and Collection.has_new(cat_of_card)
 		var t: Array = lines[v]
 		var bottom := hub_cards[i].get_node("BottomFrame")
 		var pairs := [[bottom.get_node("MaxScore"), bottom.get_node("MaxScore/Score")], [bottom.get_node("Progress"), bottom.get_node("Progress/Progress")]]
@@ -315,6 +316,11 @@ func _build_pedia() -> void:
 		n.text = "%03d %s" % [PetState.FORMS[id]["no"], PetState.FORMS[id]["name"] if known else "???"]
 		_fit_one_line(n, 26)
 		c.set_meta("action", { "type": "pal", "id": id })
+		if known and Collection.is_new("pedia", id):
+			var tag := _new_badge(20)
+			tag.position = Vector2(118, 2)
+			c.add_child(tag)
+			Collection.mark_seen_item("pedia", id)     # seen now
 		_add_item(c)
 
 func _show_detail(id: String) -> void:

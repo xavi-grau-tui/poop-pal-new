@@ -12,6 +12,7 @@ signal fed(food: Dictionary)
 signal drank(drink: Dictionary)
 signal score_changed(total: int)
 signal boost_changed(boost_id: String)                  # "" = no boost
+signal pal_discovered(form_id: String)                  # a form reached for the very first time
 
 const SAVE_PATH := "user://pet_state.json"
 
@@ -181,10 +182,16 @@ func _dominant_family() -> String:
 
 func _set_form(id: String, reason: String) -> void:
 	form_id = id
-	if id not in discovered:
+	var first_time := id not in discovered
+	if first_time:
 		discovered.append(id)
 	save_data()
 	form_changed.emit(id, reason)
+	if first_time:
+		Collection.new_items["pedia/" + id] = true     # NEW tag in the Pal-Pedia
+		Collection.save_data()
+		# announce it once the hatch / evolve animation has played
+		get_tree().create_timer(1.0).timeout.connect(func(): pal_discovered.emit(id))
 
 # --- Save / Load ---
 
