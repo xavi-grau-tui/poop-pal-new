@@ -29,6 +29,7 @@ func _ready():
 	PetState.fed.connect(_on_fed)
 	PetState.drank.connect(_on_drank)
 	PetState.form_changed.connect(_on_form_changed)
+	_align_timers_to_score()
 	running = PetState.has_poop()
 	if running:
 		food_time_left = food_duration
@@ -52,6 +53,18 @@ func _ding() -> void:
 	add_child(sfx)
 	sfx.play()
 	sfx.finished.connect(sfx.queue_free)
+
+## The timers end where the score ends, so the seconds sit under its last two digits
+func _align_timers_to_score() -> void:
+	if not score_counter_label:
+		return
+	var f := score_counter_label.get_theme_font("font")
+	var fs := score_counter_label.get_theme_font_size("font_size")
+	var right := score_counter_label.position.x + f.get_string_size("000000", HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	for l in [food_timer_label, drink_timer_label]:
+		if l:
+			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			l.position.x = right - l.size.x
 
 func show_message(text: String, secs := MESSAGE_TIME) -> void:
 	if not _msg_label:
