@@ -58,7 +58,11 @@ def sunglasses(c, cx, cy, spread, eye_r):
     fd, ld = ImageDraw.Draw(frame), ImageDraw.Draw(lens)
     P = c.P
     ink = (26, 16, 22, 255)
-    r = eye_r * 1.5 + 1.0
+    # lenses sized to the face: on small pals (close eyes) they shrink so the frame doesn't
+    # swallow the whole face, and a nose gap always stays between them
+    r = min(eye_r * 1.5 + 1.0, spread * 0.72)
+    small = spread < 11.5
+    brow = 2.0 if small else 2.8
     for e in (cx - spread, cx + spread):
         box = [*P(e - r * 1.05, cy - r * 0.72), *P(e + r * 1.05, cy + r * 0.72)]
         ld.rounded_rectangle(box, radius=int(r * 0.5 * k), fill=(44, 34, 58, 255))
@@ -67,10 +71,10 @@ def sunglasses(c, cx, cy, spread, eye_r):
         fd.line([P(e - r * .55, cy + r * .1), P(e - r * .1, cy - r * .45)], fill=(255, 255, 255, 255), width=int(1.4 * k))
         fd.line([P(e - r * .05, cy + r * .15), P(e + r * .2, cy - r * .2)], fill=(255, 255, 255, 255), width=int(0.9 * k))
     # bold brow bar across both lenses, and short arms
-    fd.line([P(cx - spread - r * 1.1, cy - r * .62), P(cx + spread + r * 1.1, cy - r * .62)], fill=ink, width=int(2.8 * k))
+    fd.line([P(cx - spread - r * 1.1, cy - r * .62), P(cx + spread + r * 1.1, cy - r * .62)], fill=ink, width=int(brow * k))
     for side in (-1, 1):
         x0 = cx + side * (spread + r * 1.05)
-        fd.line([P(x0, cy - r * .55), P(x0 + side * 4.5, cy - r * .75)], fill=ink, width=int(2.2 * k))
+        fd.line([P(x0, cy - r * .55), P(x0 + side * (3.0 if small else 4.5), cy - r * .75)], fill=ink, width=int(2.0 * k))
     return frame, lens
 
 

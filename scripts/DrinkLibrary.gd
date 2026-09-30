@@ -6,6 +6,7 @@ var all_drinks = [
 		"icon": preload("res://textures/drinks/water.png"),
 		"kcal": 0,
 		"tags": ["hydrating", "healthy"],
+		"boost": "splash",                    # Pipe Dream: bounce back once instead of losing
 		"color": Color(0.75, 0.85, 1.0, 0.5)  # soft blue
 	},
 	{

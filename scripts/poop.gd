@@ -36,6 +36,11 @@ var _tickling := false
 var _tickle_ready_at := 0.0
 var _body_rect := Rect2()          # visible body, in local (texture) coords
 
+# Drink boost badge: a little icon in the top-right corner of the pal's frame (pet cam)
+const BOOST_BADGE_POS := Vector2(700, -992)
+var boost_badge: Sprite2D
+var _badge_bob: Tween
+
 # Worn accessory (Collection): a child sprite on the same canvas as the form, so it follows
 # every squash, blink, shake and flush for free. It only has to follow the animation frame.
 var accessory: Sprite2D
@@ -55,6 +60,7 @@ func _ready():
 			_refresh_accessory())
 
 	frame_changed.connect(_update_body_rect)
+	_setup_boost_badge.call_deferred()
 	if PetState.has_poop():
 		sprite_frames = PetState.build_sprite_frames()
 		play("idle")
@@ -250,6 +256,41 @@ func _update_body_rect() -> void:
 	var img := tex.get_image()
 	var used := img.get_used_rect() if img else Rect2i(Vector2i.ZERO, tex.get_size())
 	_body_rect = Rect2(Vector2(used.position) - tex.get_size() / 2.0, used.size)
+
+func _setup_boost_badge() -> void:
+	boost_badge = Sprite2D.new()
+	boost_badge.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	boost_badge.scale = Vector2(5, 5)
+	boost_badge.position = BOOST_BADGE_POS
+	boost_badge.z_index = 2
+	boost_badge.visible = false
+	get_parent().add_child(boost_badge)
+	PetState.boost_changed.connect(_on_boost_changed)
+	_on_boost_changed(PetState.boost, false)
+
+func _on_boost_changed(id: String, animate := true) -> void:
+	if not boost_badge:
+		return
+	if _badge_bob:
+		_badge_bob.kill()
+	if id == "":
+		if boost_badge.visible and animate:
+			var t := create_tween()
+			t.tween_property(boost_badge, "modulate:a", 0.0, 0.3)
+			t.tween_callback(boost_badge.hide)
+		else:
+			boost_badge.hide()
+		return
+	boost_badge.texture = PetState.boost_icon(id)
+	boost_badge.position = BOOST_BADGE_POS
+	boost_badge.modulate.a = 1.0
+	boost_badge.show()
+	if animate:                                  # pops in when you drink
+		boost_badge.scale = Vector2.ZERO
+		create_tween().tween_property(boost_badge, "scale", Vector2(5, 5), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_badge_bob = create_tween().set_loops()
+	_badge_bob.tween_property(boost_badge, "position:y", BOOST_BADGE_POS.y - 6, 0.7).set_trans(Tween.TRANS_SINE)
+	_badge_bob.tween_property(boost_badge, "position:y", BOOST_BADGE_POS.y, 0.7).set_trans(Tween.TRANS_SINE)
 
 func _refresh_accessory() -> void:
 	_update_body_rect()

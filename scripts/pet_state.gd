@@ -11,6 +11,7 @@ signal form_changed(form_id: String, reason: String)  # reason: "hatch" | "evolv
 signal fed(food: Dictionary)
 signal drank(drink: Dictionary)
 signal score_changed(total: int)
+signal boost_changed(boost_id: String)                  # "" = no boost
 
 const SAVE_PATH := "user://pet_state.json"
 
@@ -60,6 +61,19 @@ var meals: Array = []      # food families eaten this cycle, in order
 var discovered: Array = [] # every form ever reached
 var score := 0             # main LCD score: every minigame round adds its points
 
+## Drink boosts: the last drink gives the pal one boost, used up in the next minigame that
+## has a use for it (each game decides what a boost does; players find out which is best).
+const BOOSTS := {
+	"splash": {
+		"name": "Splash",
+		"desc": "Bounce back once instead of losing",
+		# pixel icon: # outline, b fill, w shine
+		"icon": ["...#...", "..#b#..", "..#b#..", ".#bbb#.", "#bwbbb#", "#bwbbb#", "#bbbbb#", ".#bbb#.", "..###.."],
+		"colors": { "#": Color8(46, 40, 60), "b": Color8(140, 196, 236), "w": Color8(250, 252, 255) },
+	},
+}
+var boost := ""
+
 func _ready() -> void:
 	load_data()
 	if FRESH_START_ON_LAUNCH:
@@ -67,6 +81,7 @@ func _ready() -> void:
 		meals.clear()
 		score = 0
 		discovered.clear()
+		boost = ""
 		save_data()
 
 func has_poop() -> bool:
@@ -110,6 +125,32 @@ func feed(food: Dictionary) -> void:
 
 func drink(drink_data: Dictionary) -> void:
 	drank.emit(drink_data)
+	var b: String = drink_data.get("boost", "")
+	if b != "" and b in BOOSTS:
+		boost = b                         # one boost at a time: the last drink counts
+		save_data()
+		boost_changed.emit(boost)
+
+func use_boost() -> void:
+	if boost == "":
+		return
+	boost = ""
+	save_data()
+	boost_changed.emit("")
+
+## Pixel icon of a boost (for the pet cam and the minigame HUDs)
+func boost_icon(id: String) -> Texture2D:
+	var info: Dictionary = BOOSTS.get(id, {})
+	if info.is_empty():
+		return null
+	var rows: Array = info["icon"]
+	var img := Image.create(rows[0].length(), rows.size(), false, Image.FORMAT_RGBA8)
+	for y in rows.size():
+		for x in rows[y].length():
+			var ch: String = rows[y][x]
+			if info["colors"].has(ch):
+				img.set_pixel(x, y, info["colors"][ch])
+	return ImageTexture.create_from_image(img)
 
 func add_score(points: int) -> void:
 	if points <= 0:
@@ -123,8 +164,10 @@ func flush() -> void:
 		return
 	form_id = ""
 	meals.clear()
+	boost = ""                            # the boost goes down with the pal
 	save_data()
 	form_changed.emit("", "flush")
+	boost_changed.emit("")
 
 func _dominant_family() -> String:
 	var counts := {}
@@ -148,7 +191,7 @@ func _set_form(id: String, reason: String) -> void:
 func save_data() -> void:
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({ "form_id": form_id, "meals": meals, "discovered": discovered, "score": score }))
+		file.store_string(JSON.stringify({ "form_id": form_id, "meals": meals, "discovered": discovered, "score": score, "boost": boost }))
 
 func load_data() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
@@ -164,3 +207,4 @@ func load_data() -> void:
 		meals = parsed.get("meals", [])
 		discovered = parsed.get("discovered", [])
 		score = int(parsed.get("score", 0))
+		boost = str(parsed.get("boost", ""))

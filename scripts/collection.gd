@@ -20,7 +20,11 @@ const RESET_UNLOCKS_ON_LAUNCH := true
 ## Rewards earned in minigames: reaching `score` in one round of `game` unlocks the item.
 ## (game = Games menu page index: 0 Pipe Dream, 1 Tilt Maze, 2 Splash Hoops, 3 Pal Dash, 4 Tile Break, 5 Germ Zap)
 const REWARDS := [
-	{ "game": 0, "score": 5, "category": "decor", "id": "fairy_lights" },
+	# Pipe Dream is the first path: backgrounds, then gut decor, then dress-up
+	{ "game": 0, "score": 5, "category": "backgrounds", "id": "tp_rolls" },
+	{ "game": 0, "score": 10, "category": "decor", "id": "fairy_lights" },
+	{ "game": 0, "score": 15, "category": "accessories", "id": "sunglasses" },
+	# TODO: 20 points in Pipe Dream unlocks the next minigame (Tilt Maze)
 ]
 
 ## "layers": [far layer (CloudA), near layer (CloudB)] — drop-in replacements for the cloud textures.
@@ -35,8 +39,8 @@ const BACKGROUNDS := {
 	"tp_rolls": {
 		"name": "Toilet Rolls",
 		"layers": ["res://textures/pet-background/tprolls_far.png", "res://textures/pet-background/tprolls_near.png"],
-		"unlocked": true,  # prototype: free; later e.g. a Tilt Maze reward
-		"unlock": "",
+		"unlocked": false,
+		"unlock": "Pipe Dream: 5 pts",
 	},
 	# "?" slots: items still to come (nothing unlocks them yet). A list shows one page more
 	# each time its current last page is fully unlocked.
@@ -51,7 +55,7 @@ const BACKGROUND_ORDER := ["clouds", "tp_rolls", "mystery_1", "mystery_2", "myst
 ## drawn on the form's own canvas (see tools/art/accessories.py).
 const ACCESSORIES := {
 	"none": { "name": "Nothing", "dir": "", "unlocked": true, "unlock": "" },
-	"sunglasses": { "name": "Sunglasses", "dir": "res://textures/pet/accessories/sunglasses/", "unlocked": true, "unlock": "" },
+	"sunglasses": { "name": "Sunglasses", "dir": "res://textures/pet/accessories/sunglasses/", "unlocked": false, "unlock": "Pipe Dream: 15 pts" },
 	"mystery_acc_1": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
 	"mystery_acc_2": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
 	"mystery_acc_3": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
@@ -62,7 +66,7 @@ const ACCESSORY_ORDER := ["none", "sunglasses", "mystery_acc_1", "mystery_acc_2"
 ## Gut decor. "frames": overlays the size of intestine-front.png, cycled to animate.
 const DECOR := {
 	"none": { "name": "Nothing", "frames": [], "unlocked": true, "unlock": "" },
-	"fairy_lights": { "name": "Fairy Lights", "frames": ["res://textures/pet/decor/fairy_lights-1.png", "res://textures/pet/decor/fairy_lights-2.png"], "unlocked": false, "unlock": "Pipe Dream: 5 pts" },
+	"fairy_lights": { "name": "Fairy Lights", "frames": ["res://textures/pet/decor/fairy_lights-1.png", "res://textures/pet/decor/fairy_lights-2.png"], "unlocked": false, "unlock": "Pipe Dream: 10 pts" },
 	"mystery_decor_1": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 	"mystery_decor_2": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 	"mystery_decor_3": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },

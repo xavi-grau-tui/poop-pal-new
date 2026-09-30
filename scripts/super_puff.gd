@@ -9,8 +9,22 @@ var is_holding := false
 
 var obstacles: Array[Dictionary] = []
 var obstacle_timer := 0.0
-var obstacle_interval := 1.7
-var scroll_speed := 250.0
+var obstacle_interval := 2.3
+var scroll_speed := 210.0
+var last_gap_center := -1.0
+
+# Progression: everything eases from the calm start values to the hard ones as the score
+# climbs to HARD_AT (spacing, speed, gap size, and how far a gap may jump from the last one)
+const HARD_AT := 30.0
+const INTERVAL := Vector2(2.3, 1.25)        # seconds between pipes (start, hard)
+const SPEED := Vector2(210.0, 380.0)        # scroll speed
+const GAP := Vector2(270.0, 195.0)          # gap height
+const GAP_JUMP := Vector2(110.0, 330.0)     # max move of the gap centre from one pipe to the next
+
+# Drink boost "splash" (water): the first hit bounces the pal back instead of losing
+var splash_ready := false
+var invuln := 0.0
+var boost_icon: Sprite2D
 
 var score_label: Label
 var score_bg: ColorRect
@@ -45,6 +59,7 @@ func _ready() -> void:
 	
 	_create_player()
 	_create_score_label()
+	_setup_boost()
 	super._ready()
 
 func _create_clouds() -> void:
@@ -228,7 +243,13 @@ func _process(delta: float) -> void:
 	_update_player(delta)
 	_update_obstacles(delta)
 	_spawn_obstacles(delta)
-	_check_collisions()
+	if invuln > 0.0:
+		invuln -= delta
+		player.modulate.a = 0.35 if int(invuln * 14.0) % 2 == 0 else 1.0
+		if invuln <= 0.0:
+			player.modulate.a = 1.0
+	else:
+		_check_collisions()
 	score_label.text = str(score)
 	if DEBUG_HITBOX:
 		queue_redraw()
@@ -269,11 +290,17 @@ func _spawn_obstacles(delta: float) -> void:
 		return
 	obstacle_timer = 0.0
 
-	# Random gap position, clamped well within bounds
-	var gap_size := 200.0
-	var min_y := PLAY_TOP + 80.0
-	var max_y := PLAY_BOTTOM - gap_size - 80.0
-	var gap_y := randf_range(min_y, max_y)
+	# How far into the run we are (0 = calm start, 1 = hard)
+	var d := clampf(score / HARD_AT, 0.0, 1.0)
+	var gap_size := lerpf(GAP.x, GAP.y, d)
+	var min_c := PLAY_TOP + 80.0 + gap_size / 2.0
+	var max_c := PLAY_BOTTOM - 80.0 - gap_size / 2.0
+	if last_gap_center < 0.0:
+		last_gap_center = player.position.y + HITBOX_OFFSET.y     # first gap: where the pal is
+	var jump := lerpf(GAP_JUMP.x, GAP_JUMP.y, d)
+	var centre := clampf(last_gap_center + randf_range(-jump, jump), min_c, max_c)
+	last_gap_center = centre
+	var gap_y := centre - gap_size / 2.0
 
 	var pipe_width := 90.0
 	# Spawn just outside the right edge — clipping hides the overflow
@@ -298,9 +325,9 @@ func _spawn_obstacles(delta: float) -> void:
 		"width": pipe_width
 	})
 
-	# Gradually increase difficulty
-	obstacle_interval = maxf(1.0, obstacle_interval - 0.02)
-	scroll_speed = minf(400.0, scroll_speed + 2.0)
+	# Next pipe: a little closer and faster as the score climbs
+	obstacle_interval = lerpf(INTERVAL.x, INTERVAL.y, d)
+	scroll_speed = lerpf(SPEED.x, SPEED.y, d)
 
 func _update_obstacles(delta: float) -> void:
 	var to_remove := []
@@ -346,8 +373,82 @@ func _check_collisions() -> void:
 		var bottom_rect := Rect2(bottom.position, bot_sz)
 
 		if player_rect.intersects(top_rect) or player_rect.intersects(bottom_rect):
+			if splash_ready:
+				_splash(top.position.x, player_rect)
+				return
 			end_game()
 			return
+
+# --- Drink boost: splash ---
+
+func _setup_boost() -> void:
+	splash_ready = PetState.boost == "splash"
+	boost_icon = Sprite2D.new()
+	boost_icon.texture = PetState.boost_icon("splash")
+	boost_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	boost_icon.scale = Vector2(6, 6)
+	boost_icon.position = Vector2(PLAY_LEFT + 760, PLAY_TOP + 80)   # next to the score box
+	boost_icon.visible = splash_ready
+	add_child(boost_icon)
+	if splash_ready:
+		var t := boost_icon.create_tween().set_loops()
+		t.tween_property(boost_icon, "position:y", boost_icon.position.y - 5, 0.6).set_trans(Tween.TRANS_SINE)
+		t.tween_property(boost_icon, "position:y", boost_icon.position.y, 0.6).set_trans(Tween.TRANS_SINE)
+
+## The hit is absorbed: the pal is pushed back from the pipe (the pipes slide right),
+## blinks for a moment, and the boost is used up.
+func _splash(pipe_x: float, player_rect: Rect2) -> void:
+	splash_ready = false
+	PetState.use_boost()
+	var push := maxf(0.0, player_rect.end.x + 70.0 - pipe_x)
+	for o in obstacles:
+		o["top"].position.x += push
+		o["bottom"].position.x += push
+	player_vy = 0.0
+	invuln = 1.1
+	# the icon pops away
+	var t := create_tween()
+	t.tween_property(boost_icon, "scale", Vector2(10, 10), 0.15)
+	t.parallel().tween_property(boost_icon, "modulate:a", 0.0, 0.25)
+	t.tween_callback(boost_icon.hide)
+	# splash text + droplets
+	var l := Label.new()
+	l.text = "SPLASH!"
+	var f = load("res://fonts/pixChicago.ttf")
+	if f:
+		l.add_theme_font_override("font", f)
+	l.add_theme_font_size_override("font_size", 40)
+	l.add_theme_color_override("font_color", Color8(200, 232, 250))
+	l.add_theme_color_override("font_outline_color", Color8(46, 40, 60))
+	l.add_theme_constant_override("outline_size", 10)
+	l.position = player.position + Vector2(-80, -130)
+	add_child(l)
+	var lt := create_tween()
+	lt.tween_property(l, "position:y", l.position.y - 50, 0.7)
+	lt.parallel().tween_property(l, "modulate:a", 0.0, 0.7)
+	lt.tween_callback(l.queue_free)
+	for i in 6:
+		var dr := ColorRect.new()
+		dr.color = Color8(160, 210, 245)
+		dr.size = Vector2(10, 10)
+		dr.position = player.position + Vector2(20, 20)
+		add_child(dr)
+		var dir := Vector2.from_angle(-PI * 0.2 - i * PI * 0.12) * 90.0
+		var dt := create_tween()
+		dt.tween_property(dr, "position", dr.position + dir, 0.35)
+		dt.parallel().tween_property(dr, "modulate:a", 0.0, 0.35)
+		dt.tween_callback(dr.queue_free)
+	var sfx := AudioStreamPlayer.new()
+	sfx.stream = load("res://sounds/fx/underwater-247531.mp3")
+	sfx.volume_db = -10.0
+	var sound_btn = get_node_or_null("/root/PoopPal/Main UI/SoundButtons/SoundButton")
+	if sound_btn and sound_btn.button_pressed:
+		sfx.volume_db = linear_to_db(0.0)
+	add_child(sfx)
+	sfx.play()
+	get_tree().create_timer(0.5).timeout.connect(func():
+		if is_instance_valid(sfx):
+			sfx.queue_free())
 
 # --- Input hooks ---
 
