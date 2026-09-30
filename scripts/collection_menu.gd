@@ -523,6 +523,17 @@ func _apply_background() -> void:
 		far.texture = load(layers[0])
 	if near and layers.size() > 1:
 		near.texture = load(layers[1])
+	# sky colour: the same hue shift as the gut colours, on the pink sky behind the layers
+	var sky = get_node_or_null("../../PetBackground/PinkBackground")
+	if sky:
+		var hue: float = Collection.BACKGROUNDS.get(Collection.equipped_bg_color, {}).get("hue", 0.0)
+		if hue == 0.0:
+			sky.material = null
+		else:
+			var m := ShaderMaterial.new()
+			m.shader = preload("res://scripts/shaders/hue_shift.gdshader")
+			m.set_shader_parameter("hue_shift", hue)
+			sky.material = m
 
 # ================================================================== BUILDERS
 
@@ -635,7 +646,10 @@ func _form_icon(id: String) -> Texture2D:
 func _item_preview(cat: String, id: String) -> Texture2D:
 	match cat:
 		"backgrounds":
-			var layers: Array = Collection.BACKGROUNDS[id]["layers"]
+			var bg: Dictionary = Collection.BACKGROUNDS[id]
+			if bg.get("kind", "") == "color":        # the sky recoloured, with clouds for context
+				return _background_preview(Collection.BACKGROUNDS["clouds"]["layers"], bg.get("hue", 0.0))
+			var layers: Array = bg["layers"]
 			return _background_preview(layers) if not layers.is_empty() else null
 		"accessories":
 			return _accessory_preview(id)
@@ -691,9 +705,11 @@ func _image(path: String) -> Image:
 	img.convert(Image.FORMAT_RGBA8)
 	return img
 
-func _background_preview(layers: Array) -> Texture2D:
+func _background_preview(layers: Array, hue := 0.0) -> Texture2D:
 	var img := Image.create(200, 200, false, Image.FORMAT_RGBA8)
-	img.fill(Color8(236, 170, 170))
+	var sky := Color8(229, 165, 166)
+	sky.h = fposmod(sky.h + hue, 1.0)
+	img.fill(sky)
 	for path in layers:
 		var layer_img: Image = (load(path) as Texture2D).get_image()
 		if layer_img.is_compressed():

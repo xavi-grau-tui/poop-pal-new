@@ -25,31 +25,37 @@ const REWARDS := [
 	{ "game": 0, "score": 10, "category": "decor", "id": "fairy_lights" },
 	{ "game": 0, "score": 15, "category": "accessories", "id": "sunglasses" },
 	{ "game": 0, "score": 20, "category": "decor", "id": "purple_gut" },
+	{ "game": 0, "score": 30, "category": "backgrounds", "id": "pastel_yellow" },
 ]
 
 ## "layers": [far layer (CloudA), near layer (CloudB)] — drop-in replacements for the cloud textures.
 ## "unlock": how it is obtained (shown on the locked card). Default unlocked = true/false.
 const BACKGROUNDS := {
+	# Like the gut decor: one "complement" (the scrolling layers) + one "color" (a hue shift of
+	# the pink sky behind them, pastel only for now); a colour in use is taken off by holding it
 	"clouds": {
 		"name": "Clouds",
+		"kind": "complement",
 		"layers": ["res://textures/pet-background/clouds3.png", "res://textures/pet-background/clouds2.png"],
 		"unlocked": true,
 		"unlock": "",
 	},
 	"tp_rolls": {
 		"name": "Toilet Rolls",
+		"kind": "complement",
 		"layers": ["res://textures/pet-background/tprolls_far.png", "res://textures/pet-background/tprolls_near.png"],
 		"unlocked": false,
 		"unlock": "Pipe Dream: 5 pts",
 	},
 	# "?" slots: items still to come (nothing unlocks them yet). A list shows one page more
 	# each time its current last page is fully unlocked.
+	"pastel_yellow": { "name": "Pastel Yellow", "kind": "color", "hue": 0.145, "layers": [], "unlocked": false, "unlock": "Pipe Dream: 30 pts" },
 	"mystery_1": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 	"mystery_2": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 	"mystery_3": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 	"mystery_4": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 }
-const BACKGROUND_ORDER := ["clouds", "tp_rolls", "mystery_1", "mystery_2", "mystery_3", "mystery_4"]
+const BACKGROUND_ORDER := ["clouds", "tp_rolls", "pastel_yellow", "mystery_1", "mystery_2", "mystery_3", "mystery_4"]
 
 ## Pal accessories. "dir" holds one texture per form and frame: <form>-1.png, <form>-2.png,
 ## drawn on the form's own canvas (see tools/art/accessories.py).
@@ -79,6 +85,7 @@ const DECOR_ORDER := ["none", "fairy_lights", "purple_gut", "mystery_decor_1", "
 
 var owned := { "backgrounds": [], "accessories": [], "decor": [] }
 var equipped_background := DEFAULT_BACKGROUND
+var equipped_bg_color := ""            # sky colour in use ("" = the natural pink)
 var equipped_accessory := "none"
 var equipped_decor := "none"          # the complement in use
 var equipped_gut_color := ""           # the gut colour in use ("" = the natural pink)
@@ -92,8 +99,9 @@ func _ready() -> void:
 				owned[cat].append(id)
 	if not RESET_UNLOCKS_ON_LAUNCH:
 		load_data()
-	if RESET_BACKGROUND_ON_LAUNCH and equipped_background != DEFAULT_BACKGROUND:
+	if RESET_BACKGROUND_ON_LAUNCH and (equipped_background != DEFAULT_BACKGROUND or equipped_bg_color != ""):
 		equipped_background = DEFAULT_BACKGROUND
+		equipped_bg_color = ""
 		save_data()
 	if RESET_EQUIPPED_ON_LAUNCH and (equipped_accessory != "none" or equipped_decor != "none" or equipped_gut_color != ""):
 		equipped_accessory = "none"
@@ -182,6 +190,8 @@ func equip(category: String, id: String) -> bool:
 	return true
 
 func is_in_use(category: String, id: String) -> bool:
+	if category == "backgrounds":
+		return equipped_background == id or equipped_bg_color == id
 	if category == "decor" and id != "none":
 		return equipped_decor == id or equipped_gut_color == id
 	if category == "decor":
@@ -190,6 +200,8 @@ func is_in_use(category: String, id: String) -> bool:
 
 ## Short 'In use' text for a category's card
 func in_use_label(category: String) -> String:
+	if category == "backgrounds":
+		return "2 items" if equipped_bg_color != "" else BACKGROUNDS[equipped_background]["name"]
 	if category == "decor":
 		var names := []
 		if equipped_gut_color != "":
@@ -202,9 +214,14 @@ func in_use_label(category: String) -> String:
 	return catalog(category)[equipped(category)]["name"]
 
 func equip_background(id: String) -> bool:
-	if not is_owned("backgrounds", id) or BACKGROUNDS[id]["layers"].is_empty():
+	if not is_owned("backgrounds", id) or id not in BACKGROUNDS:
 		return false
-	equipped_background = id
+	if BACKGROUNDS[id].get("kind", "") == "color":
+		equipped_bg_color = "" if equipped_bg_color == id else id
+	elif BACKGROUNDS[id]["layers"].is_empty():
+		return false
+	else:
+		equipped_background = id
 	save_data()
 	background_changed.emit(id)
 	equipped_changed.emit("backgrounds", id)
@@ -213,7 +230,7 @@ func equip_background(id: String) -> bool:
 func save_data() -> void:
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({ "owned": owned, "equipped_background": equipped_background,
+		file.store_string(JSON.stringify({ "owned": owned, "equipped_background": equipped_background, "equipped_bg_color": equipped_bg_color,
 			"equipped_accessory": equipped_accessory, "equipped_decor": equipped_decor, "equipped_gut_color": equipped_gut_color, "new_items": new_items.keys() }))
 
 func load_data() -> void:
@@ -231,6 +248,9 @@ func load_data() -> void:
 					owned[cat] = []
 				if id not in owned[cat]:
 					owned[cat].append(id)
+		var bgc := str(parsed.get("equipped_bg_color", ""))
+		if bgc in BACKGROUNDS and is_owned("backgrounds", bgc):
+			equipped_bg_color = bgc
 		var eq := str(parsed.get("equipped_background", "clouds"))
 		if eq in BACKGROUNDS and is_owned("backgrounds", eq):
 			equipped_background = eq

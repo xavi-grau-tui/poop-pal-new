@@ -17,9 +17,11 @@ vec3 hsv2rgb(vec3 c) {
 	return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
 }
 
+// In a canvas_item fragment, COLOR already holds texture * modulate: shift that (reading
+// TEXTURE again and multiplying by COLOR would apply the colour twice = darker)
 void fragment() {
-	vec4 c = texture(TEXTURE, UV);
+	vec4 c = COLOR;
 	vec3 hsv = rgb2hsv(c.rgb);
 	hsv.x = fract(hsv.x + hue_shift);
-	COLOR = vec4(hsv2rgb(hsv), c.a) * COLOR;
+	COLOR = vec4(hsv2rgb(hsv), c.a);
 }
