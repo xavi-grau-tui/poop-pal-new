@@ -58,6 +58,7 @@ var title: Label
 var status: Label
 var page_label: Label
 var page_hint: Sprite2D
+var detail_legend: Node2D          # pal card controls, in the golden band: (o) back   next >>
 var font: Font
 
 func _ready() -> void:
@@ -83,6 +84,23 @@ func _ready() -> void:
 	page_hint.scale = Vector2(1.16715, 1.00655)
 	page_hint.z_index = 2
 	menu.add_child(page_hint)
+
+	# Pal card legend: a mini main button = back, the forward icon (page_hint) = next
+	detail_legend = Node2D.new()
+	detail_legend.z_index = 2
+	detail_legend.visible = false
+	menu.add_child(detail_legend)
+	var mini := Sprite2D.new()
+	mini.texture = load("res://textures/buttons/mainbuttonnormal.png")
+	mini.scale = Vector2(0.26, 0.26)
+	mini.position = Vector2(985, -476)
+	detail_legend.add_child(mini)
+	var back_l := _label(Vector2(1015, -500), Vector2(100, 48), 32, TEXT_DARK, detail_legend)
+	back_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	back_l.text = "back"
+	var next_l := _label(Vector2(1130, -500), Vector2(105, 48), 32, TEXT_DARK, detail_legend)
+	next_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	next_l.text = "next"
 
 	_build_hub_cards(menu)
 
@@ -331,7 +349,7 @@ func _show_detail(id: String) -> void:
 	var f: Dictionary = PetState.FORMS[id]
 	var known: bool = id in PetState.discovered
 	title.text = "#%03d" % f["no"]
-	status.text = "Tap: back   >> next"
+	status.text = ""                   # the controls are shown in the band below
 
 	var card := _card(Vector2(INNER.position.x + 24, INNER.position.y + 86), Vector2(INNER.size.x - 48, 470))
 	content.add_child(card)
@@ -461,6 +479,7 @@ func _refresh_pager() -> void:
 		var step: float = dots[1].position.x - dots[0].position.x
 		list_dots.position.x = _list_dots_x0 + step * (dots.size() - pages) / 2.0
 	page_label.visible = many and not is_list
+	detail_legend.visible = view == View.DETAIL
 	page_hint.visible = (many or view == View.DETAIL) and view != View.HUB
 	page_label.text = "%d/%d" % [page + 1, pages]
 
