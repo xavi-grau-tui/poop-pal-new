@@ -82,7 +82,7 @@
 [ext_resource type="Texture2D" uid="uid://dn61lqgvrem40" path="res://textures/menus/circleborder_small.png" id="95_ringb_s"]
 [ext_resource type="Texture2D" uid="uid://bp0inh6d5hkcq" path="res://textures/menus/circle_small.png" id="96_ring_s"]
 [ext_resource type="Script" uid="uid://br65ke7ejkwg0" path="res://scripts/collection_menu.gd" id="98_coll"]
-[ext_resource type="Script" path="res://scripts/boot_sequence.gd" id="99_boot"]
+[ext_resource type="Script" uid="uid://dj723c5131mb7" path="res://scripts/boot_sequence.gd" id="99_boot"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_w48qg"]
 shader = ExtResource("3_ycdy4")
