@@ -370,7 +370,7 @@ func _say_hi() -> void:
 	hop.tween_property(self, "position:y", base_position.y - 10.0, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	hop.tween_property(self, "position:y", base_position.y, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	var l := Label.new()
-	l.text = "Hi!"
+	l.text = "hi!"
 	var f = load("res://fonts/pixChicago.ttf")
 	if f:
 		l.add_theme_font_override("font", f)
@@ -381,7 +381,7 @@ func _say_hi() -> void:
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.size = Vector2(160, 60)
 	l.z_index = 2
-	var start := base_position + Vector2(-80, (_body_rect.position.y) * base_scale.y - 40)
+	var start := base_position + Vector2(-150, (_body_rect.position.y) * base_scale.y - 40)   # a bit to the left
 	l.position = start
 	l.modulate.a = 0.0
 	l.scale = Vector2(0.6, 0.6)
