@@ -19,7 +19,7 @@ var current_page := 0
 # Card art for games whose cards are still "?" placeholders in the scene.
 # Shown once the game is unlocked.
 const CARD_ART := {
-	0: { "logo": "res://textures/menus/pipedream.png", "background": "res://textures/menus/pattern_cloud_brown.png" },
+	0: { "logo": "res://textures/menus/pipedream.png", "background": "res://textures/menus/pattern_pipe_brown.png" },
 	1: { "logo": "res://textures/menus/tiltmaze.png", "background": "res://textures/menus/pattern_ball_moss.png" },
 	2: { "logo": "res://textures/menus/splashhoops.png", "background": "res://textures/menus/pattern_drop_sage.png" },
 	3: { "logo": "res://textures/menus/paldash.png", "background": "res://textures/menus/pattern_corn_caramel.png" },

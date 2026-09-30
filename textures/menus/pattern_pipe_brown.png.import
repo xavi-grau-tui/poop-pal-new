@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dkdqdc0hdkpg8"
-path="res://.godot/imported/pattern_cloud_brown.png-7d698ce5da955c8a63900adb681911fd.ctex"
+uid="uid://r0lgq01x4koj"
+path="res://.godot/imported/pattern_pipe_brown.png-8f4f6413b91d18d8b23091dc62890047.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/menus/pattern_cloud_brown.png"
-dest_files=["res://.godot/imported/pattern_cloud_brown.png-7d698ce5da955c8a63900adb681911fd.ctex"]
+source_file="res://textures/menus/pattern_pipe_brown.png"
+dest_files=["res://.godot/imported/pattern_pipe_brown.png-8f4f6413b91d18d8b23091dc62890047.ctex"]
 
 [params]
 
