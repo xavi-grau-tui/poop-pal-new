@@ -24,7 +24,7 @@ const REWARDS := [
 	{ "game": 0, "score": 5, "category": "backgrounds", "id": "tp_rolls" },
 	{ "game": 0, "score": 10, "category": "decor", "id": "fairy_lights" },
 	{ "game": 0, "score": 15, "category": "accessories", "id": "sunglasses" },
-	# TODO: 20 points in Pipe Dream unlocks the next minigame (Tilt Maze)
+	{ "game": 0, "score": 20, "category": "decor", "id": "purple_gut" },
 ]
 
 ## "layers": [far layer (CloudA), near layer (CloudB)] — drop-in replacements for the cloud textures.
@@ -63,21 +63,25 @@ const ACCESSORIES := {
 }
 const ACCESSORY_ORDER := ["none", "sunglasses", "mystery_acc_1", "mystery_acc_2", "mystery_acc_3", "mystery_acc_4"]
 
-## Gut decor. "frames": overlays the size of intestine-front.png, cycled to animate.
+## Gut decor, two kinds that combine: one "complement" (an overlay hung on the gut; "frames"
+## are the size of intestine-front.png, cycled to animate) and one "color" (a hue shift of
+## the whole gut). "Nothing" takes both off.
 const DECOR := {
-	"none": { "name": "Nothing", "frames": [], "unlocked": true, "unlock": "" },
-	"fairy_lights": { "name": "Fairy Lights", "frames": ["res://textures/pet/decor/fairy_lights-1.png", "res://textures/pet/decor/fairy_lights-2.png"], "unlocked": false, "unlock": "Pipe Dream: 10 pts" },
+	"none": { "name": "Nothing", "kind": "", "frames": [], "unlocked": true, "unlock": "" },
+	"fairy_lights": { "name": "Fairy Lights", "kind": "complement", "frames": ["res://textures/pet/decor/fairy_lights-1.png", "res://textures/pet/decor/fairy_lights-2.png"], "unlocked": false, "unlock": "Pipe Dream: 10 pts" },
+	"purple_gut": { "name": "Purple Gut", "kind": "color", "hue": -0.235, "frames": [], "unlocked": false, "unlock": "Pipe Dream: 20 pts" },
 	"mystery_decor_1": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 	"mystery_decor_2": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 	"mystery_decor_3": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 	"mystery_decor_4": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 }
-const DECOR_ORDER := ["none", "fairy_lights", "mystery_decor_1", "mystery_decor_2", "mystery_decor_3", "mystery_decor_4"]
+const DECOR_ORDER := ["none", "fairy_lights", "purple_gut", "mystery_decor_1", "mystery_decor_2", "mystery_decor_3", "mystery_decor_4"]
 
 var owned := { "backgrounds": [], "accessories": [], "decor": [] }
 var equipped_background := DEFAULT_BACKGROUND
 var equipped_accessory := "none"
-var equipped_decor := "none"
+var equipped_decor := "none"          # the complement in use
+var equipped_gut_color := ""           # the gut colour in use ("" = the natural pink)
 var new_items := {}                     # "category/id" -> true: unlocked but not looked at yet
 
 func _ready() -> void:
@@ -91,9 +95,10 @@ func _ready() -> void:
 	if RESET_BACKGROUND_ON_LAUNCH and equipped_background != DEFAULT_BACKGROUND:
 		equipped_background = DEFAULT_BACKGROUND
 		save_data()
-	if RESET_EQUIPPED_ON_LAUNCH and (equipped_accessory != "none" or equipped_decor != "none"):
+	if RESET_EQUIPPED_ON_LAUNCH and (equipped_accessory != "none" or equipped_decor != "none" or equipped_gut_color != ""):
 		equipped_accessory = "none"
 		equipped_decor = "none"
+		equipped_gut_color = ""
 		save_data()
 
 func is_owned(category: String, id: String) -> bool:
@@ -162,10 +167,39 @@ func equip(category: String, id: String) -> bool:
 	if category == "accessories":
 		equipped_accessory = id
 	else:
-		equipped_decor = id
+		# decor: one complement + one colour; "none" clears both; picking the one already in
+		# use takes it off again
+		match DECOR[id].get("kind", ""):
+			"color":
+				equipped_gut_color = "" if equipped_gut_color == id else id
+			"complement":
+				equipped_decor = "none" if equipped_decor == id else id
+			_:
+				equipped_decor = "none"
+				equipped_gut_color = ""
 	save_data()
 	equipped_changed.emit(category, id)
 	return true
+
+func is_in_use(category: String, id: String) -> bool:
+	if category == "decor" and id != "none":
+		return equipped_decor == id or equipped_gut_color == id
+	if category == "decor":
+		return equipped_decor == "none" and equipped_gut_color == ""
+	return equipped(category) == id
+
+## Short 'In use' text for a category's card
+func in_use_label(category: String) -> String:
+	if category == "decor":
+		var names := []
+		if equipped_gut_color != "":
+			names.append(DECOR[equipped_gut_color]["name"].replace(" Gut", ""))
+		if equipped_decor != "none":
+			names.append(DECOR[equipped_decor]["name"])
+		if names.size() == 2:
+			return "2 items"                  # (both would not fit on the card)
+		return names[0] if not names.is_empty() else "Nothing"
+	return catalog(category)[equipped(category)]["name"]
 
 func equip_background(id: String) -> bool:
 	if not is_owned("backgrounds", id) or BACKGROUNDS[id]["layers"].is_empty():
@@ -180,7 +214,7 @@ func save_data() -> void:
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify({ "owned": owned, "equipped_background": equipped_background,
-			"equipped_accessory": equipped_accessory, "equipped_decor": equipped_decor, "new_items": new_items.keys() }))
+			"equipped_accessory": equipped_accessory, "equipped_decor": equipped_decor, "equipped_gut_color": equipped_gut_color, "new_items": new_items.keys() }))
 
 func load_data() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
@@ -205,6 +239,9 @@ func load_data() -> void:
 		var acc := str(parsed.get("equipped_accessory", "none"))
 		if acc in ACCESSORIES and is_owned("accessories", acc):
 			equipped_accessory = acc
+		var col := str(parsed.get("equipped_gut_color", ""))
+		if col in DECOR and is_owned("decor", col):
+			equipped_gut_color = col
 		var dec := str(parsed.get("equipped_decor", "none"))
 		if dec in DECOR and is_owned("decor", dec):
 			equipped_decor = dec

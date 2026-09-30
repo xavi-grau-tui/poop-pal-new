@@ -263,7 +263,7 @@ func _update_hub_card_info() -> void:
 			if Collection.is_owned(cat, id):
 				owned += 1
 		var cat_catalog := Collection.catalog(cat)
-		lines[v] = ["Unlocked", "%d/%d" % [owned, Collection.order(cat).size()], "In use", cat_catalog[Collection.equipped(cat)]["name"]]
+		lines[v] = ["Unlocked", "%d/%d" % [owned, Collection.order(cat).size()], "In use", Collection.in_use_label(cat)]
 	for i in HUB_CARDS.size():
 		var v: int = HUB_CARDS[i]["view"]
 		hub_cards[i].get_node("NewBadge").visible = v in LISTS and Collection.has_new(LISTS[v]["category"])
@@ -383,9 +383,14 @@ func _build_list(v: int) -> void:
 		st.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		if not owned:
 			st.text = "Play to unlock"
-		elif Collection.equipped(cat) == id:
+		elif Collection.is_in_use(cat, id):
 			st.text = "In use"
 			st.add_theme_color_override("font_color", IN_USE)
+		# kind tag in the bottom-right corner (gut decor: "complement" / "color")
+		if owned and item.get("kind", "") != "":
+			var tag := _label(Vector2(420, 90), Vector2(166, 36), 24, TEXT, row)
+			tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			tag.text = item["kind"]
 		row.set_meta("action", { "type": "equip", "category": cat, "id": id } if owned else { "type": "locked" })
 		if Collection.is_new(cat, id):
 			var tag := _new_badge(26)
@@ -626,16 +631,25 @@ func _accessory_preview(id: String) -> Texture2D:
 	var used := body.get_used_rect().grow(4)
 	return ImageTexture.create_from_image(body.get_region(used))
 
-## A corner of the colon with the decor on it
+## A corner of the colon with the decor on it (a colour item shows the gut recoloured)
 func _decor_preview(id: String) -> Texture2D:
 	var gut := _image("res://textures/pet-background/intestine-front.png")
 	if gut == null:
 		return null
+
 	var frames: Array = Collection.DECOR[id]["frames"]
 	if not frames.is_empty():
 		var over := _image(frames[0])
 		gut.blend_rect(over, Rect2i(Vector2i.ZERO, over.get_size()), Vector2i.ZERO)
 	var crop := gut.get_region(Rect2i(60, 90, 380, 360))
+	var hue: float = Collection.DECOR[id].get("hue", 0.0)
+	if hue != 0.0:                               # only the small crop gets recoloured
+		for y in crop.get_height():
+			for x in crop.get_width():
+				var c := crop.get_pixel(x, y)
+				if c.a > 0.0:
+					c.h = fposmod(c.h + hue, 1.0)
+					crop.set_pixel(x, y, c)
 	var img := Image.create(crop.get_width(), crop.get_height(), false, Image.FORMAT_RGBA8)
 	img.fill(Color8(236, 170, 170))
 	img.blend_rect(crop, Rect2i(Vector2i.ZERO, crop.get_size()), Vector2i.ZERO)

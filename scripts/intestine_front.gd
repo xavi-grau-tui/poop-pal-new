@@ -39,6 +39,7 @@ func _ready():
 	tween.set_loops()
 
 func _apply_decor() -> void:
+	_apply_gut_color()
 	_decor_frames.clear()
 	for path in Collection.DECOR.get(Collection.equipped_decor, {}).get("frames", []):
 		_decor_frames.append(load(path))
@@ -48,6 +49,21 @@ func _apply_decor() -> void:
 		_decor_timer.start()
 	else:
 		_decor_timer.stop()
+
+## Gut colour (a decor of kind "color"): the same hue shift on the front and back gut
+func _apply_gut_color() -> void:
+	var id: String = Collection.equipped_gut_color
+	var hue: float = Collection.DECOR.get(id, {}).get("hue", 0.0) if id != "" else 0.0
+	for n in [self, get_node_or_null("../Intestine-back")]:
+		if not n:
+			continue
+		if hue == 0.0:
+			n.material = null
+			continue
+		var m := ShaderMaterial.new()
+		m.shader = preload("res://scripts/shaders/hue_shift.gdshader")
+		m.set_shader_parameter("hue_shift", hue)
+		n.material = m
 
 func _next_decor_frame() -> void:
 	if _decor_frames.is_empty():
