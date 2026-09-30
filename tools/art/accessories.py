@@ -51,30 +51,34 @@ def round_glasses(c, cx, cy, spread, eye_r):
 
 
 def sunglasses(c, cx, cy, spread, eye_r):
-    """Cool wayfarer-ish shades: dark lenses, a bold brow bar, two white shine streaks."""
+    """Cool wayfarer-ish shades: dark lenses, a bold brow bar, two white shine streaks.
+    Sized to the face: lenses a bit bigger than the eyes and pushed apart so there is always
+    a nose gap between them (on small pals the lenses sit a little outside the eyes)."""
     k = c.k * c.f
     frame = Image.new('RGBA', (c.w * c.k, c.h * c.k), (0, 0, 0, 0))
     lens = Image.new('RGBA', frame.size, (0, 0, 0, 0))
     fd, ld = ImageDraw.Draw(frame), ImageDraw.Draw(lens)
     P = c.P
     ink = (26, 16, 22, 255)
-    # lenses sized to the face: on small pals (close eyes) they shrink so the frame doesn't
-    # swallow the whole face, and a nose gap always stays between them
-    r = min(eye_r * 1.5 + 1.0, spread * 0.72)
-    small = spread < 11.5
-    brow = 2.0 if small else 2.8
-    for e in (cx - spread, cx + spread):
-        box = [*P(e - r * 1.05, cy - r * 0.72), *P(e + r * 1.05, cy + r * 0.72)]
+    r = eye_r * 1.45 + 1.3                   # lens half-width
+    rw, rh = r * 1.05, r * 0.72
+    # keep clear of the mouth: the lenses' inner edges stay outside the mouth's width
+    # (face() draws the mouth about 3.2 * eye_r / 3.4 to each side of the centre)
+    mouth_half = 3.2 * eye_r / 3.4
+    off = max(spread, rw + mouth_half + 1.5)  # lens centre distance from the face centre
+    for side in (-1, 1):
+        e = cx + side * off
+        box = [*P(e - rw, cy - rh), *P(e + rw, cy + rh)]
         ld.rounded_rectangle(box, radius=int(r * 0.5 * k), fill=(44, 34, 58, 255))
         fd.rounded_rectangle(box, radius=int(r * 0.5 * k), outline=ink, width=int(1.8 * k))
         # shine: two short diagonal streaks
         fd.line([P(e - r * .55, cy + r * .1), P(e - r * .1, cy - r * .45)], fill=(255, 255, 255, 255), width=int(1.4 * k))
         fd.line([P(e - r * .05, cy + r * .15), P(e + r * .2, cy - r * .2)], fill=(255, 255, 255, 255), width=int(0.9 * k))
-    # bold brow bar across both lenses, and short arms
-    fd.line([P(cx - spread - r * 1.1, cy - r * .62), P(cx + spread + r * 1.1, cy - r * .62)], fill=ink, width=int(brow * k))
+    # brow bar across both lenses (the bridge), and short arms
+    fd.line([P(cx - off - rw, cy - rh * .85), P(cx + off + rw, cy - rh * .85)], fill=ink, width=int(2.6 * k))
     for side in (-1, 1):
-        x0 = cx + side * (spread + r * 1.05)
-        fd.line([P(x0, cy - r * .55), P(x0 + side * (3.0 if small else 4.5), cy - r * .75)], fill=ink, width=int(2.0 * k))
+        x0 = cx + side * (off + rw)
+        fd.line([P(x0, cy - rh * .75), P(x0 + side * 4.0, cy - rh * 1.05)], fill=ink, width=int(2.0 * k))
     return frame, lens
 
 

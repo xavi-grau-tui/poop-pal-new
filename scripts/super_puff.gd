@@ -13,13 +13,17 @@ var obstacle_interval := 2.3
 var scroll_speed := 210.0
 var last_gap_center := -1.0
 
-# Progression: everything eases from the calm start values to the hard ones as the score
-# climbs to HARD_AT (spacing, speed, gap size, and how far a gap may jump from the last one)
+# Progression in two phases, so high scores stay rare (they will unlock rare items):
+#   0 -> HARD_AT      calm start to 'hard'   (spacing, speed, gap size, gap jump)
+#   HARD_AT -> EXPERT_AT   'hard' to 'expert': pipes closer, gaps smaller and further apart
+# Every value stays passable: the pal climbs/falls at most 400 px/s, and the expert gap
+# jump can be covered in the time between two pipes.
 const HARD_AT := 30.0
-const INTERVAL := Vector2(2.3, 1.25)        # seconds between pipes (start, hard)
-const SPEED := Vector2(210.0, 380.0)        # scroll speed
-const GAP := Vector2(270.0, 195.0)          # gap height
-const GAP_JUMP := Vector2(110.0, 330.0)     # max move of the gap centre from one pipe to the next
+const EXPERT_AT := 90.0
+const INTERVAL := Vector3(2.3, 1.25, 1.0)       # seconds between pipes (start, hard, expert)
+const SPEED := Vector3(210.0, 380.0, 400.0)     # scroll speed (pipe spacing 483 -> 475 -> 400 px)
+const GAP := Vector3(270.0, 195.0, 170.0)       # gap height
+const GAP_JUMP := Vector3(110.0, 300.0, 300.0)  # max move of the gap centre between pipes
 
 # Drink boost "splash" (water, a lasting status): hitting a pipe the first time makes the
 # pal go "boing" and the view roll back a bit, for a second try at that same gap.
@@ -296,14 +300,13 @@ func _spawn_obstacles(delta: float) -> void:
 		return
 	obstacle_timer = 0.0
 
-	# How far into the run we are (0 = calm start, 1 = hard)
-	var d := clampf(score / HARD_AT, 0.0, 1.0)
-	var gap_size := lerpf(GAP.x, GAP.y, d)
+	# How far into the run we are
+	var gap_size := _phase(GAP)
 	var min_c := PLAY_TOP + 80.0 + gap_size / 2.0
 	var max_c := PLAY_BOTTOM - 80.0 - gap_size / 2.0
 	if last_gap_center < 0.0:
 		last_gap_center = player.position.y + HITBOX_OFFSET.y     # first gap: where the pal is
-	var jump := lerpf(GAP_JUMP.x, GAP_JUMP.y, d)
+	var jump := _phase(GAP_JUMP)
 	var centre := clampf(last_gap_center + randf_range(-jump, jump), min_c, max_c)
 	last_gap_center = centre
 	var gap_y := centre - gap_size / 2.0
@@ -332,8 +335,14 @@ func _spawn_obstacles(delta: float) -> void:
 	})
 
 	# Next pipe: a little closer and faster as the score climbs
-	obstacle_interval = lerpf(INTERVAL.x, INTERVAL.y, d)
-	scroll_speed = lerpf(SPEED.x, SPEED.y, d)
+	obstacle_interval = _phase(INTERVAL)
+	scroll_speed = _phase(SPEED)
+
+## start -> hard over the first HARD_AT points, then hard -> expert until EXPERT_AT
+func _phase(v: Vector3) -> float:
+	if score <= HARD_AT:
+		return lerpf(v.x, v.y, score / HARD_AT)
+	return lerpf(v.y, v.z, clampf((score - HARD_AT) / (EXPERT_AT - HARD_AT), 0.0, 1.0))
 
 func _update_obstacles(delta: float) -> void:
 	if rewinding:

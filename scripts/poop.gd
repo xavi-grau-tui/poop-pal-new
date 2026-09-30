@@ -42,8 +42,9 @@ var boost_badge: Sprite2D
 var aura: BoostAura                                 # glow + drips on the pal while a boost is on
 var _badge_bob: Tween
 
-# Worn accessory (Collection): a child sprite on the same canvas as the form, so it follows
-# every squash, blink, shake and flush for free. It only has to follow the animation frame.
+# Worn accessory (Collection): a separate sprite on the same canvas as the form. It stays
+# still while the pal breathes, and only follows real movement (hops, shakes, flush).
+const ACCESSORY_FOLLOW_SCALE := 0.12   # scale changes smaller than this (breathing) are ignored
 var accessory: Sprite2D
 
 func _ready():
@@ -53,8 +54,8 @@ func _ready():
 	PetState.form_changed.connect(_on_form_changed)
 	accessory = Sprite2D.new()
 	accessory.name = "Accessory"
-	add_child(accessory)
-	frame_changed.connect(_refresh_accessory)
+	get_parent().add_child.call_deferred(accessory)
+	_place_accessory_above.call_deferred()
 	animation_changed.connect(_refresh_accessory)
 	Collection.equipped_changed.connect(func(category, _id):
 		if category == "accessories":
@@ -72,6 +73,7 @@ func _ready():
 
 func _process(delta: float) -> void:
 	_time += delta
+	_follow_accessory()
 	if flush_charge > 0.0:
 		rotation = sin(_time * 38.0) * 0.07 * flush_charge
 		position = base_position + Vector2(sin(_time * 53.0) * 4.0 * flush_charge, 0)
@@ -306,13 +308,28 @@ func _refresh_aura() -> void:
 		_update_body_rect()
 		aura.setup(PetState.boost, _body_rect)
 
+func _place_accessory_above() -> void:
+	if accessory and accessory.get_parent():
+		accessory.get_parent().move_child(accessory, get_index() + 1)
+
+func _follow_accessory() -> void:
+	if not accessory:
+		return
+	accessory.position = position
+	accessory.rotation = rotation
+	accessory.modulate = modulate
+	accessory.visible = visible
+	var ratio := scale / base_scale
+	var big := absf(ratio.x - 1.0) > ACCESSORY_FOLLOW_SCALE or absf(ratio.y - 1.0) > ACCESSORY_FOLLOW_SCALE
+	accessory.scale = scale if big else base_scale
+
 func _refresh_accessory() -> void:
 	_update_body_rect()
 	_refresh_aura()
 	if not accessory:
 		return
 	var dir: String = Collection.ACCESSORIES.get(Collection.equipped_accessory, {}).get("dir", "")
-	var path := "%s%s-%d.png" % [dir, PetState.form_id, frame + 1]
+	var path := "%s%s-1.png" % [dir, PetState.form_id]      # one still frame (no breathing)
 	if dir == "" or not PetState.has_poop() or not ResourceLoader.exists(path):
 		accessory.texture = null
 		return

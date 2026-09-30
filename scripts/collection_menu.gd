@@ -86,6 +86,12 @@ func _ready() -> void:
 
 	_build_hub_cards(menu)
 
+	# Always reopen on the card hub: reset as soon as the menu is hidden (not when it's shown,
+	# or the last list flashes for a moment while the menu slides in)
+	visibility_changed.connect(func():
+		if not visible and view != View.HUB:
+			page = 0
+			_open(View.HUB))
 	Collection.background_changed.connect(func(_id): _apply_background())
 	_apply_background()
 	_open(View.HUB)
