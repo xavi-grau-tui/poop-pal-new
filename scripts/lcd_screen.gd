@@ -4,11 +4,12 @@ extends Node
 @export var drink_timer_label: Label
 @export var score_counter_label: Label
 
-var food_duration := 5400  # 1 hour 30 minutes
-var drink_duration := 1200 # 20 minutes
+var food_duration := 1800  # 30 minutes after each meal
+var drink_duration := 900  # 15 minutes after each drink (the first meal starts it too)
 
-var food_time_left := food_duration
-var drink_time_left := drink_duration
+# No pal yet: both at 00:00:00 and the food one blinks (it's time to eat)
+var food_time_left := 0
+var drink_time_left := 0
 
 # Timers only count down while there is a pal (they start with the first meal)
 var running := false
@@ -29,6 +30,9 @@ func _ready():
 	PetState.drank.connect(_on_drank)
 	PetState.form_changed.connect(_on_form_changed)
 	running = PetState.has_poop()
+	if running:
+		food_time_left = food_duration
+		drink_time_left = drink_duration
 	_update_labels()
 	Collection.unlocked.connect(func(_c, _id):
 		show_message("ITEM\nUNLOCKED!")
@@ -94,6 +98,8 @@ func _update_score_display() -> void:
 
 func _on_fed(_food: Dictionary) -> void:
 	food_time_left = food_duration
+	if not running:
+		drink_time_left = drink_duration      # the first meal starts the drink countdown too
 	running = true
 	_update_labels()
 
@@ -103,9 +109,9 @@ func _on_drank(_drink: Dictionary) -> void:
 
 func _on_form_changed(_form_id: String, reason: String) -> void:
 	if reason == "flush":
-		running = false
-		food_time_left = food_duration
-		drink_time_left = drink_duration
+		running = false                       # back to the start: waiting for a meal
+		food_time_left = 0
+		drink_time_left = 0
 		_update_labels()
 
 func _process(delta):
@@ -130,7 +136,8 @@ func _update_labels() -> void:
 		food_timer_label.modulate.a = 1.0 if (food_time_left > 0 or blink_on) else 0.15
 	if drink_timer_label:
 		drink_timer_label.text = format_time(drink_time_left)
-		drink_timer_label.modulate.a = 1.0 if (drink_time_left > 0 or blink_on) else 0.15
+		# (before the first meal only the food timer blinks)
+		drink_timer_label.modulate.a = 1.0 if (drink_time_left > 0 or blink_on or not running) else 0.15
 
 func format_time(seconds: int) -> String:
 	var h := seconds / 3600
