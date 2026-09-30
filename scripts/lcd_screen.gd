@@ -136,11 +136,12 @@ func _update_labels() -> void:
 		food_timer_label.modulate.a = 1.0 if (food_time_left > 0 or blink_on) else 0.15
 	if drink_timer_label:
 		drink_timer_label.text = format_time(drink_time_left)
-		# (before the first meal only the food timer blinks)
-		drink_timer_label.modulate.a = 1.0 if (drink_time_left > 0 or blink_on or not running) else 0.15
+		# before the first meal the drink timer is just unlit (faint digits), only food blinks
+		if not running:
+			drink_timer_label.modulate.a = 0.15
+		else:
+			drink_timer_label.modulate.a = 1.0 if (drink_time_left > 0 or blink_on) else 0.15
 
 func format_time(seconds: int) -> String:
-	var h := seconds / 3600
-	var m := (seconds % 3600) / 60
-	var s := seconds % 60
-	return "%02d:%02d:%02d" % [h, m, s]
+	# mm:ss (no hours: the countdowns are 30 and 15 minutes)
+	return "%02d:%02d" % [seconds / 60, seconds % 60]
