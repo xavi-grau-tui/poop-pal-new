@@ -2,7 +2,8 @@
 
 A buzzy glottal source (sawtooth with vibrato) shaped by two vowel formants ("ee"), cut
 into short syllables whose pitch steps down like a chuckle. Soft and short.
-    -> sounds/fx/giggle.wav
+    -> sounds/fx/giggle.wav         (tickle: hee-hee-hee-hee)
+    -> sounds/fx/giggle_short.wav   (button poke: a quick "hee-hee")
 """
 import math, os, wave
 import numpy as np
@@ -38,9 +39,9 @@ def syllable(pitch, dur, breath=0.25):
     return v * env
 
 
-def giggle(path):
+def giggle(path, notes=((620, 0.11), (560, 0.10), (520, 0.10), (470, 0.16))):
     parts = []
-    for i, (p, d) in enumerate([(620, 0.11), (560, 0.10), (520, 0.10), (470, 0.16)]):
+    for i, (p, d) in enumerate(notes):
         parts.append(syllable(p, d))
         parts.append(np.zeros(int(SR * (0.035 + 0.01 * i))))
     out = np.concatenate(parts)
@@ -52,4 +53,5 @@ def giggle(path):
 
 if __name__ == '__main__':
     giggle(os.path.join(PROJ, '..', 'sounds', 'fx', 'giggle.wav'))
+    giggle(os.path.join(PROJ, '..', 'sounds', 'fx', 'giggle_short.wav'), ((600, 0.09), (500, 0.13)))
     print('ok')

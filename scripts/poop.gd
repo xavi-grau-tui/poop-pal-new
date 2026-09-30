@@ -188,6 +188,33 @@ func _tickle() -> void:
 	_tickle_ready_at = Time.get_ticks_msec() / 1000.0 + TICKLE_COOLDOWN
 	_start_breathing()
 
+## Main button tap on the pet screen: a quick chuckle and a little bounce (no hearts).
+## Tapping again while it's still bouncing just restarts the bounce.
+func poke() -> void:
+	if not PetState.has_poop() or _tickling or flush_charge > 0.0 or modulate.a < 0.5:
+		return
+	if fx_tween and fx_tween.is_running() and not has_meta("poking"):
+		return                               # busy hatching / evolving
+	_stop_all_tweens()
+	set_meta("poking", true)
+	position = base_position
+	rotation = 0.0
+	_play_sfx("res://sounds/fx/giggle_short.wav", -8.0, randf_range(0.92, 1.12))
+	var lean := 0.07 if randf() < 0.5 else -0.07
+	fx_tween = create_tween()
+	fx_tween.tween_property(self, "scale", base_scale * Vector2(1.1, 0.9), 0.05)
+	fx_tween.tween_property(self, "position:y", base_position.y - 12.0, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	fx_tween.parallel().tween_property(self, "scale", base_scale * Vector2(0.96, 1.05), 0.1)
+	fx_tween.parallel().tween_property(self, "rotation", lean, 0.1)
+	fx_tween.tween_property(self, "position:y", base_position.y, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	fx_tween.parallel().tween_property(self, "rotation", 0.0, 0.1)
+	fx_tween.tween_property(self, "scale", base_scale, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var mine := fx_tween
+	await mine.finished
+	if fx_tween == mine:                     # (not restarted by another tap)
+		remove_meta("poking")
+		_start_breathing()
+
 func _hearts() -> void:
 	# three little pixel hearts float up from the pal
 	var img := Image.create(7, 6, false, Image.FORMAT_RGBA8)
@@ -349,13 +376,14 @@ func _hide_mystery() -> void:
 		mystery.visible = false
 		mystery.scale = Vector2(MYSTERY_SCALE, MYSTERY_SCALE))
 
-func _play_sfx(path: String, volume_db: float) -> void:
+func _play_sfx(path: String, volume_db: float, pitch := 1.0) -> void:
 	var stream = load(path) as AudioStream
 	if not stream:
 		return
 	var sfx = AudioStreamPlayer.new()
 	sfx.stream = stream
 	sfx.volume_db = volume_db
+	sfx.pitch_scale = pitch
 	var sound_btn = get_node_or_null("/root/PoopPal/Main UI/SoundButtons/SoundButton")
 	if sound_btn and sound_btn.button_pressed:
 		sfx.volume_db = linear_to_db(0.0)

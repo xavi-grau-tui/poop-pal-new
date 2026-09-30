@@ -77,7 +77,12 @@ func _handle_main_button_press() -> void:
 	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
 		if b.button_pressed and b.target_menu and b.target_menu.has_method("select_next"):
 			b.target_menu.select_next()
-			break
+			return
+	# Pet screen, no menu open: a tap pokes the pal (a long press flushes it)
+	if not _flushing:
+		var poop = get_node_or_null("../PetView/Poop")
+		if poop and poop.has_method("poke"):
+			poop.poke()
 
 # ------------------------------------------------------------------ PROCESS / HOLD-TO-CONFIRM
 func _process(delta: float) -> void:
