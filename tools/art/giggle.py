@@ -5,6 +5,7 @@ into short syllables whose pitch steps down like a chuckle. Soft and short.
     -> sounds/fx/giggle.wav         (tickle: hee-hee-hee-hee)
     -> sounds/fx/giggle_short.wav   (button poke: a quick "hee-hee")
     -> sounds/fx/hi.wav             (a new pal hatches: a tiny voice-like "hi!")
+    -> sounds/fx/bye.wav            (flush: a soft "bye!" with a falling pitch)
 """
 import math, os, wave
 import numpy as np
@@ -92,8 +93,29 @@ def hi(path):
         w.writeframes((out * 32767).astype(np.int16).tobytes())
 
 
+def bye(path):
+    """'b' = a tiny low pop, then 'ai' gliding like 'hi' but with a falling, wistful pitch."""
+    rng = np.random.default_rng(5)
+    nb = int(SR * 0.025)
+    tb = np.arange(nb) / SR
+    pop = np.sin(2 * math.pi * 140 * tb) * np.exp(-tb * 180) * 0.8 + rng.standard_normal(nb) * np.exp(-tb * 300) * 0.15
+    nv = int(SR * 0.32)
+    t = np.arange(nv) / SR
+    f0 = 640 * (1 - 0.28 * (t / t[-1]) ** 0.9) * (1 + 0.03 * np.sin(2 * math.pi * 7 * t))
+    phase = np.cumsum(f0 / SR)
+    src = 2 * (phase % 1.0) - 1 + 0.1 * rng.standard_normal(nv)
+    v = formant_glide(src, 820, 400, 110) * 1.0 + formant_glide(src, 1200, 2400, 170) * 0.9
+    env = np.minimum(1, t / 0.012) * np.exp(-t * 5.5)
+    out = np.concatenate([pop, v * env, np.zeros(int(SR * 0.05))])
+    out = out / np.abs(out).max() * 0.55
+    with wave.open(path, 'wb') as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR)
+        w.writeframes((out * 32767).astype(np.int16).tobytes())
+
+
 if __name__ == '__main__':
     giggle(os.path.join(PROJ, '..', 'sounds', 'fx', 'giggle.wav'))
     giggle(os.path.join(PROJ, '..', 'sounds', 'fx', 'giggle_short.wav'), ((780, 0.09), (650, 0.13)))
     hi(os.path.join(PROJ, '..', 'sounds', 'fx', 'hi.wav'))
+    bye(os.path.join(PROJ, '..', 'sounds', 'fx', 'bye.wav'))
     print('ok')

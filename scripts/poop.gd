@@ -361,16 +361,23 @@ func _play_hatch() -> void:
 	await fx_tween.finished
 	_start_breathing()
 
-## A new pal greets you: a little "hi!" noise, a tiny hop and "Hi!" floating up the cam
+## A new pal greets you: a little "hi!" noise, a tiny hop and "hi!" floating up the cam
 func _say_hi() -> void:
+	_say("hi!", "res://sounds/fx/hi.wav")
+
+## Flush: the pal says goodbye before it spins away
+func say_bye() -> void:
+	_say("bye!", "res://sounds/fx/bye.wav")
+
+func _say(word: String, sound: String) -> void:
 	if not PetState.has_poop():
 		return
-	_play_sfx("res://sounds/fx/hi.wav", -9.0, randf_range(0.97, 1.06))
+	_play_sfx(sound, -9.0, randf_range(0.97, 1.06))
 	var hop := create_tween()
 	hop.tween_property(self, "position:y", base_position.y - 10.0, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	hop.tween_property(self, "position:y", base_position.y, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	var l := Label.new()
-	l.text = "hi!"
+	l.text = word
 	var f = load("res://fonts/pixChicago.ttf")
 	if f:
 		l.add_theme_font_override("font", f)

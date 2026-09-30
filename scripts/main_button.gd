@@ -229,9 +229,14 @@ func _drink_after_pour(spawner: Node, drink: Dictionary) -> void:
 
 func _flush_poop() -> void:
 	_flushing = true
+	var poop = get_node_or_null("../PetView/Poop")
+	# the pal says bye first, then the whoosh and the spin
+	if poop and poop.has_method("say_bye"):
+		poop.set_flush_charge(0.0)
+		poop.say_bye()
+		await get_tree().create_timer(0.55).timeout
 	var flush_sfx := _play_sfx("res://sounds/fx/sfx_sounds_falling8.mp3", flush_sound_db)
 	Input.vibrate_handheld(80)
-	var poop = get_node_or_null("../PetView/Poop")
 	var whoosh_end := Time.get_ticks_msec() + int(flush_fade_time * 1000.0)
 	# the flush sound is longer than the spin: fade it out so it's gone before the cling
 	if flush_sfx and flush_sfx.volume_db > -50.0:   # (muted = -inf, leave it)
