@@ -141,6 +141,9 @@ func confirm_selected(sel: Node) -> bool:
 	var action: Dictionary = sel.get_meta("action", {})
 	match action.get("type", ""):
 		"open":
+			if action["view"] == View.ACCESSORIES and not PetState.has_poop():
+				_point_to_food()      # nobody to dress yet: feed the pal first
+				return false
 			page = 0              # (the card's own ConfirmSound already played)
 			_open(action["view"])
 		"back":
@@ -615,6 +618,14 @@ func _background_preview(layers: Array) -> Texture2D:
 		layer_img.convert(Image.FORMAT_RGBA8)
 		img.blend_rect(layer_img, Rect2i(180, 90, 200, 200), Vector2i.ZERO)
 	return ImageTexture.create_from_image(img)
+
+## No pal yet: a short buzz and the Food button blinks (like the Games button does)
+func _point_to_food() -> void:
+	Input.vibrate_handheld(40)
+	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
+		if b.target_menu and b.target_menu.has_method("populate_foods"):
+			b.blink_hint()
+			break
 
 func _click() -> void:
 	_sfx("res://sounds/fx/click-5.mp3", -6.0)
