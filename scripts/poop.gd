@@ -37,8 +37,9 @@ var _tickle_ready_at := 0.0
 var _body_rect := Rect2()          # visible body, in local (texture) coords
 
 # Drink boost badge: a little icon in the top-right corner of the pal's frame (pet cam)
-const BOOST_BADGE_POS := Vector2(700, -992)
+const BOOST_BADGE_POS := Vector2(670, -955)        # inside the frame's cream area, top-right
 var boost_badge: Sprite2D
+var aura: BoostAura                                 # glow + drips on the pal while a boost is on
 var _badge_bob: Tween
 
 # Worn accessory (Collection): a child sprite on the same canvas as the form, so it follows
@@ -265,6 +266,9 @@ func _setup_boost_badge() -> void:
 	boost_badge.z_index = 2
 	boost_badge.visible = false
 	get_parent().add_child(boost_badge)
+	aura = BoostAura.new()
+	aura.visible = false
+	add_child(aura)
 	PetState.boost_changed.connect(_on_boost_changed)
 	_on_boost_changed(PetState.boost, false)
 
@@ -273,6 +277,7 @@ func _on_boost_changed(id: String, animate := true) -> void:
 		return
 	if _badge_bob:
 		_badge_bob.kill()
+	_refresh_aura()
 	if id == "":
 		if boost_badge.visible and animate:
 			var t := create_tween()
@@ -292,8 +297,17 @@ func _on_boost_changed(id: String, animate := true) -> void:
 	_badge_bob.tween_property(boost_badge, "position:y", BOOST_BADGE_POS.y - 6, 0.7).set_trans(Tween.TRANS_SINE)
 	_badge_bob.tween_property(boost_badge, "position:y", BOOST_BADGE_POS.y, 0.7).set_trans(Tween.TRANS_SINE)
 
+func _refresh_aura() -> void:
+	if not aura:
+		return
+	aura.visible = PetState.boost != "" and PetState.has_poop()
+	if aura.visible:
+		_update_body_rect()
+		aura.setup(PetState.boost, _body_rect)
+
 func _refresh_accessory() -> void:
 	_update_body_rect()
+	_refresh_aura()
 	if not accessory:
 		return
 	var dir: String = Collection.ACCESSORIES.get(Collection.equipped_accessory, {}).get("dir", "")

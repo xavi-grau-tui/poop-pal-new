@@ -21,10 +21,15 @@ const SPEED := Vector2(210.0, 380.0)        # scroll speed
 const GAP := Vector2(270.0, 195.0)          # gap height
 const GAP_JUMP := Vector2(110.0, 330.0)     # max move of the gap centre from one pipe to the next
 
-# Drink boost "splash" (water): the first hit bounces the pal back instead of losing
+# Drink boost "splash" (water, a lasting status): hitting a pipe the first time makes the
+# pal go "boing" and the view roll back a bit, for a second try at that same gap.
+# Hitting the same pipe again is game over.
 var splash_ready := false
 var invuln := 0.0
 var boost_icon: Sprite2D
+var world_shift := 0.0          # tweened during the roll-back
+var _shift_applied := 0.0
+var rewinding := false
 
 var score_label: Label
 var score_bg: ColorRect
@@ -242,7 +247,8 @@ func _process(delta: float) -> void:
 
 	_update_player(delta)
 	_update_obstacles(delta)
-	_spawn_obstacles(delta)
+	if not rewinding:
+		_spawn_obstacles(delta)
 	if invuln > 0.0:
 		invuln -= delta
 		player.modulate.a = 0.35 if int(invuln * 14.0) % 2 == 0 else 1.0
@@ -330,6 +336,13 @@ func _spawn_obstacles(delta: float) -> void:
 	scroll_speed = lerpf(SPEED.x, SPEED.y, d)
 
 func _update_obstacles(delta: float) -> void:
+	if rewinding:
+		var ds := world_shift - _shift_applied
+		_shift_applied = world_shift
+		for o in obstacles:
+			o["top"].position.x += ds
+			o["bottom"].position.x += ds
+		return
 	var to_remove := []
 	for i in range(obstacles.size()):
 		var obs = obstacles[i]
@@ -373,7 +386,8 @@ func _check_collisions() -> void:
 		var bottom_rect := Rect2(bottom.position, bot_sz)
 
 		if player_rect.intersects(top_rect) or player_rect.intersects(bottom_rect):
-			if splash_ready:
+			if splash_ready and not obs.get("bounced", false):
+				obs["bounced"] = true
 				_splash(top.position.x, player_rect)
 				return
 			end_game()
@@ -391,29 +405,46 @@ func _setup_boost() -> void:
 	boost_icon.visible = splash_ready
 	add_child(boost_icon)
 	if splash_ready:
+		var aura := BoostAura.new()
+		player.add_child(aura)
+		var tex := player.sprite_frames.get_frame_texture(player.animation, 0)
+		var img := tex.get_image()
+		var used := img.get_used_rect() if img else Rect2i(Vector2i.ZERO, tex.get_size())
+		aura.setup("splash", Rect2(Vector2(used.position) - tex.get_size() / 2.0, used.size))
+	if splash_ready:
 		var t := boost_icon.create_tween().set_loops()
 		t.tween_property(boost_icon, "position:y", boost_icon.position.y - 5, 0.6).set_trans(Tween.TRANS_SINE)
 		t.tween_property(boost_icon, "position:y", boost_icon.position.y, 0.6).set_trans(Tween.TRANS_SINE)
 
-## The hit is absorbed: the pal is pushed back from the pipe (the pipes slide right),
-## blinks for a moment, and the boost is used up.
+## Boing: the pal squashes against the pipe and the view rolls back smoothly, so the same
+## gap comes again. The status stays (it's water, not an extra life).
 func _splash(pipe_x: float, player_rect: Rect2) -> void:
-	splash_ready = false
-	PetState.use_boost()
-	var push := maxf(0.0, player_rect.end.x + 70.0 - pipe_x)
-	for o in obstacles:
-		o["top"].position.x += push
-		o["bottom"].position.x += push
-	player_vy = 0.0
-	invuln = 1.1
-	# the icon pops away
+	var push := maxf(0.0, player_rect.end.x + 150.0 - pipe_x)
+	rewinding = true
+	world_shift = 0.0
+	_shift_applied = 0.0
+	var roll := create_tween()
+	roll.tween_property(self, "world_shift", push, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	roll.tween_callback(func():
+		rewinding = false
+		world_shift = 0.0
+		_shift_applied = 0.0)
+	player_vy = -120.0
+	invuln = 0.8
+	# boing: squash against the pipe, then spring back
+	var base: Vector2 = player.get_meta("base_scale", player.scale)
+	player.set_meta("base_scale", base)
+	var b := create_tween()
+	b.tween_property(player, "scale", base * Vector2(0.7, 1.25), 0.07)
+	b.tween_property(player, "scale", base * Vector2(1.2, 0.85), 0.1)
+	b.tween_property(player, "scale", base, 0.35).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	# the HUD drop pulses (the status stays)
 	var t := create_tween()
-	t.tween_property(boost_icon, "scale", Vector2(10, 10), 0.15)
-	t.parallel().tween_property(boost_icon, "modulate:a", 0.0, 0.25)
-	t.tween_callback(boost_icon.hide)
-	# splash text + droplets
+	t.tween_property(boost_icon, "scale", Vector2(8.5, 8.5), 0.1)
+	t.tween_property(boost_icon, "scale", Vector2(6, 6), 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# BOING! text + droplets
 	var l := Label.new()
-	l.text = "SPLASH!"
+	l.text = "BOING!"
 	var f = load("res://fonts/pixChicago.ttf")
 	if f:
 		l.add_theme_font_override("font", f)
