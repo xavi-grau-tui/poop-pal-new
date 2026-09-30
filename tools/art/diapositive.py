@@ -15,7 +15,10 @@ from PIL import Image
 from hires import PROJ, SCR
 
 GRID = 3           # texels per new art pixel (was ~5)
-LINE = 6           # outline thickness in texels (was ~10)
+LINE = 7           # outline thickness in texels (was ~10)
+BOTTOM = 4         # extra outline weight along the bottom edge (like the pixel cards)
+BEVEL = True       # moulded look: light top/left, shaded bottom/right, gloss, inset panel
+SCREWS = False     # four tiny screws on the frame band (tried: too busy in the corners)
 R_OUT = 44         # outer corner radius (as the original)
 R_PANEL = 26       # panel corner radius
 
@@ -77,9 +80,39 @@ def soften(src, dst):
 
     out = np.zeros_like(a)
     inside = d_outer >= 0
+    x0, y0, x1, y1 = outer
+    cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+    band = inside & (d_ring < 0)
     out[inside] = c_body
-    out[inside & (d_outer < LINE)] = c_out
+    body = np.array(c_body[:3], np.float32)
+    if BEVEL:
+        # which side of the frame a pixel is on: <0 top/left (lit), >0 bottom/right (shade)
+        side = (x - cx) / (x1 - x0) + (y - cy) / (y1 - y0) * 1.4
+        lit = band & (d_outer >= LINE) & (d_outer < LINE + GRID) & (side < -0.05)
+        shade = band & (d_outer >= LINE) & (d_outer < LINE + 2 * GRID) & (side > 0.05)
+        out[lit, :3] = np.clip(body * 0.2 + 255 * 0.8, 0, 255)
+        out[shade, :3] = np.clip(body * 0.8, 0, 255)
+        # a soft darker ring where the band meets the panel's outline (the panel sits lower)
+        lip = band & (d_ring >= -GRID) & (side > -0.2)
+        out[lip, :3] = np.clip(body * 0.88, 0, 255)
+        # gloss: a short bright arc on the top-left corner
+        r = R_OUT
+        gloss = band & (d_outer >= LINE + GRID) & (d_outer < LINE + 2 * GRID) & (x < x0 + r * 0.9) & (y < y0 + r * 0.9)
+        out[gloss, :3] = 255
+    # outline, heavier along the bottom
+    d_low = depth(x, y, (x0, y0, x1, y1 - BOTTOM), R_OUT, GRID)
+    out[inside & ((d_outer < LINE) | (d_low < LINE))] = c_out
     out[(d_ring >= 0) & (d_panel < 0)] = c_in
+    if SCREWS:
+        bw = (panel[0] - LINE) - (x0 + LINE)                  # band width at the sides
+        for sx, sy in ((x0 + LINE + bw / 2, y0 + LINE + bw / 2), (x1 - LINE - bw / 2, y0 + LINE + bw / 2),
+                       (x0 + LINE + bw / 2, y1 - LINE - BOTTOM - bw / 2), (x1 - LINE - bw / 2, y1 - LINE - BOTTOM - bw / 2)):
+            sx, sy = round(sx / GRID) * GRID, round(sy / GRID) * GRID
+            dd = np.hypot(np.floor((x - sx) / GRID) * GRID + GRID / 2, np.floor((y - sy) / GRID) * GRID + GRID / 2)
+            out[dd <= 5.0, :3] = np.clip(body * 0.55, 0, 255)             # screw head
+            out[dd <= 2.5, :3] = np.clip(body * 0.35 + 255 * 0.65, 0, 255)  # highlight
+            slot = (np.abs((x - sx) - (y - sy)) < 1.6) & (dd <= 4.0)
+            out[slot, :3] = np.array(c_out[:3])                            # slot
     # panel: the original pixels; where the new rounder corner reaches into the old
     # outline, borrow the texture from a little further in
     pm = d_panel >= 0
@@ -92,6 +125,10 @@ def soften(src, dst):
     out[use_old] = old[use_old]
     fill = pm & ~use_old
     out[fill] = old[yi[fill], xi[fill]]
+    if BEVEL:
+        pside = (x - cx) / (x1 - x0) + (y - cy) / (y1 - y0) * 1.4
+        inset = pm & (d_panel < GRID) & (pside < 0.1)
+        out[inset, :3] = (out[inset, :3].astype(np.float32) * 0.8).astype(np.uint8)
     out[..., 3] = np.where(inside, 255, 0)
     Image.fromarray(out, 'RGBA').save(dst)
     return a, out
