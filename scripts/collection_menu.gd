@@ -93,12 +93,12 @@ func _ready() -> void:
 	var mini := Sprite2D.new()
 	mini.texture = load("res://textures/buttons/mainbuttonnormal.png")
 	mini.scale = Vector2(0.26, 0.26)
-	mini.position = Vector2(985, -476)
+	mini.position = Vector2(1024, -476)         # centre of the frame's bottom band
 	detail_legend.add_child(mini)
-	var back_l := _label(Vector2(1015, -500), Vector2(100, 48), 32, TEXT_DARK, detail_legend)
+	var back_l := _label(Vector2(1054, -500), Vector2(90, 48), 32, TEXT_DARK, detail_legend)
 	back_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	back_l.text = "back"
-	var next_l := _label(Vector2(1130, -500), Vector2(105, 48), 32, TEXT_DARK, detail_legend)
+	var next_l := _label(Vector2(1150, -500), Vector2(90, 48), 32, TEXT_DARK, detail_legend)
 	next_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	next_l.text = "next"
 

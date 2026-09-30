@@ -28,6 +28,8 @@ var progress_target := {
 
 ## Prototype/testing: games unlocked regardless of progress
 const DEBUG_UNLOCKED := [1, 2, 3, 4, 5]
+## Prototype/testing: every launch starts with no best scores and no progress (fresh start)
+const RESET_SCORES_ON_LAUNCH := true
 
 func _ready() -> void:
 	_init_game(0, true)   # Super Puff — unlocked by default
@@ -39,6 +41,12 @@ func _ready() -> void:
 	_init_game(6, false)
 	_init_game(7, false)
 	load_data()
+	if RESET_SCORES_ON_LAUNCH:
+		for idx in games:
+			games[idx]["max_score"] = 0
+			games[idx]["progress"] = 0.0
+			games[idx]["unlocked"] = idx == 0         # only the first game, as on a new install
+		save_data()
 	for idx in DEBUG_UNLOCKED:
 		games[idx]["unlocked"] = true
 
