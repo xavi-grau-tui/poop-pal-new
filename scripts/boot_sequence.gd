@@ -57,13 +57,13 @@ func _build() -> void:
 	text = Label.new()
 	text.text = welcome_text
 	text.add_theme_font_override("font", load("res://fonts/pixChicago.ttf"))
-	text.add_theme_font_size_override("font_size", 44)
+	text.add_theme_font_size_override("font_size", 40)
 	text.add_theme_color_override("font_color", TEXT_COLOR)
 	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.size = Vector2(sz.x * 0.72, sz.y * 0.6)
-	text.position = center - text.size / 2.0
+	text.size = Vector2(sz.x * 0.74, sz.y * 0.8)      # tall enough for all the lines
+	text.position = center - text.size / 2.0 - Vector2(0, sz.y * 0.03)
 	text.visible_ratio = 0.0
 	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(text)
