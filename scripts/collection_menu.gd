@@ -364,7 +364,7 @@ func _show_detail(id: String) -> void:
 	_fit_one_line(name_l, 52)
 	var stage_l := _label(Vector2(262, 100), Vector2(330, 44), 30, TEXT_DARK, card)
 	stage_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	stage_l.text = (("Baby" if f["stage"] == 1 else "Evolved") + " - " + str(f["family"]).capitalize()) if known else "Not found yet"
+	stage_l.text = (str(f.get("stage_name", "pal")).capitalize() + " - " + str(f["family"]).capitalize()) if known else "Not found yet"
 	_fit_one_line(stage_l, 30)
 	var link := _label(Vector2(262, 150), Vector2(330, 74), 28, TEXT_DARK, card)
 	link.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -510,12 +510,14 @@ func _pedia_pages() -> int:
 
 func _evolution_link(id: String) -> String:
 	var from: String = PetState.FORMS[id]["from"]
-	if from != "":
+	if from in PetState.FORMS:
 		return "Evolves from " + (PetState.FORMS[from]["name"] if from in PetState.discovered else "???")
-	for other in PetState.FORMS:
-		if PetState.FORMS[other]["from"] == id:
-			return "Evolves into " + (PetState.FORMS[other]["name"] if other in PetState.discovered else "???")
-	return ""
+	if from != "":
+		return "Evolves from " + from                # mutants: "any adult"
+	# a baby: how many of its kids you've found
+	var kids := PetState.FORMS.keys().filter(func(o): return PetState.FORMS[o]["from"] == id)
+	var found := kids.filter(func(o): return o in PetState.discovered).size()
+	return "Evolves into %d pals (%d found)" % [kids.size(), found]
 
 # ================================================================== BACKGROUND APPLY
 

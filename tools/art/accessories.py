@@ -24,6 +24,9 @@ def faces():
         forms.face = spy
         fn(Canvas(forms.W, forms.H, forms.K, forms.F))   # full run (forms.py assumes K), only to catch the face call
     forms.face = real
+    # ...and every pal made by forms_gen.py (the evolution tree)
+    import forms_gen
+    found.update(forms_gen.faces())
     return found
 
 

@@ -14,6 +14,11 @@ extends Node2D
 @onready var nodedots = $Menu/Dots
 @onready var dots = nodedots.get_children()
 
+# Third page: special foods (tech / cosmic / legendary). Built from a copy of the food page.
+var vbox_special: Node = null
+var special_options := []
+const PAGES := 3
+
 var current_page := 0
 var drinks_populated := false
 
@@ -24,7 +29,12 @@ func show_page(index: int):
 	current_page = index
 	vbox_food.visible = index == 0
 	vbox_drink.visible = index == 1
-	active_options = [food_option_1, food_option_2, food_option_3] if index == 0 else [drink_option_1, drink_option_2, drink_option_3]
+	if vbox_special:
+		vbox_special.visible = index == 2
+	match index:
+		0: active_options = [food_option_1, food_option_2, food_option_3]
+		1: active_options = [drink_option_1, drink_option_2, drink_option_3]
+		_: active_options = special_options
 	current_selection = -1
 	reset_selection()
 	update_dots(index)
@@ -41,19 +51,46 @@ func update_selection():
 		node.scale = Vector2.ONE * 1.015 if i == current_selection else Vector2.ONE
 
 func reset_selection():
-	for node in [food_option_1, food_option_2, food_option_3, drink_option_1, drink_option_2, drink_option_3]:
+	for node in [food_option_1, food_option_2, food_option_3, drink_option_1, drink_option_2, drink_option_3] + special_options:
 		node.scale = Vector2.ONE
 
 func flip_page():
-	current_page = (current_page + 1) % 2
+	current_page = (current_page + 1) % PAGES
 	show_page(current_page)
 	if current_page == 1 and not drinks_populated:
 		populate_drinks()
 		drinks_populated = true
 
 func _ready():
+	_build_special_page()
 	show_page(0)
 	populate_foods()
+	populate_special()
+
+func _build_special_page() -> void:
+	vbox_special = vbox_food.duplicate()
+	vbox_special.name = "VBoxSpecial"
+	vbox_food.get_parent().add_child(vbox_special)
+	vbox_special.visible = false
+	special_options = vbox_special.get_children().filter(func(n): return n.name.begins_with("FoodOption"))
+	# a third dot; the row still ends right before the forward sign
+	var extra: Control = dots[dots.size() - 1].duplicate()
+	nodedots.add_child(extra)
+	for d in dots:
+		d.position.x -= 40.0
+	dots = nodedots.get_children()
+
+## Special foods: one tech, one cosmic, one legendary (FoodLibrary.get_special_set)
+func populate_special():
+	var pool = FoodLibrary.get_special_set()
+	for i in range(mini(special_options.size(), pool.size())):
+		var food_data = pool[i]
+		var option_node = special_options[i]
+		option_node.get_node("Icon").texture = food_data.icon
+		option_node.get_node("Name").text = food_data.name
+		option_node.get_node("Kcal").text = {"tech": "exotic", "cosmic": "exotic", "legend": "rare"}.get(food_data.family, "")
+		option_node.set_meta("food", food_data)
+		option_node.set_meta("special", true)
 
 func populate_foods():
 	# One food per family (green / sweet / greasy) — the family drives poop evolution
@@ -99,12 +136,14 @@ func update_dots(index: int):
 		dots[i].modulate = Color(1, 1, 1, 1) if i == index else Color(1, 1, 1, 0.3)
 
 func reset_active_options():
+	populate_special()          # (the legendary one follows the pal you have now)
 	show_page(current_page)
 
 ## Asked by the main button before the OK sound: no pal yet = the first thing must be food,
 ## so a drink is refused (soft error + the Food button blinks)
 func can_confirm(sel: Node) -> bool:
-	if sel and sel.has_meta("drink") and PetState.needs_first_meal():
+	var special_first: bool = sel != null and sel.has_meta("special") and not PetState.can_start_with(sel.get_meta("food", {}))
+	if sel and (sel.has_meta("drink") or special_first) and PetState.needs_first_meal():
 		Input.vibrate_handheld(40)
 		for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
 			if b.target_menu == self:

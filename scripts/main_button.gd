@@ -215,8 +215,7 @@ func _spawn_food_or_drink_effect(sel: Node) -> void:
 
 	var pet_view = get_node("/root/PoopPal/Main UI/PetView")
 
-	var vbox_food = get_node_or_null("/root/PoopPal/Main UI/Menus/FoodMenu/Menu/VBoxFood")
-	if vbox_food and sel.get_parent() == vbox_food and sel.has_node("Icon"):
+	if _is_food_option(sel) and sel.has_node("Icon"):
 		var icon = sel.get_node("Icon")
 		if icon.texture:
 			_feed_after_fall(pet_view.get_node("FoodRainSpawner"), icon.texture, sel.get_meta("food", {}))
@@ -242,6 +241,7 @@ func _feed_after_fall(spawner: Node, texture: Texture2D, food: Dictionary) -> vo
 	var food_menu = get_node_or_null("../Menus/FoodMenu")
 	if food_menu and food_menu.has_method("populate_foods"):
 		food_menu.populate_foods()  # fresh menu for the next meal
+		food_menu.populate_special()
 
 func _drink_after_pour(spawner: Node, drink: Dictionary) -> void:
 	await spawner.spawn_drink_stream()
@@ -277,8 +277,8 @@ func _flush_poop() -> void:
 	_flushing = false
 
 func _is_food_option(sel: Node) -> bool:
-	var vbox_food = get_node_or_null("/root/PoopPal/Main UI/Menus/FoodMenu/Menu/VBoxFood")
-	return vbox_food != null and sel.get_parent() == vbox_food
+	# the food page or the special-food page
+	return sel != null and sel.get_parent() != null and sel.get_parent().name in ["VBoxFood", "VBoxSpecial"]
 
 func _get_active_menu() -> Node:
 	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):

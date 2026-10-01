@@ -78,7 +78,7 @@ MUTANT = {
     'F': ('Mecha Nugget', 'Blob Beyond'), 'H': ('Overclock', 'Solar Flare'), 'U': ('Acid Battery', 'Void Pickle'),
 }
 LEGEND = {'G': 'World Tree', 'S': 'Celestial Sundae', 'F': 'Deep-Fried Dragon', 'H': 'Phoenix', 'U': 'Kraken'}
-DRAWN = {'Sprig', 'Swirlet', 'Nugget', 'Broccolump', 'Neapoolitan', 'Greasy Chonk'}   # art exists
+DRAWN = set()   # (every pal has art now: tools/art/forms.py + forms_gen.py)
 
 
 def friends(a):
@@ -188,7 +188,7 @@ def draw(forms):
     im = Image.new('RGB', (WIDTH, H), BG)
     d = ImageDraw.Draw(im)
     d.text((40, 30), 'POOP PAL  -  EVOLUTION TREE (DRAFT)', font=F_TITLE, fill=INK)
-    d.text((40, 78), '120 pals. Every meal can change your pal, and the ORDER of the foods matters.   * = already drawn', font=F_TEXT, fill=INK)
+    d.text((40, 78), '120 pals. Every meal can change your pal, and the ORDER of the foods matters.', font=F_TEXT, fill=INK)
     # rules panel
     d.rounded_rectangle([30, 125, 1010, HEADER_H - 20], radius=14, fill=PANEL, outline=INK, width=2)
     lines = [

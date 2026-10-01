@@ -2,10 +2,8 @@ extends Node
 ## Autoload singleton — the current poop: which form it is, what it has eaten,
 ## and which forms have ever been discovered (future gallery / Poop-Pedia).
 ##
-## Cycle (prototype):
-##   no poop  --first meal-->  stage 1 baby (family of that food)
-##   stage 1  --next meal-->   stage 2 evolution (dominant family across meals, ties -> latest meal)
-##   any      --flush-->       no poop
+## Cycle: no poop --first meal--> baby --> kid --> adult (--> mutant / legend); the flush
+## starts again. What each meal does: data/evolution_tree.json (see feed()).
 
 signal form_changed(form_id: String, reason: String)  # reason: "hatch" | "evolve" | "flush" | "load"
 signal fed(food: Dictionary)
@@ -19,43 +17,37 @@ const SAVE_PATH := "user://pet_state.json"
 ## Prototype/testing: every launch starts from zero — no poop, score 0, empty Poop-Pedia.
 const FRESH_START_ON_LAUNCH := true
 
-## Every pal. "no" = Poop-Pedia number, "from" = what it evolves from,
-## "desc" = shown once discovered, "hint" = shown while it is still "???".
-const FORMS := {
-	"sprig":        { "no": 1, "name": "Sprig",        "stage": 1, "family": "green",  "from": "",
-		"desc": "Hatched from a salad. Photosynthesises when nobody is looking.",
-		"hint": "Start a pal with something green.",
-		"frames": ["res://textures/pet/forms/sprig-1.png", "res://textures/pet/forms/sprig-2.png"] },
-	"broccolump":   { "no": 2, "name": "Broccolump",   "stage": 2, "family": "green",  "from": "sprig",
-		"desc": "Grown on greens. Proudly fibrous, faintly smug.",
-		"hint": "A Sprig that keeps eating its greens...",
-		"frames": ["res://textures/pet/forms/broccolump-1.png", "res://textures/pet/forms/broccolump-2.png"] },
-	"swirlet":      { "no": 3, "name": "Swirlet",      "stage": 1, "family": "sweet",  "from": "",
-		"desc": "Born from sugar. Hums when it is happy, which is always.",
-		"hint": "Start a pal with something sweet.",
-		"frames": ["res://textures/pet/forms/swirlet-1.png", "res://textures/pet/forms/swirlet-2.png"] },
-	"neapoolitan":  { "no": 4, "name": "Neapoolitan",  "stage": 2, "family": "sweet",  "from": "swirlet",
-		"desc": "Three flavours, one cherry, zero regrets.",
-		"hint": "Something sweet, then something sweeter...",
-		"frames": ["res://textures/pet/forms/neapoolitan-1.png", "res://textures/pet/forms/neapoolitan-2.png"] },
-	"nugget":       { "no": 5, "name": "Nugget",       "stage": 1, "family": "greasy", "from": "",
-		"desc": "Deep-fried at birth. Squeaks when poked.",
-		"hint": "Start a pal with something greasy.",
-		"frames": ["res://textures/pet/forms/nugget-1.png", "res://textures/pet/forms/nugget-2.png"] },
-	"greasy_chonk": { "no": 6, "name": "Greasy Chonk", "stage": 2, "family": "greasy", "from": "nugget",
-		"desc": "Glistening. Content. Do not squeeze.",
-		"hint": "What happens if a Nugget never stops eating junk?",
-		"frames": ["res://textures/pet/forms/greasy_chonk-1.png", "res://textures/pet/forms/greasy_chonk-2.png"] },
-}
+## Every pal and every evolution come from data/evolution_tree.json (made by
+## tools/design/evolution_data.py, drawn in docs/evolution_tree_draft.png).
+## FORMS[id] = { no, name, stage (1 baby .. 5 legend), stage_name, family, from, variant,
+## face, desc, hint, frames }
+const TREE_PATH := "res://data/evolution_tree.json"
+const BASIC_FAMILIES := ["green", "sweet", "greasy", "spicy", "sour"]
+var FORMS := {}
+var STARTERS := {}          # food family -> baby
+var NEXT := {}              # form -> { food family -> form }   (kids, adults, mutants)
+var LEGENDS := {}           # ultra adult -> { food: legendary food name, to: legend }
+
+func _load_tree() -> void:
+	var f := FileAccess.open(TREE_PATH, FileAccess.READ)
+	if not f:
+		push_error("evolution tree missing: " + TREE_PATH)
+		return
+	var data: Dictionary = JSON.parse_string(f.get_as_text())
+	FORMS = data["forms"]
+	for id in FORMS:
+		FORMS[id]["no"] = int(FORMS[id]["no"])
+		FORMS[id]["stage"] = int(FORMS[id]["stage"])
+		FORMS[id]["frames"] = ["res://textures/pet/forms/%s-1.png" % id, "res://textures/pet/forms/%s-2.png" % id]
+	STARTERS = data["starters"]
+	NEXT = data["next"]
+	LEGENDS = data["legend"]
 
 ## Pedia order (by number)
 func pedia_order() -> Array:
 	var ids := FORMS.keys()
 	ids.sort_custom(func(a, b): return FORMS[a]["no"] < FORMS[b]["no"])
 	return ids
-
-const STARTERS := { "green": "sprig", "sweet": "swirlet", "greasy": "nugget" }
-const EVOLUTIONS := { "green": "broccolump", "sweet": "neapoolitan", "greasy": "greasy_chonk" }
 
 var form_id := ""          # "" = no poop yet, waiting for the first meal
 var meals: Array = []      # food families eaten this cycle, in order
@@ -76,6 +68,7 @@ const BOOSTS := {
 var boost := ""
 
 func _ready() -> void:
+	_load_tree()
 	load_data()
 	if FRESH_START_ON_LAUNCH:
 		form_id = ""
@@ -110,19 +103,41 @@ func build_sprite_frames(id: String = form_id) -> SpriteFrames:
 
 # --- Cycle ---
 
+## What a food does (path-dependent: the result depends on the pal you have AND the food):
+##   no pal       basic food -> its baby (special foods can't start a pal)
+##   baby / kid   basic food -> the next stage (data NEXT)
+##   adult        tech / cosmic -> the family's mutant; the ULTRA adult + its legendary food
+##                -> its legend; basic foods are just eaten
+##   mutant/legend nothing changes any more (until the flush)
 func feed(food: Dictionary) -> void:
 	var family: String = food.get("family", "")
 	if family == "":
 		return
 	meals.append(family)
 	fed.emit(food)
-
-	if form_id == "":
-		_set_form(STARTERS[family], "hatch")
-	elif FORMS[form_id]["stage"] == 1:
-		_set_form(EVOLUTIONS[_dominant_family()], "evolve")
-	else:
+	var to := evolution_for(food)
+	if to == "":
 		save_data()
+	elif form_id == "":
+		_set_form(to, "hatch")
+	else:
+		_set_form(to, "evolve")
+
+## The form this food would turn the current pal into ("" = no change)
+func evolution_for(food: Dictionary, from: String = form_id) -> String:
+	var family: String = food.get("family", "")
+	if from == "":
+		return STARTERS.get(family, "")
+	if family == "legend":
+		var lg: Dictionary = LEGENDS.get(from, {})
+		if lg.get("to") != null and lg.get("family", "") == food.get("legend_of", ""):
+			return lg["to"]
+		return ""
+	return NEXT.get(from, {}).get(family, "")
+
+## Special foods (tech / cosmic / legendary) can't be a pal's first meal
+func can_start_with(food: Dictionary) -> bool:
+	return food.get("family", "") in BASIC_FAMILIES
 
 func drink(drink_data: Dictionary) -> void:
 	drank.emit(drink_data)
@@ -169,16 +184,6 @@ func flush() -> void:
 	save_data()
 	form_changed.emit("", "flush")
 	boost_changed.emit("")
-
-func _dominant_family() -> String:
-	var counts := {}
-	for f in meals:
-		counts[f] = counts.get(f, 0) + 1
-	var best: String = meals[-1]  # ties go to the latest meal
-	for f in counts:
-		if counts[f] > counts[best]:
-			best = f
-	return best
 
 func _set_form(id: String, reason: String) -> void:
 	form_id = id
