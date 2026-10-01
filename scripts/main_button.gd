@@ -246,6 +246,9 @@ func _feed_after_fall(spawner: Node, texture: Texture2D, food: Dictionary) -> vo
 func _drink_after_pour(spawner: Node, drink: Dictionary) -> void:
 	await spawner.spawn_drink_stream()
 	PetState.drink(drink)
+	var food_menu = get_node_or_null("../Menus/FoodMenu")
+	if food_menu and food_menu.has_method("populate_drinks"):
+		food_menu.populate_drinks()  # fresh drinks for next time
 
 func _flush_poop() -> void:
 	_flushing = true

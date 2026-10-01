@@ -105,29 +105,18 @@ func populate_foods():
 		_set_type_tag(option_node, food_data.family)
 		option_node.set_meta("food", food_data)
 
+## Three drinks of three different types (DrinkLibrary.get_menu_set); the tag shows the type
 func populate_drinks():
-	var healthy = DrinkLibrary.all_drinks.filter(func(d): return "healthy" in d.tags)
-	var neutral = DrinkLibrary.all_drinks.filter(func(d): return "neutral" in d.tags)
-	var unhealthy = DrinkLibrary.all_drinks.filter(func(d): return "unhealthy" in d.tags)
-
-	var drink_pool = []
-	if healthy.size() > 0: drink_pool.append(healthy[randi() % healthy.size()])
-	if neutral.size() > 0: drink_pool.append(neutral[randi() % neutral.size()])
-	if unhealthy.size() > 0: drink_pool.append(unhealthy[randi() % unhealthy.size()])
-
-	drink_pool.shuffle()
+	var drink_pool = DrinkLibrary.get_menu_set()
 	var options = [drink_option_1, drink_option_2, drink_option_3]
-
-	for i in range(options.size()):
+	for i in range(mini(options.size(), drink_pool.size())):
 		var drink_data = drink_pool[i]
 		var option_node = options[i]
-
 		option_node.get_node("Icon").texture = drink_data.icon
 		option_node.get_node("Name").text = drink_data.name
-		option_node.get_node("Kcal").text = str(drink_data.kcal) + " kcal"
+		_set_type_tag(option_node, drink_data.type)
 		option_node.set_meta("is_drink", true)
 		option_node.set_meta("drink", drink_data)
-
 		var col: Color = drink_data.color if drink_data.has("color") else Color(1, 1, 1, 0.3)
 		option_node.set_meta("color", col)
 
@@ -139,11 +128,16 @@ const TYPE_TAGS := {
 	"greasy": ["Greasy", Color8(222, 186, 144)], "spicy": ["Spicy", Color8(226, 160, 144)],
 	"sour": ["Sour", Color8(226, 214, 150)], "tech": ["Tech", Color8(170, 186, 200)],
 	"cosmic": ["Cosmic", Color8(196, 178, 214)], "legend": ["Rare", Color8(236, 208, 140)],
+	# drinks
+	"watery": ["Watery", Color8(180, 208, 226)], "fizzy": ["Fizzy", Color8(232, 192, 184)],
+	"caffeinated": ["Energy", Color8(206, 186, 164)], "milky": ["Milky", Color8(238, 232, 220)],
+	"fruity": ["Fruity", Color8(240, 200, 160)],
 }
 
 const FRAME_FOOD := preload("res://textures/menus/foodmenulabel_food.png")   # frame without the kcal box
 const TAG_TEX := preload("res://textures/menus/foodtag.png")                   # that box, pale (tools/art/food_tag.py)
 const TAG_AT := Vector2(274, 55)     # where the box goes in the frame's pixels (6 px lower than the old one)
+const TAG_SCALE := 0.84
 
 func _set_type_tag(option_node: Node, family: String) -> void:
 	var kcal: Label = option_node.get_node("Kcal")
@@ -158,19 +152,20 @@ func _set_type_tag(option_node: Node, family: String) -> void:
 		tag.texture = TAG_TEX
 		tag.centered = false
 		tag.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		tag.scale = frame.scale
-		tag.position = top_left + TAG_AT * frame.scale
+		# a bit smaller than the old box, centred where it was
+		tag.scale = frame.scale * TAG_SCALE
+		tag.position = top_left + (TAG_AT + TAG_TEX.get_size() / 2.0) * frame.scale - TAG_TEX.get_size() * tag.scale / 2.0
 		tag.z_index = frame.z_index
 		option_node.add_child(tag)
 		var l := Label.new()
 		l.name = "TypeText"
 		l.position = tag.position
-		l.size = TAG_TEX.get_size() * frame.scale
+		l.size = TAG_TEX.get_size() * tag.scale
 		l.z_index = frame.z_index
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		l.add_theme_font_override("font", kcal.get_theme_font("font"))
-		l.add_theme_font_size_override("font_size", 32)
+		l.add_theme_font_size_override("font_size", 36)
 		l.add_theme_color_override("font_color", Color8(92, 60, 44))
 		option_node.add_child(l)
 	var info: Array = TYPE_TAGS.get(family, [family.capitalize(), Color8(220, 196, 150)])
