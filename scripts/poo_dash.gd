@@ -63,12 +63,22 @@ var dash_label: Label
 var banner: Label
 var _keys := {}
 
+# Drink boost "splash" (water, a lasting status): each obstacle or hole gives one second chance:
+# boing, the world rolls back a bit, try again. Hitting the same one again ends the run.
+var splash_ready := false
+var rewinding := false
+var world_shift := 0.0
+var _shift_applied := 0.0
+var invuln := 0.0
+var boost_icon: Sprite2D
+
 func _ready() -> void:
 	game_music_path = "res://sounds/music/Pixel Dash.mp3"
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	for n in ["ground_top", "ground", "plunger", "fly_1", "fly_2", "corn"]:
 		tex[n] = load("res://textures/minigames/dash/%s.png" % n)
 	_create_static_nodes()
+	_setup_boost()
 	super._ready()
 
 func start_game() -> void:
@@ -194,6 +204,17 @@ func _process(delta: float) -> void:
 	_read_keys()
 	if dead:
 		return
+	if rewinding:
+		var ds := world_shift - _shift_applied
+		_shift_applied = world_shift
+		_shift_world(ds)
+		_animate_player(delta, false)
+		return
+	if invuln > 0.0:
+		invuln -= delta
+		player.modulate.a = 0.35 if int(invuln * 14.0) % 2 == 0 else 1.0
+		if invuln <= 0.0:
+			player.modulate.a = 1.0
 	run_time += delta
 	speed = minf(SPEED_MAX, SPEED_START + run_time * SPEED_GAIN)
 	var dashing := dash_left > 0.0
@@ -240,6 +261,9 @@ func _process(delta: float) -> void:
 		air_time += delta
 		if air_time > COYOTE:
 			on_ground = on_ground and support
+	if (support and py > GROUND_Y + 14.0 and not on_ground) or py > GROUND_Y + 60.0:
+		if _hole_second_chance():
+			return
 	if support and py > GROUND_Y + 14.0 and not on_ground:
 		_die("Splat!")        # fell in a hole and ran into its far wall
 		return
@@ -297,9 +321,85 @@ func _update_things(delta: float, dashing: bool) -> void:
 			_sfx("res://sounds/fx/clack.mp3", -6.0)
 			_smash(n)
 			things.remove_at(i)
+		elif invuln > 0.0:
+			continue
+		elif splash_ready and not t.get("bounced", false):
+			t["bounced"] = true
+			_boing(t["x"] - PLAYER_X + 170.0)
+			return
 		else:
 			_die("Ouch!")
 			return
+
+# --- Drink boost: splash ---
+
+func _shift_world(ds: float) -> void:
+	next_x += ds
+	for g in ground:
+		g["x0"] += ds
+		g["x1"] += ds
+		g["node"].position.x = g["x0"]
+	for t in things:
+		t["x"] += ds
+		t["node"].position.x = t["x"]
+
+## Fell into a hole: bounce back out once per hole (the world rolls back before the hole)
+func _hole_second_chance() -> bool:
+	if not splash_ready:
+		return false
+	var before: Dictionary = {}
+	for g in ground:
+		if g["x1"] <= PLAYER_X + BODY_W * 0.3 and (before.is_empty() or g["x1"] > before["x1"]):
+			before = g
+	if before.is_empty() or before.get("bounced", false):
+		return false
+	before["bounced"] = true
+	py = GROUND_Y
+	vy = 0.0
+	on_ground = true
+	air_time = 0.0
+	_boing(PLAYER_X - before["x1"] + 150.0)
+	return true
+
+## Boing: squash, the world rolls back smoothly by 'push' px, blink for a moment
+func _boing(push: float) -> void:
+	rewinding = true
+	world_shift = 0.0
+	_shift_applied = 0.0
+	var roll := create_tween()
+	roll.tween_property(self, "world_shift", maxf(push, 60.0), 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	roll.tween_callback(func():
+		rewinding = false
+		invuln = 0.8)
+	var base := player.get_meta("base_scale") as Vector2
+	var b := create_tween()
+	b.tween_property(player, "scale", base * Vector2(0.7, 1.25), 0.07)
+	b.tween_property(player, "scale", base * Vector2(1.2, 0.85), 0.1)
+	b.tween_property(player, "scale", base, 0.35).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	if boost_icon:
+		var t := create_tween()
+		t.tween_property(boost_icon, "scale", Vector2(8.5, 8.5), 0.1)
+		t.tween_property(boost_icon, "scale", Vector2(6, 6), 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_float_text("BOING!", Vector2(PLAYER_X, py - 90))
+	_sfx("res://sounds/fx/water_boing.wav", -8.0)
+
+func _setup_boost() -> void:
+	splash_ready = PetState.boost == "splash"
+	if not splash_ready:
+		return
+	var aura := BoostAura.new()
+	player.add_child(aura)
+	var anim := "idle" if player.sprite_frames.has_animation("idle") else "default"
+	var tx := player.sprite_frames.get_frame_texture(anim, 0)
+	var img := tx.get_image()
+	var used := img.get_used_rect() if img else Rect2i(Vector2i.ZERO, tx.get_size())
+	aura.setup("splash", Rect2(Vector2(used.position) - tx.get_size() / 2.0, used.size))
+	boost_icon = Sprite2D.new()
+	boost_icon.texture = PetState.boost_icon("splash")
+	boost_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	boost_icon.scale = Vector2(6, 6)
+	boost_icon.position = Vector2(PLAY_WIDTH - 280, 59)       # next to the score box
+	add_child(boost_icon)
 
 func _land() -> void:
 	jumps_left = 1
