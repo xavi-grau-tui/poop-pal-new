@@ -22,6 +22,7 @@ DrinkLibrary="*res://scripts/DrinkLibrary.gd"
 GameData="*res://scripts/game_data.gd"
 PetState="*res://scripts/pet_state.gd"
 Collection="*res://scripts/collection.gd"
+LuckyPinch="*res://scripts/lucky_pinch_state.gd"
 
 [display]
 

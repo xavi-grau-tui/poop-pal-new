@@ -20,6 +20,8 @@ var game_scenes := {
 	4: "res://scenes/minigames/poo_break.tscn",
 	5: "res://scenes/minigames/germ_zap.tscn",
 	6: "res://scenes/minigames/tummy_tunes.tscn",
+	7: "res://scenes/minigames/flipper_belly.tscn",
+	LuckyPinch.GAME_INDEX: "res://scenes/minigames/lucky_pinch.tscn",   # the bonus (not a card)
 }
 
 func _ready() -> void:
@@ -27,6 +29,8 @@ func _ready() -> void:
 	is_active = false
 
 func is_game_unlocked(page_index: int) -> bool:
+	if page_index == LuckyPinch.GAME_INDEX:
+		return LuckyPinch.pending
 	return GameData.is_unlocked(page_index)
 
 func start_game(page_index: int) -> void:

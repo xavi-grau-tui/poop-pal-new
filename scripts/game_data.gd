@@ -25,10 +25,11 @@ var progress_target := {
 	4: 5000, # Poo Break
 	5: 8000, # Germ Zap
 	6: 6000, # Tummy Tunes
+	7: 10000, # Flipper Belly
 }
 
 ## Prototype/testing: games unlocked regardless of progress
-const DEBUG_UNLOCKED := [1, 2, 3, 4, 5, 6]
+const DEBUG_UNLOCKED := [1, 2, 3, 4, 5, 6, 7]
 ## Prototype/testing: every launch starts with no best scores and no progress (fresh start)
 const RESET_SCORES_ON_LAUNCH := true
 

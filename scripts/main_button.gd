@@ -134,6 +134,12 @@ func _process(delta: float) -> void:
 		was_pressed = false
 		_confirming = true
 		var sel = _get_selected_option_node()
+		# LUCKY PINCH waiting: nothing else can be chosen (a menu was already open)
+		if LuckyPinch.pending and _any_menu_toggled() and not _is_game_menu_active():
+			_play_sfx("res://sounds/fx/error.mp3", -22.0, 1.25)
+			_reset_hold()
+			_confirming = false
+			return
 		# A menu can refuse before anything plays (e.g. DRESS UP with no pal yet):
 		# a very soft error blip instead of the OK sound
 		var menu = _get_active_menu()

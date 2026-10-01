@@ -26,12 +26,31 @@ const CARD_ART := {
 	4: { "logo": "res://textures/menus/tilebreak.png", "background": "res://textures/menus/pattern_brick_terracotta.png" },
 	5: { "logo": "res://textures/menus/germzap.png", "background": "res://textures/menus/pattern_germ_olive.png" },
 	6: { "logo": "res://textures/menus/tummytunes.png", "background": "res://textures/menus/pattern_note_lilac.png" },
+	7: { "logo": "res://textures/menus/flipperbelly.png", "background": "res://textures/menus/pattern_flipper_rose.png" },
 }
+
+# LUCKY PINCH bonus pending: the menu shows only its card (2 tries), no paging
+const BONUS_ART := { "logo": "res://textures/menus/luckypinch.png", "background": "res://textures/menus/pattern_claw_gold.png" }
+var bonus_page: Node = null
 
 func _ready():
 	show_page(current_page)
+	LuckyPinch.changed.connect(func(_on): show_page(current_page))
+	LuckyPinch.tries_changed.connect(_on_bonus_tries)
 
 func show_page(index: int) -> void:
+	var bonus := LuckyPinch.pending
+	$Menu/Dots.visible = not bonus
+	$Menu/ForwardHint.visible = not bonus
+	if bonus:
+		_ensure_bonus_page()
+		for p in pages:
+			p.visible = false
+		bonus_page.visible = true
+		_update_bonus_card()
+		return
+	if bonus_page:
+		bonus_page.visible = false
 	for i in range(pages.size()):
 		pages[i].visible = (i == index)
 	for i in range(dots.size()):
@@ -39,11 +58,13 @@ func show_page(index: int) -> void:
 	_update_game_card_labels(index)
 
 func flip_page() -> void:
+	if LuckyPinch.pending:
+		return                     # the bonus card is the only one
 	current_page = (current_page + 1) % pages.size()
 	show_page(current_page)
 
 func get_selected_page() -> int:
-	return current_page
+	return LuckyPinch.GAME_INDEX if LuckyPinch.pending else current_page
 
 # --- Interface expected by main_button / menu_buttons ---
 
@@ -52,6 +73,8 @@ func select_next() -> void:
 	pass
 
 func get_selected_option() -> Node:
+	if LuckyPinch.pending and bonus_page:
+		return bonus_page.get_node_or_null("Game")
 	# Return the Game child inside the current page (where Doughnut lives)
 	if current_page >= 0 and current_page < pages.size():
 		var page = pages[current_page]
@@ -88,3 +111,37 @@ func _update_game_card_labels(index: int) -> void:
 	var progress_label = bottom.get_node_or_null("Progress/Progress")
 	if progress_label:
 		progress_label.text = "%d%%" % int(GameData.get_progress(index))
+
+func _on_bonus_tries(_t: int) -> void:
+	if bonus_page:
+		_update_bonus_card()
+
+## The bonus card: a copy of a game card with the LUCKY PINCH art, tries and prizes
+func _ensure_bonus_page() -> void:
+	if bonus_page:
+		return
+	bonus_page = pages[pages.size() - 1].duplicate()
+	bonus_page.name = "VBoxBonus"
+	$Menu.add_child(bonus_page)
+	var game_node = bonus_page.get_node_or_null("Game")
+	if not game_node:
+		return
+	var logo = game_node.get_node_or_null("TopFrame/Control/GameLogo")
+	var bg = game_node.get_node_or_null("TopFrame/Control/Background")
+	if logo:
+		logo.texture = load(BONUS_ART["logo"])
+	if bg:
+		bg.texture = load(BONUS_ART["background"])
+
+func _update_bonus_card() -> void:
+	var bottom = bonus_page.get_node_or_null("Game/BottomFrame")
+	if not bottom:
+		return
+	var a = bottom.get_node_or_null("MaxScore")
+	var b = bottom.get_node_or_null("MaxScore/Score")
+	var c = bottom.get_node_or_null("Progress")
+	var d = bottom.get_node_or_null("Progress/Progress")
+	if a: a.text = "Tries"
+	if b: b.text = str(LuckyPinch.tries)
+	if c: c.text = "Prizes"
+	if d: d.text = "%d/%d" % [LuckyPinch.prizes.size(), LuckyPinch.TRIES]

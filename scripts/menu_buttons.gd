@@ -31,6 +31,9 @@ func _ready():
 	if target_menu and target_menu.has_method("confirm_selected"):
 		Collection.unlocked.connect(func(_c, _id): blink_hint(6, 0.18))
 		PetState.pal_discovered.connect(func(_id): blink_hint(6, 0.18))
+	# The Games button keeps blinking while a LUCKY PINCH bonus waits to be played
+	if target_menu is GameMenuSwitcher:
+		LuckyPinch.changed.connect(func(on): start_attention() if on else stop_attention())
 
 func _process(_delta):
 	self.disabled = FoodRainSpawner.is_locked or DrinkWaterfallSpawner.is_locked
@@ -40,8 +43,15 @@ func _gui_input(event):
 		get_viewport().set_input_as_handled()
 		return
 
-	# No poop yet: games stay closed until the first meal
-	if PetState.needs_first_meal() and not button_pressed and target_menu is GameMenuSwitcher:
+	# LUCKY PINCH pending: it must be played first, the other menus stay closed
+	if LuckyPinch.pending and not button_pressed and not (target_menu is GameMenuSwitcher):
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			_refuse_for_bonus()
+		accept_event()
+		return
+
+	# No poop yet: games stay closed until the first meal (a pending bonus can still be played)
+	if PetState.needs_first_meal() and not LuckyPinch.pending and not button_pressed and target_menu is GameMenuSwitcher:
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			_refuse_until_first_meal()
 		accept_event()
@@ -122,6 +132,37 @@ func _refuse_until_first_meal() -> void:
 		if _is_food_button(b):
 			b.blink_hint()
 			break
+
+## Refused because a LUCKY PINCH bonus is waiting: a soft error blip (the Games button is
+## already blinking)
+func _refuse_for_bonus() -> void:
+	Input.vibrate_handheld(40)
+	var sfx := AudioStreamPlayer.new()
+	sfx.stream = load("res://sounds/fx/error.mp3")
+	sfx.volume_db = -22.0
+	sfx.pitch_scale = 1.25
+	add_child(sfx)
+	sfx.play()
+	sfx.finished.connect(sfx.queue_free)
+
+var _attention: Tween
+
+## Blinks until stopped (LUCKY PINCH waiting), also while its menu is open
+func start_attention() -> void:
+	if _attention:
+		_attention.kill()
+	_attention = create_tween().set_loops()
+	_attention.tween_callback(func(): _show(pressed_texture))
+	_attention.tween_interval(0.28)
+	_attention.tween_callback(func(): _show(normal_texture))
+	_attention.tween_interval(0.28)
+
+func stop_attention() -> void:
+	if _attention:
+		_attention.kill()
+		_attention = null
+	texture_pressed = pressed_texture
+	texture_normal = pressed_texture if button_pressed else normal_texture
 
 var _blink_tween: Tween
 
