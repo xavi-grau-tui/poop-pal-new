@@ -133,11 +133,12 @@ func populate_drinks():
 
 # The food's type (what shapes the evolution) instead of its kcal: a little coloured tag,
 # the same colours as the evolution tree (docs/evolution_tree_draft.png)
+# (muted pastels, so they sit with the menu's creams and browns)
 const TYPE_TAGS := {
-	"green": ["Green", Color8(118, 168, 78)], "sweet": ["Sweet", Color8(236, 132, 172)],
-	"greasy": ["Greasy", Color8(204, 134, 62)], "spicy": ["Spicy", Color8(214, 74, 58)],
-	"sour": ["Sour", Color8(204, 186, 44)], "tech": ["Tech", Color8(104, 136, 168)],
-	"cosmic": ["Cosmic", Color8(146, 104, 200)], "legend": ["Rare", Color8(226, 176, 40)],
+	"green": ["Green", Color8(176, 200, 150)], "sweet": ["Sweet", Color8(232, 182, 196)],
+	"greasy": ["Greasy", Color8(222, 186, 144)], "spicy": ["Spicy", Color8(226, 160, 144)],
+	"sour": ["Sour", Color8(226, 214, 150)], "tech": ["Tech", Color8(170, 186, 200)],
+	"cosmic": ["Cosmic", Color8(196, 178, 214)], "legend": ["Rare", Color8(236, 208, 140)],
 }
 
 func _set_type_tag(option_node: Node, family: String) -> void:
@@ -148,25 +149,23 @@ func _set_type_tag(option_node: Node, family: String) -> void:
 		tag = Panel.new()
 		tag.name = "TypeTag"
 		tag.z_index = kcal.z_index
-		# right over the beige box of the frame art (the kcal label sat in its lower part)
-		tag.position = Vector2(kcal.position.x - 2, kcal.position.y - 33)
-		tag.size = Vector2(150, 72)
+		# in the lower part of the beige box (where the kcal was), clear of the food's name
+		tag.position = Vector2(kcal.position.x + 2, kcal.position.y - 4)
+		tag.size = Vector2(142, 48)
 		var l := Label.new()
 		l.name = "Text"
 		l.set_anchors_preset(Control.PRESET_FULL_RECT)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		l.add_theme_font_override("font", kcal.get_theme_font("font"))
-		l.add_theme_font_size_override("font_size", 32)
-		l.add_theme_color_override("font_color", Color.WHITE)
-		l.add_theme_color_override("font_outline_color", Color8(74, 44, 32))
-		l.add_theme_constant_override("outline_size", 8)
+		l.add_theme_font_size_override("font_size", 28)
+		l.add_theme_color_override("font_color", Color8(92, 60, 44))
 		tag.add_child(l)
 		option_node.add_child(tag)
 	var info: Array = TYPE_TAGS.get(family, [family.capitalize(), Color8(166, 129, 94)])
 	var box := StyleBoxFlat.new()
 	box.bg_color = info[1]
-	box.border_color = Color8(74, 44, 32)
+	box.border_color = Color8(120, 86, 62)
 	box.set_border_width_all(3)
 	box.set_corner_radius_all(8)
 	tag.add_theme_stylebox_override("panel", box)
