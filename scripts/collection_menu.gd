@@ -489,16 +489,20 @@ func _list_pages(v: int) -> int:
 	var cat: String = LISTS[v]["category"]
 	var ids := Collection.order(cat)
 	var total := maxi(1, ceili(ids.size() / float(LIST_PER_PAGE)))
+	# every page with something you own is shown (wherever it was won)...
 	var shown := 1
-	while shown < total:
+	for i in ids.size():
+		if Collection.is_owned(cat, ids[i]):
+			shown = maxi(shown, i / LIST_PER_PAGE + 1)
+	# ...plus one more page of "???" once the last one is complete
+	if shown < total:
 		var full := true
 		for i in range((shown - 1) * LIST_PER_PAGE, mini(shown * LIST_PER_PAGE, ids.size())):
 			if not Collection.is_owned(cat, ids[i]):
 				full = false
 				break
-		if not full:
-			break
-		shown += 1
+		if full:
+			shown += 1
 	return shown
 
 func _pedia_pages() -> int:

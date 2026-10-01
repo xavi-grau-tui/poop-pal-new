@@ -62,7 +62,7 @@ const BACKGROUNDS := {
 	"mystery_3": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 	"mystery_4": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 }
-const BACKGROUND_ORDER := ["clouds", "tp_rolls", "bubbles", "pink", "pastel_yellow", "lilac", "mystery_3", "mystery_4"]
+const BACKGROUND_ORDER := ["clouds", "tp_rolls", "pink", "pastel_yellow", "bubbles", "lilac", "mystery_3", "mystery_4"]
 
 ## Pal accessories. "dir" holds one texture per form and frame: <form>-1.png, <form>-2.png,
 ## drawn on the form's own canvas (see tools/art/accessories.py).
