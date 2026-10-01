@@ -95,9 +95,6 @@ func _play_error_sound() -> void:
 	sfx.autoplay = true
 	container.add_child(sfx)
 	# Respect mute state
-	var sound_btn = get_node_or_null("/root/PoopPal/Main UI/SoundButtons/SoundButton")
-	if sound_btn and sound_btn.button_pressed:
-		sfx.volume_db = linear_to_db(0.0)
 	sfx.finished.connect(sfx.queue_free)
 
 func _play_clack() -> void:
@@ -109,9 +106,6 @@ func _play_clack() -> void:
 	sfx.volume_db = -7.0
 	sfx.autoplay = true
 	add_child(sfx)
-	var sound_btn = get_node_or_null("/root/PoopPal/Main UI/SoundButtons/SoundButton")
-	if sound_btn and sound_btn.button_pressed:
-		sfx.volume_db = linear_to_db(0.0)
 	sfx.finished.connect(sfx.queue_free)
 
 # --- Game Over UI ---

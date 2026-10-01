@@ -481,9 +481,6 @@ func _splash(pipe_x: float, player_rect: Rect2) -> void:
 	var sfx := AudioStreamPlayer.new()
 	sfx.stream = load("res://sounds/fx/underwater-247531.mp3")
 	sfx.volume_db = -10.0
-	var sound_btn = get_node_or_null("/root/PoopPal/Main UI/SoundButtons/SoundButton")
-	if sound_btn and sound_btn.button_pressed:
-		sfx.volume_db = linear_to_db(0.0)
 	add_child(sfx)
 	sfx.play()
 	get_tree().create_timer(0.5).timeout.connect(func():

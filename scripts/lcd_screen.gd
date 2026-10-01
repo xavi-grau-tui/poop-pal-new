@@ -47,9 +47,6 @@ func _ding() -> void:
 	var sfx := AudioStreamPlayer.new()
 	sfx.stream = load("res://sounds/fx/unlock_ding.wav")
 	sfx.volume_db = -14.0
-	var sound_btn = get_node_or_null("/root/PoopPal/Main UI/SoundButtons/SoundButton")
-	if sound_btn and sound_btn.button_pressed:
-		sfx.volume_db = linear_to_db(0.0)
 	add_child(sfx)
 	sfx.play()
 	sfx.finished.connect(sfx.queue_free)

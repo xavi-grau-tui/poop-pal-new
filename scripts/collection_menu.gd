@@ -737,9 +737,6 @@ func _sfx(path: String, volume_db: float) -> void:
 	var sfx := AudioStreamPlayer.new()
 	sfx.stream = stream
 	sfx.volume_db = volume_db
-	var sound_btn = get_node_or_null("/root/PoopPal/Main UI/SoundButtons/SoundButton")
-	if sound_btn and sound_btn.button_pressed:
-		sfx.volume_db = linear_to_db(0.0)
 	add_child(sfx)
 	sfx.play()
 	sfx.finished.connect(sfx.queue_free)
