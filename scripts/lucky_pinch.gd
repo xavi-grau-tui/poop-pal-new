@@ -27,7 +27,14 @@ const FLOOR_BACK := 694.0
 const CHUTE := Rect2(40, 600, 184, 330)  # the prize chute's front panel
 const CHUTE_WINDOW := Rect2(62, 790, 140, 110)
 const PIT_X := Vector2(300.0, 890.0)
-const CLAW_HOLD_Y := 14.0              # (claw pixels) where a held capsule's centre sits    # capsules lie between these x
+const CLAW_HOLD_Y := 14.0              # (claw pixels) where a held capsule's centre sits
+# Grabbing is positional (x in px, depth d 0..1): only a capsule really under the claw
+const GRAB_DX := 32.0                   # ...a bit off = a loose grip (may slip on the way)
+const GRAB_DD := 0.13
+const FIRM_DX := 14.0                   # ...right on top = a firm grip
+const FIRM_DD := 0.06
+const PUSH_DX := 85.0                   # capsules this close to where it lands get knocked aside
+const PUSH_DD := 0.25    # capsules lie between these x
 
 const CAPSULE_COLORS := ["pink", "mint", "yellow", "lilac", "orange"]
 const OUTLINE := Color8(74, 44, 32)
@@ -185,27 +192,47 @@ func _grab() -> void:
 	claw_sprite.texture = tex["claw_closed"]
 	_sfx("res://sounds/fx/claw_grab.wav", -10.0)
 	var x := claw_x + _sway()
+	# only a capsule that's really between the prongs: close in x AND at the same depth
 	var best := -1
-	var best_dist := 9999.0
+	var best_score := 9999.0
 	for i in capsules.size():
 		var c: Dictionary = capsules[i]
-		var dist := Vector2(c["x"] - x, (c["d"] - claw_d) * 300.0).length()
-		if dist < best_dist:
-			best_dist = dist
+		var dx: float = absf(c["x"] - x)
+		var dd: float = absf(c["d"] - claw_d)
+		if dx <= GRAB_DX and dd <= GRAB_DD and dx + dd * 200.0 < best_score:
+			best_score = dx + dd * 200.0
 			best = i
-	if best < 0 or best_dist > 74.0:
+	_push_neighbours(x, best)
+	if best < 0:
 		return                                         # closed on nothing
 	held = capsules[best]
 	capsules.remove_at(best)
-	# firm right on top, loose when a bit off
-	held_loose = 0.05 if best_dist < 32.0 else (0.55 if best_dist < 54.0 else 0.85)
+	var firm: bool = absf(held["x"] - x) <= FIRM_DX and absf(held["d"] - claw_d) <= FIRM_DD
+	held_loose = 0.05 if firm else 0.6
 	slip_at = randf_range(0.2, 1.9) if randf() < held_loose else 9.0
 	var node: Sprite2D = held["node"]
 	node.get_parent().remove_child(node)
 	rig_inner.add_child(node)
 	rig_inner.move_child(node, 0)                       # behind the prongs
 	node.scale = Vector2.ONE
+	node.rotation = 0.0
 	node.position = Vector2(0, CLAW_HOLD_Y)
+
+## The prongs knock the capsules they land next to: they roll a little to the side
+func _push_neighbours(x: float, except: int) -> void:
+	for i in capsules.size():
+		if i == except:
+			continue
+		var c: Dictionary = capsules[i]
+		var dx: float = c["x"] - x
+		if absf(dx) > PUSH_DX or absf(c["d"] - claw_d) > PUSH_DD:
+			continue
+		var side := signf(dx) if dx != 0.0 else (1.0 if randf() < 0.5 else -1.0)
+		c["x"] = clampf(c["x"] + side * randf_range(26.0, 46.0), PIT_X.x, PIT_X.y)
+		var node: Sprite2D = c["node"]
+		var t := create_tween()
+		t.tween_property(node, "position:x", c["x"], 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		t.parallel().tween_property(node, "rotation", node.rotation + side * 1.2, 0.35)
 
 func _check_slip() -> void:
 	if held.is_empty() or _progress < slip_at:

@@ -152,7 +152,7 @@ func _input(event: InputEvent) -> void:
 	_rub_travel += absf(dx)
 
 func _can_be_touched() -> bool:
-	if not PetState.has_poop() or _tickling or flush_charge > 0.0 or modulate.a < 0.5:
+	if not PetState.has_poop() or _tickling or _transforming or flush_charge > 0.0 or modulate.a < 0.5:
 		return false
 	if GameScreen.is_active or not get_parent().visible:
 		return false
@@ -207,11 +207,14 @@ func _tickle() -> void:
 ## Main button tap on the pet screen: a quick chuckle and a little bounce (no hearts).
 ## Tapping again while it's still bouncing just restarts the bounce.
 func poke() -> void:
-	if not PetState.has_poop() or _tickling or flush_charge > 0.0 or modulate.a < 0.5:
-		return
+	if not PetState.has_poop() or _tickling or _transforming or flush_charge > 0.0 or modulate.a < 0.5:
+		return                               # (hatching / evolving can't be interrupted)
 	if fx_tween and fx_tween.is_running() and not has_meta("poking"):
-		return                               # busy hatching / evolving
-	_stop_all_tweens()
+		return
+	# (the digestion blink keeps going: only the breathing and a previous poke stop)
+	for t in [breathing_tween, fx_tween]:
+		if t:
+			t.kill()
 	set_meta("poking", true)
 	position = base_position
 	rotation = 0.0
@@ -353,7 +356,12 @@ func _on_form_changed(_form_id: String, reason: String) -> void:
 		"flush":
 			_show_mystery()
 
+## True while hatching or evolving: pokes wait, so the new form always shows up
+var _transforming := false
+
 func _play_hatch() -> void:
+	_transforming = true
+	remove_meta("poking")
 	_stop_all_tweens()
 	_hide_mystery()
 	sprite_frames = PetState.build_sprite_frames()
@@ -366,6 +374,7 @@ func _play_hatch() -> void:
 	_play_sfx("res://sounds/fx/gamecoin.wav", -8.0)
 	get_tree().create_timer(0.45).timeout.connect(_say_hi)
 	await fx_tween.finished
+	_transforming = false
 	_start_breathing()
 
 ## A new pal greets you: a little "hi!" noise, a tiny hop and "hi!" floating up the cam
@@ -409,6 +418,8 @@ func _say(word: String, sound: String) -> void:
 	t.tween_callback(l.queue_free)
 
 func _play_evolve() -> void:
+	_transforming = true
+	remove_meta("poking")
 	_stop_all_tweens()
 	scale = base_scale
 	modulate = Color(1, 1, 1, 1)
@@ -434,6 +445,7 @@ func _play_evolve() -> void:
 	fx_tween.tween_property(self, "scale", base_scale, 0.8).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	fx_tween.parallel().tween_property(self, "modulate", Color(1, 1, 1, 1), 0.5)
 	await fx_tween.finished
+	_transforming = false
 	_start_breathing()
 
 func play_flush() -> void:
