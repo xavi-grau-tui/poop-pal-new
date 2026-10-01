@@ -96,17 +96,33 @@ func request_menu_second_half(target: Node):
 	if was_game_screen:
 		_stop_game_and_resume_music()
 
+## True while a menu slides out on its way back to the pet (menu buttons ignore taps then)
+var returning := false
+
 func return_to_pet():
 	if current_menu != pet_view:
-		if current_menu:
-			var anim = get_animation_player(current_menu)
+		var closing: Node = current_menu
+		if closing:
+			var anim = get_animation_player(closing)
 			if anim:
+				returning = true
 				anim.play("menu_slide_out_left_1")
-				await anim.animation_finished
-			if current_menu == game_screen:
+				# (a timer, not animation_finished: another animation started on the same
+				# player — e.g. the quick slide after choosing an item — would swallow it)
+				await get_tree().create_timer(anim.current_animation_length if anim.current_animation_length > 0.0 else 0.3).timeout
+				returning = false
+			# another menu was opened while this one slid out: leave that one alone
+			if current_menu != closing or pending_menu != null:
+				if closing != current_menu and closing != pending_menu:
+					if closing == game_screen:
+						_stop_game_and_resume_music()
+					else:
+						closing.visible = false
+				return
+			if closing == game_screen:
 				_stop_game_and_resume_music()
 			else:
-				current_menu.visible = false
+				closing.visible = false
 
 		if not pet_view_back:
 			pet_view.visible = true

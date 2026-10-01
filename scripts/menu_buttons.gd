@@ -45,6 +45,11 @@ func _gui_input(event):
 		get_viewport().set_input_as_handled()
 		return
 
+	# a menu is still sliding back to the pet: a tap now would race with it
+	if menu_manager and menu_manager.get("returning"):
+		accept_event()
+		return
+
 	# LUCKY PINCH: while the claw visits nothing opens; then only Games (it must be played
 	# first: food and settings can't be opened or toggled at all)
 	if LuckyPinch.visiting or (LuckyPinch.pending and not (target_menu is GameMenuSwitcher)):
