@@ -389,7 +389,7 @@ func _say(word: String, sound: String) -> void:
 	if f:
 		l.add_theme_font_override("font", f)
 	l.add_theme_font_size_override("font_size", 46)
-	l.add_theme_color_override("font_color", Color8(250, 244, 214))
+	l.add_theme_color_override("font_color", Color8(248, 164, 192))     # pink, like the pal's cheeks
 	l.add_theme_color_override("font_outline_color", Color8(74, 44, 32))
 	l.add_theme_constant_override("outline_size", 12)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
