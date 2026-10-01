@@ -415,6 +415,7 @@ func _setup_boost() -> void:
 	add_child(boost_icon)
 	if splash_ready:
 		var aura := BoostAura.new()
+		aura.position = player.offset             # follow the sprite's drawing offset
 		player.add_child(aura)
 		var tex := player.sprite_frames.get_frame_texture(player.animation, 0)
 		var img := tex.get_image()
@@ -438,8 +439,7 @@ func _splash(pipe_x: float, player_rect: Rect2) -> void:
 		rewinding = false
 		world_shift = 0.0
 		_shift_applied = 0.0)
-	player_vy = -120.0
-	invuln = 0.8
+	player_vy = -120.0                  # (no immunity: the pipe is solid again for the second try)
 	# boing: squash against the pipe, then spring back
 	var base: Vector2 = player.get_meta("base_scale", player.scale)
 	player.set_meta("base_scale", base)

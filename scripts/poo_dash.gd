@@ -368,9 +368,7 @@ func _boing(push: float) -> void:
 	_shift_applied = 0.0
 	var roll := create_tween()
 	roll.tween_property(self, "world_shift", maxf(push, 60.0), 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	roll.tween_callback(func():
-		rewinding = false
-		invuln = 0.8)
+	roll.tween_callback(func(): rewinding = false)   # no immunity: the obstacle is solid again
 	var base := player.get_meta("base_scale") as Vector2
 	var b := create_tween()
 	b.tween_property(player, "scale", base * Vector2(0.7, 1.25), 0.07)
@@ -388,6 +386,7 @@ func _setup_boost() -> void:
 	if not splash_ready:
 		return
 	var aura := BoostAura.new()
+	aura.position = player.offset                 # the sprite is drawn shifted (feet on the ground)
 	player.add_child(aura)
 	var anim := "idle" if player.sprite_frames.has_animation("idle") else "default"
 	var tx := player.sprite_frames.get_frame_texture(anim, 0)
