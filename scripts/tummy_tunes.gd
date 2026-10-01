@@ -5,6 +5,7 @@ extends BaseMinigame
 ##   left lane   = the speaker (mute) button   (in this game it doesn't mute: it plays)
 ##   middle lane = the main (orange) button
 ##   right lane  = the forward button
+## Each note is a tiny copy of its button, falling onto that button's silhouette on the line.
 ## Phones: every finger is read directly, so two buttons can be pressed together (chords).
 ## Desktop: Left/A, Down/S/Space, Right/D.
 ##
@@ -15,7 +16,7 @@ const SONG := "res://sounds/music/Retro Game Console.mp3"
 const CHART := "res://data/charts/retro_game_console.json"
 const DIFFICULTY := "normal"
 const LEAD_IN := 2.0                  # silence before the song starts (count-in)
-const FALL_TIME := 1.5                # seconds a note takes from the top to the line
+const FALL_TIME := 1.8                # seconds a note takes from the top to the line
 
 # Hit windows (seconds from the note's time)
 const PERFECT := 0.06
@@ -27,7 +28,11 @@ const LANE_X := [215.0, 475.0, 735.0]
 const LANE_W := 190.0
 const LINE_Y := 820.0
 const TOP_Y := 120.0
-const LANE_COLORS := [Color8(246, 150, 180), Color8(250, 206, 110), Color8(150, 220, 190)]
+const LANE_COLORS := [Color8(250, 228, 180), Color8(236, 150, 92), Color8(250, 228, 180)]   # like the buttons
+const BUTTON_TEX := ["res://textures/buttons/soundbutton%s.png", "res://textures/buttons/mainbutton%s.png", "res://textures/buttons/forwardbutton%s.png"]
+const NOTE_SCALE := 0.7
+const TARGET_DIM := Color(0.55, 0.4, 0.55, 0.6)
+const PAL_POS := Vector2(130, 82)
 const OUTLINE := Color8(74, 44, 32)
 
 var notes: Array = []                 # [time, lane]
@@ -43,26 +48,33 @@ var counts := { "perfect": 0, "good": 0, "miss": 0 }
 
 var lcd_font: Font
 var note_tex: Array[Texture2D] = []
+var pressed_tex: Array[Texture2D] = []
 var targets: Array[Sprite2D] = []
+var bpm := 120.0
+var beat_offset := 0.0
 var lane_flash: Array[ColorRect] = []
 var score_label: Label
 var combo_label: Label
 var judge_label: Label
 var banner: Label
 var pal: AnimatedSprite2D
+var headphones: Sprite2D
 var _keys := {}
 var _touch_mode := false              # phone: ignore the emulated single-mouse button presses
 var _touch_lane := {}                 # touch index -> lane
 
 func _ready() -> void:
 	lcd_font = load("res://fonts/pixChicago.ttf")
-	for c in ["pink", "yellow", "mint"]:
-		note_tex.append(load("res://textures/minigames/splash/ball_%s.png" % c))
+	for path in BUTTON_TEX:
+		note_tex.append(load(path % "normal"))
+		pressed_tex.append(load(path % "pressed"))
 	var f := FileAccess.open(CHART, FileAccess.READ)
 	if f:
 		var data = JSON.parse_string(f.get_as_text())
 		if data is Dictionary:
 			notes = data["charts"][DIFFICULTY]
+			bpm = data["bpm"]
+			beat_offset = data["offset"]
 	# the pet screen's music stops; this game plays its own song in sync
 	var mc = get_node_or_null("/root/PoopPal/MusicController")
 	if mc:
@@ -108,18 +120,14 @@ func _process(delta: float) -> void:
 			_judge("miss", n["lane"])
 			n["node"].queue_free()
 			live.remove_at(i)
-	# the pal bobs on the beat
-	if pal:
-		var beat := 60.0 / 116.76
-		var ph := fposmod(t, beat) / beat
-		pal.scale = pal.get_meta("base") * Vector2(1.0 + 0.06 * (1.0 - ph), 1.0 - 0.06 * (1.0 - ph))
+	_dance(t)
 	score_label.text = str(score)
 
 func _spawn(time: float, lane: int) -> void:
 	var s := Sprite2D.new()
 	s.texture = note_tex[lane]
-	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	s.scale = Vector2(5, 5)
+	s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	s.scale = Vector2(NOTE_SCALE, NOTE_SCALE)
 	s.position = Vector2(LANE_X[lane], TOP_Y)
 	add_child(s)
 	move_child(s, targets[0].get_index())          # under the targets / HUD
@@ -149,7 +157,7 @@ func _press(lane: int) -> void:
 	_judge("perfect" if best_d <= PERFECT else "good", lane)
 	var node: Sprite2D = n["node"]
 	var tw := create_tween()
-	tw.tween_property(node, "scale", Vector2(8, 8), 0.1)
+	tw.tween_property(node, "scale", Vector2.ONE * NOTE_SCALE * 1.5, 0.1)
 	tw.parallel().tween_property(node, "modulate:a", 0.0, 0.12)
 	tw.tween_callback(node.queue_free)
 
@@ -272,31 +280,31 @@ func _create_static_nodes() -> void:
 	line.position = Vector2(LANE_X[0] - LANE_W / 2.0, LINE_Y - 3)
 	line.size = Vector2(LANE_X[2] - LANE_X[0] + LANE_W, 6)
 	add_child(line)
-	# targets: hollow rings on the line, one per lane
+	# targets: a dim silhouette of each button on the line; the note lands right on top of it
 	for i in 3:
 		var r := Sprite2D.new()
-		r.texture = _ring_texture(LANE_COLORS[i])
-		r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		r.scale = Vector2(5, 5)
+		r.texture = pressed_tex[i]
+		r.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		r.scale = Vector2(NOTE_SCALE, NOTE_SCALE)
 		r.position = Vector2(LANE_X[i], LINE_Y)
+		r.modulate = TARGET_DIM
 		add_child(r)
 		targets.append(r)
-	# which button is which, under the line
-	for i in 3:
-		var l := _make_label(Vector2(LANE_X[i] - 90, LINE_Y + 40), Vector2(180, 40), 26, HORIZONTAL_ALIGNMENT_CENTER, Color8(250, 244, 214))
-		l.text = ["speaker", "main", "forward"][i]
-		l.modulate.a = 0.6
-	# the pal, bobbing to the beat, in the top-left corner
+	# the pal with headphones on, dancing to the beat in the top-left corner
 	var frames: SpriteFrames = PetState.build_sprite_frames() if PetState.has_poop() else null
 	if frames:
 		pal = AnimatedSprite2D.new()
 		pal.sprite_frames = frames
 		pal.play("idle")
 		pal.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		pal.scale = Vector2(1.3, 1.3)
+		pal.scale = Vector2(2.3, 2.3)
 		pal.set_meta("base", pal.scale)
-		pal.position = Vector2(95, 70)
+		pal.position = PAL_POS
 		add_child(pal)
+		headphones = Sprite2D.new()
+		pal.add_child(headphones)
+		pal.frame_changed.connect(_sync_headphones)
+		_sync_headphones()
 	var frame := ColorRect.new()
 	frame.color = Color(0, 0, 0)
 	frame.position = Vector2(PLAY_WIDTH - 245, 24)
@@ -322,22 +330,32 @@ func _flash(lane: int) -> void:
 	var f := lane_flash[lane]
 	f.color.a = 0.35
 	create_tween().tween_property(f, "color:a", 0.0, 0.18)
+	# the silhouette lights up, like the real button being pressed
 	var r := targets[lane]
+	r.modulate = Color.WHITE
+	r.scale = Vector2.ONE * NOTE_SCALE * 1.08
 	var tw := create_tween()
-	tw.tween_property(r, "scale", Vector2(6, 6), 0.05)
-	tw.tween_property(r, "scale", Vector2(5, 5), 0.1)
+	tw.tween_property(r, "scale", Vector2.ONE * NOTE_SCALE, 0.1)
+	tw.parallel().tween_property(r, "modulate", TARGET_DIM, 0.2)
 
-static func _ring_texture(col: Color) -> Texture2D:
-	var n := 15
-	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
-	for y in n:
-		for x in n:
-			var d := Vector2(x + 0.5 - n / 2.0, y + 0.5 - n / 2.0).length()
-			if d <= 7.0 and d >= 5.4:
-				img.set_pixel(x, y, Color8(46, 30, 40))
-			elif d < 5.4 and d >= 4.0:
-				img.set_pixel(x, y, col)
-	return ImageTexture.create_from_image(img)
+## Dance: hop on every beat, sway left/right on alternate beats, squash on landing.
+## The bigger the combo, the wilder the moves.
+func _dance(t: float) -> void:
+	if not pal:
+		return
+	var x := (t - beat_offset) * bpm / 60.0       # in beats
+	var ph := x - floorf(x)
+	var amp := 0.6 + 0.2 * mini(combo / 10, 3)    # combo x1 .. x4 -> 0.6 .. 1.2
+	var sway := sin(PI * x)                       # flips side every beat
+	var hop := sin(PI * ph) * 18.0 * amp
+	var squash := pow(1.0 - ph, 3.0) * 0.14
+	pal.position = PAL_POS + Vector2(sway * 10.0 * amp, -hop)
+	pal.rotation = sway * 0.16 * amp
+	pal.scale = pal.get_meta("base") * Vector2(1.0 + squash, 1.0 - squash)
+
+func _sync_headphones() -> void:
+	var path := "res://textures/pet/accessories/headphones/%s-%d.png" % [PetState.form_id, pal.frame + 1]
+	headphones.texture = load(path) if ResourceLoader.exists(path) else null
 
 func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
 	var l := Label.new()
