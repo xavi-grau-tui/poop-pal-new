@@ -1,0 +1,16 @@
+[config]
+name="SceneLifecycle"
+binary="scene_lifecycle.a"
+initialization="scene_lifecycle_init"
+deinitialization="scene_lifecycle_deinit"
+
+[dependencies]
+linked=[]
+embedded=[]
+system=["UIKit.framework"]
+capabilities=[]
+files=[]
+linker_flags=["-ObjC"]
+
+[plist]
+UIApplicationSceneManifest:raw="<dict><key>UIApplicationSupportsMultipleScenes</key><false/><key>UISceneConfigurations</key><dict><key>UIWindowSceneSessionRoleApplication</key><array><dict><key>UISceneConfigurationName</key><string>Default Configuration</string><key>UISceneDelegateClassName</key><string>GodotSceneDelegate</string></dict></array></dict></dict>"
