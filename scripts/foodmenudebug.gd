@@ -141,35 +141,41 @@ const TYPE_TAGS := {
 	"cosmic": ["Cosmic", Color8(196, 178, 214)], "legend": ["Rare", Color8(236, 208, 140)],
 }
 
+const FRAME_FOOD := preload("res://textures/menus/foodmenulabel_food.png")   # frame without the kcal box
+const TAG_TEX := preload("res://textures/menus/foodtag.png")                   # that box, pale (tools/art/food_tag.py)
+const TAG_AT := Vector2(274, 55)     # where the box goes in the frame's pixels (6 px lower than the old one)
+
 func _set_type_tag(option_node: Node, family: String) -> void:
 	var kcal: Label = option_node.get_node("Kcal")
 	kcal.visible = false
-	var tag: Panel = option_node.get_node_or_null("TypeTag")
+	var tag: Sprite2D = option_node.get_node_or_null("TypeTag")
 	if not tag:
-		tag = Panel.new()
+		var frame: Sprite2D = option_node.get_node("Frame")
+		frame.texture = FRAME_FOOD
+		var top_left := frame.position - frame.texture.get_size() * frame.scale / 2.0
+		tag = Sprite2D.new()
 		tag.name = "TypeTag"
-		tag.z_index = kcal.z_index
-		# in the lower part of the beige box (where the kcal was), clear of the food's name
-		tag.position = Vector2(kcal.position.x + 2, kcal.position.y - 4)
-		tag.size = Vector2(142, 48)
+		tag.texture = TAG_TEX
+		tag.centered = false
+		tag.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tag.scale = frame.scale
+		tag.position = top_left + TAG_AT * frame.scale
+		tag.z_index = frame.z_index
+		option_node.add_child(tag)
 		var l := Label.new()
-		l.name = "Text"
-		l.set_anchors_preset(Control.PRESET_FULL_RECT)
+		l.name = "TypeText"
+		l.position = tag.position
+		l.size = TAG_TEX.get_size() * frame.scale
+		l.z_index = frame.z_index
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		l.add_theme_font_override("font", kcal.get_theme_font("font"))
-		l.add_theme_font_size_override("font_size", 28)
+		l.add_theme_font_size_override("font_size", 32)
 		l.add_theme_color_override("font_color", Color8(92, 60, 44))
-		tag.add_child(l)
-		option_node.add_child(tag)
-	var info: Array = TYPE_TAGS.get(family, [family.capitalize(), Color8(166, 129, 94)])
-	var box := StyleBoxFlat.new()
-	box.bg_color = info[1]
-	box.border_color = Color8(120, 86, 62)
-	box.set_border_width_all(3)
-	box.set_corner_radius_all(8)
-	tag.add_theme_stylebox_override("panel", box)
-	tag.get_node("Text").text = info[0]
+		option_node.add_child(l)
+	var info: Array = TYPE_TAGS.get(family, [family.capitalize(), Color8(220, 196, 150)])
+	tag.modulate = info[1] * Color(1.06, 1.06, 1.06)   # (the box art is a little under white)
+	option_node.get_node("TypeText").text = info[0]
 
 func update_dots(index: int):
 	for i in range(dots.size()):
