@@ -51,8 +51,8 @@ func _gui_input(event: InputEvent) -> void:
 			await get_tree().create_timer(0.3).timeout
 			if was_pressed and my_press == _press_id:
 				# Don't start filling for locked games
+				# (a locked game never fills; letting go still moves to the next card)
 				if _is_game_menu_active() and not _is_current_game_unlocked():
-					_reset_hold()
 					return
 				filling = true
 				if selected_doughnut:
@@ -67,7 +67,9 @@ func _gui_input(event: InputEvent) -> void:
 					release_sound.play()
 				Input.vibrate_handheld(15)
 
-				if not filling:
+				# in a menu, letting go before the choice confirms is still a tap (next option);
+				# on the pet screen a half-done flush hold just cancels
+				if not filling or _any_menu_toggled():
 					_handle_main_button_press()
 
 			_reset_hold()
