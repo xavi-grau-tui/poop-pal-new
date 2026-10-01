@@ -64,7 +64,7 @@ var banner: Label
 var _keys := {}
 
 func _ready() -> void:
-	game_music_path = "res://sounds/music/Frédéric Chopin - Etude_ Op. 10 No. 01 [8 bits].mp3"
+	game_music_path = "res://sounds/music/Pixel Dash.mp3"
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	for n in ["ground_top", "ground", "plunger", "fly_1", "fly_2", "corn"]:
 		tex[n] = load("res://textures/minigames/dash/%s.png" % n)
