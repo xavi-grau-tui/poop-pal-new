@@ -54,8 +54,23 @@ func _on_fed(_food: Dictionary) -> void:
 	if not go:
 		return
 	await get_tree().create_timer(VISIT_DELAY).timeout
+	# the claw only comes to a quiet pet screen: no menu open (or sliding), nothing being
+	# eaten or drunk, no game running. Closing a menu by force mid-slide broke the menus.
+	while not _pet_screen_idle():
+		await get_tree().create_timer(0.5).timeout
 	if not pending:
 		start()
+
+func _pet_screen_idle() -> bool:
+	if GameScreen.is_active or FoodRainSpawner.is_locked or DrinkWaterfallSpawner.is_locked:
+		return false
+	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
+		if b.button_pressed:
+			return false
+	var mgr = get_node_or_null("/root/PoopPal/Main UI/MenuManager")
+	if mgr and (mgr.pending_menu != null or mgr.current_menu != mgr.pet_view):
+		return false
+	return true
 
 func start() -> void:
 	if pit.is_empty():
@@ -64,7 +79,6 @@ func start() -> void:
 	visiting = true
 	tries = TRIES
 	prizes.clear()
-	_close_other_menus()
 	changed.emit(true)
 	_play_visit()
 
@@ -135,14 +149,6 @@ static func kind_label(category: String, id: String) -> String:
 		"decor":
 			return "Gut decor - " + (kind if kind != "" else "complement")
 	return ""
-
-## The bonus is mandatory: an open food / settings menu closes when the claw comes
-func _close_other_menus() -> void:
-	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
-		if b.button_pressed and not (b.target_menu is GameMenuSwitcher):
-			b.button_pressed = false
-			if b.has_method("deactivate_with_clack"):
-				b.deactivate_with_clack()
 
 func _play_visit() -> void:
 	var pet_view := get_node_or_null("/root/PoopPal/Main UI/PetView")
