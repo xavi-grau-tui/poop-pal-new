@@ -5,7 +5,7 @@ extends BaseMinigame
 ##   left lane   = the speaker (mute) button   (in this game it doesn't mute: it plays)
 ##   middle lane = the main (orange) button
 ##   right lane  = the forward button
-## Each note is a tiny copy of its button, falling onto that button's silhouette on the line.
+## Groove meter: hits fill it, misses and stray presses drain it; empty = the song stops (fail).
 ## Phones: every finger is read directly, so two buttons can be pressed together (chords).
 ## Desktop: Left/A, Down/S/Space, Right/D.
 ##
@@ -16,24 +16,27 @@ const SONG := "res://sounds/music/Retro Game Console.mp3"
 const CHART := "res://data/charts/retro_game_console.json"
 const DIFFICULTY := "normal"
 const LEAD_IN := 2.0                  # silence before the song starts (count-in)
-const FALL_TIME := 1.8                # seconds a note takes from the top to the line
+const FALL_TIME := 1.5                # seconds a note takes from the top to the line
 
 # Hit windows (seconds from the note's time)
 const PERFECT := 0.06
 const GOOD := 0.13
 const MISS_AFTER := 0.16
 const POINTS := { "perfect": 10, "good": 5 }
+const SLOPPY := 0.25                  # a press this close to a note (but outside GOOD) misses it
+
+# Groove meter (0..1). Starts at 80%; empty = fail.
+const GROOVE_START := 0.8
+const GROOVE_GAIN := { "perfect": 0.03, "good": 0.015, "miss": -0.08 }
+const GROOVE_STRAY := -0.04           # pressing when there's no note at all
 
 const LANE_X := [215.0, 475.0, 735.0]
 const LANE_W := 190.0
 const LINE_Y := 820.0
 const TOP_Y := 120.0
-const LANE_COLORS := [Color8(250, 228, 180), Color8(236, 150, 92), Color8(250, 228, 180)]   # like the buttons
-const BUTTON_TEX := ["res://textures/buttons/soundbutton%s.png", "res://textures/buttons/mainbutton%s.png", "res://textures/buttons/forwardbutton%s.png"]
-const NOTE_SCALE := 0.7
-const TARGET_DIM := Color(0.55, 0.4, 0.55, 0.6)
-const PAL_POS := Vector2(130, 82)
+const LANE_COLORS := [Color8(246, 150, 180), Color8(250, 206, 110), Color8(150, 220, 190)]
 const OUTLINE := Color8(74, 44, 32)
+const PAL_POS := Vector2(130, 82)
 
 var notes: Array = []                 # [time, lane]
 var next_spawn := 0
@@ -45,10 +48,12 @@ var finished := false
 var combo := 0
 var best_combo := 0
 var counts := { "perfect": 0, "good": 0, "miss": 0 }
+var groove := GROOVE_START
+var groove_fill: ColorRect
+var groove_box: ColorRect
 
 var lcd_font: Font
 var note_tex: Array[Texture2D] = []
-var pressed_tex: Array[Texture2D] = []
 var targets: Array[Sprite2D] = []
 var bpm := 120.0
 var beat_offset := 0.0
@@ -65,9 +70,8 @@ var _touch_lane := {}                 # touch index -> lane
 
 func _ready() -> void:
 	lcd_font = load("res://fonts/pixChicago.ttf")
-	for path in BUTTON_TEX:
-		note_tex.append(load(path % "normal"))
-		pressed_tex.append(load(path % "pressed"))
+	for c in ["pink", "yellow", "mint"]:
+		note_tex.append(load("res://textures/minigames/splash/ball_%s.png" % c))
 	var f := FileAccess.open(CHART, FileAccess.READ)
 	if f:
 		var data = JSON.parse_string(f.get_as_text())
@@ -101,6 +105,8 @@ func _process(delta: float) -> void:
 	if not is_running:
 		return
 	_read_keys()
+	if finished and groove <= 0.0:
+		return
 	if not song_started:
 		clock += delta
 		if clock >= 0.0:
@@ -126,8 +132,8 @@ func _process(delta: float) -> void:
 func _spawn(time: float, lane: int) -> void:
 	var s := Sprite2D.new()
 	s.texture = note_tex[lane]
-	s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	s.scale = Vector2(NOTE_SCALE, NOTE_SCALE)
+	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	s.scale = Vector2(5, 5)
 	s.position = Vector2(LANE_X[lane], TOP_Y)
 	add_child(s)
 	move_child(s, targets[0].get_index())          # under the targets / HUD
@@ -150,19 +156,33 @@ func _press(lane: int) -> void:
 		if d < best_d:
 			best_d = d
 			best = i
-	if best < 0 or best_d > GOOD:
-		return                                       # nothing close: a free press (no penalty)
+	if best < 0 or best_d > SLOPPY:
+		if next_spawn > 0:
+			_judge("stray", lane)                    # (no penalty during the count-in)                        # no note there: mashing costs groove
+		return
 	var n: Dictionary = live[best]
 	live.remove_at(best)
-	_judge("perfect" if best_d <= PERFECT else "good", lane)
 	var node: Sprite2D = n["node"]
+	if best_d > GOOD:                                # too early / too late: that note is lost
+		_judge("miss", lane)
+		var tf := create_tween()
+		tf.tween_property(node, "modulate", Color(0.4, 0.3, 0.35, 0.0), 0.2)
+		tf.tween_callback(node.queue_free)
+		return
+	_judge("perfect" if best_d <= PERFECT else "good", lane)
 	var tw := create_tween()
-	tw.tween_property(node, "scale", Vector2.ONE * NOTE_SCALE * 1.5, 0.1)
+	tw.tween_property(node, "scale", Vector2(8, 8), 0.1)
 	tw.parallel().tween_property(node, "modulate:a", 0.0, 0.12)
 	tw.tween_callback(node.queue_free)
 
 func _judge(kind: String, lane: int) -> void:
+	if kind == "stray":
+		combo = 0
+		_add_groove(GROOVE_STRAY)
+		combo_label.text = ""
+		return
 	counts[kind] += 1
+	_add_groove(GROOVE_GAIN[kind])
 	if kind == "miss":
 		combo = 0
 	else:
@@ -179,7 +199,41 @@ func _judge(kind: String, lane: int) -> void:
 	tw.tween_property(judge_label, "modulate:a", 0.0, 0.25)
 	combo_label.text = ("x%d  combo %d" % [1 + mini(combo / 10, 3), combo]) if combo >= 5 else ""
 
+func _add_groove(d: float) -> void:
+	if finished:
+		return
+	groove = clampf(groove + d, 0.0, 1.0)
+	_draw_groove()
+	if groove <= 0.0:
+		_fail()
+
+func _draw_groove() -> void:
+	if not groove_fill:
+		return
+	groove_fill.size.x = (groove_box.size.x - 8) * groove
+	groove_fill.color = Color8(214, 120, 130) if groove < 0.3 else (Color8(250, 206, 110) if groove < 0.6 else Color8(150, 200, 120))
+
+## The groove ran out: the record scratches to a stop and the game ends.
+func _fail() -> void:
+	finished = true
+	song.stop()
+	for n in live:
+		n["node"].queue_free()
+	live.clear()
+	await get_tree().create_timer(0.5).timeout
+	if not is_running:
+		return
+	end_game()
+	if game_over_overlay:
+		var title: Label = game_over_overlay.get_meta("title")
+		title.text = "Lost the groove!"
+		var st: Label = game_over_overlay.get_meta("score_text")
+		st.text = "Score %d   best combo %d" % [score, best_combo]
+		st.add_theme_font_size_override("font_size", 30)
+
 func _on_song_finished() -> void:
+	if finished:
+		return
 	finished = true
 	await get_tree().create_timer(0.6).timeout
 	if not is_running:
@@ -280,14 +334,13 @@ func _create_static_nodes() -> void:
 	line.position = Vector2(LANE_X[0] - LANE_W / 2.0, LINE_Y - 3)
 	line.size = Vector2(LANE_X[2] - LANE_X[0] + LANE_W, 6)
 	add_child(line)
-	# targets: a dim silhouette of each button on the line; the note lands right on top of it
+	# targets: hollow rings on the line, one per lane
 	for i in 3:
 		var r := Sprite2D.new()
-		r.texture = pressed_tex[i]
-		r.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-		r.scale = Vector2(NOTE_SCALE, NOTE_SCALE)
+		r.texture = _ring_texture(LANE_COLORS[i])
+		r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		r.scale = Vector2(5, 5)
 		r.position = Vector2(LANE_X[i], LINE_Y)
-		r.modulate = TARGET_DIM
 		add_child(r)
 		targets.append(r)
 	# the pal with headphones on, dancing to the beat in the top-left corner
@@ -315,6 +368,22 @@ func _create_static_nodes() -> void:
 	box.position = frame.position + Vector2(5, 5)
 	box.size = frame.size - Vector2(10, 10)
 	add_child(box)
+	# groove meter under the score
+	groove_box = ColorRect.new()
+	groove_box.color = Color(0, 0, 0)
+	groove_box.position = Vector2(frame.position.x, frame.position.y + frame.size.y + 10)
+	groove_box.size = Vector2(frame.size.x, 26)
+	add_child(groove_box)
+	var groove_bg := ColorRect.new()
+	groove_bg.color = Color(0.3, 0.2, 0.28)
+	groove_bg.position = Vector2(4, 4)
+	groove_bg.size = groove_box.size - Vector2(8, 8)
+	groove_box.add_child(groove_bg)
+	groove_fill = ColorRect.new()
+	groove_fill.position = Vector2(4, 4)
+	groove_fill.size = Vector2(0, groove_box.size.y - 8)
+	groove_box.add_child(groove_fill)
+	_draw_groove()
 	score_label = _make_label(box.position + Vector2(6, 0), box.size - Vector2(18, 0), 36, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
 	combo_label = _make_label(Vector2(0, 110), Vector2(PLAY_WIDTH, 50), 30, HORIZONTAL_ALIGNMENT_CENTER, Color8(255, 236, 140))
 	judge_label = _make_label(Vector2(0, LINE_Y - 110), Vector2(220, 50), 32, HORIZONTAL_ALIGNMENT_CENTER, Color.WHITE)
@@ -330,13 +399,10 @@ func _flash(lane: int) -> void:
 	var f := lane_flash[lane]
 	f.color.a = 0.35
 	create_tween().tween_property(f, "color:a", 0.0, 0.18)
-	# the silhouette lights up, like the real button being pressed
 	var r := targets[lane]
-	r.modulate = Color.WHITE
-	r.scale = Vector2.ONE * NOTE_SCALE * 1.08
 	var tw := create_tween()
-	tw.tween_property(r, "scale", Vector2.ONE * NOTE_SCALE, 0.1)
-	tw.parallel().tween_property(r, "modulate", TARGET_DIM, 0.2)
+	tw.tween_property(r, "scale", Vector2(6, 6), 0.05)
+	tw.tween_property(r, "scale", Vector2(5, 5), 0.1)
 
 ## Dance: hop on every beat, sway left/right on alternate beats, squash on landing.
 ## The bigger the combo, the wilder the moves.
@@ -345,7 +411,11 @@ func _dance(t: float) -> void:
 		return
 	var x := (t - beat_offset) * bpm / 60.0       # in beats
 	var ph := x - floorf(x)
-	var amp := 0.6 + 0.2 * mini(combo / 10, 3)    # combo x1 .. x4 -> 0.6 .. 1.2
+	var amp := (0.6 + 0.2 * mini(combo / 10, 3)) * (0.4 + 0.6 * minf(1.0, groove / 0.5))   # combo up = wilder, groove low = sluggish
+	if finished:
+		amp = 0.0
+	if groove_box:
+		groove_box.modulate.a = 1.0 if groove >= 0.3 or ph < 0.5 else 0.45    # low: blinks on the beat
 	var sway := sin(PI * x)                       # flips side every beat
 	var hop := sin(PI * ph) * 18.0 * amp
 	var squash := pow(1.0 - ph, 3.0) * 0.14
@@ -356,6 +426,18 @@ func _dance(t: float) -> void:
 func _sync_headphones() -> void:
 	var path := "res://textures/pet/accessories/headphones/%s-%d.png" % [PetState.form_id, pal.frame + 1]
 	headphones.texture = load(path) if ResourceLoader.exists(path) else null
+
+static func _ring_texture(col: Color) -> Texture2D:
+	var n := 15
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	for y in n:
+		for x in n:
+			var d := Vector2(x + 0.5 - n / 2.0, y + 0.5 - n / 2.0).length()
+			if d <= 7.0 and d >= 5.4:
+				img.set_pixel(x, y, Color8(46, 30, 40))
+			elif d < 5.4 and d >= 4.0:
+				img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
 
 func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
 	var l := Label.new()

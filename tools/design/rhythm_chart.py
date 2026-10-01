@@ -3,8 +3,7 @@
 1. Spectral flux in three bands (low / mid / high) finds where sounds start.
 2. The tempo and beat phase are fitted to those onsets, and onsets are snapped to the grid.
 3. Bands become lanes: low -> left (mute button), mid -> middle (main), high -> right (forward).
-4. Each 4-bar phrase is folded into a one-bar groove the chart leans on, so patterns repeat
-   like the music does. Three charts: easy (quarters), normal (eighths), hard (16ths, chords).
+4. Three charts: easy (quarter notes, one lane), normal (eighths), hard (sixteenths, chords).
 
     python3 tools/design/rhythm_chart.py "sounds/music/Retro Game Console.mp3" data/charts/retro_game_console.json
 
@@ -90,61 +89,38 @@ def make_charts(path):
     bpm, phase = fit_grid(allt, alls, bpm0)
     beat = 60 / bpm
     length = len(x) / SR
-    # how strongly each band hits on every 16th-note slot (flux peak right around the slot)
+    # strength of each band at each 16th-note slot
     n16 = int(length / (beat / 4)) + 1
     slots = np.zeros((3, n16))
     for b in range(3):
-        for k in range(n16):
-            i = int((phase + k * beat / 4) * fps)
-            if i + 3 < flux.shape[1]:
-                slots[b, k] = flux[b, max(0, i - 2):i + 3].max()
-    loud = slots.max(0)
-    # each band on its own scale, so a hi-hat and a kick compete fairly for a lane
-    z = np.zeros_like(slots)
-    for b in range(3):
-        med = np.median(slots[b])
-        iqr = np.percentile(slots[b], 75) - np.percentile(slots[b], 25) + 1e-6
-        z[b] = (slots[b] - med) / iqr
-    # groove: average every 4-bar phrase into a one-bar pattern and lean on it, so the chart
-    # repeats bar after bar the way the song does (learnable = intuitive), fills still show
-    bars = n16 // 16
-    groove = z.copy()
-    for p0 in range(0, bars, 4):
-        seg = z[:, p0 * 16:min(bars, p0 + 4) * 16].reshape(3, -1, 16)
-        tmpl = np.median(seg, axis=1)
-        for bar in range(p0, min(bars, p0 + 4)):
-            groove[:, bar * 16:(bar + 1) * 16] = 0.7 * tmpl + 0.3 * z[:, bar * 16:(bar + 1) * 16]
+        idx, st = peaks(flux[b], k=0.9)
+        for i, s in zip(idx, st):
+            t = i / fps
+            q = (t - phase) / (beat / 4)
+            k = int(round(q))
+            if 0 <= k < n16 and abs(q - k) < 0.35:
+                slots[b, k] = max(slots[b, k], s)
     t_of = lambda k: round(phase + k * beat / 4, 3)
-    # lane balance: a small per-band bias so no button sits idle (choice of lane only)
-    bias = np.zeros(3)
-    strong = [k for k in range(bars * 16) if k % 2 == 0 and loud[k] > 0.12 and groove[:, k].max() > 0.3]
-    for _ in range(60):
-        cnt = np.bincount([int(np.argmax(groove[:, k] + bias)) for k in strong], minlength=3)
-        bias -= 0.02 * (cnt / max(1, cnt.sum()) - 1 / 3) * 3
 
-    def chart(every, per_bar, chords=False):
-        """`every`: 4 = quarters, 2 = eighths, 1 = sixteenths. Per bar, the `per_bar` slots
-        with the strongest groove get a note, in the lane of the band that hits hardest."""
-        notes = []
-        for bar in range(bars):
-            ks = list(range(bar * 16, bar * 16 + 16, every))
-            ks = [k for k in ks if loud[k] > 0.12]                  # silence: no notes
-            best = sorted(ks, key=lambda k: -groove[:, k].max())[:per_bar]
-            for k in sorted(best):
-                if groove[:, k].max() < 0.3:
+    def chart(every, max_lanes, thresh, min_gap16):
+        notes, last = [], [-99, -99, -99]
+        for k in range(0, n16, every):
+            s = slots[:, k] if every == 1 else slots[:, k:k + every].max(1)
+            order = [b for b in np.argsort(-s) if s[b] >= thresh]
+            used = 0
+            for b in order:
+                if used >= max_lanes or k - last[b] < min_gap16:
                     continue
-                order = np.argsort(-(groove[:, k] + bias))
-                notes.append([t_of(k), int(order[0])])
-                # chords only on beats, when a second band hits almost as hard
-                if chords and k % 4 == 0 and groove[order[1], k] > 0.8 * groove[order[0], k] and groove[order[1], k] > 1.0:
-                    notes.append([t_of(k), int(order[1])])
+                notes.append([t_of(k), int(b)])
+                last[b] = k
+                used += 1
         return notes
 
     lead = 2.0                                       # nothing in the first 2 s (count-in)
     charts = {
-        "easy": chart(4, 3),                # quarters, ~1.5 notes/s
-        "normal": chart(2, 5),              # eighths, ~2.4 notes/s
-        "hard": chart(1, 9, chords=True),   # sixteenths + chords
+        "easy": chart(4, 1, 0.45, 4),       # ~2 notes/s, quarter notes, never two at once
+        "normal": chart(2, 1, 0.75, 2),     # ~3 notes/s, eighths
+        "hard": chart(2, 2, 0.6, 2),        # ~5 notes/s, eighths with chords
     }
     for k in charts:
         charts[k] = [n for n in charts[k] if n[0] >= lead]
