@@ -1,0 +1,981 @@
+{
+ "families": {
+  "G": "Green",
+  "S": "Sweet",
+  "F": "Greasy",
+  "H": "Spicy",
+  "U": "Sour",
+  "T": "Tech",
+  "C": "Cosmic",
+  "L": "Legendary"
+ },
+ "legendary_foods": {
+  "G": "Golden Seed",
+  "S": "Stardust Sugar",
+  "F": "Dragon Oil",
+  "H": "Phoenix Pepper",
+  "U": "Kraken Brine"
+ },
+ "forms": [
+  {
+   "no": 1,
+   "name": "Sprig",
+   "stage": "baby",
+   "family": "G",
+   "from": "",
+   "rule": "first meal: Green"
+  },
+  {
+   "no": 2,
+   "name": "Swirlet",
+   "stage": "baby",
+   "family": "S",
+   "from": "",
+   "rule": "first meal: Sweet"
+  },
+  {
+   "no": 3,
+   "name": "Nugget",
+   "stage": "baby",
+   "family": "F",
+   "from": "",
+   "rule": "first meal: Greasy"
+  },
+  {
+   "no": 4,
+   "name": "Ember",
+   "stage": "baby",
+   "family": "H",
+   "from": "",
+   "rule": "first meal: Spicy"
+  },
+  {
+   "no": 5,
+   "name": "Picklet",
+   "stage": "baby",
+   "family": "U",
+   "from": "",
+   "rule": "first meal: Sour"
+  },
+  {
+   "no": 6,
+   "name": "Broccolump",
+   "stage": "kid",
+   "family": "G",
+   "from": "Sprig",
+   "rule": "then Green"
+  },
+  {
+   "no": 7,
+   "name": "Sproutberry",
+   "stage": "kid",
+   "family": "G",
+   "from": "Sprig",
+   "rule": "then Sweet"
+  },
+  {
+   "no": 8,
+   "name": "Fritterleaf",
+   "stage": "kid",
+   "family": "G",
+   "from": "Sprig",
+   "rule": "then Greasy"
+  },
+  {
+   "no": 9,
+   "name": "Jalapling",
+   "stage": "kid",
+   "family": "G",
+   "from": "Sprig",
+   "rule": "then Spicy"
+  },
+  {
+   "no": 10,
+   "name": "Gherkid",
+   "stage": "kid",
+   "family": "G",
+   "from": "Sprig",
+   "rule": "then Sour"
+  },
+  {
+   "no": 11,
+   "name": "Matcharoo",
+   "stage": "kid",
+   "family": "S",
+   "from": "Swirlet",
+   "rule": "then Green"
+  },
+  {
+   "no": 12,
+   "name": "Neapoolitan",
+   "stage": "kid",
+   "family": "S",
+   "from": "Swirlet",
+   "rule": "then Sweet"
+  },
+  {
+   "no": 13,
+   "name": "Donutto",
+   "stage": "kid",
+   "family": "S",
+   "from": "Swirlet",
+   "rule": "then Greasy"
+  },
+  {
+   "no": 14,
+   "name": "Spicecake",
+   "stage": "kid",
+   "family": "S",
+   "from": "Swirlet",
+   "rule": "then Spicy"
+  },
+  {
+   "no": 15,
+   "name": "Lemoncurdle",
+   "stage": "kid",
+   "family": "S",
+   "from": "Swirlet",
+   "rule": "then Sour"
+  },
+  {
+   "no": 16,
+   "name": "Wrapster",
+   "stage": "kid",
+   "family": "F",
+   "from": "Nugget",
+   "rule": "then Green"
+  },
+  {
+   "no": 17,
+   "name": "Churrolo",
+   "stage": "kid",
+   "family": "F",
+   "from": "Nugget",
+   "rule": "then Sweet"
+  },
+  {
+   "no": 18,
+   "name": "Greasy Chonk",
+   "stage": "kid",
+   "family": "F",
+   "from": "Nugget",
+   "rule": "then Greasy"
+  },
+  {
+   "no": 19,
+   "name": "Wingding",
+   "stage": "kid",
+   "family": "F",
+   "from": "Nugget",
+   "rule": "then Spicy"
+  },
+  {
+   "no": 20,
+   "name": "Vinegrub",
+   "stage": "kid",
+   "family": "F",
+   "from": "Nugget",
+   "rule": "then Sour"
+  },
+  {
+   "no": 21,
+   "name": "Pepperpod",
+   "stage": "kid",
+   "family": "H",
+   "from": "Ember",
+   "rule": "then Green"
+  },
+  {
+   "no": 22,
+   "name": "Chilimango",
+   "stage": "kid",
+   "family": "H",
+   "from": "Ember",
+   "rule": "then Sweet"
+  },
+  {
+   "no": 23,
+   "name": "Nachunk",
+   "stage": "kid",
+   "family": "H",
+   "from": "Ember",
+   "rule": "then Greasy"
+  },
+  {
+   "no": 24,
+   "name": "Scorchling",
+   "stage": "kid",
+   "family": "H",
+   "from": "Ember",
+   "rule": "then Spicy"
+  },
+  {
+   "no": 25,
+   "name": "Salsette",
+   "stage": "kid",
+   "family": "H",
+   "from": "Ember",
+   "rule": "then Sour"
+  },
+  {
+   "no": 26,
+   "name": "Kimchling",
+   "stage": "kid",
+   "family": "U",
+   "from": "Picklet",
+   "rule": "then Green"
+  },
+  {
+   "no": 27,
+   "name": "Sourpatch",
+   "stage": "kid",
+   "family": "U",
+   "from": "Picklet",
+   "rule": "then Sweet"
+  },
+  {
+   "no": 28,
+   "name": "Dillfry",
+   "stage": "kid",
+   "family": "U",
+   "from": "Picklet",
+   "rule": "then Greasy"
+  },
+  {
+   "no": 29,
+   "name": "Fermento",
+   "stage": "kid",
+   "family": "U",
+   "from": "Picklet",
+   "rule": "then Spicy"
+  },
+  {
+   "no": 30,
+   "name": "Puckerpus",
+   "stage": "kid",
+   "family": "U",
+   "from": "Picklet",
+   "rule": "then Sour"
+  },
+  {
+   "no": 31,
+   "name": "Treefolk",
+   "stage": "adult",
+   "family": "G",
+   "from": "Broccolump",
+   "rule": "ULTRA: Green again"
+  },
+  {
+   "no": 32,
+   "name": "Blossomoss",
+   "stage": "adult",
+   "family": "G",
+   "from": "Broccolump",
+   "rule": "BLOOM: a friend (Sour/Sweet)"
+  },
+  {
+   "no": 33,
+   "name": "Thornbrute",
+   "stage": "adult",
+   "family": "G",
+   "from": "Broccolump",
+   "rule": "CLASH: a rival (Greasy/Spicy)"
+  },
+  {
+   "no": 34,
+   "name": "Orchardon",
+   "stage": "adult",
+   "family": "G",
+   "from": "Sproutberry",
+   "rule": "ROOT: Green again"
+  },
+  {
+   "no": 35,
+   "name": "Jamboree",
+   "stage": "adult",
+   "family": "G",
+   "from": "Sproutberry",
+   "rule": "PEAK: Sweet again"
+  },
+  {
+   "no": 36,
+   "name": "Fruitcakey",
+   "stage": "adult",
+   "family": "G",
+   "from": "Sproutberry",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 37,
+   "name": "Tempura Sage",
+   "stage": "adult",
+   "family": "G",
+   "from": "Fritterleaf",
+   "rule": "ROOT: Green again"
+  },
+  {
+   "no": 38,
+   "name": "Onion Ringo",
+   "stage": "adult",
+   "family": "G",
+   "from": "Fritterleaf",
+   "rule": "PEAK: Greasy again"
+  },
+  {
+   "no": 39,
+   "name": "Kebabble",
+   "stage": "adult",
+   "family": "G",
+   "from": "Fritterleaf",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 40,
+   "name": "Pepper Hedge",
+   "stage": "adult",
+   "family": "G",
+   "from": "Jalapling",
+   "rule": "ROOT: Green again"
+  },
+  {
+   "no": 41,
+   "name": "Habanerd",
+   "stage": "adult",
+   "family": "G",
+   "from": "Jalapling",
+   "rule": "PEAK: Spicy again"
+  },
+  {
+   "no": 42,
+   "name": "Currycane",
+   "stage": "adult",
+   "family": "G",
+   "from": "Jalapling",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 43,
+   "name": "Cucumbersome",
+   "stage": "adult",
+   "family": "G",
+   "from": "Gherkid",
+   "rule": "ROOT: Green again"
+  },
+  {
+   "no": 44,
+   "name": "Dill Pickler",
+   "stage": "adult",
+   "family": "G",
+   "from": "Gherkid",
+   "rule": "PEAK: Sour again"
+  },
+  {
+   "no": 45,
+   "name": "Kombuchoo",
+   "stage": "adult",
+   "family": "G",
+   "from": "Gherkid",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 46,
+   "name": "Matcha Monk",
+   "stage": "adult",
+   "family": "S",
+   "from": "Matcharoo",
+   "rule": "ROOT: Sweet again"
+  },
+  {
+   "no": 47,
+   "name": "Mint Mochi",
+   "stage": "adult",
+   "family": "S",
+   "from": "Matcharoo",
+   "rule": "PEAK: Green again"
+  },
+  {
+   "no": 48,
+   "name": "Rhubarb Rascal",
+   "stage": "adult",
+   "family": "S",
+   "from": "Matcharoo",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 49,
+   "name": "Sundae Supreme",
+   "stage": "adult",
+   "family": "S",
+   "from": "Neapoolitan",
+   "rule": "ULTRA: Sweet again"
+  },
+  {
+   "no": 50,
+   "name": "Caramelord",
+   "stage": "adult",
+   "family": "S",
+   "from": "Neapoolitan",
+   "rule": "BLOOM: a friend (Green/Greasy)"
+  },
+  {
+   "no": 51,
+   "name": "Sour Gummy",
+   "stage": "adult",
+   "family": "S",
+   "from": "Neapoolitan",
+   "rule": "CLASH: a rival (Spicy/Sour)"
+  },
+  {
+   "no": 52,
+   "name": "Glazed Duke",
+   "stage": "adult",
+   "family": "S",
+   "from": "Donutto",
+   "rule": "ROOT: Sweet again"
+  },
+  {
+   "no": 53,
+   "name": "Deep-Fried Bar",
+   "stage": "adult",
+   "family": "S",
+   "from": "Donutto",
+   "rule": "PEAK: Greasy again"
+  },
+  {
+   "no": 54,
+   "name": "Funnelcake",
+   "stage": "adult",
+   "family": "S",
+   "from": "Donutto",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 55,
+   "name": "Cinnabun",
+   "stage": "adult",
+   "family": "S",
+   "from": "Spicecake",
+   "rule": "ROOT: Sweet again"
+  },
+  {
+   "no": 56,
+   "name": "Chili Choco",
+   "stage": "adult",
+   "family": "S",
+   "from": "Spicecake",
+   "rule": "PEAK: Spicy again"
+  },
+  {
+   "no": 57,
+   "name": "Ginger Snap",
+   "stage": "adult",
+   "family": "S",
+   "from": "Spicecake",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 58,
+   "name": "Lemon Tart",
+   "stage": "adult",
+   "family": "S",
+   "from": "Lemoncurdle",
+   "rule": "ROOT: Sweet again"
+  },
+  {
+   "no": 59,
+   "name": "Sherbet Shock",
+   "stage": "adult",
+   "family": "S",
+   "from": "Lemoncurdle",
+   "rule": "PEAK: Sour again"
+  },
+  {
+   "no": 60,
+   "name": "Yuzu Fizz",
+   "stage": "adult",
+   "family": "S",
+   "from": "Lemoncurdle",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 61,
+   "name": "Loaded Wrap",
+   "stage": "adult",
+   "family": "F",
+   "from": "Wrapster",
+   "rule": "ROOT: Greasy again"
+  },
+  {
+   "no": 62,
+   "name": "Garden Burger",
+   "stage": "adult",
+   "family": "F",
+   "from": "Wrapster",
+   "rule": "PEAK: Green again"
+  },
+  {
+   "no": 63,
+   "name": "Pizza Verde",
+   "stage": "adult",
+   "family": "F",
+   "from": "Wrapster",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 64,
+   "name": "Fair Fritter",
+   "stage": "adult",
+   "family": "F",
+   "from": "Churrolo",
+   "rule": "ROOT: Greasy again"
+  },
+  {
+   "no": 65,
+   "name": "Churro King",
+   "stage": "adult",
+   "family": "F",
+   "from": "Churrolo",
+   "rule": "PEAK: Sweet again"
+  },
+  {
+   "no": 66,
+   "name": "Dulce Diablo",
+   "stage": "adult",
+   "family": "F",
+   "from": "Churrolo",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 67,
+   "name": "Lard Lord",
+   "stage": "adult",
+   "family": "F",
+   "from": "Greasy Chonk",
+   "rule": "ULTRA: Greasy again"
+  },
+  {
+   "no": 68,
+   "name": "Maple Baconeer",
+   "stage": "adult",
+   "family": "F",
+   "from": "Greasy Chonk",
+   "rule": "BLOOM: a friend (Sweet/Spicy)"
+  },
+  {
+   "no": 69,
+   "name": "Salad Shame",
+   "stage": "adult",
+   "family": "F",
+   "from": "Greasy Chonk",
+   "rule": "CLASH: a rival (Green/Sour)"
+  },
+  {
+   "no": 70,
+   "name": "Bucket Boss",
+   "stage": "adult",
+   "family": "F",
+   "from": "Wingding",
+   "rule": "ROOT: Greasy again"
+  },
+  {
+   "no": 71,
+   "name": "Buffalo Blaze",
+   "stage": "adult",
+   "family": "F",
+   "from": "Wingding",
+   "rule": "PEAK: Spicy again"
+  },
+  {
+   "no": 72,
+   "name": "Hot Pocketeer",
+   "stage": "adult",
+   "family": "F",
+   "from": "Wingding",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 73,
+   "name": "Chippy",
+   "stage": "adult",
+   "family": "F",
+   "from": "Vinegrub",
+   "rule": "ROOT: Greasy again"
+  },
+  {
+   "no": 74,
+   "name": "Malt Marauder",
+   "stage": "adult",
+   "family": "F",
+   "from": "Vinegrub",
+   "rule": "PEAK: Sour again"
+  },
+  {
+   "no": 75,
+   "name": "Fish Taco",
+   "stage": "adult",
+   "family": "F",
+   "from": "Vinegrub",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 76,
+   "name": "Ghost Pepper",
+   "stage": "adult",
+   "family": "H",
+   "from": "Pepperpod",
+   "rule": "ROOT: Spicy again"
+  },
+  {
+   "no": 77,
+   "name": "Wasabeast",
+   "stage": "adult",
+   "family": "H",
+   "from": "Pepperpod",
+   "rule": "PEAK: Green again"
+  },
+  {
+   "no": 78,
+   "name": "Pad Thai Tiger",
+   "stage": "adult",
+   "family": "H",
+   "from": "Pepperpod",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 79,
+   "name": "Mole Mole",
+   "stage": "adult",
+   "family": "H",
+   "from": "Chilimango",
+   "rule": "ROOT: Spicy again"
+  },
+  {
+   "no": 80,
+   "name": "Mango Tango",
+   "stage": "adult",
+   "family": "H",
+   "from": "Chilimango",
+   "rule": "PEAK: Sweet again"
+  },
+  {
+   "no": 81,
+   "name": "Hot Honey",
+   "stage": "adult",
+   "family": "H",
+   "from": "Chilimango",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 82,
+   "name": "Inferno Taco",
+   "stage": "adult",
+   "family": "H",
+   "from": "Nachunk",
+   "rule": "ROOT: Spicy again"
+  },
+  {
+   "no": 83,
+   "name": "Nacho Grande",
+   "stage": "adult",
+   "family": "H",
+   "from": "Nachunk",
+   "rule": "PEAK: Greasy again"
+  },
+  {
+   "no": 84,
+   "name": "Chimichunga",
+   "stage": "adult",
+   "family": "H",
+   "from": "Nachunk",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 85,
+   "name": "Magma Mound",
+   "stage": "adult",
+   "family": "H",
+   "from": "Scorchling",
+   "rule": "ULTRA: Spicy again"
+  },
+  {
+   "no": 86,
+   "name": "Firecracker",
+   "stage": "adult",
+   "family": "H",
+   "from": "Scorchling",
+   "rule": "BLOOM: a friend (Greasy/Sour)"
+  },
+  {
+   "no": 87,
+   "name": "Cold Sweat",
+   "stage": "adult",
+   "family": "H",
+   "from": "Scorchling",
+   "rule": "CLASH: a rival (Green/Sweet)"
+  },
+  {
+   "no": 88,
+   "name": "Salsa Diablo",
+   "stage": "adult",
+   "family": "H",
+   "from": "Salsette",
+   "rule": "ROOT: Spicy again"
+  },
+  {
+   "no": 89,
+   "name": "Tom Yum",
+   "stage": "adult",
+   "family": "H",
+   "from": "Salsette",
+   "rule": "PEAK: Sour again"
+  },
+  {
+   "no": 90,
+   "name": "Ceviche",
+   "stage": "adult",
+   "family": "H",
+   "from": "Salsette",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 91,
+   "name": "Sauerkraut",
+   "stage": "adult",
+   "family": "U",
+   "from": "Kimchling",
+   "rule": "ROOT: Sour again"
+  },
+  {
+   "no": 92,
+   "name": "Kimchi Kaiju",
+   "stage": "adult",
+   "family": "U",
+   "from": "Kimchling",
+   "rule": "PEAK: Green again"
+  },
+  {
+   "no": 93,
+   "name": "Pickled Garden",
+   "stage": "adult",
+   "family": "U",
+   "from": "Kimchling",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 94,
+   "name": "Warhead",
+   "stage": "adult",
+   "family": "U",
+   "from": "Sourpatch",
+   "rule": "ROOT: Sour again"
+  },
+  {
+   "no": 95,
+   "name": "Sweet Tart",
+   "stage": "adult",
+   "family": "U",
+   "from": "Sourpatch",
+   "rule": "PEAK: Sweet again"
+  },
+  {
+   "no": 96,
+   "name": "Candy Kraut",
+   "stage": "adult",
+   "family": "U",
+   "from": "Sourpatch",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 97,
+   "name": "Pickle Spear",
+   "stage": "adult",
+   "family": "U",
+   "from": "Dillfry",
+   "rule": "ROOT: Sour again"
+  },
+  {
+   "no": 98,
+   "name": "Fried Pickle",
+   "stage": "adult",
+   "family": "U",
+   "from": "Dillfry",
+   "rule": "PEAK: Greasy again"
+  },
+  {
+   "no": 99,
+   "name": "Reuben",
+   "stage": "adult",
+   "family": "U",
+   "from": "Dillfry",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 100,
+   "name": "Vindaloo",
+   "stage": "adult",
+   "family": "U",
+   "from": "Fermento",
+   "rule": "ROOT: Sour again"
+  },
+  {
+   "no": 101,
+   "name": "Hot Sauce",
+   "stage": "adult",
+   "family": "U",
+   "from": "Fermento",
+   "rule": "PEAK: Spicy again"
+  },
+  {
+   "no": 102,
+   "name": "Gochujang",
+   "stage": "adult",
+   "family": "U",
+   "from": "Fermento",
+   "rule": "CHAOS: any other basic food"
+  },
+  {
+   "no": 103,
+   "name": "Vinegaroon",
+   "stage": "adult",
+   "family": "U",
+   "from": "Puckerpus",
+   "rule": "ULTRA: Sour again"
+  },
+  {
+   "no": 104,
+   "name": "Citrus Sage",
+   "stage": "adult",
+   "family": "U",
+   "from": "Puckerpus",
+   "rule": "BLOOM: a friend (Spicy/Green)"
+  },
+  {
+   "no": 105,
+   "name": "Curdle Brute",
+   "stage": "adult",
+   "family": "U",
+   "from": "Puckerpus",
+   "rule": "CLASH: a rival (Sweet/Greasy)"
+  },
+  {
+   "no": 106,
+   "name": "Cyborg Sprout",
+   "stage": "mutant",
+   "family": "G",
+   "from": "any Green adult",
+   "rule": "Tech food"
+  },
+  {
+   "no": 107,
+   "name": "Moss Martian",
+   "stage": "mutant",
+   "family": "G",
+   "from": "any Green adult",
+   "rule": "Cosmic food"
+  },
+  {
+   "no": 108,
+   "name": "Robo Sundae",
+   "stage": "mutant",
+   "family": "S",
+   "from": "any Sweet adult",
+   "rule": "Tech food"
+  },
+  {
+   "no": 109,
+   "name": "Nebula Swirl",
+   "stage": "mutant",
+   "family": "S",
+   "from": "any Sweet adult",
+   "rule": "Cosmic food"
+  },
+  {
+   "no": 110,
+   "name": "Mecha Nugget",
+   "stage": "mutant",
+   "family": "F",
+   "from": "any Greasy adult",
+   "rule": "Tech food"
+  },
+  {
+   "no": 111,
+   "name": "Blob Beyond",
+   "stage": "mutant",
+   "family": "F",
+   "from": "any Greasy adult",
+   "rule": "Cosmic food"
+  },
+  {
+   "no": 112,
+   "name": "Overclock",
+   "stage": "mutant",
+   "family": "H",
+   "from": "any Spicy adult",
+   "rule": "Tech food"
+  },
+  {
+   "no": 113,
+   "name": "Solar Flare",
+   "stage": "mutant",
+   "family": "H",
+   "from": "any Spicy adult",
+   "rule": "Cosmic food"
+  },
+  {
+   "no": 114,
+   "name": "Acid Battery",
+   "stage": "mutant",
+   "family": "U",
+   "from": "any Sour adult",
+   "rule": "Tech food"
+  },
+  {
+   "no": 115,
+   "name": "Void Pickle",
+   "stage": "mutant",
+   "family": "U",
+   "from": "any Sour adult",
+   "rule": "Cosmic food"
+  },
+  {
+   "no": 116,
+   "name": "World Tree",
+   "stage": "legend",
+   "family": "G",
+   "from": "Treefolk",
+   "rule": "legendary food: Golden Seed"
+  },
+  {
+   "no": 117,
+   "name": "Celestial Sundae",
+   "stage": "legend",
+   "family": "S",
+   "from": "Sundae Supreme",
+   "rule": "legendary food: Stardust Sugar"
+  },
+  {
+   "no": 118,
+   "name": "Deep-Fried Dragon",
+   "stage": "legend",
+   "family": "F",
+   "from": "Lard Lord",
+   "rule": "legendary food: Dragon Oil"
+  },
+  {
+   "no": 119,
+   "name": "Phoenix",
+   "stage": "legend",
+   "family": "H",
+   "from": "Magma Mound",
+   "rule": "legendary food: Phoenix Pepper"
+  },
+  {
+   "no": 120,
+   "name": "Kraken",
+   "stage": "legend",
+   "family": "U",
+   "from": "Vinegaroon",
+   "rule": "legendary food: Kraken Brine"
+  }
+ ]
+}
