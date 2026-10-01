@@ -20,6 +20,10 @@ func _ready():
 
 	if game_screen:
 		game_screen.visible = false
+	# 3D wallpaper effect: the sky and clouds slide behind the gut when the phone tilts
+	var tilt := preload("res://scripts/tilt_parallax.gd").new()
+	tilt.name = "TiltParallax"
+	get_parent().add_child.call_deferred(tilt)
 
 func get_animation_player(node: Node) -> AnimationPlayer:
 	var anim = node.get_node_or_null("AnimationPlayer")
