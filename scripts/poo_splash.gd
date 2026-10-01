@@ -37,10 +37,10 @@ const JET_TOP := 474.0                  # the thrust only acts below mid-screen;
 										# fly on their momentum and just fall back down
 const JET_SPREAD := 0.42                # cone widening per px of height
 const CENTER_X := 475.0                 # between the two pumps
-const MEET_PULL := 14.0                  # both pumps on: the currents pull towards the centre...
-const MEET_DAMP := 4.5                  # ...and cancel each other there (no overshoot)
-const MEET_MIN_H := 250.0               # (above the pile; baskets can be crossed from below)
-const MEET_LIFT := 1500.0               # where they meet the water rises: a column up the middle
+const MEET_PULL := 20.0                  # both pumps on: the currents pull towards the centre...
+const MEET_DAMP := 5.5                  # ...and cancel each other there (no overshoot)
+const MEET_MIN_H := 200.0               # (above the pile; baskets can be crossed from below)
+const MEET_LIFT := 1900.0               # where they meet the water rises: a column up the middle
 const MEET_WIDTH := 110.0
 const PUMP_TIME := 0.9                  # held main pump runs dry after this long
 const BOUNCE := 0.45
@@ -55,7 +55,7 @@ const CUP_H := 78.0
 ## the outer sides (where a single pump throws the outer ball). None in the jet columns,
 ## none above another.
 const CUP_SLOTS := [
-	Vector2(325, 470), Vector2(475, 330), Vector2(625, 470),
+	Vector2(325, 470), Vector2(475, 380), Vector2(625, 470),
 	Vector2(130, 545), Vector2(820, 545),
 ]
 const CUP_POINTS := [200, 300, 200, 100, 100]
@@ -88,6 +88,9 @@ var score_label: Label
 var banner: Label
 var rng := RandomNumberGenerator.new()
 var _key_jets := [false, false]
+# Phones: each console button only sees one finger (touch is turned into a single mouse), so
+# both pumps read the touches directly: touch index -> pump held by that finger
+var _touch_jets := {}
 
 func _ready() -> void:
 	game_music_path = "res://sounds/music/Frédéric Chopin - Nocturne： Op. 9 No. 2 [8 bits].mp3"
@@ -196,7 +199,7 @@ func _update_jets(delta: float) -> void:
 	for i in 2:
 		var j: Dictionary = jets[i]
 		var want := 0.0
-		if j["held"] or _key_jets[i]:
+		if j["held"] or _key_jets[i] or i in _touch_jets.values():
 			j["hold_time"] += delta
 			want = clampf(1.0 - (j["hold_time"] - PUMP_TIME) / 0.4, 0.0, 1.0)   # pump runs dry
 		else:
@@ -521,9 +524,34 @@ func on_forward_button_pressed() -> void:
 	if is_game_over:
 		super.on_forward_button_pressed()
 
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventScreenTouch) or not is_running or is_game_over:
+		return
+	if event.pressed:
+		var j := _pump_at(event.position)
+		if j >= 0:
+			if not _pump_active(j):
+				_sfx("res://sounds/fx/underwater-247531.mp3", -14.0, 0.6)
+			_touch_jets[event.index] = j
+	else:
+		_touch_jets.erase(event.index)
+
+## Which pump button a screen position is on (0 = main, 1 = forward, -1 = neither)
+func _pump_at(screen_pos: Vector2) -> int:
+	var paths := ["/root/PoopPal/Main UI/MainButton", "/root/PoopPal/Main UI/SoundButtons/ForwardButton"]
+	for i in paths.size():
+		var b := get_node_or_null(paths[i]) as Control
+		if b and (b.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, b.size)).grow(20).has_point(screen_pos):
+			return i
+	return -1
+
+func _pump_active(i: int) -> bool:
+	return jets[i]["held"] or i in _touch_jets.values()
+
 func _pump(i: int, down: bool) -> void:
+	var was := _pump_active(i)
 	jets[i]["held"] = down
-	if down:
+	if down and not was:
 		_sfx("res://sounds/fx/underwater-247531.mp3", -14.0, 0.6)
 
 func end_game() -> void:

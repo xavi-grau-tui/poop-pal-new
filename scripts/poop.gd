@@ -116,12 +116,19 @@ func blink(custom_times := -1, custom_opacity := -1.0, custom_speed := -1.0):
 # ------------------------------------------------------------------ TICKLING
 
 func _input(event: InputEvent) -> void:
-	if not (event is InputEventMouseMotion) or not (event.button_mask & MOUSE_BUTTON_MASK_LEFT):
+	# finger drags (phone) or a dragged mouse (desktop); the phone's emulated mouse is ignored
+	var lp: Vector2
+	if event is InputEventScreenDrag:
+		lp = to_local(get_canvas_transform().affine_inverse() * event.position)
+	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION and (event.button_mask & MOUSE_BUTTON_MASK_LEFT):
+		lp = to_local(get_global_mouse_position())
+	elif (event is InputEventScreenTouch or event is InputEventMouseButton) and not event.pressed:
 		_rub_active = false
+		return
+	else:
 		return
 	if not _can_be_touched():
 		return
-	var lp := to_local(get_global_mouse_position())
 	if not _body_rect.grow(6.0).has_point(lp):
 		_rub_active = false
 		return
