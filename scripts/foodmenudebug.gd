@@ -88,7 +88,7 @@ func populate_special():
 		var option_node = special_options[i]
 		option_node.get_node("Icon").texture = food_data.icon
 		option_node.get_node("Name").text = food_data.name
-		option_node.get_node("Kcal").text = {"tech": "exotic", "cosmic": "exotic", "legend": "rare"}.get(food_data.family, "")
+		_set_type_tag(option_node, food_data.family)
 		option_node.set_meta("food", food_data)
 		option_node.set_meta("special", true)
 
@@ -102,7 +102,7 @@ func populate_foods():
 		var option_node = options[i]
 		option_node.get_node("Icon").texture = food_data.icon
 		option_node.get_node("Name").text = food_data.name
-		option_node.get_node("Kcal").text = str(food_data.kcal) + " kcal"
+		_set_type_tag(option_node, food_data.family)
 		option_node.set_meta("food", food_data)
 
 func populate_drinks():
@@ -130,6 +130,47 @@ func populate_drinks():
 
 		var col: Color = drink_data.color if drink_data.has("color") else Color(1, 1, 1, 0.3)
 		option_node.set_meta("color", col)
+
+# The food's type (what shapes the evolution) instead of its kcal: a little coloured tag,
+# the same colours as the evolution tree (docs/evolution_tree_draft.png)
+const TYPE_TAGS := {
+	"green": ["Green", Color8(118, 168, 78)], "sweet": ["Sweet", Color8(236, 132, 172)],
+	"greasy": ["Greasy", Color8(204, 134, 62)], "spicy": ["Spicy", Color8(214, 74, 58)],
+	"sour": ["Sour", Color8(204, 186, 44)], "tech": ["Tech", Color8(104, 136, 168)],
+	"cosmic": ["Cosmic", Color8(146, 104, 200)], "legend": ["Rare", Color8(226, 176, 40)],
+}
+
+func _set_type_tag(option_node: Node, family: String) -> void:
+	var kcal: Label = option_node.get_node("Kcal")
+	kcal.visible = false
+	var tag: Panel = option_node.get_node_or_null("TypeTag")
+	if not tag:
+		tag = Panel.new()
+		tag.name = "TypeTag"
+		tag.z_index = kcal.z_index
+		# right over the beige box of the frame art (the kcal label sat in its lower part)
+		tag.position = Vector2(kcal.position.x - 2, kcal.position.y - 33)
+		tag.size = Vector2(150, 72)
+		var l := Label.new()
+		l.name = "Text"
+		l.set_anchors_preset(Control.PRESET_FULL_RECT)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		l.add_theme_font_override("font", kcal.get_theme_font("font"))
+		l.add_theme_font_size_override("font_size", 32)
+		l.add_theme_color_override("font_color", Color.WHITE)
+		l.add_theme_color_override("font_outline_color", Color8(74, 44, 32))
+		l.add_theme_constant_override("outline_size", 8)
+		tag.add_child(l)
+		option_node.add_child(tag)
+	var info: Array = TYPE_TAGS.get(family, [family.capitalize(), Color8(166, 129, 94)])
+	var box := StyleBoxFlat.new()
+	box.bg_color = info[1]
+	box.border_color = Color8(74, 44, 32)
+	box.set_border_width_all(3)
+	box.set_corner_radius_all(8)
+	tag.add_theme_stylebox_override("panel", box)
+	tag.get_node("Text").text = info[0]
 
 func update_dots(index: int):
 	for i in range(dots.size()):
