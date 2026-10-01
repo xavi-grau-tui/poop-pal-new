@@ -3,10 +3,10 @@ extends BaseMinigame
 ##
 ##   main button     = LEFT flipper (it's orange, like the button)
 ##   forward button  = RIGHT flipper (cream, like the button)
-##   speaker button  = nudge the table. Three nudges in a row = TILT: the flippers die
-##                     until the ball drains.
+## The speaker button stays the normal mute button (only Tummy Tunes uses it as a control).
 ## Phones: every finger is read directly, so both flippers work at once.
-## Desktop: also Left/A and Right/D for the flippers, Space / Up to nudge.
+## Desktop: also Left/A and Right/D for the flippers, Space / Up to nudge the table (three
+## nudges in a row = TILT: the flippers die until the ball drains).
 ##
 ## Table: three bumpers (100), two slingshots (10), the Y-U-M drop targets (150 each, all
 ## three = 1000 and they come back), and the belly button hole at the top left (250: it
@@ -65,6 +65,7 @@ var walls: Array = []                    # [a, b, kind] kind: "wall" | "sling0" 
 var arch: PackedVector2Array
 var field_poly: PackedVector2Array
 var sling_polys: Array = []
+var pocket_polys: Array = []             # filled-in gaps behind the slingshots
 var flippers: Array[Dictionary] = []     # { pivot, sign, angle, vel, held }
 var ball := { "pos": Vector2.ZERO, "vel": Vector2.ZERO, "live": false, "spin": 0.0 }
 var balls_left := BALLS
@@ -132,6 +133,17 @@ func _build_geometry() -> void:
 		walls.append([p[0], p[2], "sling%d" % s])
 		walls.append([p[0], p[1], "wall"])
 		walls.append([p[1], p[2], "wall"])
+	# the gap between the outer wall and the back of each slingshot is closed with a sloped
+	# roof down to the slingshot's top corner, so the ball rolls off into play instead of
+	# dropping into a pocket it can't get out of
+	# (and the sliver under each slingshot is sealed down to the guide rail too)
+	pocket_polys = [
+		PackedVector2Array([Vector2(40, 440), Vector2(100, 500), Vector2(100, 610), Vector2(200, 680), Vector2(215, 728), Vector2(40, 600)]),
+		PackedVector2Array([Vector2(920, 440), Vector2(860, 500), Vector2(860, 610), Vector2(760, 680), Vector2(745, 728), Vector2(920, 600)]),
+	]
+	for pp in pocket_polys:
+		walls.append([pp[0], pp[1], "wall"])
+		walls.append([pp[3], pp[4], "wall"])
 	# the playfield shape (for drawing)
 	field_poly = PackedVector2Array(arch)
 	field_poly.append(Vector2(920, 600))
@@ -479,6 +491,12 @@ func _draw_table() -> void:
 	for p in arch:
 		c.draw_circle(p, 10, OUTLINE)
 	c.draw_polyline(arch, WALL, 9)
+	# the filled gaps behind the slingshots
+	for pp in pocket_polys:
+		c.draw_colored_polygon(pp, BACK)
+		for e in [[pp[0], pp[1]], [pp[3], pp[4]]]:
+			c.draw_line(e[0], e[1], OUTLINE, 21)
+			c.draw_line(e[0], e[1], WALL, 9)
 	# slingshots
 	for s in 2:
 		var p: PackedVector2Array = sling_polys[s]
@@ -634,18 +652,12 @@ func on_forward_button_pressed() -> void:
 	if is_game_over:
 		super.on_forward_button_pressed()
 
-## The speaker button nudges the table (sound_button.gd routes it here instead of muting)
-func on_sound_button_pressed() -> void:
-	_nudge()
-
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventScreenTouch) or is_game_over:
 		return
 	if event.pressed:
 		var b := _button_at(event.position)
-		if b == 2:
-			_nudge()
-		elif b >= 0:
+		if b >= 0:
 			var was := _flipper_held(b)
 			_touch[event.index] = b
 			if not was and is_running and not tilted:
@@ -654,7 +666,7 @@ func _input(event: InputEvent) -> void:
 		_touch.erase(event.index)
 
 func _button_at(screen_pos: Vector2) -> int:
-	var paths := ["/root/PoopPal/Main UI/MainButton", "/root/PoopPal/Main UI/SoundButtons/ForwardButton", "/root/PoopPal/Main UI/SoundButtons/SoundButton"]
+	var paths := ["/root/PoopPal/Main UI/MainButton", "/root/PoopPal/Main UI/SoundButtons/ForwardButton"]
 	for i in paths.size():
 		var b := get_node_or_null(paths[i]) as Control
 		if b and (b.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, b.size)).grow(20).has_point(screen_pos):
