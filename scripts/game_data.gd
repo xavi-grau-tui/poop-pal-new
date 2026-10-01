@@ -24,10 +24,11 @@ var progress_target := {
 	3: 3000, # Poo Dash
 	4: 5000, # Poo Break
 	5: 8000, # Germ Zap
+	6: 6000, # Tummy Tunes
 }
 
 ## Prototype/testing: games unlocked regardless of progress
-const DEBUG_UNLOCKED := [1, 2, 3, 4, 5]
+const DEBUG_UNLOCKED := [1, 2, 3, 4, 5, 6]
 ## Prototype/testing: every launch starts with no best scores and no progress (fresh start)
 const RESET_SCORES_ON_LAUNCH := true
 

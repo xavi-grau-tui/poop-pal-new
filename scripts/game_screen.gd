@@ -19,6 +19,7 @@ var game_scenes := {
 	3: "res://scenes/minigames/poo_dash.tscn",
 	4: "res://scenes/minigames/poo_break.tscn",
 	5: "res://scenes/minigames/germ_zap.tscn",
+	6: "res://scenes/minigames/tummy_tunes.tscn",
 }
 
 func _ready() -> void:

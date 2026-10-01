@@ -44,6 +44,16 @@ func update_audio():
 			game_screen.set_game_music_volume(volume)
 
 func _gui_input(event):
+	# In a game that uses this button as a control (Tummy Tunes: the left lane), it plays
+	# instead of muting
+	if GameScreen.is_active and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		var gs = get_node_or_null("/root/PoopPal/Main UI/GameScreen")
+		if gs and gs.current_game and gs.current_game.has_method("on_sound_button_pressed"):
+			if event.pressed:
+				gs.current_game.on_sound_button_pressed()
+				Input.vibrate_handheld(15)
+			accept_event()
+			return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		was_pressed_inside = get_global_rect().has_point(event.position)
 		if click_sound:
