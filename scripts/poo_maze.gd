@@ -84,7 +84,7 @@ var ball_texture: Texture2D
 var lcd_font: Font
 
 func _ready() -> void:
-	game_music_path = "res://sounds/music/Frédéric Chopin - Etude_ Op. 25 No. 02 [8 bits].mp3"
+	game_music_path = "res://sounds/music/Hidden Passage.mp3"
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	ball_texture = _make_ball_texture()
 	_create_static_nodes()
