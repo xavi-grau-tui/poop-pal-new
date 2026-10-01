@@ -130,6 +130,16 @@ func _ensure_bonus_page() -> void:
 	var bg = game_node.get_node_or_null("TopFrame/Control/Background")
 	if logo:
 		logo.texture = load(BONUS_ART["logo"])
+		# the title flashes like arcade marquee lights: bright, normal, bright, a little pause
+		var t: Tween = logo.create_tween().set_loops()
+		for i in 2:
+			t.tween_callback(func(): logo.modulate = Color(1.45, 1.35, 1.1))
+			t.tween_interval(0.16)
+			t.tween_callback(func(): logo.modulate = Color.WHITE)
+			t.tween_interval(0.16)
+		t.tween_interval(0.5)
+		t.parallel().tween_property(logo, "scale", logo.scale * 1.06, 0.25).set_trans(Tween.TRANS_SINE)
+		t.tween_property(logo, "scale", logo.scale, 0.25).set_trans(Tween.TRANS_SINE)
 	if bg:
 		bg.texture = load(BONUS_ART["background"])
 

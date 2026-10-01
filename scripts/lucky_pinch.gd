@@ -1,7 +1,7 @@
 extends BaseMinigame
 ## Lucky Pinch — the bonus claw machine (LuckyPinch autoload: it shows up now and then after
-## a meal and must be played). Two tries, a prize in every capsule you bring to the chute:
-## an item not unlocked yet.
+## a meal and must be played). Two tries; every capsule holds a prize (LuckyPinch keeps the
+## pile between bonuses: what's inside each one and where it lies, also after being knocked).
 ##
 ##   hold MAIN     = the claw slides right (let go: it stops; one go only, like the real one)
 ##   hold FORWARD  = the claw moves to the back (let go: it drops)
@@ -57,7 +57,8 @@ var _progress := 0.0
 var _wait := 0.0
 var main_down := false
 var fwd_down := false
-var capsules: Array[Dictionary] = []    # { x, d, node }
+var capsules: Array[Dictionary] = []    # LuckyPinch.pit entries still lying in the pit (+ "node")
+var _won: Dictionary = {}               # the capsule on its way down the chute
 var _clock := 0.0
 
 var lcd_font: Font
@@ -232,7 +233,8 @@ func _push_neighbours(x: float, except: int) -> void:
 		var node: Sprite2D = c["node"]
 		var t := create_tween()
 		t.tween_property(node, "position:x", c["x"], 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		t.parallel().tween_property(node, "rotation", node.rotation + side * 1.2, 0.35)
+		c["rot"] = node.rotation + side * 1.2
+		t.parallel().tween_property(node, "rotation", c["rot"], 0.35)
 
 func _check_slip() -> void:
 	if held.is_empty() or _progress < slip_at:
@@ -241,6 +243,7 @@ func _check_slip() -> void:
 	var from := node.global_position - global_position
 	rig_inner.remove_child(node)
 	var x := claw_x + _sway()
+	var c: Dictionary = held
 	held = {}
 	if x < CHUTE.end.x - 10.0:
 		# slipped right over the chute: lucky!
@@ -248,17 +251,21 @@ func _check_slip() -> void:
 		move_child(node, chute_front.get_index())       # behind the chute's front panel
 		node.position = from
 		node.scale = Vector2.ONE * depth_scale(0.0)
+		_won = c
 		_drop_into_chute(node)
 		return
-	# back into the pit, where it fell
+	# back into the pit, where it fell (and it stays there for the next bonus)
 	var d := claw_d
-	var c := { "x": clampf(x, PIT_X.x, PIT_X.y), "d": d, "node": node }
+	c["x"] = clampf(x, PIT_X.x, PIT_X.y)
+	c["d"] = d
+	c["rot"] = randf_range(-0.6, 0.6)
 	pit.add_child(node)
 	node.position = from
 	node.scale = Vector2.ONE * depth_scale(d)
 	capsules.append(c)
 	var t := create_tween()
 	t.tween_property(node, "position", Vector2(c["x"], capsule_rest_y(d)), 0.45).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	t.parallel().tween_property(node, "rotation", c["rot"], 0.45)
 	_sfx("res://sounds/fx/claw_miss.wav", -12.0)
 	_float_text("oops!", Vector2(c["x"], capsule_rest_y(d) - 40))
 
@@ -272,6 +279,7 @@ func _release() -> void:
 	var node: Sprite2D = held["node"]
 	var at := node.global_position - global_position
 	rig_inner.remove_child(node)
+	_won = held
 	held = {}
 	add_child(node)
 	move_child(node, chute_front.get_index())           # behind the chute's front panel
@@ -304,29 +312,89 @@ func _reveal_prize(capsule_tex: Texture2D) -> void:
 		_open_prize())
 
 func _open_prize() -> void:
-	var p := LuckyPinch.win_prize()
-	var text := ""
-	if p.is_empty():
-		add_score(500)
-		text = "+500 pts!"
-	else:
-		text = "%s!" % p["name"]
+	var p := LuckyPinch.win(_won)
+	_won = {}
+	if p.has("points"):
+		add_score(p["points"])
 	_sfx("res://sounds/fx/claw_prize.wav", -8.0)
 	for i in 10:
 		_spark(CHUTE_WINDOW.get_center())
-	var l := _make_label(Vector2(0, 470), Vector2(PLAY_WIDTH, 80), 50, HORIZONTAL_ALIGNMENT_CENTER, Color8(255, 236, 150))
-	l.add_theme_color_override("font_outline_color", OUTLINE)
-	l.add_theme_constant_override("outline_size", 14)
-	l.text = text
-	l.pivot_offset = l.size / 2.0
-	l.scale = Vector2(0.3, 0.3)
-	var t := create_tween()
-	t.tween_property(l, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	t.tween_interval(1.6)
-	t.tween_property(l, "modulate:a", 0.0, 0.3)
-	t.tween_callback(l.queue_free)
+	_show_prize_card(p)
 	_refresh_tries()
-	get_tree().create_timer(2.3).timeout.connect(_next_try)
+	get_tree().create_timer(2.9).timeout.connect(_next_try)
+
+## The prize card: a picture of the item, its name and what kind of item it is
+func _show_prize_card(p: Dictionary) -> void:
+	var card := Control.new()
+	card.size = Vector2(540, 400)
+	card.position = Vector2((PLAY_WIDTH - card.size.x) / 2.0 + 60.0, 230)
+	card.pivot_offset = card.size / 2.0
+	add_child(card)
+	var border := ColorRect.new()
+	border.color = OUTLINE
+	border.size = card.size
+	card.add_child(border)
+	var face := ColorRect.new()
+	face.color = Color8(250, 238, 208)
+	face.position = Vector2(8, 8)
+	face.size = card.size - Vector2(16, 16)
+	card.add_child(face)
+	var band := ColorRect.new()
+	band.color = GOLD
+	band.position = Vector2(8, 8)
+	band.size = Vector2(card.size.x - 16, 52)
+	card.add_child(band)
+	var head := _card_label(card, Vector2(0, 10), Vector2(card.size.x, 48), 30, OUTLINE)
+	head.text = "YOU GOT"
+	# picture (the same previews as the settings menus)
+	var box := ColorRect.new()
+	box.color = OUTLINE
+	box.position = Vector2((card.size.x - 170) / 2.0, 74)
+	box.size = Vector2(170, 170)
+	card.add_child(box)
+	var inner := ColorRect.new()
+	inner.color = Color8(232, 214, 176)
+	inner.position = box.position + Vector2(6, 6)
+	inner.size = box.size - Vector2(12, 12)
+	card.add_child(inner)
+	var pic := TextureRect.new()
+	pic.position = inner.position + Vector2(6, 6)
+	pic.size = inner.size - Vector2(12, 12)
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	card.add_child(pic)
+	var name_l := _card_label(card, Vector2(0, 262), Vector2(card.size.x, 52), 38, OUTLINE)
+	var kind_l := _card_label(card, Vector2(0, 322), Vector2(card.size.x, 44), 26, Color8(104, 128, 72))
+	if p.has("category"):
+		var menu := get_node_or_null("/root/PoopPal/Main UI/Menus/Settings Menu")
+		if menu and menu.has_method("_item_preview"):
+			pic.texture = menu._item_preview(p["category"], p["id"])
+		name_l.text = p["name"]
+		kind_l.text = LuckyPinch.kind_label(p["category"], p["id"])
+	else:
+		name_l.text = "+%d pts" % p.get("points", 0)
+		kind_l.text = "Bonus points"
+		pic.texture = tex["capsule_yellow"]
+	card.scale = Vector2(0.2, 0.2)
+	var t := create_tween()
+	t.tween_property(card, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_interval(2.2)
+	t.tween_property(card, "modulate:a", 0.0, 0.3)
+	t.tween_callback(card.queue_free)
+
+func _card_label(parent: Control, pos: Vector2, sz: Vector2, font_size: int, color: Color) -> Label:
+	var l := Label.new()
+	l.position = pos
+	l.size = sz
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	if lcd_font:
+		l.add_theme_font_override("font", lcd_font)
+	l.add_theme_font_size_override("font_size", font_size)
+	l.add_theme_color_override("font_color", color)
+	parent.add_child(l)
+	return l
 
 func _next_try() -> void:
 	if not is_running:
@@ -339,7 +407,7 @@ func _next_try() -> void:
 		_finish()
 
 func _finish() -> void:
-	var won: Array = LuckyPinch.prizes.map(func(p): return p["name"])
+	var won: Array = LuckyPinch.prizes.map(func(p): return p["name"] if p.has("name") else "+%d pts" % p.get("points", 0))
 	LuckyPinch.finish()
 	end_game()
 	if game_over_overlay:
@@ -368,21 +436,16 @@ func _reset_claw() -> void:
 # ================================================================== NODES
 
 func _fill_pit() -> void:
-	var rows := [0.1, 0.5, 0.9]
-	for r in rows.size():
-		for col in 4:
-			var d: float = rows[r] + randf_range(-0.05, 0.05)
-			var x := PIT_X.x + 20.0 + col * 165.0 + (r % 2) * 70.0 + randf_range(-14, 14)
-			if x > PIT_X.y:
-				continue
-			var s := Sprite2D.new()
-			s.texture = tex["capsule_" + CAPSULE_COLORS[randi() % CAPSULE_COLORS.size()]]
-			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			s.scale = Vector2.ONE * depth_scale(d)
-			s.position = Vector2(x, capsule_rest_y(d))
-			s.rotation = randf_range(-0.5, 0.5)
-			pit.add_child(s)
-			capsules.append({ "x": x, "d": d, "node": s })
+	for c in LuckyPinch.pit:
+		var s := Sprite2D.new()
+		s.texture = tex["capsule_" + str(c["color"])]
+		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		s.scale = Vector2.ONE * depth_scale(c["d"])
+		s.position = Vector2(c["x"], capsule_rest_y(c["d"]))
+		s.rotation = c["rot"]
+		pit.add_child(s)
+		c["node"] = s
+		capsules.append(c)
 
 func _create_nodes() -> void:
 	var bg := ColorRect.new()
@@ -625,6 +688,8 @@ func _play_error_sound() -> void:
 	pass                                # (the end of a bonus is no failure)
 
 func _exit_tree() -> void:
+	for c in LuckyPinch.pit:
+		c.erase("node")                     # (the pile itself stays in LuckyPinch)
 	# left halfway through the last try: the bonus is used up anyway
 	if LuckyPinch.pending and LuckyPinch.tries <= 0 and phase != P.DONE:
 		LuckyPinch.finish()

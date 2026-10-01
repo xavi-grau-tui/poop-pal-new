@@ -32,8 +32,10 @@ func _ready():
 		Collection.unlocked.connect(func(_c, _id): blink_hint(6, 0.18))
 		PetState.pal_discovered.connect(func(_id): blink_hint(6, 0.18))
 	# The Games button keeps blinking while a LUCKY PINCH bonus waits to be played
+	# (it starts once the claw has left the pet cam)
 	if target_menu is GameMenuSwitcher:
-		LuckyPinch.changed.connect(func(on): start_attention() if on else stop_attention())
+		LuckyPinch.visit_finished.connect(_on_bonus_visit_finished)
+		LuckyPinch.changed.connect(_on_bonus_changed)
 
 func _process(_delta):
 	self.disabled = FoodRainSpawner.is_locked or DrinkWaterfallSpawner.is_locked
@@ -43,8 +45,9 @@ func _gui_input(event):
 		get_viewport().set_input_as_handled()
 		return
 
-	# LUCKY PINCH pending: it must be played first, the other menus stay closed
-	if LuckyPinch.pending and not button_pressed and not (target_menu is GameMenuSwitcher):
+	# LUCKY PINCH: while the claw visits nothing opens; then only Games (it must be played
+	# first: food and settings can't be opened or toggled at all)
+	if LuckyPinch.visiting or (LuckyPinch.pending and not (target_menu is GameMenuSwitcher)):
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			_refuse_for_bonus()
 		accept_event()
@@ -132,6 +135,14 @@ func _refuse_until_first_meal() -> void:
 		if _is_food_button(b):
 			b.blink_hint()
 			break
+
+func _on_bonus_visit_finished() -> void:
+	if LuckyPinch.pending:
+		start_attention()
+
+func _on_bonus_changed(on: bool) -> void:
+	if not on:
+		stop_attention()
 
 ## Refused because a LUCKY PINCH bonus is waiting: a soft error blip (the Games button is
 ## already blinking)

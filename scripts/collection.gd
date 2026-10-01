@@ -49,26 +49,32 @@ const BACKGROUNDS := {
 	},
 	# "?" slots: items still to come (nothing unlocks them yet). A list shows one page more
 	# each time its current last page is fully unlocked.
+	"bubbles": {
+		"name": "Bubbles",
+		"kind": "complement",
+		"layers": ["res://textures/pet-background/bubbles_far.png", "res://textures/pet-background/bubbles_near.png"],
+		"unlocked": false,
+		"unlock": "Lucky Pinch",
+	},
 	"pink": { "name": "Pink", "kind": "color", "hue": 0.0, "layers": [], "unlocked": true, "unlock": "" },
 	"pastel_yellow": { "name": "Yellow", "kind": "color", "hue": 0.145, "layers": [], "unlocked": false, "unlock": "Pipe Dream: 30 pts" },
-	"mystery_1": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
-	"mystery_2": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
+	"lilac": { "name": "Lilac", "kind": "color", "hue": -0.12, "layers": [], "unlocked": false, "unlock": "Lucky Pinch" },
 	"mystery_3": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 	"mystery_4": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 }
-const BACKGROUND_ORDER := ["clouds", "tp_rolls", "pink", "pastel_yellow", "mystery_1", "mystery_2", "mystery_3", "mystery_4"]
+const BACKGROUND_ORDER := ["clouds", "tp_rolls", "bubbles", "pink", "pastel_yellow", "lilac", "mystery_3", "mystery_4"]
 
 ## Pal accessories. "dir" holds one texture per form and frame: <form>-1.png, <form>-2.png,
 ## drawn on the form's own canvas (see tools/art/accessories.py).
 const ACCESSORIES := {
 	"none": { "name": "Nothing", "dir": "", "unlocked": true, "unlock": "" },
 	"sunglasses": { "name": "Sunglasses", "dir": "res://textures/pet/accessories/sunglasses/", "unlocked": false, "unlock": "Pipe Dream: 15 pts" },
-	"mystery_acc_1": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
-	"mystery_acc_2": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
+	"scarf": { "name": "Scarf", "dir": "res://textures/pet/accessories/scarf/", "unlocked": false, "unlock": "Lucky Pinch" },
+	"headphones": { "name": "Headphones", "dir": "res://textures/pet/accessories/headphones/", "unlocked": false, "unlock": "Lucky Pinch" },
 	"mystery_acc_3": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
 	"mystery_acc_4": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
 }
-const ACCESSORY_ORDER := ["none", "sunglasses", "mystery_acc_1", "mystery_acc_2", "mystery_acc_3", "mystery_acc_4"]
+const ACCESSORY_ORDER := ["none", "sunglasses", "scarf", "headphones", "mystery_acc_3", "mystery_acc_4"]
 
 ## Gut decor, two kinds that combine: one "complement" (an overlay hung on the gut; "frames"
 ## are the size of intestine-front.png, cycled to animate) and one "color" (a hue shift of
@@ -77,12 +83,20 @@ const DECOR := {
 	"none": { "name": "Nothing", "kind": "", "frames": [], "unlocked": true, "unlock": "" },
 	"fairy_lights": { "name": "Fairy Lights", "kind": "complement", "frames": ["res://textures/pet/decor/fairy_lights-1.png", "res://textures/pet/decor/fairy_lights-2.png"], "unlocked": false, "unlock": "Pipe Dream: 10 pts" },
 	"purple_gut": { "name": "Purple Gut", "kind": "color", "hue": -0.235, "frames": [], "unlocked": false, "unlock": "Pipe Dream: 20 pts" },
-	"mystery_decor_1": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
-	"mystery_decor_2": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
+	"bunting": { "name": "Bunting", "kind": "complement", "frames": ["res://textures/pet/decor/bunting-1.png", "res://textures/pet/decor/bunting-2.png"], "unlocked": false, "unlock": "Lucky Pinch" },
+	"golden_gut": { "name": "Golden Gut", "kind": "color", "hue": 0.13, "frames": [], "unlocked": false, "unlock": "Lucky Pinch" },
+	"mint_gut": { "name": "Mint Gut", "kind": "color", "hue": 0.44, "frames": [], "unlocked": false, "unlock": "Lucky Pinch" },
 	"mystery_decor_3": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 	"mystery_decor_4": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 }
-const DECOR_ORDER := ["none", "fairy_lights", "purple_gut", "mystery_decor_1", "mystery_decor_2", "mystery_decor_3", "mystery_decor_4"]
+const DECOR_ORDER := ["none", "fairy_lights", "purple_gut", "bunting", "golden_gut", "mint_gut", "mystery_decor_3", "mystery_decor_4"]
+
+## Only won from the LUCKY PINCH claw machine: one capsule each
+const LUCKY_ITEMS := [
+	["accessories", "scarf"], ["accessories", "headphones"],
+	["backgrounds", "bubbles"], ["backgrounds", "lilac"],
+	["decor", "bunting"], ["decor", "golden_gut"], ["decor", "mint_gut"],
+]
 
 var owned := { "backgrounds": [], "accessories": [], "decor": [] }
 var equipped_background := DEFAULT_BACKGROUND
