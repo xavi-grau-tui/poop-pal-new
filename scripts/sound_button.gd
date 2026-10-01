@@ -52,6 +52,7 @@ func _gui_input(event):
 			if event.pressed:
 				gs.current_game.on_sound_button_pressed()
 				Input.vibrate_handheld(15)
+			show_held(event.pressed)
 			accept_event()
 			return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -60,6 +61,14 @@ func _gui_input(event):
 			click_sound.stop()
 			click_sound.play()
 		Input.vibrate_handheld(25)
+
+## Game-control mode (Tummy Tunes): the button goes down while held and back up on release,
+## like the other buttons, instead of latching mute on/off
+func show_held(held: bool) -> void:
+	if held:
+		texture_normal = sound_off_texture
+	else:
+		update_visual()
 
 # 🔁 Used by forward button to untoggle sound
 func force_enable_sound():

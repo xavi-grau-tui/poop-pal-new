@@ -253,6 +253,9 @@ func freeze() -> void:
 	if song:
 		song.stop()
 
+func _exit_tree() -> void:
+	_show_speaker_held(false)
+
 func end_game() -> void:
 	if song and not finished:
 		song.stop()
@@ -291,8 +294,18 @@ func _input(event: InputEvent) -> void:
 		if lane >= 0:
 			_touch_lane[event.index] = lane
 			_press(lane)
+			if lane == 0:
+				_show_speaker_held(true)
 	else:
+		if _touch_lane.get(event.index, -1) == 0:
+			_show_speaker_held(false)
 		_touch_lane.erase(event.index)
+
+## The speaker button looks pressed while its lane is held (any finger, or the A / Left key)
+func _show_speaker_held(held: bool) -> void:
+	var b = get_node_or_null("/root/PoopPal/Main UI/SoundButtons/SoundButton")
+	if b and b.has_method("show_held"):
+		b.show_held(held)
 
 func _lane_at(screen_pos: Vector2) -> int:
 	var paths := ["/root/PoopPal/Main UI/SoundButtons/SoundButton", "/root/PoopPal/Main UI/MainButton", "/root/PoopPal/Main UI/SoundButtons/ForwardButton"]
@@ -308,6 +321,8 @@ func _read_keys() -> void:
 		var down := Input.is_key_pressed(k)
 		if down and not _keys.get(k, false):
 			_press(map[k])
+		if map[k] == 0 and down != _keys.get(k, false):
+			_show_speaker_held(down)
 		_keys[k] = down
 
 # ================================================================== NODES / FX
