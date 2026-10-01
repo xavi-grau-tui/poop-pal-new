@@ -84,7 +84,7 @@ var banner: Label
 var rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
-	game_music_path = "res://sounds/music/Johann Sebastian Bach - Prelude 1_ BWV 846 [Well Tempered Clavier] [8 bits].mp3"
+	game_music_path = "res://sounds/music/Pixel Pulse.mp3"
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	tex["paddle"] = load("res://textures/minigames/break/paddle.png")
 	for c in COLORS.values():
