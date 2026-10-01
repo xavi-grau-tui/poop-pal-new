@@ -14,6 +14,7 @@ var hold_timer         := 0.0
 var filling            := false
 var selected_doughnut  : TextureProgressBar = null
 var _flushing          := false
+var _confirming        := false   # a choice was just confirmed: ignore taps until the menu has closed
 var _press_id          := 0       # each press gets its own id, so a quick tap's timer can't hijack the next press
 
 func _ready() -> void:
@@ -33,6 +34,8 @@ func _gui_input(event: InputEvent) -> void:
 				_route_to_minigame("on_main_button_pressed")
 				return
 
+			if _confirming:
+				return
 			was_pressed       = true
 			_press_id        += 1
 			var my_press      := _press_id
@@ -127,6 +130,7 @@ func _process(delta: float) -> void:
 
 		# this press is used up: letting go now must not also count as a tap (= next option)
 		was_pressed = false
+		_confirming = true
 		var sel = _get_selected_option_node()
 		# A menu can refuse before anything plays (e.g. DRESS UP with no pal yet):
 		# a very soft error blip instead of the OK sound
@@ -134,15 +138,18 @@ func _process(delta: float) -> void:
 		if sel and menu and menu.has_method("can_confirm") and not menu.can_confirm(sel):
 			_play_sfx("res://sounds/fx/error.mp3", -22.0, 1.25)
 			_reset_hold()
+			_confirming = false
 			return
 		if sel and sel.has_node("ConfirmSound"):
 			var csp : AudioStreamPlayer2D = sel.get_node("ConfirmSound")
 			if csp.stream:
 				csp.play()
-				await csp.finished
+				# (a timer, not csp.finished: if the sound were cut off the button would stay locked)
+				await get_tree().create_timer(csp.stream.get_length()).timeout
 
 		_handle_hold_confirm(sel)
 		_reset_hold()
+		_confirming = false
 
 # ------------------------------------------------------------------ HOLD CONFIRM DISPATCH
 func _handle_hold_confirm(sel: Node) -> void:
