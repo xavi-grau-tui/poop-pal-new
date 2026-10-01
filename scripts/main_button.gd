@@ -14,6 +14,7 @@ var hold_timer         := 0.0
 var filling            := false
 var selected_doughnut  : TextureProgressBar = null
 var _flushing          := false
+var _press_id          := 0       # each press gets its own id, so a quick tap's timer can't hijack the next press
 
 func _ready() -> void:
 	toggle_mode = false
@@ -33,6 +34,8 @@ func _gui_input(event: InputEvent) -> void:
 				return
 
 			was_pressed       = true
+			_press_id        += 1
+			var my_press      := _press_id
 			hold_timer        = 0.0
 			filling           = false
 			selected_doughnut = _get_selected_doughnut()
@@ -43,7 +46,7 @@ func _gui_input(event: InputEvent) -> void:
 			Input.vibrate_handheld(15)
 
 			await get_tree().create_timer(0.3).timeout
-			if was_pressed:
+			if was_pressed and my_press == _press_id:
 				# Don't start filling for locked games
 				if _is_game_menu_active() and not _is_current_game_unlocked():
 					_reset_hold()
@@ -122,6 +125,8 @@ func _process(delta: float) -> void:
 	if hold_timer >= hold_duration:
 		filling = false
 
+		# this press is used up: letting go now must not also count as a tap (= next option)
+		was_pressed = false
 		var sel = _get_selected_option_node()
 		# A menu can refuse before anything plays (e.g. DRESS UP with no pal yet):
 		# a very soft error blip instead of the OK sound
