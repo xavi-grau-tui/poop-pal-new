@@ -93,7 +93,7 @@ var _key_jets := [false, false]
 var _touch_jets := {}
 
 func _ready() -> void:
-	game_music_path = "res://sounds/music/Frédéric Chopin - Nocturne： Op. 9 No. 2 [8 bits].mp3"
+	game_music_path = "res://sounds/music/Underwater Arpeggio.mp3"
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	for n in ["tank", "cup_rim", "cup_net", "nozzle", "bubble_big", "bubble_small"]:
 		tex[n] = load("res://textures/minigames/splash/%s.png" % n)
