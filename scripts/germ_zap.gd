@@ -62,7 +62,7 @@ var banner: Label
 var rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
-	game_music_path = "res://sounds/music/M.T. - Hoffnungslos [8 bits].mp3"
+	game_music_path = "res://sounds/music/Bit-Crushed Dash.mp3"
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	for kind in TYPES:
 		for f in [1, 2]:
