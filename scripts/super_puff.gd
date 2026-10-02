@@ -249,7 +249,8 @@ func _process(delta: float) -> void:
 	if not is_running:
 		return
 
-	_update_player(delta)
+	if not rewinding:
+		_update_player(delta)
 	_update_obstacles(delta)
 	if not rewinding:
 		_spawn_obstacles(delta)
@@ -258,7 +259,7 @@ func _process(delta: float) -> void:
 		player.modulate.a = 0.35 if int(invuln * 14.0) % 2 == 0 else 1.0
 		if invuln <= 0.0:
 			player.modulate.a = 1.0
-	else:
+	elif not rewinding:                   # (during the boing roll-back the pipe is moving away)
 		_check_collisions()
 	score_label.text = str(score)
 	if DEBUG_HITBOX:
@@ -397,7 +398,8 @@ func _check_collisions() -> void:
 		if player_rect.intersects(top_rect) or player_rect.intersects(bottom_rect):
 			if splash_ready and not obs.get("bounced", false):
 				obs["bounced"] = true
-				_splash(top.position.x, player_rect)
+				# (the middle of this pipe's gap: the pal is put back in line with it)
+				_splash(top.position.x, player_rect, (top_rect.end.y + bottom_rect.position.y) / 2.0)
 				return
 			end_game()
 			return
@@ -428,7 +430,7 @@ func _setup_boost() -> void:
 
 ## Boing: the pal squashes against the pipe and the view rolls back smoothly, so the same
 ## gap comes again. The status stays (it's water, not an extra life).
-func _splash(pipe_x: float, player_rect: Rect2) -> void:
+func _splash(pipe_x: float, player_rect: Rect2, gap_y: float) -> void:
 	var push := maxf(0.0, player_rect.end.x + 150.0 - pipe_x)
 	rewinding = true
 	world_shift = 0.0
@@ -439,7 +441,12 @@ func _splash(pipe_x: float, player_rect: Rect2) -> void:
 		rewinding = false
 		world_shift = 0.0
 		_shift_applied = 0.0)
-	player_vy = -120.0                  # (no immunity: the pipe is solid again for the second try)
+	# while the view rolls back the pal floats to the middle of the gap it hit, so the second
+	# try is a real one whether it hit the top pipe or the one below it (no immunity: the
+	# pipe is solid again)
+	player_vy = 0.0
+	var lift := create_tween()
+	lift.tween_property(player, "position:y", gap_y - HITBOX_OFFSET.y, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	# boing: squash against the pipe, then spring back
 	var base: Vector2 = player.get_meta("base_scale", player.scale)
 	player.set_meta("base_scale", base)

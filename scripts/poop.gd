@@ -88,8 +88,10 @@ func _start_breathing():
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	breathing_tween.set_loops()
 
+var _squish: Tween          # the little squish of each rub stroke
+
 func _stop_all_tweens():
-	for t in [breathing_tween, blink_tween, fx_tween]:
+	for t in [breathing_tween, blink_tween, fx_tween, _squish]:
 		if t:
 			t.kill()
 
@@ -154,6 +156,9 @@ func _input(event: InputEvent) -> void:
 func _can_be_touched() -> bool:
 	if not PetState.has_poop() or _tickling or _transforming or flush_charge > 0.0 or modulate.a < 0.5:
 		return false
+	# digesting: an evolution may come right after, a tickle would get in its way
+	if FoodRainSpawner.is_locked or DrinkWaterfallSpawner.is_locked:
+		return false
 	if GameScreen.is_active or not get_parent().visible:
 		return false
 	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
@@ -168,9 +173,11 @@ func _on_stroke() -> void:
 		_rub_times.pop_front()
 	# every stroke gives a tiny squish, so the pal feels touched
 	if not (fx_tween and fx_tween.is_running()):
-		var t := create_tween()
-		t.tween_property(self, "scale", base_scale * Vector2(1.06, 0.95), 0.05)
-		t.tween_property(self, "scale", base_scale, 0.08)
+		if _squish:
+			_squish.kill()
+		_squish = create_tween()
+		_squish.tween_property(self, "scale", base_scale * Vector2(1.06, 0.95), 0.05)
+		_squish.tween_property(self, "scale", base_scale, 0.08)
 	if _rub_times.size() >= TICKLE_STROKES and now >= _tickle_ready_at:
 		_rub_times.clear()
 		_tickle()
@@ -363,6 +370,11 @@ func _play_hatch() -> void:
 	_transforming = true
 	remove_meta("poking")
 	_stop_all_tweens()
+	# (a tickle / poke that was still going: put the pal back in its spot first)
+	_tickling = false
+	_rub_active = false
+	position = base_position
+	rotation = 0.0
 	_hide_mystery()
 	sprite_frames = PetState.build_sprite_frames()
 	play("idle")
@@ -421,6 +433,11 @@ func _play_evolve() -> void:
 	_transforming = true
 	remove_meta("poking")
 	_stop_all_tweens()
+	# (a tickle / poke that was still going: put the pal back in its spot first)
+	_tickling = false
+	_rub_active = false
+	position = base_position
+	rotation = 0.0
 	scale = base_scale
 	modulate = Color(1, 1, 1, 1)
 

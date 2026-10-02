@@ -325,7 +325,8 @@ func _update_things(delta: float, dashing: bool) -> void:
 			continue
 		elif splash_ready and not t.get("bounced", false):
 			t["bounced"] = true
-			_boing(t["x"] - PLAYER_X + 170.0)
+			# push the whole obstacle back ahead of the pal (also when it came down onto it)
+			_boing(maxf(t["x"] - PLAYER_X + 170.0, PLAYER_X + BODY_W / 2.0 + 110.0 - (t["x"] - t["w"] / 2.0)))
 			return
 		else:
 			_die("Ouch!")

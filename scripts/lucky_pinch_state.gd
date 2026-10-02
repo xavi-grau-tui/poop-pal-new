@@ -54,32 +54,42 @@ func _on_fed(_food: Dictionary) -> void:
 	if not go:
 		return
 	await get_tree().create_timer(VISIT_DELAY).timeout
-	# the claw only comes to a quiet pet screen: no menu open (or sliding), nothing being
-	# eaten or drunk, no game running. Closing a menu by force mid-slide broke the menus.
-	while not _pet_screen_idle():
-		await get_tree().create_timer(0.5).timeout
+	# the bonus comes right away; it only waits for a moment it can't break: a menu still
+	# sliding, food or a drink going down, or a minigame being played
+	while not _can_start_now():
+		await get_tree().create_timer(0.3).timeout
 	if not pending:
 		start()
 
-func _pet_screen_idle() -> bool:
+func _can_start_now() -> bool:
 	if GameScreen.is_active or FoodRainSpawner.is_locked or DrinkWaterfallSpawner.is_locked:
 		return false
-	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
-		if b.button_pressed:
-			return false
 	var mgr = get_node_or_null("/root/PoopPal/Main UI/MenuManager")
-	if mgr and (mgr.pending_menu != null or mgr.current_menu != mgr.pet_view):
+	if mgr and (mgr.pending_menu != null or mgr.get("returning")):
 		return false
 	return true
+
+## An open menu (food, drinks, settings, games) closes the normal way, like after eating
+func _close_open_menu() -> bool:
+	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
+		if b.button_pressed:
+			var mb = get_node_or_null("/root/PoopPal/Main UI/MainButton")
+			if mb and mb.has_method("_untoggle_current_menu"):
+				mb._reset_hold()             # (a hold on an option is cancelled)
+				mb._untoggle_current_menu()
+				return true
+	return false
 
 func start() -> void:
 	if pit.is_empty():
 		refill()
 	pending = true
-	visiting = true
+	visiting = true                   # (every menu button is locked from now on)
 	tries = TRIES
 	prizes.clear()
 	changed.emit(true)
+	if _close_open_menu():
+		await get_tree().create_timer(0.45).timeout     # the menu slides away first
 	_play_visit()
 
 func use_try() -> void:

@@ -67,9 +67,10 @@ func _gui_input(event: InputEvent) -> void:
 					release_sound.play()
 				Input.vibrate_handheld(15)
 
-				# in a menu, letting go before the choice confirms is still a tap (next option);
-				# on the pet screen a half-done flush hold just cancels
-				if not filling or _any_menu_toggled():
+				# in a menu, letting go before the selection ring shows is still a tap (next
+				# option); once the ring is filling, letting go early keeps the same option.
+				# On the pet screen a half-done flush hold just cancels.
+				if not filling or (_any_menu_toggled() and hold_timer < fill_start_delay):
 					_handle_main_button_press()
 
 			_reset_hold()
