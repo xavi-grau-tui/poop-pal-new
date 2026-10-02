@@ -147,7 +147,7 @@ func _on_bonus_visit_finished() -> void:
 
 func _on_bonus_changed(on: bool) -> void:
 	if on:
-		start_attention()                # blinks from the very moment the bonus appears
+		start_attention()                # blinks with the claw's arrival
 	else:
 		stop_attention()
 
@@ -198,6 +198,9 @@ func blink_hint(times := 3, step := 0.12) -> void:
 	_blink_tween.tween_callback(func():
 		texture_pressed = pressed_texture
 		texture_normal = pressed_texture if button_pressed else normal_texture)
+
+func is_blinking() -> bool:
+	return _blink_tween != null and _blink_tween.is_running()
 
 func _show(tex: Texture2D) -> void:
 	texture_normal = tex

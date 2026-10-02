@@ -95,6 +95,9 @@ func show_message(text: String, secs := MESSAGE_TIME) -> void:
 		_msg_tween.tween_interval(0.15)
 	_msg_tween.tween_callback(_end_message)
 
+func is_showing_message() -> bool:
+	return _msg_label != null and _msg_label.visible
+
 func _end_message() -> void:
 	_msg_label.visible = false
 	_msg_label.modulate.a = 1.0

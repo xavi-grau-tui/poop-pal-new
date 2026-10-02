@@ -13,12 +13,12 @@ extends Node
 
 signal changed(pending: bool)
 signal tries_changed(tries: int)
-signal visit_finished                 # the claw is in the pet cam: Games can be opened
+signal visit_finished                 # the claw has gone back up: Games can be opened
 
 const GAME_INDEX := 100               # its "page" for GameScreen (not a regular card)
 const TRIES := 2
 const CHANCE := 0.2                   # after each meal (never two meals in a row)
-const VISIT_DELAY := 1.6              # after the meal: the hatch / evolve animation ends first
+const VISIT_DELAY := 2.2              # (by then a new pal's PAL UNLOCKED! has started; it plays out first)
 ## Prototype/testing: the first meal after every launch always brings the claw
 const TEST_FIRST_MEAL := true
 
@@ -73,24 +73,40 @@ func _close_open_menu() -> bool:
 				return true
 	return false
 
-## The bonus begins: from this moment everything is locked (only Games, once the claw is
-## here) and the Games button blinks. The claw comes down as soon as the pal has finished
-## hatching / evolving.
+## The bonus begins. From this moment every button is locked. Once the pal is done (its
+## hatch / evolve and a PAL UNLOCKED! with the gear blink, if any, all play out first) the
+## BONUS! comes all at once: the claw drops in, the LCD says BONUS!, the Games button blinks.
+## Buttons stay locked until the claw has gone back up; then only Games works.
 func start() -> void:
 	if pit.is_empty():
 		refill()
 	pending = true
-	visiting = true                   # (every menu button is locked from now on)
+	visiting = true                   # (every button is locked from now on)
 	tries = TRIES
 	prizes.clear()
-	changed.emit(true)
 	await get_tree().create_timer(VISIT_DELAY).timeout
-	# (only waits for a moment it can't break: a menu still sliding, food going down, a game)
-	while not _can_start_now():
-		await get_tree().create_timer(0.2).timeout
+	# waits for a moment it can't break (a menu sliding, food going down, a game) and for
+	# the pal's own show to end (transforming, an LCD message, a button blinking)
+	var quiet := 0.0
+	while quiet < 0.3:
+		await get_tree().create_timer(0.1).timeout
+		quiet = quiet + 0.1 if (_can_start_now() and _pal_show_over()) else 0.0
 	if _close_open_menu():
 		await get_tree().create_timer(0.45).timeout     # the menu slides away first
+	changed.emit(true)                # the Games button starts blinking, with the claw
 	_play_visit()
+
+func _pal_show_over() -> bool:
+	var lcd = get_node_or_null("/root/PoopPal/Main UI/LCD Screen")
+	if lcd and lcd.has_method("is_showing_message") and lcd.is_showing_message():
+		return false
+	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
+		if b.has_method("is_blinking") and b.is_blinking():
+			return false
+	var poop = get_node_or_null("/root/PoopPal/Main UI/PetView/Poop")
+	if poop and poop.get("_transforming"):
+		return false
+	return true
 
 func use_try() -> void:
 	tries = maxi(0, tries - 1)

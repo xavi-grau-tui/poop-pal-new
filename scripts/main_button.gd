@@ -36,6 +36,8 @@ func _gui_input(event: InputEvent) -> void:
 
 			if _confirming:
 				return
+			if LuckyPinch.visiting:
+				return                       # (LUCKY PINCH arriving: nothing to press)
 			was_pressed       = true
 			_press_id        += 1
 			var my_press      := _press_id

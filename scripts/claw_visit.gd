@@ -52,7 +52,6 @@ func play(poop: Node2D) -> void:
 	t.tween_callback(queue_free)
 
 func _arrived(poop: Node2D) -> void:
-	LuckyPinch.end_visit()                # the claw is here: Games can be opened now
 	var lcd := get_node_or_null("/root/PoopPal/Main UI/LCD Screen")
 	if lcd and lcd.has_method("show_message"):
 		lcd.show_message("BONUS!")
