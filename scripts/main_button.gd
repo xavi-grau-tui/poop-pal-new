@@ -102,8 +102,8 @@ func _process(delta: float) -> void:
 
 	# Pet view, no menu open: hold to flush the poop
 	if not _any_menu_toggled():
-		if not PetState.has_poop() or _flushing or FoodRainSpawner.is_locked or DrinkWaterfallSpawner.is_locked:
-			return
+		if not PetState.has_poop() or _flushing or FoodRainSpawner.is_locked or DrinkWaterfallSpawner.is_locked or LuckyPinch.pending:
+			return                       # (no flushing while a LUCKY PINCH bonus waits)
 		var poop = get_node_or_null("../PetView/Poop")
 		var charge = clamp((hold_timer - fill_start_delay) / (flush_hold_duration - fill_start_delay), 0.0, 1.0)
 		if poop and poop.has_method("set_flush_charge"):

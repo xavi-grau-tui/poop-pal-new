@@ -146,7 +146,9 @@ func _on_bonus_visit_finished() -> void:
 		start_attention()
 
 func _on_bonus_changed(on: bool) -> void:
-	if not on:
+	if on:
+		start_attention()                # blinks from the very moment the bonus appears
+	else:
 		stop_attention()
 
 ## Refused because a LUCKY PINCH bonus is waiting: a soft error blip (the Games button is
