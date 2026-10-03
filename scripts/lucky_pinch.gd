@@ -73,6 +73,7 @@ var carriage: Sprite2D
 var cable: Line2D
 var shadow: Sprite2D
 var prize_layer: Node2D
+var window_clip: Control               # the flap's window: the prize capsule shows only inside it
 var chute_front: Control
 var hint: Label
 var tries_label: Label
@@ -302,10 +303,10 @@ func _reveal_prize(capsule_tex: Texture2D) -> void:
 	cap.texture = capsule_tex
 	cap.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	cap.scale = Vector2(5, 5)
-	cap.position = CHUTE_WINDOW.get_center() + Vector2(0, -60)
-	prize_layer.add_child(cap)
+	cap.position = CHUTE_WINDOW.size / 2.0 + Vector2(0, -60)   # (in the window: it drops in from above)
+	window_clip.add_child(cap)
 	var t := create_tween()
-	t.tween_property(cap, "position:y", CHUTE_WINDOW.get_center().y + 10, 0.4).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	t.tween_property(cap, "position:y", CHUTE_WINDOW.size.y / 2.0 + 10, 0.4).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	t.tween_interval(0.3)
 	t.tween_property(cap, "scale", Vector2(6.4, 6.4), 0.12)
 	t.tween_callback(func():
@@ -505,6 +506,12 @@ func _create_nodes() -> void:
 	chute_front.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	chute_front.draw.connect(_draw_prize_box.bind(chute_front))
 	add_child(chute_front)
+	window_clip = Control.new()
+	window_clip.position = CHUTE_WINDOW.position
+	window_clip.size = CHUTE_WINDOW.size
+	window_clip.clip_contents = true
+	window_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(window_clip)
 	prize_layer = Node2D.new()
 	add_child(prize_layer)
 	# the glass flap, over the prize
