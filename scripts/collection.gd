@@ -26,6 +26,8 @@ const REWARDS := [
 	{ "game": 0, "score": 15, "category": "accessories", "id": "sunglasses" },
 	{ "game": 0, "score": 20, "category": "decor", "id": "purple_gut" },
 	{ "game": 0, "score": 30, "category": "backgrounds", "id": "pastel_yellow" },
+	# Tilt Maze: levels cleared in one run (the unlock path gets reworked later)
+	{ "game": 1, "levels": 2, "category": "accessories", "id": "round_glasses" },
 ]
 
 ## "layers": [far layer (CloudA), near layer (CloudB)] — drop-in replacements for the cloud textures.
@@ -71,10 +73,10 @@ const ACCESSORIES := {
 	"sunglasses": { "name": "Sunglasses", "dir": "res://textures/pet/accessories/sunglasses/", "unlocked": false, "unlock": "Pipe Dream: 15 pts" },
 	"scarf": { "name": "Scarf", "dir": "res://textures/pet/accessories/scarf/", "unlocked": false, "unlock": "Lucky Pinch" },
 	"headphones": { "name": "Headphones", "dir": "res://textures/pet/accessories/headphones/", "unlocked": false, "unlock": "Lucky Pinch" },
-	"mystery_acc_3": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
+	"round_glasses": { "name": "Round Glasses", "dir": "res://textures/pet/accessories/round_glasses/", "unlocked": false, "unlock": "Tilt Maze: 2 levels" },
 	"mystery_acc_4": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
 }
-const ACCESSORY_ORDER := ["none", "sunglasses", "scarf", "headphones", "mystery_acc_3", "mystery_acc_4"]
+const ACCESSORY_ORDER := ["none", "sunglasses", "round_glasses", "scarf", "headphones", "mystery_acc_4"]
 
 ## Gut decor, two kinds that combine: one "complement" (an overlay hung on the gut; "frames"
 ## are the size of intestine-front.png, cycled to animate) and one "color" (a hue shift of
@@ -145,7 +147,13 @@ func unlock(category: String, id: String) -> void:
 ## Called by every minigame as points come in (live, mid-round)
 func report_game_score(game: int, score: int) -> void:
 	for r in REWARDS:
-		if r["game"] == game and score >= r["score"] and not is_owned(r["category"], r["id"]):
+		if r["game"] == game and r.has("score") and score >= r["score"] and not is_owned(r["category"], r["id"]):
+			unlock(r["category"], r["id"])
+
+## Level-based rewards (Tilt Maze): `levels` = levels cleared in this run
+func report_game_levels(game: int, levels: int) -> void:
+	for r in REWARDS:
+		if r["game"] == game and r.has("levels") and levels >= r["levels"] and not is_owned(r["category"], r["id"]):
 			unlock(r["category"], r["id"])
 
 func has_new(category: String) -> bool:

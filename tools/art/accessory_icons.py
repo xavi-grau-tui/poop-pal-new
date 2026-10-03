@@ -37,15 +37,28 @@ def arc(cx, cy, rx, ry, a0, a1, n=16):
 
 
 def sunglasses(c):
-    # temples, bridge and the brow bar behind the lenses
-    bar = tube(c, [(3, 12.5), (29, 12.5)], 1.1)
+    # flat-topped lenses with round bottoms (like the worn ones), a bold top bar, short arms
+    for cx in (9.3, 22.7):
+        rim = field(c, [(cx, 14.5, 7.0, 8.6)])
+        material(c, height(rim, .5), (rim > 1) & (c.y > 11.2), FRAME, bump=4, spec_amt=.5, grain=.03)
+        lens = field(c, [(cx, 14.5, 5.6, 7.2)])
+        lm = (lens > 1) & (c.y > 12.6)
+        material(c, height(lens, .5), lm, LENS, bump=3, spec_amt=.8, spec_pow=30, grain=.02, ao=.05)
+    bar = tube(c, [(2.5, 12.2), (29.5, 12.2)], 1.4)
     material(c, height(bar, .5), bar > 1, FRAME, bump=3, spec_amt=.5, grain=.03)
-    for cx in (9.5, 22.5):
-        rim = field(c, [(cx, 17, 6.4, 5.4)])
+    draw_lines(c, [[(5.8, 19.5), (9.2, 14.2)], [(19.2, 19.5), (22.6, 14.2)]], (230, 224, 248), 1.2)
+
+
+def round_glasses(c):
+    bridge = tube(c, arc(16, 18.5, 3.2, 2.6, math.pi * 1.1, math.pi * 1.9, 10), .9)
+    material(c, height(bridge, .5), bridge > 1, FRAME, bump=3, spec_amt=.5, grain=.03)
+    for cx in (8.5, 23.5):
+        rim = field(c, [(cx, 18, 6.6, 6.6)])
         material(c, height(rim, .5), rim > 1, FRAME, bump=4, spec_amt=.5, grain=.03)
-        lens = field(c, [(cx, 17.2, 5.0, 4.1)])
-        material(c, height(lens, .5), lens > 1, LENS, bump=4, spec_amt=.9, spec_pow=30, grain=.02, ao=.1)
-    draw_lines(c, [[(6.5, 16.5), (9, 14.2)], [(19.5, 16.5), (22, 14.2)]], (220, 214, 240), 1.1)
+        lens = field(c, [(cx, 18, 5.2, 5.2)])
+        material(c, height(lens, .5), lens > 1, [(120, 150, 176), (160, 196, 222), (196, 228, 248), (230, 244, 255), (255, 255, 255)],
+                 bump=3, spec_amt=.9, spec_pow=30, grain=.02, ao=.05)
+    draw_lines(c, [[(5.5, 18), (7.5, 15)], [(20.5, 18), (22.5, 15)]], (255, 255, 255), 1.1)
 
 
 def scarf(c):
@@ -81,7 +94,7 @@ def none(c):
     material(c, height(bar, .5), bar > 1, WOOD, bump=4, spec_amt=.4, grain=.08)
 
 
-ICONS = {'none': none, 'sunglasses': sunglasses, 'scarf': scarf, 'headphones': headphones}
+ICONS = {'none': none, 'sunglasses': sunglasses, 'round_glasses': round_glasses, 'scarf': scarf, 'headphones': headphones}
 
 if __name__ == '__main__':
     out = []

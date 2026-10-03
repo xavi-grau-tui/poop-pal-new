@@ -846,6 +846,7 @@ func _check_finish() -> void:
 	vel = Vector2.ZERO
 	var bonus := 50 + maxi(0, 60 - int(level_time)) * 2
 	add_score(bonus)
+	Collection.report_game_levels(1, level)          # (levels cleared so far this run)
 	_sfx("res://sounds/fx/water-pouring-98795.mp3", -12.0, 1.4)
 	Input.vibrate_handheld(60)
 	# Flushed! Spiral into the swirl
