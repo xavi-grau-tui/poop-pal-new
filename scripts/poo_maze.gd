@@ -560,71 +560,76 @@ func _refresh_lives() -> void:
 
 # ================================================================== GENERATED TEXTURES
 
-## Your pal, curled up and rolling: its own sprite redrawn on the board's chunky 16x16 grid
-## (each new pixel picks from its patch of the sprite: the dark bits like eyes and mouth win,
-## so the face stays readable), with a dark outline. Works for every pal.
+## Your pal as a ball, drawn like the pink checkpoint balls (two tones, a shine, a dark
+## outline) but a bit smaller, in your pal's colours: its body colour, a cap in its topping's
+## colour (leaf, flame, frosting...) and its little face. Read from the pal's own sprite, so
+## it works for every pal.
 func _make_ball_texture() -> Texture2D:
-	var path := "res://textures/minigames/balls/classic.png"
+	var body := Color8(196, 120, 80)
+	var cap := Color(0, 0, 0, 0)
 	if PetState.has_poop():
-		path = PetState.FORMS[PetState.form_id]["frames"][0]
-	var src: Image = (load(path) as Texture2D).get_image()
-	if src.is_compressed():
-		src.decompress()
-	src.convert(Image.FORMAT_RGBA8)
-	var used := src.get_used_rect()
-	var inner := BALL_ART - 2                                 # (room for the outline)
-	# squeezed into a round ball (wide pals get taller), the face stays in the middle
-	var kx := used.size.x / float(inner)
-	var ky := used.size.y / float(inner)
-	var w := inner
-	var h := inner
-	var ox := 1
-	var oy := 1
-	var c0 := Vector2(BALL_ART / 2.0, BALL_ART / 2.0)
-	var img := Image.create(BALL_ART, BALL_ART, false, Image.FORMAT_RGBA8)
-	for ty in h:
-		for tx in w:
-			if Vector2(ox + tx + 0.5, oy + ty + 0.5).distance_to(c0) > inner / 2.0 + 0.3:
-				continue                                          # (a round ball)
-			var sx0 := used.position.x + int(tx * kx)
-			var sy0 := used.position.y + int(ty * ky)
-			var sx1 := used.position.x + int((tx + 1) * kx)
-			var sy1 := used.position.y + int((ty + 1) * ky)
-			var total := 0
-			var opaque := 0
-			var dark := 0
-			var sum := Color(0, 0, 0, 0)
-			var darkest := Color(1, 1, 1, 1)
-			for sy in range(sy0, maxi(sy1, sy0 + 1)):
-				for sx in range(sx0, maxi(sx1, sx0 + 1)):
-					total += 1
-					var c := src.get_pixel(sx, sy)
-					if c.a < 0.5:
-						continue
-					opaque += 1
-					sum += c
-					if c.get_luminance() < 0.22:
-						dark += 1
-						if c.get_luminance() < darkest.get_luminance():
-							darkest = c
-			if opaque == 0:
+		var src: Image = (load(PetState.FORMS[PetState.form_id]["frames"][0]) as Texture2D).get_image()
+		if src.is_compressed():
+			src.decompress()
+		src.convert(Image.FORMAT_RGBA8)
+		var used := src.get_used_rect()
+		body = _main_colour(src, Rect2i(used.position.x, used.position.y + used.size.y * 55 / 100, used.size.x, used.size.y * 30 / 100))
+		var top := _main_colour(src, Rect2i(used.position.x, used.position.y, used.size.x, used.size.y * 25 / 100))
+		if _colour_gap(top, body) > 0.18:
+			cap = top
+	var S := BALL_ART
+	var r := 6.5                                       # (the checkpoint balls are 7.5)
+	var c0 := Vector2(S / 2.0, S / 2.0)
+	var light := body.lightened(0.18)
+	var shade := body.darkened(0.12)
+	var ink := body.darkened(0.62)
+	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
+	for y in S:
+		for x in S:
+			var off := Vector2(x + 0.5, y + 0.5) - c0
+			var d := off.length()
+			if d > r:
 				continue
-			var col: Color = darkest if dark * 4 >= opaque else sum / float(opaque)
-			col.a = 1.0
-			img.set_pixel(ox + tx, oy + ty, col)
-	# outline around the shape
-	var out := img.duplicate()
-	for y in BALL_ART:
-		for x in BALL_ART:
-			if img.get_pixel(x, y).a > 0.5:
+			var col := light if off.x + off.y < 0 else shade
+			# the topping as a cap on top, with a wavy edge
+			if cap.a > 0.0 and off.y < -1.5 + (0.8 if int(x) % 2 == 0 else 0.0):
+				col = cap.lightened(0.12) if off.x + off.y < 0 else cap.darkened(0.08)
+			if d > r - 1.1:
+				col = ink
+			img.set_pixel(x, y, col)
+	# shine, eyes and mouth
+	img.set_pixel(int(c0.x) - 3, int(c0.y) - 3, Color(1, 1, 1, 0.9))
+	for ex in [-2, 1]:
+		img.set_pixel(int(c0.x) + ex, int(c0.y), Color8(24, 12, 16))
+		img.set_pixel(int(c0.x) + ex, int(c0.y) + 1, Color8(24, 12, 16))
+	img.set_pixel(int(c0.x), int(c0.y) + 2, Color8(120, 40, 50))
+	img.set_pixel(int(c0.x) - 1, int(c0.y) + 2, Color8(120, 40, 50))
+	return ImageTexture.create_from_image(img)
+
+## The most common (non-outline) colour in a part of the sprite, roughly
+func _main_colour(src: Image, area: Rect2i) -> Color:
+	var counts := {}
+	var sums := {}
+	for y in range(area.position.y, area.end.y):
+		for x in range(area.position.x, area.end.x):
+			var c := src.get_pixel(x, y)
+			if c.a < 0.5 or c.get_luminance() < 0.2:
 				continue
-			for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-				var nx := x + d.x
-				var ny := y + d.y
-				if nx >= 0 and ny >= 0 and nx < BALL_ART and ny < BALL_ART and img.get_pixel(nx, ny).a > 0.5:
-					out.set_pixel(x, y, OUTLINE)
-					break
-	return ImageTexture.create_from_image(out)
+			var key := Vector3i(int(c.r * 6), int(c.g * 6), int(c.b * 6))
+			counts[key] = counts.get(key, 0) + 1
+			sums[key] = sums.get(key, Color(0, 0, 0, 0)) + c
+	var best = null
+	for k in counts:
+		if best == null or counts[k] > counts[best]:
+			best = k
+	if best == null:
+		return Color8(196, 120, 80)
+	var col: Color = sums[best] / float(counts[best])
+	col.a = 1.0
+	return col
+
+func _colour_gap(a: Color, b: Color) -> float:
+	return absf(a.r - b.r) + absf(a.g - b.g) + absf(a.b - b.b)
 
 func _make_swirl_texture() -> Texture2D:
 	## The goal: a little flush swirl.
