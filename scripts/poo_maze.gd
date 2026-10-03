@@ -19,7 +19,8 @@ const ORIGIN := Vector2(27, 26)       # board top-left inside the play area (cen
 # --- Ball physics ---
 const BALL_R := 24.0
 const DETAIL := 4                     # world px per texture px for small sprites (same grid as the board)
-const BALL_ART := 16                  # the ball is drawn on a 16x16 grid (x4 = 64 world px)
+const BALL_ART := 20                  # the pal ball's canvas (a 16 px ball), shown x3
+const BALL_SCALE := 3                 # (a finer grid than the board, for the face details)
 const ACCEL := 1500.0                 # px/s² at full tilt
 const FRICTION := 1.1                 # velocity damping per second
 const MAX_SPEED := 720.0
@@ -91,6 +92,8 @@ func _ready() -> void:
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	ball_texture = _make_ball_texture()
 	_create_static_nodes()
+	intro_text = "Tilt to move your pal"
+	intro_icon = ball_texture
 	super._ready()
 
 func start_game() -> void:
@@ -98,7 +101,6 @@ func start_game() -> void:
 	level = 1
 	lives = LIVES
 	_build_level()
-	_show_banner("Tilt to roll!" if _has_tilt_sensor() else "Arrows / drag to roll", 1.8)
 
 # ================================================================== LEVEL BUILD
 
@@ -115,6 +117,12 @@ func _build_level() -> void:
 	level_time = 0.0
 	state = State.PLAY
 	_refresh_lives()
+	# (drawn right away, also while the how-to card waits)
+	ball.position = ball_pos
+	shadow.position = ball.position + Vector2(8, 20)
+	hud_level.text = "LV %d" % level
+	hud_time.text = "0:00"
+	score_label.text = str(score)
 
 func _generate_maze(rng: RandomNumberGenerator) -> void:
 	tiles.resize(GRID * GRID)
@@ -478,7 +486,7 @@ func _create_static_nodes() -> void:
 
 	ball = Sprite2D.new()
 	ball.texture = ball_texture
-	ball.scale = Vector2(DETAIL, DETAIL)
+	ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
 	ball.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(ball)
 
@@ -560,15 +568,23 @@ func _refresh_lives() -> void:
 
 # ================================================================== GENERATED TEXTURES
 
-## Your pal as a ball, drawn like the pink checkpoint balls (two tones, a shine, a dark
-## outline) but a bit smaller, in your pal's colours: its body colour, a cap in its topping's
-## colour (leaf, flame, frosting...) and its little face. Read from the pal's own sprite, so
-## it works for every pal.
+## Your pal as a ball, drawn like the pink checkpoint balls (shaded, a shine, a dark outline)
+## in your pal's colours: its body colour, a cap in its topping's colour with a family detail
+## (leaf veins, sprinkles, flame tips, lemon dots, cheese drips; rivets, stars, a crown) and
+## its own face (happy, sleepy, ._., angry, evil, dizzy...). Read from the pal's sprite and
+## the evolution data, so it works for every pal.
 func _make_ball_texture() -> Texture2D:
 	var body := Color8(196, 120, 80)
 	var cap := Color(0, 0, 0, 0)
+	var face := "happy"
+	var family := ""
+	var stage := ""
 	if PetState.has_poop():
-		var src: Image = (load(PetState.FORMS[PetState.form_id]["frames"][0]) as Texture2D).get_image()
+		var f: Dictionary = PetState.FORMS[PetState.form_id]
+		face = f.get("face", "happy")
+		family = f.get("family", "")
+		stage = f.get("stage_name", "")
+		var src: Image = (load(f["frames"][0]) as Texture2D).get_image()
 		if src.is_compressed():
 			src.decompress()
 		src.convert(Image.FORMAT_RGBA8)
@@ -578,33 +594,146 @@ func _make_ball_texture() -> Texture2D:
 		if _colour_gap(top, body) > 0.18:
 			cap = top
 	var S := BALL_ART
-	var r := 6.5                                       # (the checkpoint balls are 7.5)
-	var c0 := Vector2(S / 2.0, S / 2.0)
-	var light := body.lightened(0.18)
-	var shade := body.darkened(0.12)
-	var ink := body.darkened(0.62)
+	var c := S / 2                                 # 10: centre pixel
+	var r := 8.0
+	var light := body.lightened(0.22)
+	var mid := body
+	var dark := body.darkened(0.18)
+	var ink := body.darkened(0.65)
 	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
+	var cap_edge := func(x: int) -> float:         # how far down the cap reaches at column x
+		var e := -2.0 + (0.9 if x % 2 == 0 else 0.0)
+		if family == "spicy":
+			e = -2.5 + (1.6 if x % 3 == 1 else 0.0)        # flame tips
+		elif family == "greasy" and (x == c - 4 or x == c + 3):
+			e = 0.5                                          # cheese drips
+		return e
 	for y in S:
 		for x in S:
-			var off := Vector2(x + 0.5, y + 0.5) - c0
+			var off := Vector2(x + 0.5 - c, y + 0.5 - c)
 			var d := off.length()
 			if d > r:
 				continue
-			var col := light if off.x + off.y < 0 else shade
-			# the topping as a cap on top, with a wavy edge
-			if cap.a > 0.0 and off.y < -1.5 + (0.8 if int(x) % 2 == 0 else 0.0):
-				col = cap.lightened(0.12) if off.x + off.y < 0 else cap.darkened(0.08)
+			var lit := off.x + off.y
+			var col := light if lit < -4.0 else (mid if lit < 3.5 else dark)
+			if cap.a > 0.0 and off.y < cap_edge.call(x):
+				col = cap.lightened(0.15) if lit < -3.0 else (cap if lit < 4.0 else cap.darkened(0.12))
 			if d > r - 1.1:
 				col = ink
 			img.set_pixel(x, y, col)
-	# shine, eyes and mouth
-	img.set_pixel(int(c0.x) - 3, int(c0.y) - 3, Color(1, 1, 1, 0.9))
-	for ex in [-2, 1]:
-		img.set_pixel(int(c0.x) + ex, int(c0.y), Color8(24, 12, 16))
-		img.set_pixel(int(c0.x) + ex, int(c0.y) + 1, Color8(24, 12, 16))
-	img.set_pixel(int(c0.x), int(c0.y) + 2, Color8(120, 40, 50))
-	img.set_pixel(int(c0.x) - 1, int(c0.y) + 2, Color8(120, 40, 50))
+	var px := func(x: int, y: int, col: Color) -> void:
+		if x >= 0 and y >= 0 and x < S and y < S and img.get_pixel(x, y).a > 0.0:
+			img.set_pixel(x, y, col)
+	# family details on the cap
+	if cap.a > 0.0:
+		match family:
+			"green":                                   # leaf veins
+				for p in [Vector2i(c - 2, 4), Vector2i(c - 1, 5), Vector2i(c + 1, 4), Vector2i(c + 2, 5), Vector2i(c, 3)]:
+					px.call(p.x, p.y, cap.darkened(0.3))
+			"sweet":                                   # sprinkles
+				var sp := [Color8(110, 190, 235), Color8(255, 205, 60), Color8(120, 200, 100), Color8(255, 250, 220)]
+				var spots := [Vector2i(c - 3, 5), Vector2i(c, 3), Vector2i(c + 2, 5), Vector2i(c - 1, 6), Vector2i(c + 4, 6)]
+				for i in spots.size():
+					px.call(spots[i].x, spots[i].y, sp[i % sp.size()])
+			"spicy":                                   # yellow flame tips
+				for x in S:
+					for y in range(1, 8):
+						if img.get_pixel(x, y).a > 0.0 and img.get_pixel(x, y) != ink:
+							img.set_pixel(x, y, Color8(255, 214, 90))
+							break
+			"sour":                                    # lemon dots
+				for p in [Vector2i(c - 2, 4), Vector2i(c + 2, 4), Vector2i(c, 6)]:
+					px.call(p.x, p.y, Color8(255, 246, 170))
+	if stage == "mutant" and face == "visor":          # tech: rivets + antenna
+		for p in [Vector2i(c - 6, c + 2), Vector2i(c + 5, c + 2)]:
+			px.call(p.x, p.y, Color8(230, 236, 250))
+		img.set_pixel(c, 0, Color8(240, 70, 70))
+		img.set_pixel(c, 1, Color8(70, 74, 90))
+	elif stage == "mutant":                            # cosmic: stars
+		for p in [Vector2i(c - 5, c - 3), Vector2i(c + 4, c + 4), Vector2i(c + 5, c - 2)]:
+			px.call(p.x, p.y, Color8(230, 255, 240))
+	elif stage == "legend":                            # a little gold crown
+		for x in range(c - 3, c + 3):
+			img.set_pixel(x, 1, Color8(240, 196, 60))
+		for x in [c - 3, c - 1, c + 1]:
+			img.set_pixel(x, 0, Color8(255, 226, 110))
+	# shine
+	px.call(c - 5, c - 3, Color(1, 1, 1, 0.95))
+	px.call(c - 4, c - 4, Color(1, 1, 1, 0.95))
+	px.call(c - 5, c - 2, Color(1, 1, 1, 0.6))
+	_ball_face(img, face, c, body)
 	return ImageTexture.create_from_image(img)
+
+## The pal's face on its ball (eyes at c-3 / c+2, mouth below), in its own mood
+func _ball_face(img: Image, face: String, c: int, body: Color) -> void:
+	var ink := Color8(24, 12, 16)
+	var white := Color8(255, 255, 255)
+	var mouth := Color8(120, 40, 50)
+	var blush := Color8(240, 140, 160)
+	var ey := c + 1
+	var put := func(x: int, y: int, col: Color) -> void:
+		img.set_pixel(x, y, col)
+	var eyes := [c - 3, c + 2]
+	match face:
+		"sleepy":
+			for e in eyes:
+				put.call(e - 1, ey, ink); put.call(e, ey + 1, ink); put.call(e + 1, ey, ink)
+			put.call(c - 1, ey + 3, mouth); put.call(c, ey + 3, mouth)
+		"neutral":
+			for e in eyes:
+				put.call(e, ey, ink)
+			put.call(c - 1, ey + 3, ink); put.call(c, ey + 3, ink)
+		"sad":
+			for e in eyes:
+				put.call(e, ey, ink); put.call(e, ey + 1, ink)
+			put.call(eyes[0] - 1, ey - 2, ink); put.call(eyes[1] + 1, ey - 2, ink)      # brows up
+			put.call(c - 1, ey + 3, ink); put.call(c, ey + 3, ink)
+			put.call(c - 2, ey + 4, ink); put.call(c + 1, ey + 4, ink)                 # frown
+			put.call(eyes[1] + 1, ey + 2, Color8(130, 190, 240))                       # a tear
+		"angry":
+			for e in eyes:
+				put.call(e, ey, ink); put.call(e, ey + 1, ink)
+			put.call(eyes[0] - 1, ey - 2, ink); put.call(eyes[0], ey - 1, ink)          # brows down
+			put.call(eyes[1] + 1, ey - 2, ink); put.call(eyes[1], ey - 1, ink)
+			for x in range(c - 2, c + 2):
+				put.call(x, ey + 3, ink)
+		"evil":
+			for e in eyes:
+				put.call(e - 1, ey, ink); put.call(e, ey, ink)                            # half-closed
+			put.call(eyes[0] - 1, ey - 1, ink); put.call(eyes[1] + 1, ey - 1, ink)
+			for x in range(c - 2, c + 3):
+				put.call(x, ey + 3, ink)
+			put.call(c - 3, ey + 2, ink); put.call(c + 3, ey + 2, ink)                 # grin
+			put.call(c + 1, ey + 4, white)                                             # fang
+		"dizzy":
+			for e in eyes:
+				put.call(e - 1, ey - 1, ink); put.call(e + 1, ey + 1, ink); put.call(e, ey, ink)
+				put.call(e + 1, ey - 1, ink); put.call(e - 1, ey + 1, ink)
+			put.call(c - 2, ey + 3, ink); put.call(c - 1, ey + 4, ink); put.call(c, ey + 3, ink); put.call(c + 1, ey + 4, ink)
+		"visor":
+			for x in range(c - 5, c + 5):
+				put.call(x, ey, Color8(20, 24, 34)); put.call(x, ey + 1, Color8(20, 24, 34))
+			for e in eyes:
+				put.call(e, ey, Color8(120, 255, 200)); put.call(e + 1, ey, Color8(120, 255, 200))
+		"three":
+			for e in eyes:
+				put.call(e, ey, ink); put.call(e, ey + 1, ink)
+			put.call(c - 1, ey - 3, ink); put.call(c - 1, ey - 2, ink)
+			put.call(c - 1, ey + 3, mouth); put.call(c, ey + 3, mouth)
+		"stars":
+			for e in eyes:
+				put.call(e, ey, Color8(255, 214, 80)); put.call(e - 1, ey, ink); put.call(e + 1, ey, ink)
+				put.call(e, ey - 1, ink); put.call(e, ey + 1, ink)
+			put.call(c - 1, ey + 3, mouth); put.call(c, ey + 3, mouth)
+		_:                                         # happy / sparkle: eyes with a shine, a smile
+			for e in eyes:
+				put.call(e, ey, ink); put.call(e, ey + 1, ink)
+				if face == "sparkle":
+					put.call(e, ey, white)
+			put.call(c - 2, ey + 3, mouth); put.call(c + 1, ey + 3, mouth)
+			put.call(c - 1, ey + 4, mouth); put.call(c, ey + 4, mouth)
+	if face in ["happy", "sparkle", "sleepy", "stars", "neutral"]:
+		put.call(eyes[0] - 2, ey + 2, blush); put.call(eyes[1] + 2, ey + 2, blush)
 
 ## The most common (non-outline) colour in a part of the sprite, roughly
 func _main_colour(src: Image, area: Rect2i) -> Color:
@@ -713,7 +842,7 @@ func _process(delta: float) -> void:
 
 	if state != State.FALLING:
 		ball.position = ball_pos
-	shadow.position = ball.position + Vector2(8, 20) * (ball.scale.x / DETAIL)
+	shadow.position = ball.position + Vector2(8, 20) * (ball.scale.x / BALL_SCALE)
 	shadow.visible = state != State.FALLING
 	hud_level.text = "LV %d" % level
 	hud_time.text = "%d:%02d" % [int(level_time) / 60, int(level_time) % 60]
@@ -789,14 +918,14 @@ func _check_finish() -> void:
 	var t := create_tween()
 	t.tween_property(ball, "position", finish_pos, 0.25)
 	t.parallel().tween_property(ball, "rotation", ball.rotation + TAU * 3.0, 1.0)
-	t.parallel().tween_property(ball, "scale", Vector2(0.1, 0.1) * DETAIL, 1.0).set_ease(Tween.EASE_IN)
+	t.parallel().tween_property(ball, "scale", Vector2(0.1, 0.1) * BALL_SCALE, 1.0).set_ease(Tween.EASE_IN)
 	_show_banner("LEVEL %d CLEAR!\n+%d" % [level, bonus], 1.6)
 	t.tween_interval(1.0)
 	t.tween_callback(func():
 		if not is_running:
 			return
 		level += 1
-		ball.scale = Vector2(DETAIL, DETAIL)
+		ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
 		_build_level()
 		_show_banner("LEVEL %d" % level, 1.0))
 
@@ -809,7 +938,7 @@ func _fall_into(h: Vector2) -> void:
 	Input.vibrate_handheld(90)
 	var t := create_tween()
 	t.tween_property(ball, "position", h, 0.12)
-	t.tween_property(ball, "scale", Vector2(0.15, 0.15) * DETAIL, 0.45).set_ease(Tween.EASE_IN)
+	t.tween_property(ball, "scale", Vector2(0.15, 0.15) * BALL_SCALE, 0.45).set_ease(Tween.EASE_IN)
 	t.parallel().tween_property(ball, "modulate", Color(0.2, 0.15, 0.1, 1), 0.45)
 	t.tween_callback(func():
 		if lives <= 0:
@@ -817,7 +946,7 @@ func _fall_into(h: Vector2) -> void:
 			return
 		ball_pos = respawn_pos
 		ball.position = ball_pos
-		ball.scale = Vector2(DETAIL, DETAIL)
+		ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
 		ball.modulate = Color(1, 1, 1, 1)
 		state = State.PLAY
 		var blink := create_tween()
@@ -857,6 +986,10 @@ func _read_tilt() -> Vector2:
 	return t.limit_length(1.0)
 
 func on_main_button_pressed() -> void:
+	if intro_active():
+		dismiss_intro()
+		calib = _sensor_tilt()                   # (the way you hold it now is "flat")
+		return
 	if is_game_over:
 		super.on_main_button_pressed()
 		return

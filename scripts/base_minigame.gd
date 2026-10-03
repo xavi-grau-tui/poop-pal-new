@@ -32,8 +32,138 @@ const PLAY_BOTTOM := 948.0
 const PLAY_WIDTH  := 950.0
 const PLAY_HEIGHT := 948.0
 
+# "How to play" card, shown the first time a game is played: a game sets these in its
+# _ready() before calling super._ready(). The game waits behind the card (paused) until the
+# main button is pressed ("OK").
+var intro_text := ""
+var intro_icon: Texture2D = null
+var intro_card: Control = null
+
 func _ready() -> void:
 	start_game()
+	if intro_text != "" and not GameData.intro_seen(_game_index()):
+		is_running = false
+		_show_intro()
+
+func _game_index() -> int:
+	var gs = get_node_or_null("/root/PoopPal/Main UI/GameScreen")
+	return gs.current_game_index if gs else -1
+
+func intro_active() -> bool:
+	return intro_card != null
+
+## OK: the card goes away and the game starts
+func dismiss_intro() -> void:
+	if not intro_card:
+		return
+	GameData.mark_intro_seen(_game_index())
+	var card := intro_card
+	intro_card = null
+	var t := create_tween()
+	t.tween_property(card, "scale", Vector2(0.85, 0.85), 0.12)
+	t.parallel().tween_property(card, "modulate:a", 0.0, 0.12)
+	t.tween_callback(card.queue_free)
+	_play_clack()
+	is_running = true
+
+## A square card in the food menu labels' style (dark border, cream face, brown shadow)
+func _show_intro() -> void:
+	var font = load("res://fonts/pixChicago.ttf")
+	var card := Control.new()
+	card.size = Vector2(600, 470)
+	card.position = Vector2((PLAY_WIDTH - card.size.x) / 2.0, (PLAY_HEIGHT - card.size.y) / 2.0)
+	card.pivot_offset = card.size / 2.0
+	add_child(card)
+	var dim := ColorRect.new()                   # the game shows dimmed behind it
+	dim.color = Color(0, 0, 0, 0.35)
+	dim.position = -card.position
+	dim.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT)
+	card.add_child(dim)
+	var bg := NinePatchRect.new()
+	bg.texture = _label_frame_texture()
+	bg.patch_margin_left = 4
+	bg.patch_margin_right = 4
+	bg.patch_margin_top = 4
+	bg.patch_margin_bottom = 7
+	bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	bg.scale = Vector2(3, 3)
+	bg.size = card.size / 3.0
+	card.add_child(bg)
+	var text := Label.new()
+	text.text = intro_text
+	text.position = Vector2(40, 40)
+	text.size = Vector2(card.size.x - 80, 150)
+	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if font:
+		text.add_theme_font_override("font", font)
+	text.add_theme_font_size_override("font_size", 46)
+	text.add_theme_color_override("font_color", Color8(92, 60, 44))
+	card.add_child(text)
+	if intro_icon:                                 # e.g. the pal's ball, rolling side to side
+		var icon := TextureRect.new()
+		icon.texture = intro_icon
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.size = Vector2(96, 96)
+		icon.pivot_offset = icon.size / 2.0
+		icon.position = Vector2((card.size.x - icon.size.x) / 2.0, 200)
+		card.add_child(icon)
+		var roll := icon.create_tween().set_loops()
+		roll.tween_property(icon, "position:x", icon.position.x + 90, 0.9).set_trans(Tween.TRANS_SINE)
+		roll.parallel().tween_property(icon, "rotation", TAU / 3.0, 0.9).set_trans(Tween.TRANS_SINE)
+		roll.tween_property(icon, "position:x", icon.position.x - 90, 1.8).set_trans(Tween.TRANS_SINE)
+		roll.parallel().tween_property(icon, "rotation", -TAU / 3.0, 1.8).set_trans(Tween.TRANS_SINE)
+		roll.tween_property(icon, "position:x", icon.position.x, 0.9).set_trans(Tween.TRANS_SINE)
+		roll.parallel().tween_property(icon, "rotation", 0.0, 0.9).set_trans(Tween.TRANS_SINE)
+	# the orange button + "OK"
+	var btn := TextureRect.new()
+	btn.texture = load("res://textures/buttons/mainbuttonnormal.png")
+	btn.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	btn.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	btn.size = Vector2(74, 70)
+	btn.position = Vector2(card.size.x / 2.0 - 90, 340)
+	card.add_child(btn)
+	var ok := Label.new()
+	ok.text = "OK"
+	ok.position = Vector2(btn.position.x + btn.size.x + 18, btn.position.y)
+	ok.size = Vector2(120, btn.size.y)
+	ok.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	if font:
+		ok.add_theme_font_override("font", font)
+	ok.add_theme_font_size_override("font_size", 44)
+	ok.add_theme_color_override("font_color", Color8(92, 60, 44))
+	card.add_child(ok)
+	var pulse := btn.create_tween().set_loops()
+	pulse.tween_property(btn, "modulate", Color(1.15, 1.1, 1.0), 0.5)
+	pulse.tween_property(btn, "modulate", Color.WHITE, 0.5)
+	card.scale = Vector2(0.6, 0.6)
+	card.modulate.a = 0.0
+	var t := create_tween()
+	t.tween_property(card, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.parallel().tween_property(card, "modulate:a", 1.0, 0.15)
+	intro_card = card
+
+## 16x16 pixel frame like foodmenulabel.png: 3 px dark border, cream face, a brown shadow under
+## the bottom border, cut corners (stretched as a nine-patch)
+static func _label_frame_texture() -> Texture2D:
+	var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	var dark := Color8(43, 33, 26)
+	var cream := Color8(250, 245, 201)
+	var shadow := Color8(146, 98, 52)
+	for y in 16:
+		for x in 16:
+			var col := cream
+			if y >= 14:
+				col = shadow if x >= 1 and x <= 14 else Color(0, 0, 0, 0)
+			elif x < 2 or x > 13 or y < 2 or y > 11:
+				col = dark
+			# cut corners
+			if (x == 0 or x == 15) and (y == 0 or y == 13):
+				col = Color(0, 0, 0, 0)
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
 
 func _start_game_music() -> void:
 	pass  # Music is now managed by GameScreen

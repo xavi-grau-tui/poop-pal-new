@@ -48,13 +48,23 @@ func _ready() -> void:
 			games[idx]["max_score"] = 0
 			games[idx]["progress"] = 0.0
 			games[idx]["unlocked"] = idx == 0         # only the first game, as on a new install
+			games[idx]["intro"] = false               # (and the how-to cards show again)
 		save_data()
 	for idx in DEBUG_UNLOCKED:
 		games[idx]["unlocked"] = true
 
 func _init_game(index: int, unlocked: bool) -> void:
 	if index not in games:
-		games[index] = { "max_score": 0, "progress": 0.0, "unlocked": unlocked }
+		games[index] = { "max_score": 0, "progress": 0.0, "unlocked": unlocked, "intro": false }
+
+## The "how to play" card is shown the first time a game is played
+func intro_seen(game_index: int) -> bool:
+	return game_index in games and games[game_index].get("intro", false)
+
+func mark_intro_seen(game_index: int) -> void:
+	if game_index in games:
+		games[game_index]["intro"] = true
+		save_data()
 
 # --- Score reporting (called when a minigame round ends) ---
 
@@ -136,5 +146,6 @@ func load_data() -> void:
 				games[idx]["max_score"] = int(parsed[key].get("max_score", 0))
 				games[idx]["progress"] = float(parsed[key].get("progress", 0.0))
 				games[idx]["unlocked"] = bool(parsed[key].get("unlocked", false))
+				games[idx]["intro"] = bool(parsed[key].get("intro", false))
 		# Super Puff always unlocked
 		games[0]["unlocked"] = true
