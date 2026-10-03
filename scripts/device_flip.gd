@@ -28,6 +28,9 @@ const OPEN_HZ := 20000.0            # low-pass cutoff facing the front (effectiv
 const MUFFLED_HZ := 700.0           # ...and with the speakers facing away
 const MUFFLED_DB := -4.0            # the back is a little quieter too
 const SETTLE_BUZZ_MS := 18          # vibration when a turn finishes
+# ...fired this close to the end of the turn: the device already fills the screen there
+# (the eased tail barely moves), so the buzz lands on the visible stop
+const SETTLE_AT := 0.03
 
 var front: Node2D
 var back: Node2D
@@ -44,6 +47,8 @@ var base_zoom: Vector2
 var base_offset: Vector2
 var muffle: AudioEffectLowPassFilter
 var muffle_idx := -1
+var turn_target := 0.0
+var settled := true                 # the settle buzz has fired for this turn
 
 func _ready() -> void:
 	front = get_parent().get_node("Main UI")
@@ -111,11 +116,11 @@ func _turn(target: float, direction := 0.0) -> void:
 		rest_rect = _device_on_screen()
 	turning = true
 	swing = direction
+	turn_target = target
+	settled = false
 	var t := create_tween()
 	t.tween_method(_apply, progress, target, TURN_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	t.tween_callback(func():
-		turning = false
-		Input.vibrate_handheld(SETTLE_BUZZ_MS))
+	t.tween_callback(func(): turning = false)
 
 func _device_on_screen() -> Rect2:
 	var xf := get_viewport().get_canvas_transform() * front.get_global_transform()
@@ -128,6 +133,9 @@ func _apply(p: float) -> void:
 	progress = p
 	back.visible = p > 0.5
 	_set_muffle(p)
+	if not settled and absf(p - turn_target) <= SETTLE_AT:
+		settled = true
+		Input.vibrate_handheld(SETTLE_BUZZ_MS)
 	if p == 0.0 or p == 1.0:
 		cam.zoom = base_zoom
 		cam.offset = base_offset
