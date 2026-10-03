@@ -2,48 +2,65 @@ extends Node2D
 ## Double-tap the Poop Pal logo and the whole device turns around to show its back
 ## (scenes/console_back.tscn); swipe left/right (or double-tap) on the back to turn it front again.
 ##
-## Created at runtime by MenuManager as a sibling of "Main UI". The turn is faked in 2D:
-## the visible face squeezes to edge-on around the screen centre while lifting a little
-## and darkening, then the other face opens out the same way.
+## Created at runtime by MenuManager as a sibling of "Main UI". The front is never hidden,
+## moved or scaled, so whatever is going on (an animation, a menu, even a minigame) carries
+## on untouched while the back is up. The turn is done with the camera: its zoom squeezes
+## the device to edge-on and back, a screen-space overlay draws the case's side (its
+## thickness) next to the face and covers everything outside the device, and the back
+## sprite sits above the whole front while it is the face showing.
 
 const BACK_SCENE := preload("res://scenes/console_back.tscn")
 
-const PIVOT := Vector2(540, -960)   # screen centre in Main UI coordinates
 const TURN_TIME := 0.55
 const LIFT := 0.07                  # extra scale at edge-on, as if picked up to turn it
 const SHADE := 0.35                 # how much a face darkens as it turns away
+const THICK := 56.0                 # case thickness seen edge-on, screen px (~half a cm)
 const DOUBLE_TAP := 0.4             # max seconds between the two taps
 const LOGO_PAD := 20.0              # tap slack around the logo, px
 const SWIPE_MIN := 120.0            # horizontal drag on the back that counts as a swipe, px
 const SWAY := 140.0                 # a swiped turn drifts this far toward the swipe at edge-on
+const DEVICE := Rect2(0, -1920, 1080, 1920)   # the device in Main UI coordinates
 
 var front: Node2D
 var back: Node2D
 var logo: Sprite2D
+var cam: Camera2D
+var overlay: Overlay
 var progress := 0.0                 # 0 = front, 1 = back
 var turning := false
 var last_tap := -10.0
 var press_pos := Vector2.ZERO
 var swing := 0.0                    # -1 / 1 while a swiped turn is drifting left / right
+var rest_rect: Rect2                # the device on screen when face-on
+var base_zoom: Vector2
+var base_offset: Vector2
 
 func _ready() -> void:
 	front = get_parent().get_node("Main UI")
 	logo = front.get_node("Console/LogoMain")
+	cam = get_parent().get_node("Camera2D")
 	back = BACK_SCENE.instantiate()
 	back.visible = false
+	back.z_as_relative = false
+	back.z_index = RenderingServer.CANVAS_ITEM_Z_MAX - 1   # above everything on the front
 	add_child(back)
+	var layer := CanvasLayer.new()
+	layer.layer = 100
+	add_child(layer)
+	overlay = Overlay.new()
+	overlay.visible = false
+	layer.add_child(overlay)
 
 func _input(event: InputEvent) -> void:
-	var tap := event as InputEventMouseButton
-	if not tap or tap.button_index != MOUSE_BUTTON_LEFT:
-		return
 	var showing_back := progress > 0.5
-	if turning:
-		get_viewport().set_input_as_handled()
+	var pointer := event is InputEventMouse or event is InputEventScreenTouch or event is InputEventScreenDrag
+	if pointer and (turning or showing_back):
+		get_viewport().set_input_as_handled()   # the front keeps running but takes no input
+	var tap := event as InputEventMouseButton
+	if not tap or tap.button_index != MOUSE_BUTTON_LEFT or turning:
 		return
 	if not tap.pressed:
 		if showing_back:
-			get_viewport().set_input_as_handled()
 			var drag := tap.position - press_pos
 			if absf(drag.x) >= SWIPE_MIN and absf(drag.x) > absf(drag.y) * 1.5:
 				last_tap = -10.0
@@ -52,8 +69,6 @@ func _input(event: InputEvent) -> void:
 	press_pos = tap.position
 	if not showing_back and not (_can_turn() and _on_logo(tap.position)):
 		return
-	if showing_back:
-		get_viewport().set_input_as_handled()   # nothing on the back takes taps
 	var now := Time.get_ticks_msec() / 1000.0
 	if now - last_tap <= DOUBLE_TAP:
 		last_tap = -10.0
@@ -63,38 +78,91 @@ func _input(event: InputEvent) -> void:
 		last_tap = now
 
 func _can_turn() -> bool:
-	# not during the power-on sequence or while a minigame is running
-	if front.get_node_or_null("BootSequence"):
-		return false
-	var gs := front.get_node_or_null("GameScreen")
-	return not (gs and gs.get("current_game"))
+	return front.get_node_or_null("BootSequence") == null   # not during the power-on sequence
 
 func _on_logo(screen_pos: Vector2) -> bool:
 	var world := get_viewport().get_canvas_transform().affine_inverse() * screen_pos
 	return logo.get_rect().grow(LOGO_PAD / logo.scale.x).has_point(logo.to_local(world))
 
 func _turn(target: float, direction := 0.0) -> void:
+	if progress == 0.0 or progress == 1.0:
+		base_zoom = cam.zoom
+		base_offset = cam.offset
+		rest_rect = _device_on_screen()
 	turning = true
 	swing = direction
 	var t := create_tween()
 	t.tween_method(_apply, progress, target, TURN_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	t.tween_callback(func(): turning = false)
 
+func _device_on_screen() -> Rect2:
+	var xf := get_viewport().get_canvas_transform() * front.get_global_transform()
+	var r := Rect2(xf * DEVICE.position, Vector2.ZERO)
+	for c in [DEVICE.end, Vector2(DEVICE.position.x, DEVICE.end.y), Vector2(DEVICE.end.x, DEVICE.position.y)]:
+		r = r.expand(xf * c)
+	return r
+
 func _apply(p: float) -> void:
 	progress = p
+	back.visible = p > 0.5
+	if p == 0.0 or p == 1.0:
+		cam.zoom = base_zoom
+		cam.offset = base_offset
+		cam.force_update_scroll()
+		overlay.visible = false
+		return
 	var angle := p * PI
 	var edge := sin(angle)                      # 0 face-on, 1 edge-on
-	var squeeze := maxf(absf(cos(angle)), 0.001)
 	var lift := 1.0 + LIFT * edge
-	var face := back if p > 0.5 else front
-	var hidden := front if face == back else back
-	hidden.visible = false
-	face.visible = true
-	face.scale = Vector2(squeeze * lift, lift)
-	face.position = PIVOT - PIVOT * face.scale + Vector2(swing * SWAY * edge, 0)
-	var s := 1.0 - SHADE * edge
-	face.modulate = Color(s, s, s)
-	if p == 0.0 or p == 1.0:
-		face.scale = Vector2.ONE
-		face.position = Vector2.ZERO
-		face.modulate = Color.WHITE
+	var zoom := Vector2(maxf(absf(cos(angle)), 0.002) * lift, lift)
+	var face_w := rest_rect.size.x * zoom.x
+	var face_h := rest_rect.size.y * zoom.y
+	var side_w := THICK * edge * lift
+	# where the camera zoom alone would put the face (it zooms about the screen centre)
+	var mid := get_viewport().get_visible_rect().size / 2.0
+	var zoomed := mid + (rest_rect.get_center() - mid) * zoom
+	# lay the face and the case side out like a box turning: the side leads during the
+	# first half of the turn and trails during the second
+	var left := zoomed.x + swing * SWAY * edge - (face_w + side_w) / 2.0
+	var side_first := (p < 0.5) == (swing >= 0.0)
+	var face_x := left + side_w if side_first else left
+	var side_x := left if side_first else left + face_w
+	var shift := face_x + face_w / 2.0 - zoomed.x
+	cam.zoom = base_zoom * zoom
+	cam.offset = base_offset + Vector2(-shift / cam.zoom.x, 0.0)
+	cam.force_update_scroll()
+	var top := zoomed.y - face_h / 2.0
+	overlay.face = Rect2(face_x, top, face_w, face_h)
+	overlay.side = Rect2(side_x, top, side_w, face_h)
+	overlay.shade = SHADE * edge
+	overlay.visible = true
+	overlay.queue_redraw()
+
+
+## Screen-space: hides everything outside the turning device, draws its side and darkens
+## the face as it turns away.
+class Overlay extends Node2D:
+	const CASE := Color8(232, 214, 186)
+	const CASE_DARK := Color8(200, 166, 130)
+	const OUTLINE := Color8(72, 49, 37)
+	const FAR := 100000.0
+
+	var face := Rect2()
+	var side := Rect2()
+	var shade := 0.0
+
+	func _draw() -> void:
+		var bg := RenderingServer.get_default_clear_color()
+		var u := face.merge(side)
+		draw_rect(Rect2(-FAR, -FAR, FAR + u.position.x, FAR * 2.0), bg)
+		draw_rect(Rect2(u.end.x, -FAR, FAR, FAR * 2.0), bg)
+		draw_rect(Rect2(u.position.x, -FAR, u.size.x, FAR + u.position.y), bg)
+		draw_rect(Rect2(u.position.x, u.end.y, u.size.x, FAR), bg)
+		if shade > 0.0:
+			draw_rect(face, Color(0, 0, 0, shade))
+		if side.size.x >= 1.0:
+			draw_rect(side, CASE)
+			# seam where the front and back shells meet, then the dark outline
+			var seam_x := side.position.x + side.size.x * 0.5
+			draw_line(Vector2(seam_x, side.position.y), Vector2(seam_x, side.end.y), CASE_DARK, maxf(side.size.x * 0.08, 1.0))
+			draw_rect(side, OUTLINE, false, minf(4.0, side.size.x * 0.5))
