@@ -1,7 +1,7 @@
 extends Control
 ## The LUCKY PINCH claw visiting the pet cam: it comes down from the top of the cam window
-## holding a glowing capsule, dangles over the pal for a moment (the LCD shows BONUS!), and
-## goes back up. Clipped to the cam window, so the cable seems to come from above it.
+## holding a glowing capsule, dangles over the pal for a moment, and goes back up;
+## the LCD shows BONUS! the whole time. Clipped to the cam window, so the cable seems to come from above it.
 
 const CAP_AT := Vector2(13, 19.1)               # (claw pixels) the capsule's centre in visit_claw.png
 const CLAW_BOTTOM := 25.0                        # (claw pixels) the tips' bottom
@@ -49,6 +49,12 @@ func play(poop: Node2D) -> void:
 	glow.tween_property(capsule, "modulate", Color(1.35, 1.3, 1.0), 0.35)
 	glow.tween_property(capsule, "modulate", Color.WHITE, 0.35)
 	var stop_y := head_y - 24.0 - CLAW_BOTTOM * S      # the claw's tips ~24px above the head
+	# BONUS! right as the claw shows up (the Games button starts blinking at the same moment),
+	# and it stays on the LCD until the claw has gone back up
+	var lcd := get_node_or_null("/root/PoopPal/Main UI/LCD Screen")
+	if lcd and lcd.has_method("show_message"):
+		lcd.show_message("BONUS!", 0.9 + DANGLE_TIME + 0.15 + 0.8 + 0.2)
+		lcd._ding()
 	_motor(0.9)
 	var t := create_tween()
 	t.tween_property(rig, "position:y", stop_y, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -62,10 +68,6 @@ func play(poop: Node2D) -> void:
 	t.tween_callback(queue_free)
 
 func _arrived(poop: Node2D) -> void:
-	var lcd := get_node_or_null("/root/PoopPal/Main UI/LCD Screen")
-	if lcd and lcd.has_method("show_message"):
-		lcd.show_message("BONUS!")
-		lcd._ding()
 	if poop and poop.has_method("_say") and PetState.has_poop():
 		poop._say("!?", "res://sounds/fx/giggle_short.wav")
 	for i in 6:
