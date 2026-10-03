@@ -8,6 +8,10 @@ extends Node2D
 ## the device to edge-on and back, a screen-space overlay draws the case's side (its
 ## thickness) next to the face and covers everything outside the device, and the back
 ## sprite sits above the whole front while it is the face showing.
+##
+## The speakers are on the front, so turning it away muffles everything (a low-pass on
+## the Master bus sweeps down as the back comes round), and each turn ends with a small
+## buzz, as if it settled in your hand.
 
 const BACK_SCENE := preload("res://scenes/console_back.tscn")
 
@@ -20,6 +24,10 @@ const LOGO_PAD := 20.0              # tap slack around the logo, px
 const SWIPE_MIN := 120.0            # horizontal drag on the back that counts as a swipe, px
 const SWAY := 140.0                 # a swiped turn drifts this far toward the swipe at edge-on
 const DEVICE := Rect2(0, -1920, 1080, 1920)   # the device in Main UI coordinates
+const OPEN_HZ := 20000.0            # low-pass cutoff facing the front (effectively off)
+const MUFFLED_HZ := 700.0           # ...and with the speakers facing away
+const MUFFLED_DB := -4.0            # the back is a little quieter too
+const SETTLE_BUZZ_MS := 18          # vibration when a turn finishes
 
 var front: Node2D
 var back: Node2D
@@ -34,6 +42,8 @@ var swing := 0.0                    # -1 / 1 while a swiped turn is drifting lef
 var rest_rect: Rect2                # the device on screen when face-on
 var base_zoom: Vector2
 var base_offset: Vector2
+var muffle: AudioEffectLowPassFilter
+var muffle_idx := -1
 
 func _ready() -> void:
 	front = get_parent().get_node("Main UI")
@@ -50,6 +60,16 @@ func _ready() -> void:
 	overlay = Overlay.new()
 	overlay.visible = false
 	layer.add_child(overlay)
+	muffle = AudioEffectLowPassFilter.new()
+	muffle.cutoff_hz = OPEN_HZ
+	AudioServer.add_bus_effect(0, muffle)
+	muffle_idx = AudioServer.get_bus_effect_count(0) - 1
+	AudioServer.set_bus_effect_enabled(0, muffle_idx, false)
+
+func _exit_tree() -> void:
+	if muffle_idx >= 0:
+		AudioServer.remove_bus_effect(0, muffle_idx)
+		AudioServer.set_bus_volume_db(0, 0.0)
 
 func _input(event: InputEvent) -> void:
 	var showing_back := progress > 0.5
@@ -93,7 +113,9 @@ func _turn(target: float, direction := 0.0) -> void:
 	swing = direction
 	var t := create_tween()
 	t.tween_method(_apply, progress, target, TURN_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	t.tween_callback(func(): turning = false)
+	t.tween_callback(func():
+		turning = false
+		Input.vibrate_handheld(SETTLE_BUZZ_MS))
 
 func _device_on_screen() -> Rect2:
 	var xf := get_viewport().get_canvas_transform() * front.get_global_transform()
@@ -105,6 +127,7 @@ func _device_on_screen() -> Rect2:
 func _apply(p: float) -> void:
 	progress = p
 	back.visible = p > 0.5
+	_set_muffle(p)
 	if p == 0.0 or p == 1.0:
 		cam.zoom = base_zoom
 		cam.offset = base_offset
@@ -138,6 +161,14 @@ func _apply(p: float) -> void:
 	overlay.face_left = not side_first
 	overlay.visible = true
 	overlay.queue_redraw()
+
+
+## How far the speakers face away (0 front .. 1 back) -> low-pass cutoff and volume.
+## The cutoff moves on a log scale, so the muffling sounds even through the turn.
+func _set_muffle(p: float) -> void:
+	AudioServer.set_bus_effect_enabled(0, muffle_idx, p > 0.0)
+	muffle.cutoff_hz = OPEN_HZ * pow(MUFFLED_HZ / OPEN_HZ, p)
+	AudioServer.set_bus_volume_db(0, MUFFLED_DB * p)
 
 
 ## Screen-space: hides everything outside the turning device, draws its side and darkens
