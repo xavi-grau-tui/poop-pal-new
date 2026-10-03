@@ -30,7 +30,7 @@ const MUFFLED_DB := -4.0            # the back is a little quieter too
 const SETTLE_BUZZ_MS := 18          # vibration when a turn finishes
 # ...fired this close to the end of the turn: the device already fills the screen there
 # (the eased tail barely moves), so the buzz lands on the visible stop
-const SETTLE_AT := 0.03
+const SETTLE_AT := 0.08
 
 var front: Node2D
 var back: Node2D
