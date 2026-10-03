@@ -94,8 +94,7 @@ func _ready() -> void:
 			tex["tile_%s_cracked" % c] = load(cracked)
 	for c in ["mint", "yellow", "pink"]:
 		tex["capsule_" + c] = load("res://textures/minigames/break/capsule_%s.png" % c)
-	var ball_path := "res://textures/minigames/balls/%s.png" % PetState.form_id
-	ball_texture = load(ball_path if PetState.has_poop() and ResourceLoader.exists(ball_path) else "res://textures/minigames/balls/classic.png")
+	ball_texture = PalBall.texture()        # (the same pal ball as Tilt Maze)
 	rng.randomize()
 	_create_static_nodes()
 	super._ready()
@@ -143,7 +142,7 @@ func _add_ball(pos: Vector2, vel: Vector2, stuck := false) -> void:
 	var s := Sprite2D.new()
 	s.texture = ball_texture
 	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	s.scale = Vector2.ONE * (BALL_R * 2.0 / 40.0)
+	s.scale = Vector2(3, 3)                   # (16 px ball x3 = 48 px, on whole pixels)
 	world.add_child(s)
 	balls.append({ "pos": pos, "vel": vel, "node": s, "stuck": stuck })
 

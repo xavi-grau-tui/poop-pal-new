@@ -131,16 +131,136 @@ def capsule(col, hi, lo):
     return outline(im)
 
 
+# ---------------------------------------------------------------- detailed claw (2x)
+# The claw and the carriage are drawn on a grid twice as fine (shown at half scale in the
+# game, so they keep the same size and grab point): shaded prongs with knuckles and rubber
+# tips, a domed hub with rivets and a little light, a steel joint ring.
+W2, H2 = 62, 46
+RUBBER = (170, 70, 84, 255)
+RUBBER_HI = (214, 112, 120, 255)
+LIGHT = (255, 110, 96, 255)
+
+
+def mirror(x):
+    return W2 - 1 - x
+
+
+def stamp_path(mask, pts, r):
+    """Every pixel within r of the polyline through pts."""
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        n = int(max(abs(x1 - x0), abs(y1 - y0)) * 3) + 1
+        for i in range(n + 1):
+            t = i / n
+            cx, cy = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
+            for y in range(int(cy - r - 1), int(cy + r + 2)):
+                for x in range(int(cx - r - 1), int(cx + r + 2)):
+                    if (x + 0.5 - cx - 0.5) ** 2 + (y + 0.5 - cy - 0.5) ** 2 <= r * r:
+                        mask.add((x, y))
+
+
+def paint_prong(im, pts, base, hi, lo, tip_from):
+    """A shaded prong: lit on its left edge, shaded on its right, a rubber tip."""
+    mask = set()
+    stamp_path(mask, pts, 2.1)
+    tip = set()
+    stamp_path(tip, pts[tip_from:], 2.1)
+    for (x, y) in mask:
+        rubber = (x, y) in tip
+        c = RUBBER if rubber else base
+        if (x - 1, y) not in mask or (x, y - 1) not in mask:
+            c = RUBBER_HI if rubber else hi
+        elif (x + 1, y) not in mask or (x, y + 1) not in mask:
+            c = (120, 44, 58, 255) if rubber else lo
+        put(im, x, y, c)
+    return mask
+
+
+def knuckle(im, x, y):
+    for dy in range(-2, 3):
+        for dx in range(-2, 3):
+            if dx * dx + dy * dy <= 5:
+                put(im, x + dx, y + dy, STEEL_LO if dx + dy > 0 else STEEL_HI)
+    put(im, x, y, GOLD_LO)
+
+
+def hub2(im):
+    # cable socket
+    rect(im, 28, 0, 33, 3, STEEL_LO)
+    rect(im, 29, 0, 30, 3, STEEL)
+    # domed gold hub
+    for y in range(3, 14):
+        half = 9 if y > 5 else (7 if y == 4 else (5 if y == 3 else 8))
+        for x in range(31 - half, 31 + half):
+            c = GOLD
+            if y <= 5 or x <= 31 - half:
+                c = GOLD_HI
+            elif y >= 12 or x >= 31 + half - 1:
+                c = GOLD_LO
+            put(im, x, y, c)
+    for x in (24, 37):                            # rivets
+        put(im, x, 9, GOLD_LO)
+        put(im, x, 8, GOLD_HI)
+    rect(im, 29, 7, 32, 9, (110, 40, 40, 255))    # the little light
+    rect(im, 29, 7, 30, 8, LIGHT)
+    put(im, 29, 7, (255, 220, 200, 255))
+    # steel joint ring under the hub
+    rect(im, 23, 14, 38, 16, STEEL)
+    rect(im, 23, 14, 38, 14, STEEL_HI)
+    rect(im, 23, 16, 38, 16, STEEL_LO)
+    for x in range(25, 38, 4):
+        put(im, x, 15, STEEL_LO)
+
+
+def claw2(open_):
+    im = canvas(W2, H2)
+    if open_:
+        left = [(24, 16), (17, 21), (10, 27), (6, 33), (6, 39), (9, 43)]
+        mid = [(30, 16), (30, 27)]
+    else:
+        left = [(24, 16), (18, 20), (13, 25), (11, 31), (13, 37), (17, 42)]
+        mid = [(30, 16), (30, 24)]
+    paint_prong(im, mid, STEEL_LO, STEEL, (96, 94, 114, 255), 1)       # the back prong
+    paint_prong(im, left, STEEL, STEEL_HI, STEEL_LO, 4)
+    paint_prong(im, [(mirror(x) - 1, y) for (x, y) in left], STEEL, STEEL, STEEL_LO, 4)
+    knuckle(im, left[2][0], left[2][1])
+    knuckle(im, mirror(left[2][0]) - 1, left[2][1])
+    hub2(im)
+    return outline(im)
+
+
+def carriage2():
+    im = canvas(46, 16)
+    rect(im, 2, 3, 43, 13, GOLD)
+    rect(im, 2, 3, 43, 4, GOLD_HI)
+    rect(im, 2, 12, 43, 13, GOLD_LO)
+    rect(im, 2, 3, 2, 13, GOLD_HI)
+    rect(im, 43, 3, 43, 13, GOLD_LO)
+    rect(im, 4, 8, 41, 8, GOLD_LO)                 # a groove
+    for x in (8, 37):                            # wheels riding the rail
+        for dy in range(-2, 3):
+            for dx in range(-2, 3):
+                if dx * dx + dy * dy <= 5:
+                    put(im, x + dx, 2 + dy, STEEL_LO if dy > 0 else STEEL)
+        put(im, x, 2, STEEL_HI)
+    for x in (5, 40):                            # rivets
+        put(im, x, 10, GOLD_LO)
+        put(im, x, 6, GOLD_LO)
+    rect(im, 19, 5, 26, 11, INK)                   # the light window
+    rect(im, 20, 6, 25, 10, (120, 40, 40, 255))
+    rect(im, 20, 6, 22, 7, LIGHT)
+    return outline(im)
+
+
 if __name__ == '__main__':
-    claw(True).save(os.path.join(DEST, 'claw_open.png'))
-    claw(False).save(os.path.join(DEST, 'claw_closed.png'))
-    carriage().save(os.path.join(DEST, 'carriage.png'))
+    claw2(True).save(os.path.join(DEST, 'claw_open.png'))
+    claw2(False).save(os.path.join(DEST, 'claw_closed.png'))
+    carriage2().save(os.path.join(DEST, 'carriage.png'))
     for name, (col, hi, lo) in CAPSULES.items():
         capsule(col, hi, lo).save(os.path.join(DEST, f'capsule_{name}.png'))
     # preview
     files = ['claw_open', 'claw_closed', 'carriage'] + [f'capsule_{k}' for k in CAPSULES]
     ims = [Image.open(os.path.join(DEST, f + '.png')) for f in files]
-    prev = Image.new('RGBA', (sum(i.width + 4 for i in ims), 25), (120, 70, 110, 255))
+    prev = Image.new('RGBA', (sum(i.width + 4 for i in ims), 48), (120, 70, 110, 255))
     x = 0
     for i in ims:
         prev.alpha_composite(i, (x, 1))

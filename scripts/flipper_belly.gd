@@ -428,15 +428,9 @@ func _create_nodes() -> void:
 	pal_ball = Sprite2D.new()
 	pal_ball.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	pal_ball.visible = false
-	var frames: SpriteFrames = PetState.build_sprite_frames() if PetState.has_poop() else null
-	if frames:
-		var tex: Texture2D = frames.get_frame_texture("idle", 0)
-		pal_ball.texture = tex
-		var used := tex.get_image().get_used_rect()
-		var body := Rect2(Vector2(used.position) - tex.get_size() / 2.0, used.size)
-		pal_ball.offset = -body.get_center()
-		var sc := (BALL_R * 2.4) / maxf(body.size.x, body.size.y)
-		pal_ball.scale = Vector2(sc, sc)
+	if PetState.has_poop():
+		pal_ball.texture = PalBall.texture()     # (the same pal ball as Tilt Maze)
+		pal_ball.scale = Vector2(3, 3)
 	else:
 		pal_ball.texture = _steel_ball_texture()
 		pal_ball.scale = Vector2(K, K)
@@ -567,9 +561,13 @@ func _refresh_hud() -> void:
 	for ch in balls_box.get_children():
 		ch.queue_free()
 	for i in BALLS:
-		var r := ColorRect.new()
-		r.custom_minimum_size = Vector2(26, 26)
-		r.color = CREAM if i < balls_left else Color(1, 1, 1, 0.15)
+		# balls left: little pal balls, like Tilt Maze's lives
+		var r := TextureRect.new()
+		r.texture = pal_ball.texture
+		r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		r.custom_minimum_size = Vector2(40, 40)
+		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		r.modulate = Color(1, 1, 1, 1) if i < balls_left else Color(0, 0, 0, 0.35)
 		balls_box.add_child(r)
 	score_label.text = str(score)
 

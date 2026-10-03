@@ -26,6 +26,7 @@ const FLOOR_FRONT := 884.0
 const FLOOR_BACK := 694.0
 const CHUTE := Rect2(40, 600, 184, 330)  # the prize chute's front panel
 const CHUTE_WINDOW := Rect2(62, 790, 140, 110)
+const TRIES_LCD := Rect2(24, 8, 210, 62)
 const PIT_X := Vector2(300.0, 890.0)
 const CLAW_HOLD_Y := 14.0              # (claw pixels) where a held capsule's centre sits
 # Grabbing is positional (x in px, depth d 0..1): only a capsule really under the claw
@@ -72,7 +73,7 @@ var carriage: Sprite2D
 var cable: Line2D
 var shadow: Sprite2D
 var prize_layer: Node2D
-var chute_front: ColorRect
+var chute_front: Control
 var hint: Label
 var tries_label: Label
 var banner: Label
@@ -480,7 +481,7 @@ func _create_nodes() -> void:
 	carriage = Sprite2D.new()
 	carriage.texture = tex["carriage"]
 	carriage.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	carriage.scale = Vector2(3, 3)
+	carriage.scale = Vector2(1.5, 1.5)            # (drawn on a 2x finer grid)
 	add_child(carriage)
 	pit = Node2D.new()
 	pit.y_sort_enabled = true
@@ -493,41 +494,39 @@ func _create_nodes() -> void:
 	claw_sprite.texture = tex["claw_closed"]
 	claw_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	claw_sprite.centered = false
+	claw_sprite.scale = Vector2(0.5, 0.5)         # (drawn on a 2x finer grid, for the detail)
 	claw_sprite.position = Vector2(-15.5, 0)
 	rig_inner.add_child(claw_sprite)
-	# the prize chute's front panel (capsules fall in behind it)
-	var frame := ColorRect.new()
-	chute_front = frame
-	frame.color = OUTLINE
-	frame.position = CHUTE.position - Vector2(6, 6)
-	frame.size = CHUTE.size + Vector2(12, 12)
-	add_child(frame)
-	var panel := ColorRect.new()
-	panel.color = GOLD
-	panel.position = CHUTE.position
-	panel.size = CHUTE.size
-	add_child(panel)
-	var band := ColorRect.new()
-	band.color = Color8(255, 228, 150)
-	band.position = CHUTE.position
-	band.size = Vector2(CHUTE.size.x, 9)
-	add_child(band)
-	var win_frame := ColorRect.new()
-	win_frame.color = OUTLINE
-	win_frame.position = CHUTE_WINDOW.position - Vector2(6, 6)
-	win_frame.size = CHUTE_WINDOW.size + Vector2(12, 12)
-	add_child(win_frame)
-	var win := ColorRect.new()
-	win.color = Color8(46, 26, 46)
-	win.position = CHUTE_WINDOW.position
-	win.size = CHUTE_WINDOW.size
-	add_child(win)
-	var sign := _make_label(CHUTE.position + Vector2(0, 40), Vector2(CHUTE.size.x, 60), 32, HORIZONTAL_ALIGNMENT_CENTER, OUTLINE)
-	sign.text = "PRIZE"
+	# the prize box (capsules fall in behind it): a solid gold cabinet, see-through only at
+	# the little glass flap at the bottom where the prize comes out
+	chute_front = Control.new()
+	chute_front.position = CHUTE.position - Vector2(6, 6)
+	chute_front.size = CHUTE.size + Vector2(12, 12)
+	chute_front.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chute_front.draw.connect(_draw_prize_box.bind(chute_front))
+	add_child(chute_front)
 	prize_layer = Node2D.new()
 	add_child(prize_layer)
+	# the glass flap, over the prize
+	var glass := Control.new()
+	glass.position = CHUTE_WINDOW.position
+	glass.size = CHUTE_WINDOW.size
+	glass.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	glass.draw.connect(_draw_flap_glass.bind(glass))
+	add_child(glass)
 	# HUD
-	tries_label = _make_label(Vector2(36, 12), Vector2(420, 56), 34, HORIZONTAL_ALIGNMENT_LEFT, OUTLINE)
+	# tries: a little LCD, like the games' score screens
+	var lcd_frame := ColorRect.new()
+	lcd_frame.color = Color(0, 0, 0)
+	lcd_frame.position = TRIES_LCD.position
+	lcd_frame.size = TRIES_LCD.size
+	add_child(lcd_frame)
+	var lcd := ColorRect.new()
+	lcd.color = Color(0.65, 0.72, 0.6)
+	lcd.position = TRIES_LCD.position + Vector2(5, 5)
+	lcd.size = TRIES_LCD.size - Vector2(10, 10)
+	add_child(lcd)
+	tries_label = _make_label(lcd.position + Vector2(10, 0), lcd.size - Vector2(20, 0), 30, HORIZONTAL_ALIGNMENT_CENTER, Color(0.2, 0.15, 0.05))
 	hint = _make_label(Vector2(250, 170), Vector2(680, 50), 30, HORIZONTAL_ALIGNMENT_CENTER, Color8(250, 228, 180))
 	hint.add_theme_color_override("font_outline_color", OUTLINE)
 	hint.add_theme_constant_override("outline_size", 10)
@@ -544,31 +543,97 @@ func _draw_cabinet() -> void:
 	# glass glints
 	c.draw_line(Vector2(270, 240), Vector2(390, 120), Color8(140, 100, 140), 9)
 	c.draw_line(Vector2(300, 270), Vector2(360, 210), Color8(140, 100, 140), 6)
-	# marquee with chasing bulbs
+	# marquee: chasing bulbs all along it (except behind the tries screen)
 	c.draw_rect(Rect2(0, 0, PLAY_WIDTH, 80), GOLD)
 	c.draw_rect(Rect2(0, 0, PLAY_WIDTH, 12), Color8(255, 228, 150))
+	c.draw_rect(Rect2(0, 66, PLAY_WIDTH, 9), GOLD_LO)
 	c.draw_rect(Rect2(0, 74, PLAY_WIDTH, 9), OUTLINE)
 	var step := int(_clock * 5.0)
-	for i in 16:
+	var x0 := TRIES_LCD.end.x + 30.0
+	var n := int((PLAY_WIDTH - 24.0 - x0) / 30.0) + 1
+	for i in n:
 		var on := (i + step) % 3 == 0
-		var p := Vector2(480 + i * 30, 40) if i < 16 else Vector2.ZERO
-		if p.x > 930:
-			continue
+		var p := Vector2(x0 + i * 30, 39)
 		c.draw_circle(p, 9, OUTLINE)
 		c.draw_circle(p, 6, Color8(255, 250, 220) if on else Color8(200, 120, 70))
+		if on:
+			c.draw_rect(Rect2(p - Vector2(3, 3), Vector2(3, 3)), Color.WHITE)
 	# rail
 	c.draw_rect(Rect2(36, RAIL_Y - 9, 880, 18), OUTLINE)
 	c.draw_rect(Rect2(39, RAIL_Y - 6, 874, 12), Color8(196, 196, 210))
 	c.draw_rect(Rect2(39, RAIL_Y - 6, 874, 3), Color8(240, 240, 250))
 	# pit floor (perspective: the back edge is higher and narrower)
 	var floor_poly := PackedVector2Array([Vector2(258, FLOOR_BACK - 24), Vector2(918, FLOOR_BACK - 24), Vector2(945, 940), Vector2(234, 940)])
-	c.draw_colored_polygon(floor_poly, Color8(60, 32, 62))
-	c.draw_line(Vector2(258, FLOOR_BACK - 24), Vector2(918, FLOOR_BACK - 24), Color8(120, 80, 120), 6)
-	# the chute's dark mouth
-	c.draw_rect(Rect2(CHUTE.position.x, CHUTE.position.y - 18, CHUTE.size.x, 24), Color8(30, 16, 30))
+	c.draw_colored_polygon(floor_poly, Color8(104, 66, 106))
+	# soft felt rows, closer together towards the back (depth)
+	for r in 6:
+		var t := float(r + 1) / 7.0
+		var y := lerpf(FLOOR_BACK - 24, 906, t * t)
+		c.draw_line(Vector2(lerpf(258, 234, t * t) + 6, y), Vector2(lerpf(918, 945, t * t) - 6, y), Color8(116, 76, 118), 3)
+	c.draw_line(Vector2(258, FLOOR_BACK - 24), Vector2(918, FLOOR_BACK - 24), Color8(156, 114, 156), 6)
 	# front glass lip
 	c.draw_rect(Rect2(234, 906, 716, 36), GOLD_LO)
 	c.draw_rect(Rect2(234, 906, 716, 6), GOLD)
+
+## The prize box: gold cabinet with a dark funnel mouth on top, bevels, rivets, a star and
+## the frame of the glass flap (the flap's inside stays open for the prize to show)
+func _draw_prize_box(cv: Control) -> void:
+	var w := cv.size.x
+	var h := cv.size.y
+	var win := Rect2(CHUTE_WINDOW.position - cv.position, CHUTE_WINDOW.size)
+	var hi := Color8(255, 228, 150)
+	# body (around the flap: four pieces, so the window stays see-through)
+	var body := [Rect2(0, 0, w, win.position.y), Rect2(0, win.end.y, w, h - win.end.y),
+		Rect2(0, win.position.y, win.position.x, win.size.y), Rect2(win.end.x, win.position.y, w - win.end.x, win.size.y)]
+	for r in body:
+		cv.draw_rect(r, OUTLINE)
+	for r in body:
+		cv.draw_rect(r.intersection(Rect2(6, 6, w - 12, h - 12)), GOLD)
+	cv.draw_rect(Rect2(6, 6, 9, h - 12), hi)                         # lit left side
+	cv.draw_rect(Rect2(w - 15, 6, 9, h - 12), GOLD_LO)               # shaded right side
+	# the funnel mouth on top: a dark opening with a steel rim
+	cv.draw_rect(Rect2(6, 6, w - 12, 30), Color8(150, 148, 166))
+	cv.draw_rect(Rect2(6, 6, w - 12, 6), Color8(220, 220, 232))
+	cv.draw_rect(Rect2(18, 15, w - 36, 15), Color8(30, 16, 30))
+	cv.draw_rect(Rect2(6, 36, w - 12, 6), OUTLINE)
+	# a big star on the front, with its shadow
+	var star_c := Vector2(w / 2.0, 120)
+	_draw_star(cv, star_c + Vector2(6, 6), 46, GOLD_LO)
+	_draw_star(cv, star_c, 46, OUTLINE)
+	_draw_star(cv, star_c, 36, Color8(246, 150, 180))
+	_draw_star(cv, star_c + Vector2(-6, -6), 15, Color8(255, 206, 220))
+	# rivets
+	for p in [Vector2(24, 54), Vector2(w - 30, 54), Vector2(24, h - 30), Vector2(w - 30, h - 30)]:
+		cv.draw_rect(Rect2(p, Vector2(9, 9)), GOLD_LO)
+		cv.draw_rect(Rect2(p, Vector2(3, 3)), hi)
+	# the flap's frame: a dark rim, a lip below to grab it
+	cv.draw_rect(Rect2(win.position - Vector2(9, 9), win.size + Vector2(18, 18)), OUTLINE, false, 6.0)
+	cv.draw_rect(Rect2(win.position.x - 6, win.position.y - 12, win.size.x + 12, 6), GOLD_LO)
+	cv.draw_rect(Rect2(win.position.x + win.size.x / 2.0 - 24, win.end.y + 9, 48, 9), Color8(150, 148, 166))
+	cv.draw_rect(Rect2(win.position.x + win.size.x / 2.0 - 24, win.end.y + 9, 48, 3), Color8(220, 220, 232))
+	# the dark space inside, behind the prize
+	cv.draw_rect(win, Color8(46, 26, 46))
+	cv.draw_rect(Rect2(win.position, Vector2(win.size.x, 12)), Color8(30, 16, 30))
+
+func _draw_star(cv: Control, c: Vector2, r: float, col: Color) -> void:
+	var pts := PackedVector2Array()
+	for i in 10:
+		var a := -PI / 2.0 + i * PI / 5.0
+		pts.append(c + Vector2.from_angle(a) * (r if i % 2 == 0 else r * 0.45))
+	cv.draw_colored_polygon(pts, col)
+
+## The glass flap over the prize: a light tint and two glints (see-through)
+func _draw_flap_glass(cv: Control) -> void:
+	var w := cv.size.x
+	var h := cv.size.y
+	cv.draw_rect(Rect2(0, 0, w, h), Color(0.8, 0.9, 1.0, 0.12))
+	cv.draw_colored_polygon(PackedVector2Array([Vector2(18, h), Vector2(48, h), Vector2(96, 0), Vector2(66, 0)]), Color(1, 1, 1, 0.16))
+	cv.draw_colored_polygon(PackedVector2Array([Vector2(60, h), Vector2(72, h), Vector2(120, 0), Vector2(108, 0)]), Color(1, 1, 1, 0.12))
+	cv.draw_rect(Rect2(0, 0, w, 6), Color(1, 1, 1, 0.25))
+	# hinges at the top
+	for x in [12.0, w - 30.0]:
+		cv.draw_rect(Rect2(x, -6, 18, 9), Color8(150, 148, 166))
+		cv.draw_rect(Rect2(x, -6, 18, 3), Color8(220, 220, 232))
 
 static func _oval_texture() -> Texture2D:
 	var img := Image.create(24, 10, false, Image.FORMAT_RGBA8)
@@ -583,7 +648,7 @@ static func _oval_texture() -> Texture2D:
 # ================================================================== HUD / FX
 
 func _refresh_tries() -> void:
-	tries_label.text = "TRIES  %d" % LuckyPinch.tries
+	tries_label.text = "TRIES %d" % LuckyPinch.tries
 
 func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
 	var l := Label.new()
