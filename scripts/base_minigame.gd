@@ -306,6 +306,47 @@ func _show_game_over() -> void:
 	exit_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 	add_child(exit_label)
 	game_over_overlay.set_meta("exit_label", exit_label)
+	# long messages wrap inside the screen instead of running off it
+	score_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	score_text.position.x = 50
+	score_text.size.x = PLAY_WIDTH - 100
+	# (games often rewrite the title/message right after end_game: lay out once they have)
+	_layout_game_over.call_deferred()
+
+## Stacks the end screen with even gaps, measured from the real text (so a long title or a
+## two-line message never touches the next line): title, message, then Restart / Exit.
+func _layout_game_over() -> void:
+	if not game_over_overlay:
+		return
+	var title: Label = game_over_overlay.get_meta("title")
+	var score_text: Label = game_over_overlay.get_meta("score_text")
+	var restart_label: Label = game_over_overlay.get_meta("restart_label")
+	var exit_label: Label = game_over_overlay.get_meta("exit_label")
+	var options: Array[Label] = []
+	for l in [restart_label, exit_label]:
+		if l.visible:
+			options.append(l)
+	var has_msg := score_text.visible and score_text.text != ""
+	const GAP_TITLE := 34.0          # title -> message
+	const GAP_OPTIONS := 70.0        # message -> options
+	const OPTION_H := 66.0
+	var th := title.get_minimum_size().y
+	var sh := score_text.get_minimum_size().y if has_msg else 0.0
+	var total := th + (GAP_TITLE + sh if has_msg else 0.0) + GAP_OPTIONS + OPTION_H * options.size()
+	var y := roundf(PLAY_HEIGHT * 0.48 - total / 2.0)
+	title.position.y = y
+	title.size.y = th
+	y += th
+	if has_msg:
+		y += GAP_TITLE
+		score_text.position.y = y
+		score_text.size.y = sh
+		y += sh
+	y += GAP_OPTIONS
+	for l in options:
+		l.position.y = y
+		l.size.y = OPTION_H
+		y += OPTION_H
 
 func _update_game_over_selection() -> void:
 	if not game_over_overlay:

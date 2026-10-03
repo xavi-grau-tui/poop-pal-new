@@ -110,7 +110,20 @@ func _update_game_card_labels(index: int) -> void:
 	# Update progress
 	var progress_label = bottom.get_node_or_null("Progress/Progress")
 	if progress_label:
+		_pin_percent_sign(progress_label)
 		progress_label.text = "%d%%" % int(GameData.get_progress(index))
+
+## The % sign stays exactly where it is for "0%"; longer numbers grow to its left
+func _pin_percent_sign(label: Label) -> void:
+	if label.has_meta("pct_right"):
+		return
+	var font: Font = label.get_theme_font("font")
+	var fs: int = label.get_theme_font_size("font_size")
+	var right: float = label.position.x + font.get_string_size("0%", HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	label.set_meta("pct_right", right)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	label.size.x = 160.0
+	label.position.x = right - label.size.x
 
 func _on_bonus_tries(_t: int) -> void:
 	if bonus_page:
