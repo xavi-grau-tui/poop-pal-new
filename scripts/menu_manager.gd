@@ -20,10 +20,26 @@ func _ready():
 
 	if game_screen:
 		game_screen.visible = false
+	_lift_console()
 	# 3D wallpaper effect: the sky and clouds slide behind the gut when the phone tilts
 	var tilt := preload("res://scripts/tilt_parallax.gd").new()
 	tilt.name = "TiltParallax"
 	get_parent().add_child.call_deferred(tilt)
+
+## Menu details stack their z (card frame + label + badge...) up to ~6, above the console's
+## frame (2-3): caught mid-slide they showed over it. The console body, its frame, LCD and
+## buttons are lifted together (same order among themselves) above anything in the menus.
+const CONSOLE_Z_LIFT := 10
+const CONSOLE_PARTS := ["Console", "LCD Screen", "MenuButtons", "SoundButtons", "MainButton"]
+
+func _lift_console() -> void:
+	var ui := get_parent()                      # (Main UI)
+	if not ui:
+		return
+	for n in CONSOLE_PARTS:
+		var part := ui.get_node_or_null(n) as CanvasItem
+		if part:
+			part.z_index += CONSOLE_Z_LIFT
 
 func get_animation_player(node: Node) -> AnimationPlayer:
 	var anim = node.get_node_or_null("AnimationPlayer")
