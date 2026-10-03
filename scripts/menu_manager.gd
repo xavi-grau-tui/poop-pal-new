@@ -25,6 +25,10 @@ func _ready():
 	var tilt := preload("res://scripts/tilt_parallax.gd").new()
 	tilt.name = "TiltParallax"
 	get_parent().add_child.call_deferred(tilt)
+	# double-tap the Poop Pal logo to turn the device around and see its back
+	var flip := preload("res://scripts/device_flip.gd").new()
+	flip.name = "DeviceFlip"
+	get_parent().get_parent().add_child.call_deferred(flip)
 
 ## Menu details stack their z (card frame + label + badge...) up to ~6, above the console's
 ## frame (2-3): caught mid-slide they showed over it. The console body, its frame, LCD and
