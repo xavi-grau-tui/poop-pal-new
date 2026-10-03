@@ -172,7 +172,8 @@ func start_attention() -> void:
 	_attention = create_tween().set_loops()
 	_attention.tween_callback(func(): _show(pressed_texture))
 	_attention.tween_interval(0.28)
-	_attention.tween_callback(func(): _show(normal_texture))
+	# (inside the game it waits for, it just stays lit: no blinking while you play it)
+	_attention.tween_callback(func(): _show(pressed_texture if GameScreen.is_active else normal_texture))
 	_attention.tween_interval(0.28)
 
 func stop_attention() -> void:
