@@ -136,9 +136,9 @@ def capsule(col, hi, lo):
 # game, so they keep the same size and grab point): shaded prongs with knuckles and rubber
 # tips, a domed hub with rivets and a little light, a steel joint ring.
 W2, H2 = 62, 46
-RUBBER = (170, 70, 84, 255)
-RUBBER_HI = (214, 112, 120, 255)
-LIGHT = (255, 110, 96, 255)
+RUBBER = GOLD                            # (gold tip caps: red ones looked like blood)
+RUBBER_HI = GOLD_HI
+LIGHT = (130, 226, 196, 255)             # a little mint light
 
 
 def mirror(x):
@@ -170,7 +170,7 @@ def paint_prong(im, pts, base, hi, lo, tip_from):
         if (x - 1, y) not in mask or (x, y - 1) not in mask:
             c = RUBBER_HI if rubber else hi
         elif (x + 1, y) not in mask or (x, y + 1) not in mask:
-            c = (120, 44, 58, 255) if rubber else lo
+            c = GOLD_LO if rubber else lo
         put(im, x, y, c)
     return mask
 
@@ -200,9 +200,9 @@ def hub2(im):
     for x in (24, 37):                            # rivets
         put(im, x, 9, GOLD_LO)
         put(im, x, 8, GOLD_HI)
-    rect(im, 29, 7, 32, 9, (110, 40, 40, 255))    # the little light
+    rect(im, 29, 7, 32, 9, (40, 104, 92, 255))    # the little light
     rect(im, 29, 7, 30, 8, LIGHT)
-    put(im, 29, 7, (255, 220, 200, 255))
+    put(im, 29, 7, (230, 255, 245, 255))
     # steel joint ring under the hub
     rect(im, 23, 14, 38, 16, STEEL)
     rect(im, 23, 14, 38, 14, STEEL_HI)
@@ -246,7 +246,7 @@ def carriage2():
         put(im, x, 10, GOLD_LO)
         put(im, x, 6, GOLD_LO)
     rect(im, 19, 5, 26, 11, INK)                   # the light window
-    rect(im, 20, 6, 25, 10, (120, 40, 40, 255))
+    rect(im, 20, 6, 25, 10, (40, 104, 92, 255))
     rect(im, 20, 6, 22, 7, LIGHT)
     return outline(im)
 
