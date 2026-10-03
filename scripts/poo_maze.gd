@@ -8,17 +8,18 @@ extends BaseMinigame
 ## Main button: set the current phone angle as "flat" (recalibrate).
 
 # --- Board geometry (all logic runs in play-area coordinates, 950x948) ---
-const PX := 2                         # world px per board pixel
-const TILE := 48                      # world px per tile
-const TILE_PX := TILE / PX            # 24 board px per tile
-const GRID := 19                      # tiles per side
-const CELLS := 6                      # maze cells per side: 2-tile corridors + 1-tile walls
-const BOARD_PX := GRID * TILE_PX      # 456
-const ORIGIN := Vector2(19, 18)       # board top-left inside the play area
+const PX := 4                         # world px per board pixel (chunky, like the pals' pixels)
+const TILE := 56                      # world px per tile
+const TILE_PX := TILE / PX            # 14 board px per tile
+const GRID := 16                      # tiles per side
+const CELLS := 5                      # maze cells per side: 2-tile corridors + 1-tile walls
+const BOARD_PX := GRID * TILE_PX      # 224
+const ORIGIN := Vector2(27, 26)       # board top-left inside the play area (centred)
 
 # --- Ball physics ---
-const BALL_R := 18.0
-const DETAIL := 2                     # world px per texture px for small sprites (coins, swirl)
+const BALL_R := 24.0
+const DETAIL := 4                     # world px per texture px for small sprites (same grid as the board)
+const BALL_ART := 16                  # the ball is drawn on a 16x16 grid (x4 = 64 world px)
 const ACCEL := 1500.0                 # px/s² at full tilt
 const FRICTION := 1.1                 # velocity damping per second
 const MAX_SPEED := 720.0
@@ -29,19 +30,21 @@ const DEADZONE := 0.04
 const INVERT_TILT := false
 
 # --- Board features ---
-const HOLE_R := 22.0
-const HOLE_FALL_R := 15.0             # ball centre this close to a hole centre = falls in
+const HOLE_R := 28.0
+const HOLE_FALL_R := 19.0             # ball centre this close to a hole centre = falls in
 const HOLE_PULL := 900.0
-const CHECK_R := 30.0
-const FINISH_R := 26.0
+const CHECK_R := 34.0
+const FINISH_R := 34.0
 const LIVES := 3
 
-# --- Palette (matches the console) ---
-const WOOD := Color8(232, 200, 152)
-const WOOD_GRAIN := Color8(214, 176, 126)
-const WALL_TOP := Color8(242, 214, 168)
-const WALL_MID := Color8(222, 184, 132)
-const WALL_SIDE := Color8(176, 124, 78)
+# --- Palette: a wooden labyrinth toy (light plywood floor, darker wooden walls) ---
+const WOOD := Color8(236, 206, 158)          # floor
+const WOOD_GRAIN := Color8(216, 180, 128)
+const WOOD_KNOT := Color8(196, 156, 104)
+const WALL_TOP := Color8(214, 160, 100)      # wall planks
+const WALL_MID := Color8(192, 136, 80)
+const WALL_GRAIN := Color8(168, 112, 62)
+const WALL_SIDE := Color8(132, 84, 48)
 const OUTLINE := Color8(74, 44, 32)
 const HOLE_DARK := Color8(34, 20, 16)
 const HOLE_RIM := Color8(120, 78, 50)
@@ -237,7 +240,8 @@ func _place_features(rng: RandomNumberGenerator) -> void:
 		if holes.size() >= want:
 			break
 		# One hole per cell, in a corner quadrant, so the other side stays passable
-		var q := Vector2(24 if rng.randf() < 0.5 else -24, 24 if rng.randf() < 0.5 else -24)
+		var o := TILE * 0.5
+		var q := Vector2(o if rng.randf() < 0.5 else -o, o if rng.randf() < 0.5 else -o)
 		holes.append(_cell_center(c) + q)
 
 func _shuffle(arr: Array, rng: RandomNumberGenerator) -> void:
@@ -277,11 +281,14 @@ func _paint_board() -> Image:
 	data.resize(n * n * 4)
 	var noise := RandomNumberGenerator.new()
 	noise.seed = 99
+	# a few knots in the plywood (fixed per board)
+	var knots: Array[Vector2] = []
+	for i in 7:
+		knots.append(Vector2(noise.randf() * n, noise.randf() * n))
 	var k := 0
 	for y in n:
 		var ty := y / t
 		var ly := y % t
-		var grain_row := sin(y * 0.45)
 		for x in n:
 			var tx := x / t
 			var lx := x % t
@@ -293,29 +300,38 @@ func _paint_board() -> Image:
 				var d_lf := lx if lf[i] else 99
 				var d_rt := (t - 1 - lx) if rt[i] else 99
 				var m := mini(mini(d_up, d_dn), mini(d_lf, d_rt))
+				# planks: the grain runs along the wall (horizontal unless it's a vertical run)
+				var vertical := (up[i] == 0 or dn[i] == 0) and lf[i] + rt[i] > 0
+				var along := float(y if vertical else x)
+				var across := float(x if vertical else y)
+				var grain := sin(across * 1.3 + sin(along * 0.11 + across * 0.7) * 1.6)
 				if m == 0:
 					c = OUTLINE
-				elif d_dn <= 6:
-					c = WALL_SIDE.darkened(0.12 * (6 - d_dn) / 6.0)      # front face, darker at the base
-				elif d_up <= 2 or d_lf <= 2:
-					c = WALL_TOP
-				elif d_rt <= 2:
+				elif d_dn <= 3:
+					c = WALL_SIDE.darkened(0.1 * (3 - d_dn))         # front face, darker at the base
+				elif d_up <= 1 or d_lf <= 1:
+					c = WALL_TOP                                     # lit edges
+				elif d_rt <= 1:
 					c = WALL_MID.darkened(0.08)
 				else:
-					c = WALL_MID.lerp(WALL_TOP, 0.25 + 0.15 * sin(x * 0.2 + y * 0.05))
+					c = WALL_MID if grain < 0.35 else WALL_GRAIN
+					if grain > 0.85:
+						c = WALL_GRAIN.darkened(0.08)
 			else:
-				var g := 0.5 + 0.5 * sin(grain_row + sin(x * 0.035 + y * 0.006) * 3.0)
-				c = WOOD.lerp(WOOD_GRAIN, g * 0.5 + noise.randf() * 0.08)
-				# Soft two-step drop shadow (light from the top-left)
-				var sx := x - 3
-				var sy := y - 6
-				if sx < 0 or sy < 0 or tiles[(sy / t) * GRID + sx / t] == 1:
+				# plywood: soft wavy grain bands + a few knots, quantized (pixel art, no gradients)
+				var g := sin(y * 0.55 + sin(x * 0.07 + y * 0.02) * 2.4)
+				c = WOOD if g < 0.45 else WOOD_GRAIN
+				for kp in knots:
+					var kd := Vector2((x - kp.x) * 0.6, y - kp.y).length()
+					if kd < 2.2:
+						c = WOOD_KNOT
+					elif kd < 3.4:
+						c = WOOD_GRAIN
+				# drop shadow of the walls (light from the top-left), two steps
+				if _is_wall_px(x - 1, y - 2):
 					c = c.darkened(0.2)
-				else:
-					sx = x - 6
-					sy = y - 11
-					if sx < 0 or sy < 0 or tiles[(sy / t) * GRID + sx / t] == 1:
-						c = c.darkened(0.09)
+				elif _is_wall_px(x - 2, y - 3):
+					c = c.darkened(0.09)
 			data[k] = c.r8
 			data[k + 1] = c.g8
 			data[k + 2] = c.b8
@@ -326,7 +342,7 @@ func _paint_board() -> Image:
 	# Route line, like the ink line on a real labyrinth board
 	for j in range(path_cells.size() - 1):
 		_ink_line(img, _to_px(_cell_center(path_cells[j])), _to_px(_cell_center(path_cells[j + 1])))
-	_ink_ring(img, _to_px(start_pos), 13.0)
+	_ink_ring(img, _to_px(start_pos), 7.0)
 
 	for h in holes:
 		_paint_hole(img, _to_px(h))
@@ -344,33 +360,38 @@ func _ink_line(img: Image, a: Vector2, b: Vector2) -> void:
 	var steps := int(maxf(absf(b.x - a.x), absf(b.y - a.y)))
 	for i in steps + 1:
 		var p := a.lerp(b, float(i) / maxf(steps, 1))
-		for o: Vector2i in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
-			var x := int(p.x) + o.x
-			var y := int(p.y) + o.y
-			if not _is_wall_px(x, y):
-				_blend(img, x, y, PATH_INK, 0.7)
+		var x := int(p.x)
+		var y := int(p.y)
+		if not _is_wall_px(x, y):
+			_blend(img, x, y, PATH_INK, 0.55)
 
 func _ink_ring(img: Image, center: Vector2, r: float) -> void:
 	for y in range(int(center.y - r - 2), int(center.y + r + 3)):
 		for x in range(int(center.x - r - 2), int(center.x + r + 3)):
 			var d := Vector2(x + 0.5, y + 0.5).distance_to(center)
-			if not _is_wall_px(x, y):
-				_blend(img, x, y, PATH_INK, 0.75 * (1.0 - clampf(absf(d - r) - 0.5, 0.0, 1.0)))
+			if not _is_wall_px(x, y) and absf(d - r) < 0.6:
+				_blend(img, x, y, PATH_INK, 0.6)
 
+## A hole drilled in the board: dark inside, a lit wooden lip at the bottom, a dark rim at
+## the top (hard pixels, no blending)
 func _paint_hole(img: Image, center: Vector2) -> void:
 	var r := HOLE_R / PX
-	for y in range(int(center.y - r - 3), int(center.y + r + 4)):
-		for x in range(int(center.x - r - 3), int(center.x + r + 4)):
+	for y in range(int(center.y - r - 2), int(center.y + r + 3)):
+		for x in range(int(center.x - r - 2), int(center.x + r + 3)):
+			if x < 0 or y < 0 or x >= BOARD_PX or y >= BOARD_PX:
+				continue
 			var off := Vector2(x + 0.5, y + 0.5) - center
 			var d := off.length()
-			# darker toward the centre, lip lit on the far (lower) edge
-			var depth := clampf(d / r, 0.0, 1.0)
-			var col := HOLE_DARK.lerp(HOLE_DARK.lightened(0.25), depth * depth)
-			if d > r - 2.0 and off.y > 0:
+			if d > r + 0.5:
+				continue
+			var col := HOLE_DARK
+			if d > r - 0.5:
+				col = HOLE_RIM.lightened(0.15) if off.y > 0 else OUTLINE
+			elif d > r - 1.5 and off.y > 0:
 				col = HOLE_RIM
-			_blend(img, x, y, col, r + 0.5 - d)                  # anti-aliased edge
-			if d > r - 0.5 and d < r + 2.0 and off.y < 0:
-				_blend(img, x, y, OUTLINE, 0.35 * (1.0 - absf(d - r - 0.5) / 1.5))
+			elif d < r * 0.45:
+				col = HOLE_DARK.darkened(0.3)
+			img.set_pixel(x, y, col)
 
 func _is_wall_px(x: int, y: int) -> bool:
 	if x < 0 or y < 0 or x >= BOARD_PX or y >= BOARD_PX:
@@ -409,7 +430,7 @@ func _create_static_nodes() -> void:
 
 	ball = Sprite2D.new()
 	ball.texture = ball_texture
-	ball.scale = Vector2.ONE
+	ball.scale = Vector2(DETAIL, DETAIL)
 	ball.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(ball)
 
@@ -469,9 +490,9 @@ func _spawn_level_nodes() -> void:
 		num.text = str(i + 1)
 		if lcd_font:
 			num.add_theme_font_override("font", lcd_font)
-		num.add_theme_font_size_override("font_size", 26)
+		num.add_theme_font_size_override("font_size", 30)
 		num.add_theme_color_override("font_color", TEXT_DARK)
-		num.position = cp["pos"] + Vector2(18, -44)
+		num.position = cp["pos"] + Vector2(24, -58)
 		level_nodes.add_child(num)
 		cp["node"] = s
 		cp["label"] = num
@@ -496,32 +517,21 @@ func _make_ball_texture() -> Texture2D:
 	var path := "res://textures/minigames/balls/%s.png" % id
 	if not ResourceLoader.exists(path):
 		path = "res://textures/minigames/balls/classic.png"
-	return load(path)
+	# redrawn on the board's chunky grid: 48 px art -> 16 px (shown x4)
+	var img: Image = (load(path) as Texture2D).get_image()
+	if img.is_compressed():
+		img.decompress()
+	img.convert(Image.FORMAT_RGBA8)
+	img.resize(BALL_ART, BALL_ART, Image.INTERPOLATE_BILINEAR)
+	for y in BALL_ART:
+		for x in BALL_ART:
+			var c := img.get_pixel(x, y)
+			c.a = 1.0 if c.a > 0.45 else 0.0
+			img.set_pixel(x, y, c)
+	return ImageTexture.create_from_image(img)
 
 func _make_swirl_texture() -> Texture2D:
 	## The goal: a little flush swirl.
-	const S := 32
-	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
-	var c := Vector2(S / 2.0, S / 2.0)
-	for y in S:
-		for x in S:
-			var off := Vector2(x + 0.5, y + 0.5) - c
-			var d := off.length()
-			if d > S / 2.0:
-				continue
-			var col := Color8(84, 150, 206).lerp(Color8(40, 90, 150), 1.0 - d / (S / 2.0))
-			if d > S / 2.0 - 1.6:
-				col = OUTLINE
-			else:
-				var arm := fposmod(off.angle() * 3.0 / TAU + d * 0.28, 1.0)
-				if arm < 0.3:
-					col = Color8(214, 240, 252)
-				elif d < 3.5:
-					col = Color8(30, 70, 120)
-			img.set_pixel(x, y, col)
-	return ImageTexture.create_from_image(img)
-
-func _make_coin_texture() -> Texture2D:
 	const S := 22
 	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
 	var c := Vector2(S / 2.0, S / 2.0)
@@ -531,23 +541,44 @@ func _make_coin_texture() -> Texture2D:
 			var d := off.length()
 			if d > S / 2.0:
 				continue
-			var shade := clampf(0.5 - (off.x + off.y) / S, 0.0, 1.0)
-			var col := Color8(196, 76, 118).lerp(Color8(248, 150, 182), shade)
-			if d > S / 2.0 - 1.6:
+			var col := Color8(84, 150, 206) if d > S * 0.25 else Color8(54, 110, 170)
+			if d > S / 2.0 - 1.2:
+				col = OUTLINE
+			else:
+				var arm := fposmod(off.angle() * 3.0 / TAU + d * 0.4, 1.0)
+				if arm < 0.3:
+					col = Color8(214, 240, 252)
+				elif d < 2.5:
+					col = Color8(30, 70, 120)
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+func _make_coin_texture() -> Texture2D:
+	const S := 15
+	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
+	var c := Vector2(S / 2.0, S / 2.0)
+	for y in S:
+		for x in S:
+			var off := Vector2(x + 0.5, y + 0.5) - c
+			var d := off.length()
+			if d > S / 2.0:
+				continue
+			var col := Color8(248, 150, 182) if off.x + off.y < 0 else Color8(214, 96, 136)
+			if d > S / 2.0 - 1.1:
 				col = Color8(110, 36, 70)
-			elif Vector2(off.x + 3.5, off.y + 3.5).length() < 2.6:
+			elif Vector2(off.x + 2.5, off.y + 2.5).length() < 1.6:
 				col = Color8(255, 222, 232)
 			img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
 
 func _make_shadow_texture() -> Texture2D:
-	var img := Image.create(20, 12, false, Image.FORMAT_RGBA8)
-	for y in 12:
-		for x in 20:
-			var off := Vector2((x + 0.5 - 10.0) / 10.0, (y + 0.5 - 6.0) / 6.0)
+	var img := Image.create(13, 7, false, Image.FORMAT_RGBA8)
+	for y in 7:
+		for x in 13:
+			var off := Vector2((x + 0.5 - 6.5) / 6.5, (y + 0.5 - 3.5) / 3.5)
 			var l := off.length()
 			if l <= 1.0:
-				img.set_pixel(x, y, Color(0.2, 0.1, 0.05, 0.4 * (1.0 - l * l)))
+				img.set_pixel(x, y, Color(0.2, 0.1, 0.05, 0.32 if l < 0.7 else 0.18))
 	return ImageTexture.create_from_image(img)
 
 # ================================================================== LOOP
@@ -581,7 +612,7 @@ func _process(delta: float) -> void:
 
 	if state != State.FALLING:
 		ball.position = ball_pos
-	shadow.position = ball.position + Vector2(5, 14) * ball.scale.x
+	shadow.position = ball.position + Vector2(8, 20) * (ball.scale.x / DETAIL)
 	shadow.visible = state != State.FALLING
 	hud_level.text = "LV %d" % level
 	hud_time.text = "%d:%02d" % [int(level_time) / 60, int(level_time) % 60]
@@ -657,14 +688,14 @@ func _check_finish() -> void:
 	var t := create_tween()
 	t.tween_property(ball, "position", finish_pos, 0.25)
 	t.parallel().tween_property(ball, "rotation", ball.rotation + TAU * 3.0, 1.0)
-	t.parallel().tween_property(ball, "scale", Vector2(0.1, 0.1), 1.0).set_ease(Tween.EASE_IN)
+	t.parallel().tween_property(ball, "scale", Vector2(0.1, 0.1) * DETAIL, 1.0).set_ease(Tween.EASE_IN)
 	_show_banner("LEVEL %d CLEAR!\n+%d" % [level, bonus], 1.6)
 	t.tween_interval(1.0)
 	t.tween_callback(func():
 		if not is_running:
 			return
 		level += 1
-		ball.scale = Vector2.ONE
+		ball.scale = Vector2(DETAIL, DETAIL)
 		_build_level()
 		_show_banner("LEVEL %d" % level, 1.0))
 
@@ -677,7 +708,7 @@ func _fall_into(h: Vector2) -> void:
 	Input.vibrate_handheld(90)
 	var t := create_tween()
 	t.tween_property(ball, "position", h, 0.12)
-	t.tween_property(ball, "scale", Vector2(0.15, 0.15), 0.45).set_ease(Tween.EASE_IN)
+	t.tween_property(ball, "scale", Vector2(0.15, 0.15) * DETAIL, 0.45).set_ease(Tween.EASE_IN)
 	t.parallel().tween_property(ball, "modulate", Color(0.2, 0.15, 0.1, 1), 0.45)
 	t.tween_callback(func():
 		if lives <= 0:
@@ -685,7 +716,7 @@ func _fall_into(h: Vector2) -> void:
 			return
 		ball_pos = respawn_pos
 		ball.position = ball_pos
-		ball.scale = Vector2.ONE
+		ball.scale = Vector2(DETAIL, DETAIL)
 		ball.modulate = Color(1, 1, 1, 1)
 		state = State.PLAY
 		var blink := create_tween()
