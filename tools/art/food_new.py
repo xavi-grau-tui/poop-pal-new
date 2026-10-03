@@ -1,6 +1,11 @@
 """New food icons (32x32, same paint-big-then-shrink style as food.py): spicy, sour, the exotic
 tech / cosmic foods and the five legendary ones.
 
+Every icon is fitted to the space the original foods use (about 30x29 px, centred, a 1 px
+margin; the eating animation splits the icon into 3x3 squares): it's painted once on a big
+canvas to measure it, then painted again zoomed and centred to fill that space (FIT says
+how much of it, for the ones that should look smaller).
+
     python3 tools/art/food_new.py   -> textures/food/<name>.png
 """
 import math, os
@@ -33,6 +38,28 @@ BRINE = [(10, 50, 50), (20, 100, 96), (50, 160, 150), (120, 214, 200), (210, 250
 TENT = [(60, 20, 60), (120, 40, 110), (180, 80, 160), (220, 140, 200), (250, 210, 240)]
 
 
+class FitCanvas(Canvas):
+    """A canvas whose design coordinates are zoomed by z around `ctr` and drawn centred on
+    `out` (native px), so the same drawing code can be painted at any size/position."""
+    def __init__(s, w, h, k, z=1.0, ctr=(16, 16), out=(16, 16)):
+        super().__init__(w, h, k)
+        y, x = np.mgrid[0:h * k, 0:w * k].astype(np.float32)
+        s.x = ctr[0] + (x / k - out[0]) / z
+        s.y = ctr[1] + (y / k - out[1]) / z
+        s.z, s.ctr, s.out = z, ctr, out
+
+    def P(s, x, y):
+        return (((x - s.ctr[0]) * s.z + s.out[0]) * s.k, ((y - s.ctr[1]) * s.z + s.out[1]) * s.k)
+
+    def alpha_at(s, x, y):
+        px, py = s.P(x, y)
+        return s.a[min(max(int(py), 0), s.h * s.k - 1), min(max(int(px), 0), s.w * s.k - 1)]
+
+
+BOX = (1.0, 1.0, 31.0, 30.5)          # where the original foods sit (native px)
+FIT = {'pickle': 0.84}                # (of the box) the ones meant to look smaller
+
+
 def blob(c, balls, pal, **kw):
     f = field(c, balls)
     m = f > 1
@@ -43,7 +70,7 @@ def blob(c, balls, pal, **kw):
 def draw_lines(c, lines, col, w):
     im = to_image(c); d = ImageDraw.Draw(im)
     for l in lines:
-        d.line([c.P(*p) for p in l], fill=col, width=int(w * c.k), joint='curve')
+        d.line([c.P(*p) for p in l], fill=col, width=max(1, int(w * c.k * getattr(c, 'z', 1.0))), joint='curve')
     a = np.asarray(im, np.float32); c.rgb, c.a = a[..., :3].copy(), a[..., 3] / 255
 
 
@@ -97,13 +124,23 @@ def curry(c):
 @icon
 def pickle(c):
     blob(c, [(9 + i * 2, 24 - i * 2.1, 5.2, 5.2) for i in range(8)], PICKLE, spec_amt=.35)
-    dots(c, 12, (5, 7, 27, 28, lambda x, y: c.a[min(int(y * c.k), c.h * c.k - 1), min(int(x * c.k), c.w * c.k - 1)] > .5), [(206, 220, 130), (50, 80, 24)], r=.6, seed=5)
+    dots(c, 12, (5, 7, 27, 28, lambda x, y: c.alpha_at(x, y) > .5), [(206, 220, 130), (50, 80, 24)], r=.6, seed=5)
 
 
 @icon
 def lemon(c):
-    blob(c, [(16, 17, 10, 8), (6.5, 17, 2.4, 2), (25.5, 17, 2.4, 2)], LEMON, spec_amt=.6)
-    blob(c, [(19, 7.5, 4.5, 2.2)], GREEN_S)
+    # seen on the diagonal (fills the square): a plump body with a little nub at each end
+    # an ellipse along the diagonal + a nub at each tip (built in rotated coordinates)
+    ang = math.radians(40)
+    u = (c.x - 16) * math.cos(ang) - (c.y - 16) * math.sin(ang)     # along the lemon
+    v = (c.x - 16) * math.sin(ang) + (c.y - 16) * math.cos(ang)     # across it
+    f = 1 / np.maximum((u / 10.5) ** 2 + (v / 8.0) ** 2, 1e-4)
+    for side in (-1, 1):
+        f = np.maximum(f, 1 / np.maximum(((u - side * 11.2) / 2.4) ** 2 + (v / 2.0) ** 2, 1e-4))
+    material(c, height(f, .5), f > 1, LEMON, bump=5, spec_amt=.6, grain=.08)
+    # the leaf, at the top tip
+    tip = (16 + 12.5 * math.cos(ang), 16 - 12.5 * math.sin(ang))
+    blob(c, [(tip[0] - 2.2, tip[1] - 1.2, 3.2, 1.7)], GREEN_S)
 
 
 @icon
@@ -198,11 +235,27 @@ def krakenbrine(c):
     material(c, height(f, .5), (f > 1) & (c.y > 15), TENT, bump=3, spec_amt=.4, grain=.04)
 
 
+def fitted(fn, name):
+    """Measure the drawing on a big canvas, then paint it fitted to BOX."""
+    m = FitCanvas(48, 48, 8, 1.0, (16, 16), (24, 24))
+    fn(m)
+    outline(m, m.a > .5, 1.0)
+    ys, xs = np.nonzero(m.a > .5)
+    x0, x1 = xs.min() / m.k - 24 + 16, (xs.max() + 1) / m.k - 24 + 16
+    y0, y1 = ys.min() / m.k - 24 + 16, (ys.max() + 1) / m.k - 24 + 16
+    f = FIT.get(name, 1.0)
+    bw, bh = (BOX[2] - BOX[0]) * f, (BOX[3] - BOX[1]) * f
+    # (the outline stays 1 px whatever the zoom, so fit what's inside it)
+    z = min((bw - 2) / (x1 - x0 - 2), (bh - 2) / (y1 - y0 - 2))
+    c = FitCanvas(32, 32, 16, z, ((x0 + x1) / 2, (y0 + y1) / 2), ((BOX[0] + BOX[2]) / 2, (BOX[1] + BOX[3]) / 2))
+    fn(c)
+    return c
+
+
 if __name__ == '__main__':
     out = []
     for name, fn in ICONS.items():
-        c = Canvas(32, 32, 16)
-        fn(c)
+        c = fitted(fn, name)
         out.append(save(c, name))
     prev = Image.new('RGBA', (len(out) * 36, 36), (236, 220, 190, 255))
     for i, im in enumerate(out):
