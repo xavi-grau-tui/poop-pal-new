@@ -36,6 +36,7 @@ const HOLE_FALL_R := 19.0             # ball centre this close to a hole centre 
 const HOLE_PULL := 900.0
 const CHECK_R := 34.0
 const FINISH_R := 34.0
+const HATCH_IN := 20                  # trapdoor opening, texture px (x DETAIL)
 const LIVES := 3
 
 # --- Palette: a wooden labyrinth toy (light plywood floor, darker wooden walls) ---
@@ -75,7 +76,12 @@ var calib := Vector2.ZERO
 var bump_cooldown := 0.0
 
 var board: Sprite2D
-var finish_sprite: Sprite2D
+var finish_sprite: Sprite2D           # the flush swirl, under the trapdoor
+var exit_node: Node2D                 # the trapdoor: frame + swirl + two hatch doors
+var hatch_l: Sprite2D
+var hatch_r: Sprite2D
+var exit_open := false
+var locked_hint_cd := 0.0
 var ball: Sprite2D
 var shadow: Sprite2D
 var level_nodes: Node2D
@@ -271,7 +277,9 @@ func _place_features(rng: RandomNumberGenerator) -> void:
 
 	# Holes: dead ends first (traps), then beside the route (tension)
 	holes.clear()
-	var want := mini(3 + level * 2, 18)
+	# (a gentle ramp: 2, 4, 6, 8... up to 18; early levels keep them spread out)
+	var want := mini(level * 2, 18)
+	var spacing := 2 if level <= 3 else (1 if level <= 6 else 0)   # free cells between holes
 	var on_path := {}
 	for c in path_cells:
 		on_path[c] = true
@@ -288,17 +296,31 @@ func _place_features(rng: RandomNumberGenerator) -> void:
 				others.append(c)
 	_shuffle(dead_ends, rng)
 	_shuffle(others, rng)
+	var used: Array[Vector2i] = []
 	for c in dead_ends:
-		if holes.size() >= want / 2:
+		if holes.size() >= (want + 1) / 2:
 			break
+		if not _hole_room(c, used, spacing):
+			continue
+		used.append(c)
 		holes.append(_cell_center(c))
 	for c in others:
 		if holes.size() >= want:
 			break
+		if not _hole_room(c, used, spacing):
+			continue
+		used.append(c)
 		# One hole per cell, in a corner quadrant, so the other side stays passable
 		var o := TILE * 0.5
 		var q := Vector2(o if rng.randf() < 0.5 else -o, o if rng.randf() < 0.5 else -o)
 		holes.append(_cell_center(c) + q)
+
+## No other hole within `spacing` cells (so early levels don't bunch them up in one spot)
+func _hole_room(c: Vector2i, used: Array[Vector2i], spacing: int) -> bool:
+	for u in used:
+		if maxi(absi(u.x - c.x), absi(u.y - c.y)) <= spacing:
+			return false
+	return true
 
 func _shuffle(arr: Array, rng: RandomNumberGenerator) -> void:
 	for i in range(arr.size() - 1, 0, -1):
@@ -361,13 +383,13 @@ func _paint_board() -> Image:
 				var along := float(y if vertical else x)
 				var across := float(x if vertical else y)
 				var grain := sin(across * 1.3 + sin(along * 0.11 + across * 0.7) * 1.6)
-				if m == 0:
-					c = OUTLINE
-				elif d_dn <= 3:
-					c = WALL_SIDE.darkened(0.1 * (3 - d_dn))         # front face, darker at the base
-				elif d_up <= 1 or d_lf <= 1:
+				if m <= 1:
+					c = OUTLINE                                      # (2 px thick)
+				elif d_dn <= 4:
+					c = WALL_SIDE.darkened(0.1 * (4 - d_dn))         # front face, darker at the base
+				elif d_up <= 2 or d_lf <= 2:
 					c = WALL_TOP                                     # lit edges
-				elif d_rt <= 1:
+				elif d_rt <= 2:
 					c = WALL_MID.darkened(0.08)
 				else:
 					c = WALL_MID if grain < 0.35 else WALL_GRAIN
@@ -472,11 +494,30 @@ func _create_static_nodes() -> void:
 	level_nodes = Node2D.new()
 	add_child(level_nodes)
 
+	# The exit: a trapdoor in the floor; it opens once every pink ball is collected
+	exit_node = Node2D.new()
+	add_child(exit_node)
+	var frame_s := Sprite2D.new()
+	frame_s.texture = _make_hatch_frame_texture()
+	frame_s.scale = Vector2(DETAIL, DETAIL)
+	frame_s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	exit_node.add_child(frame_s)
 	finish_sprite = Sprite2D.new()
 	finish_sprite.texture = _make_swirl_texture()
 	finish_sprite.scale = Vector2(DETAIL, DETAIL)
 	finish_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	add_child(finish_sprite)
+	exit_node.add_child(finish_sprite)
+	var leaf := _make_hatch_leaf_texture()
+	hatch_l = Sprite2D.new()
+	hatch_r = Sprite2D.new()
+	for h in [hatch_l, hatch_r]:
+		h.texture = leaf
+		h.centered = false
+		h.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		exit_node.add_child(h)
+	# hinged on the outer edges; the right one is mirrored
+	hatch_l.position = Vector2(-HATCH_IN / 2.0, -HATCH_IN / 2.0) * DETAIL
+	hatch_r.position = Vector2(HATCH_IN / 2.0, -HATCH_IN / 2.0) * DETAIL
 
 	shadow = Sprite2D.new()
 	shadow.texture = _make_shadow_texture()
@@ -533,26 +574,17 @@ func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: C
 func _spawn_level_nodes() -> void:
 	for n in level_nodes.get_children():
 		n.queue_free()
-	finish_sprite.position = finish_pos
+	exit_node.position = finish_pos
+	_set_exit_open(false)
 	var coin := _make_coin_texture()
-	for i in checkpoints.size():
-		var cp: Dictionary = checkpoints[i]
+	for cp in checkpoints:
 		var s := Sprite2D.new()
 		s.texture = coin
 		s.scale = Vector2(DETAIL, DETAIL)
 		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		s.position = cp["pos"]
 		level_nodes.add_child(s)
-		var num := Label.new()
-		num.text = str(i + 1)
-		if lcd_font:
-			num.add_theme_font_override("font", lcd_font)
-		num.add_theme_font_size_override("font_size", 30)
-		num.add_theme_color_override("font_color", TEXT_DARK)
-		num.position = cp["pos"] + Vector2(24, -58)
-		level_nodes.add_child(num)
 		cp["node"] = s
-		cp["label"] = num
 
 func _refresh_lives() -> void:
 	for n in lives_box.get_children():
@@ -677,8 +709,8 @@ func _colour_gap(a: Color, b: Color) -> float:
 	return absf(a.r - b.r) + absf(a.g - b.g) + absf(a.b - b.b)
 
 func _make_swirl_texture() -> Texture2D:
-	## The goal: a little flush swirl.
-	const S := 22
+	## The goal: a little flush swirl (fills the trapdoor's opening).
+	const S := HATCH_IN
 	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
 	var c := Vector2(S / 2.0, S / 2.0)
 	for y in S:
@@ -697,6 +729,93 @@ func _make_swirl_texture() -> Texture2D:
 				elif d < 2.5:
 					col = Color8(30, 70, 120)
 			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+## Trapdoor shut (open = false) or fully open, without animation (a new level)
+func _set_exit_open(open: bool) -> void:
+	exit_open = open
+	var sx := 0.0 if open else float(DETAIL)
+	hatch_l.scale = Vector2(sx, DETAIL)
+	hatch_r.scale = Vector2(-sx, DETAIL)
+	hatch_l.visible = not open
+	hatch_r.visible = not open
+	hatch_l.modulate = Color(1, 1, 1)
+	hatch_r.modulate = Color(1, 1, 1)
+	finish_sprite.visible = open
+
+## Every pink ball collected: the two hatch doors swing up (seen from above they get
+## narrower and darker towards their hinges) and the flush swirl shows underneath.
+func _open_exit() -> void:
+	exit_open = true
+	finish_sprite.visible = true
+	hatch_l.visible = true
+	hatch_r.visible = true
+	_sfx("res://sounds/fx/unlock_ding.wav", -10.0)
+	Input.vibrate_handheld(40)
+	var t := create_tween().set_parallel(true)
+	# a little rattle first...
+	var rt := create_tween()
+	rt.tween_property(exit_node, "position", finish_pos + Vector2(3, 0), 0.05)
+	rt.tween_property(exit_node, "position", finish_pos + Vector2(-3, 0), 0.05)
+	rt.tween_property(exit_node, "position", finish_pos, 0.05)
+	# ...then the doors swing open
+	t.tween_property(hatch_l, "scale:x", DETAIL * 0.4, 0.45).set_delay(0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(hatch_r, "scale:x", -DETAIL * 0.4, 0.45).set_delay(0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(hatch_l, "modulate", Color(0.62, 0.55, 0.5), 0.45).set_delay(0.15)
+	t.tween_property(hatch_r, "modulate", Color(0.62, 0.55, 0.5), 0.45).set_delay(0.15)
+	t.tween_callback(func(): _sfx("res://sounds/fx/clack.mp3", -12.0)).set_delay(0.3)
+	_show_banner("EXIT OPEN!", 0.8)
+
+func _make_hatch_frame_texture() -> Texture2D:
+	## The trapdoor's frame: a dark wooden rim round a deep opening (seen when it opens)
+	const S := HATCH_IN + 4
+	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
+	for y in S:
+		for x in S:
+			var e := mini(mini(x, y), mini(S - 1 - x, S - 1 - y))
+			var col: Color
+			if e == 0:
+				col = OUTLINE
+			elif e == 1:
+				col = WALL_SIDE if (x + y) % 5 != 0 else WALL_SIDE.darkened(0.15)
+			elif e == 2 and (y == 2 or x == 2):
+				col = OUTLINE.darkened(0.2)                  # the opening's shadowed inner lip
+			else:
+				col = Color8(36, 62, 96)                     # deep water down there
+			img.set_pixel(x, y, col)
+	# iron corner bolts
+	for p in [Vector2i(1, 1), Vector2i(S - 2, 1), Vector2i(1, S - 2), Vector2i(S - 2, S - 2)]:
+		img.set_pixel(p.x, p.y, Color8(70, 70, 76))
+	return ImageTexture.create_from_image(img)
+
+func _make_hatch_leaf_texture() -> Texture2D:
+	## One hatch door (the left one; the right is mirrored). Hinge on the left edge,
+	## the seam on the right edge, with half of the ring handle.
+	const W := HATCH_IN / 2
+	const H := HATCH_IN
+	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
+	var plank := Color8(176, 112, 64)
+	var plank_lo := Color8(150, 92, 50)
+	var iron := Color8(78, 74, 80)
+	var iron_hi := Color8(132, 128, 136)
+	for y in H:
+		for x in W:
+			var col := plank if (y / 3) % 2 == 0 else plank_lo
+			if y % 3 == 2:
+				col = col.darkened(0.18)                     # gaps between the boards
+			if (x * 7 + y * 3) % 11 == 0:
+				col = col.darkened(0.08)                     # grain specks
+			if y == 3 or y == H - 4:
+				col = iron if x > 0 else iron_hi             # iron straps from the hinge
+			if x == W - 1:
+				col = OUTLINE                                # the seam
+			elif x == 0 and y % 6 == 1:
+				col = iron_hi                                # hinge pins
+			img.set_pixel(x, y, col)
+	# half of the ring handle, at the seam
+	for p in [Vector2i(W - 3, 8), Vector2i(W - 4, 9), Vector2i(W - 3, 10), Vector2i(W - 2, 11)]:
+		img.set_pixel(p.x, p.y, Color8(206, 176, 92))
+	img.set_pixel(W - 2, 8, Color8(110, 86, 40))
 	return ImageTexture.create_from_image(img)
 
 func _make_coin_texture() -> Texture2D:
@@ -733,6 +852,7 @@ func _process(delta: float) -> void:
 	if not is_running:
 		return
 	finish_sprite.rotation -= delta * 2.5
+	locked_hint_cd = maxf(0.0, locked_hint_cd - delta)
 	bump_cooldown = maxf(0.0, bump_cooldown - delta)
 
 	if state == State.PLAY:
@@ -818,11 +938,18 @@ func _check_checkpoints() -> void:
 		t.tween_property(s, "scale", Vector2(DETAIL, DETAIL) * 1.6, 0.12)
 		t.tween_property(s, "scale", Vector2(DETAIL, DETAIL), 0.15)
 		t.parallel().tween_property(s, "modulate", Color(0.45, 0.35, 0.3, 0.55), 0.3)
-		(cp["label"] as Label).modulate.a = 0.4
 		_float_text("+10", cp["pos"])
+		if not exit_open and checkpoints.all(func(c): return c["taken"]):
+			_open_exit()
 
 func _check_finish() -> void:
 	if ball_pos.distance_to(finish_pos) > FINISH_R:
+		return
+	if not exit_open:
+		# shut: it's just floor, but say why once in a while
+		if locked_hint_cd <= 0.0:
+			locked_hint_cd = 2.5
+			_float_text("Get all the balls!", finish_pos)
 		return
 	state = State.CLEAR
 	vel = Vector2.ZERO
@@ -934,7 +1061,8 @@ func _show_banner(text: String, hold: float) -> void:
 	t.tween_property(banner, "modulate:a", 0.0, 0.3)
 
 func _float_text(text: String, at: Vector2) -> void:
-	var l := _make_label(at + Vector2(-60, -60), Vector2(120, 40), 28, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.95, 0.85))
+	var lx := clampf(at.x - 200, 30, PLAY_WIDTH - 430)          # (kept inside the board)
+	var l := _make_label(Vector2(lx, at.y - 60), Vector2(400, 40), 28, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.95, 0.85))
 	l.add_theme_color_override("font_outline_color", OUTLINE)
 	l.add_theme_constant_override("outline_size", 10)
 	l.text = text
