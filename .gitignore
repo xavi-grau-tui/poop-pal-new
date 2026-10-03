@@ -28,3 +28,4 @@ android/.cinterop/
 tools/art/out/
 .venv/
 tools/art/__pycache__/
+tools/design/__pycache__/
