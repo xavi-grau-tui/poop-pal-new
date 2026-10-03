@@ -115,14 +115,19 @@ func _update_game_card_labels(index: int) -> void:
 
 ## The % sign stays exactly where it is for "0%"; longer numbers grow to its left
 func _pin_percent_sign(label: Label) -> void:
-	if label.has_meta("pct_right"):
+	_pin_right(label, "0%")
+
+## Right-aligns a label so its text always ends where `sample` (as laid out in the scene,
+## left-aligned) ends; longer or shorter text grows to the left
+func _pin_right(label: Label, sample: String) -> void:
+	if label.has_meta("pinned_right"):
 		return
 	var font: Font = label.get_theme_font("font")
 	var fs: int = label.get_theme_font_size("font_size")
-	var right: float = label.position.x + font.get_string_size("0%", HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	label.set_meta("pct_right", right)
+	var right: float = label.position.x + font.get_string_size(sample, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	label.set_meta("pinned_right", true)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	label.size.x = 160.0
+	label.size.x = 200.0
 	label.position.x = right - label.size.x
 
 func _on_bonus_tries(_t: int) -> void:
@@ -164,7 +169,13 @@ func _update_bonus_card() -> void:
 	var b = bottom.get_node_or_null("MaxScore/Score")
 	var c = bottom.get_node_or_null("Progress")
 	var d = bottom.get_node_or_null("Progress/Progress")
+	# values end where the other cards' digits end ("000000" and "0%"), however short they are
 	if a: a.text = "Tries"
-	if b: b.text = str(LuckyPinch.tries)
-	if c: c.text = "Prizes"
-	if d: d.text = "%d/%d" % [LuckyPinch.prizes.size(), LuckyPinch.TRIES]
+	if b:
+		_pin_right(b, "000000")
+		b.text = str(LuckyPinch.tries)
+	# how many prize capsules are still in the machine (it refills when they run out)
+	if c: c.text = "Capsules"
+	if d:
+		_pin_right(d, "0%")
+		d.text = str(LuckyPinch.pit.size())
