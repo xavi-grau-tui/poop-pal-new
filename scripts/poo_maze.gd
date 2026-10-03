@@ -494,7 +494,7 @@ func _create_static_nodes() -> void:
 
 	var frame := ColorRect.new()
 	frame.color = Color(0, 0, 0)
-	frame.size = Vector2(176, 50)
+	frame.size = Vector2(176, 66)                 # (taller downwards so the digits sit comfortably)
 	frame.position = Vector2(ORIGIN.x + BOARD_PX * PX - 20 - frame.size.x, ORIGIN.y + 3)
 	add_child(frame)
 	var box := ColorRect.new()
