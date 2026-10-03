@@ -588,14 +588,14 @@ func _make_ball_texture() -> Texture2D:
 	var ink := body.darkened(0.65)
 	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
 	var inner := r - 1.0
-	# the sprite's own outline (dark pixels touching the outside) isn't a detail: only the
-	# dark bits inside (eyes, mouth, seams) win their patch
+	# the sprite's own outline and the dark shading along it are left out (one round ball,
+	# not the pal's shape drawn inside it): only the dark bits inside (eyes, mouth) win
 	var edge := {}
 	for sy in range(used.position.y, used.end.y):
 		for sx in range(used.position.x, used.end.x):
 			if src.get_pixel(sx, sy).a < 0.5:
 				continue
-			for dd: Vector2i in [Vector2i(2, 0), Vector2i(-2, 0), Vector2i(0, 2), Vector2i(0, -2)]:
+			for dd: Vector2i in [Vector2i(6, 0), Vector2i(-6, 0), Vector2i(0, 6), Vector2i(0, -6), Vector2i(4, 4), Vector2i(-4, 4), Vector2i(4, -4), Vector2i(-4, -4)]:
 				var q := Vector2i(sx, sy) + dd
 				if q.x < 0 or q.y < 0 or q.x >= src.get_width() or q.y >= src.get_height() or src.get_pixel(q.x, q.y).a < 0.5:
 					edge[Vector2i(sx, sy)] = true
