@@ -11,10 +11,10 @@ extends Node2D
 
 const BACK_SCENE := preload("res://scenes/console_back.tscn")
 
-const TURN_TIME := 0.55
+const TURN_TIME := 0.7
 const LIFT := 0.07                  # extra scale at edge-on, as if picked up to turn it
 const SHADE := 0.35                 # how much a face darkens as it turns away
-const THICK := 56.0                 # case thickness seen edge-on, screen px (~half a cm)
+const THICK := 90.0                 # case thickness seen edge-on, screen px
 const DOUBLE_TAP := 0.4             # max seconds between the two taps
 const LOGO_PAD := 20.0              # tap slack around the logo, px
 const SWIPE_MIN := 120.0            # horizontal drag on the back that counts as a swipe, px
@@ -135,6 +135,7 @@ func _apply(p: float) -> void:
 	overlay.face = Rect2(face_x, top, face_w, face_h)
 	overlay.side = Rect2(side_x, top, side_w, face_h)
 	overlay.shade = SHADE * edge
+	overlay.face_left = not side_first
 	overlay.visible = true
 	overlay.queue_redraw()
 
@@ -142,14 +143,17 @@ func _apply(p: float) -> void:
 ## Screen-space: hides everything outside the turning device, draws its side and darkens
 ## the face as it turns away.
 class Overlay extends Node2D:
-	const CASE := Color8(232, 214, 186)
-	const CASE_DARK := Color8(200, 166, 130)
+	const NEAR := Color8(214, 188, 152)    # the shell half next to the face showing
+	const FAR_HALF := Color8(178, 146, 110)   # the other half, turned further from the light
+	const SEAM := Color8(120, 88, 62)
+	const LIT := Color8(250, 237, 217)
 	const OUTLINE := Color8(72, 49, 37)
 	const FAR := 100000.0
 
 	var face := Rect2()
 	var side := Rect2()
 	var shade := 0.0
+	var face_left := false              # the face is left of the side (else right)
 
 	func _draw() -> void:
 		var bg := RenderingServer.get_default_clear_color()
@@ -161,8 +165,16 @@ class Overlay extends Node2D:
 		if shade > 0.0:
 			draw_rect(face, Color(0, 0, 0, shade))
 		if side.size.x >= 1.0:
-			draw_rect(side, CASE)
-			# seam where the front and back shells meet, then the dark outline
-			var seam_x := side.position.x + side.size.x * 0.5
-			draw_line(Vector2(seam_x, side.position.y), Vector2(seam_x, side.end.y), CASE_DARK, maxf(side.size.x * 0.08, 1.0))
+			# two shell halves meeting at a seam, the one by the face catching more light
+			var half := side.size.x * 0.5
+			var near_x := side.position.x if face_left else side.position.x + half
+			var far_x := side.position.x + half if face_left else side.position.x
+			draw_rect(Rect2(near_x, side.position.y, half, side.size.y), NEAR)
+			draw_rect(Rect2(far_x, side.position.y, half, side.size.y), FAR_HALF)
+			var seam_x := side.position.x + half
+			var w := maxf(side.size.x * 0.06, 1.0)
+			draw_line(Vector2(seam_x, side.position.y), Vector2(seam_x, side.end.y), SEAM, w)
+			# a thin highlight where the side meets the face, then the dark outline
+			var lit_x := side.position.x + w if face_left else side.end.x - w
+			draw_line(Vector2(lit_x, side.position.y), Vector2(lit_x, side.end.y), LIT, w)
 			draw_rect(side, OUTLINE, false, minf(4.0, side.size.x * 0.5))
