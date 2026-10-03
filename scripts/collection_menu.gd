@@ -663,8 +663,11 @@ func _item_preview(cat: String, id: String) -> Texture2D:
 			return _decor_preview(id)
 	return null
 
-## The current pal (or the first baby if there is none yet) wearing the accessory
+## The accessory's own icon (food-icon style); the pal wearing it only as a fallback
 func _accessory_preview(id: String) -> Texture2D:
+	var icon_path := "res://textures/pet/accessories/icons/%s.png" % id
+	if ResourceLoader.exists(icon_path):
+		return load(icon_path)
 	var form := PetState.form_id if PetState.has_poop() else String(PetState.pedia_order()[0])
 	var body := _image("res://textures/pet/forms/%s-1.png" % form)
 	if body == null:
