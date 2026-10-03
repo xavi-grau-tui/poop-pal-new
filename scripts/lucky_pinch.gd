@@ -329,7 +329,7 @@ func _open_prize() -> void:
 func _show_prize_card(p: Dictionary) -> void:
 	var card := Control.new()
 	card.size = Vector2(540, 400)
-	card.position = Vector2((PLAY_WIDTH - card.size.x) / 2.0 + 60.0, 230)
+	card.position = ((Vector2(PLAY_WIDTH, PLAY_HEIGHT) - card.size) / 2.0).round()   # dead centre
 	card.pivot_offset = card.size / 2.0
 	add_child(card)
 	var border := ColorRect.new()
