@@ -146,8 +146,9 @@ func _generate_maze(rng: RandomNumberGenerator) -> void:
 		visited[nxt] = true
 		stack.append(nxt)
 
-	# Knock out a few extra walls so there are loops and shortcuts
-	var extra := 3 + mini(level, 5)
+	# Knock out a few extra walls (loops and shortcuts); fewer as the levels go up, so the
+	# routes get longer and harder
+	var extra := maxi(0, 5 - level)
 	var tries := 0
 	while extra > 0 and tries < 200:
 		tries += 1
@@ -181,37 +182,84 @@ func _cell_neighbors(c: Vector2i) -> Array[Vector2i]:
 func _cell_center(c: Vector2i) -> Vector2:
 	return ORIGIN + Vector2(3 * c.x + 2, 3 * c.y + 2) * TILE
 
-func _place_features(rng: RandomNumberGenerator) -> void:
-	# Route: BFS from the top-left cell; the finish is the farthest cell
-	var start := Vector2i(0, 0)
-	var prev := { start: start }
-	var queue: Array[Vector2i] = [start]
-	var last := start
+## Maze distance (in cells) from one cell to every other, and the way back
+func _bfs(from: Vector2i) -> Dictionary:
+	var dist := { from: 0 }
+	var prev := { from: from }
+	var queue: Array[Vector2i] = [from]
 	while queue.size() > 0:
 		var c: Vector2i = queue.pop_front()
-		last = c
 		for n in _cell_neighbors(c):
-			if not prev.has(n):
+			if not dist.has(n):
+				dist[n] = dist[c] + 1
 				prev[n] = c
 				queue.append(n)
+	return { "dist": dist, "prev": prev }
+
+func _path(a: Vector2i, b: Vector2i) -> Array[Vector2i]:
+	var prev: Dictionary = _bfs(a)["prev"]
+	var out: Array[Vector2i] = []
+	var c := b
+	while c != a:
+		out.push_front(c)
+		c = prev[c]
+	return out
+
+func _place_features(rng: RandomNumberGenerator) -> void:
+	var start := Vector2i(0, 0)
+	var all_cells: Array[Vector2i] = []
+	for cy in CELLS:
+		for cx in CELLS:
+			all_cells.append(Vector2i(cx, cy))
+	# Checkpoints spread all over the maze: each one as far (in maze distance) as possible
+	# from the start and from the ones already picked. One more per level.
+	var n_checks := clampi(2 + level, 3, 7)
+	var dists := { start: _bfs(start)["dist"] }
+	var min_d := {}
+	for c in all_cells:
+		min_d[c] = dists[start][c]
+	var picked: Array[Vector2i] = []
+	for i in n_checks + 1:                       # (+1: the finish)
+		var best := Vector2i(-1, -1)
+		var best_d := -1.0
+		for c in all_cells:
+			if c == start or c in picked:
+				continue
+			var d: float = min_d[c] + rng.randf() * 0.5          # (ties broken per level)
+			if d > best_d:
+				best_d = d
+				best = c
+		picked.append(best)
+		dists[best] = _bfs(best)["dist"]
+		for c in all_cells:
+			min_d[c] = mini(min_d[c], dists[best][c])
+	# Visit them nearest-first from the start; the last one is the finish
+	var order: Array[Vector2i] = []
+	var cur := start
+	while picked.size() > 0:
+		var nxt: Vector2i = picked[0]
+		for c in picked:
+			if dists[cur][c] < dists[cur][nxt]:
+				nxt = c
+		order.append(nxt)
+		picked.erase(nxt)
+		cur = nxt
+	var last: Vector2i = order.pop_back()
+	# the ink route goes through all of them
 	path_cells.clear()
-	var c2 := last
-	while c2 != start:
-		path_cells.push_front(c2)
-		c2 = prev[c2]
-	path_cells.push_front(start)
+	path_cells.append(start)
+	cur = start
+	for c in order + [last]:
+		path_cells.append_array(_path(cur, c))
+		cur = c
 
 	start_pos = _cell_center(start)
 	finish_pos = _cell_center(last)
-
-	# Checkpoints spread evenly along the route
 	checkpoints.clear()
-	var n_checks := clampi(path_cells.size() / 4, 2, 6)
 	var check_cells := {}
-	for i in range(1, n_checks + 1):
-		var idx := int(round(float(i) * (path_cells.size() - 1) / float(n_checks + 1)))
-		check_cells[path_cells[idx]] = true
-		checkpoints.append({ "pos": _cell_center(path_cells[idx]), "taken": false })
+	for c in order:
+		check_cells[c] = true
+		checkpoints.append({ "pos": _cell_center(c), "taken": false })
 
 	# Holes: dead ends first (traps), then beside the route (tension)
 	holes.clear()
@@ -435,25 +483,26 @@ func _create_static_nodes() -> void:
 	add_child(ball)
 
 	# HUD lives on the top wall strip
-	hud_level = _make_label(Vector2(30, 18), Vector2(150, 52), 38, HORIZONTAL_ALIGNMENT_LEFT, Color(0.98, 0.93, 0.84))
-	hud_time = _make_label(Vector2(PLAY_WIDTH / 2 - 60, 18), Vector2(170, 52), 38, HORIZONTAL_ALIGNMENT_CENTER, Color(0.98, 0.93, 0.84))
+	# (all on the top wooden rail, clear of the frame's edges)
+	hud_level = _make_label(Vector2(ORIGIN.x + 22, ORIGIN.y + 2), Vector2(130, 52), 36, HORIZONTAL_ALIGNMENT_LEFT, Color(0.98, 0.93, 0.84))
+	hud_time = _make_label(Vector2(PLAY_WIDTH / 2 - 85, ORIGIN.y + 2), Vector2(170, 52), 36, HORIZONTAL_ALIGNMENT_CENTER, Color(0.98, 0.93, 0.84))
 
 	lives_box = HBoxContainer.new()
-	lives_box.position = Vector2(160, 24)
+	lives_box.position = Vector2(ORIGIN.x + 150, ORIGIN.y + 8)
 	lives_box.add_theme_constant_override("separation", 6)
 	add_child(lives_box)
 
 	var frame := ColorRect.new()
 	frame.color = Color(0, 0, 0)
-	frame.position = Vector2(PLAY_WIDTH - 230, 12)
-	frame.size = Vector2(205, 78)
+	frame.size = Vector2(176, 50)
+	frame.position = Vector2(ORIGIN.x + BOARD_PX * PX - 20 - frame.size.x, ORIGIN.y + 3)
 	add_child(frame)
 	var box := ColorRect.new()
 	box.color = Color(0.65, 0.72, 0.6)   # LCD green, like Super Puff
 	box.position = frame.position + Vector2(5, 5)
 	box.size = frame.size - Vector2(10, 10)
 	add_child(box)
-	score_label = _make_label(box.position + Vector2(6, 0), box.size - Vector2(18, 0), 38, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
+	score_label = _make_label(box.position + Vector2(6, 0), box.size - Vector2(14, 0), 32, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
 
 	banner = _make_label(Vector2(0, PLAY_HEIGHT / 2 - 60), Vector2(PLAY_WIDTH, 120), 54, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
 	banner.add_theme_color_override("font_outline_color", OUTLINE)
@@ -504,31 +553,78 @@ func _refresh_lives() -> void:
 		var t := TextureRect.new()
 		t.texture = ball_texture
 		t.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		t.custom_minimum_size = Vector2(40, 40)
+		t.custom_minimum_size = Vector2(36, 36)
 		t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		t.modulate = Color(1, 1, 1, 1) if i < lives else Color(0, 0, 0, 0.35)
 		lives_box.add_child(t)
 
 # ================================================================== GENERATED TEXTURES
 
+## Your pal, curled up and rolling: its own sprite redrawn on the board's chunky 16x16 grid
+## (each new pixel picks from its patch of the sprite: the dark bits like eyes and mouth win,
+## so the face stays readable), with a dark outline. Works for every pal.
 func _make_ball_texture() -> Texture2D:
-	## The current pal curled into a ball (pre-rendered per form in textures/minigames/balls/).
-	var id := PetState.form_id if PetState.has_poop() else "classic"
-	var path := "res://textures/minigames/balls/%s.png" % id
-	if not ResourceLoader.exists(path):
-		path = "res://textures/minigames/balls/classic.png"
-	# redrawn on the board's chunky grid: 48 px art -> 16 px (shown x4)
-	var img: Image = (load(path) as Texture2D).get_image()
-	if img.is_compressed():
-		img.decompress()
-	img.convert(Image.FORMAT_RGBA8)
-	img.resize(BALL_ART, BALL_ART, Image.INTERPOLATE_BILINEAR)
+	var path := "res://textures/minigames/balls/classic.png"
+	if PetState.has_poop():
+		path = PetState.FORMS[PetState.form_id]["frames"][0]
+	var src: Image = (load(path) as Texture2D).get_image()
+	if src.is_compressed():
+		src.decompress()
+	src.convert(Image.FORMAT_RGBA8)
+	var used := src.get_used_rect()
+	var inner := BALL_ART - 2                                 # (room for the outline)
+	# squeezed into a round ball (wide pals get taller), the face stays in the middle
+	var kx := used.size.x / float(inner)
+	var ky := used.size.y / float(inner)
+	var w := inner
+	var h := inner
+	var ox := 1
+	var oy := 1
+	var c0 := Vector2(BALL_ART / 2.0, BALL_ART / 2.0)
+	var img := Image.create(BALL_ART, BALL_ART, false, Image.FORMAT_RGBA8)
+	for ty in h:
+		for tx in w:
+			if Vector2(ox + tx + 0.5, oy + ty + 0.5).distance_to(c0) > inner / 2.0 + 0.3:
+				continue                                          # (a round ball)
+			var sx0 := used.position.x + int(tx * kx)
+			var sy0 := used.position.y + int(ty * ky)
+			var sx1 := used.position.x + int((tx + 1) * kx)
+			var sy1 := used.position.y + int((ty + 1) * ky)
+			var total := 0
+			var opaque := 0
+			var dark := 0
+			var sum := Color(0, 0, 0, 0)
+			var darkest := Color(1, 1, 1, 1)
+			for sy in range(sy0, maxi(sy1, sy0 + 1)):
+				for sx in range(sx0, maxi(sx1, sx0 + 1)):
+					total += 1
+					var c := src.get_pixel(sx, sy)
+					if c.a < 0.5:
+						continue
+					opaque += 1
+					sum += c
+					if c.get_luminance() < 0.22:
+						dark += 1
+						if c.get_luminance() < darkest.get_luminance():
+							darkest = c
+			if opaque == 0:
+				continue
+			var col: Color = darkest if dark * 4 >= opaque else sum / float(opaque)
+			col.a = 1.0
+			img.set_pixel(ox + tx, oy + ty, col)
+	# outline around the shape
+	var out := img.duplicate()
 	for y in BALL_ART:
 		for x in BALL_ART:
-			var c := img.get_pixel(x, y)
-			c.a = 1.0 if c.a > 0.45 else 0.0
-			img.set_pixel(x, y, c)
-	return ImageTexture.create_from_image(img)
+			if img.get_pixel(x, y).a > 0.5:
+				continue
+			for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var nx := x + d.x
+				var ny := y + d.y
+				if nx >= 0 and ny >= 0 and nx < BALL_ART and ny < BALL_ART and img.get_pixel(nx, ny).a > 0.5:
+					out.set_pixel(x, y, OUTLINE)
+					break
+	return ImageTexture.create_from_image(out)
 
 func _make_swirl_texture() -> Texture2D:
 	## The goal: a little flush swirl.
@@ -618,7 +714,7 @@ func _process(delta: float) -> void:
 	hud_time.text = "%d:%02d" % [int(level_time) / 60, int(level_time) % 60]
 	score_label.text = str(score)
 	# Shrink long numbers so they always fit the LCD box
-	score_label.add_theme_font_size_override("font_size", 38 if score < 10000 else (32 if score < 100000 else 27))
+	score_label.add_theme_font_size_override("font_size", 32 if score < 10000 else (27 if score < 100000 else 23))
 
 func _collide_walls() -> void:
 	var tx0 := int(floor((ball_pos.x - BALL_R - ORIGIN.x) / TILE))
