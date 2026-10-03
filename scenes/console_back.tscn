@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://textures/console/back.png" id="1_back"]
+[ext_resource type="Texture2D" path="res://textures/console/back_lid.png" id="2_lid"]
+
+[node name="ConsoleBack" type="Node2D"]
+
+[node name="Shell" type="Sprite2D" parent="."]
+position = Vector2(540, -960)
+texture = ExtResource("1_back")
+
+[node name="BatteryLid" type="Sprite2D" parent="."]
+position = Vector2(540, -960)
+texture = ExtResource("2_lid")
