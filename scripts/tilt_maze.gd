@@ -655,7 +655,6 @@ func _open_exit() -> void:
 	t.tween_property(hatch_l, "modulate", Color(0.62, 0.55, 0.5), 0.45).set_delay(0.15)
 	t.tween_property(hatch_r, "modulate", Color(0.62, 0.55, 0.5), 0.45).set_delay(0.15)
 	t.tween_callback(func(): _sfx("res://sounds/fx/clack.mp3", -12.0)).set_delay(0.3)
-	_show_banner("EXIT OPEN!", 0.8)
 
 func _make_hatch_frame_texture() -> Texture2D:
 	## The trapdoor's frame: a dark wooden rim round a deep opening (seen when it opens)
@@ -799,7 +798,7 @@ func _collide_walls() -> void:
 				vel -= (1.0 + BOUNCE) * vn * n
 				if -vn > 220.0 and bump_cooldown <= 0.0:
 					bump_cooldown = 0.12
-					_sfx("res://sounds/fx/clack.mp3", clampf(-26.0 + (-vn) / 40.0, -24.0, -8.0))
+					_sfx("res://sounds/fx/wood_tap.wav", clampf(-34.0 + (-vn) / 50.0, -30.0, -16.0), 0.0, randf_range(0.92, 1.08))
 					Input.vibrate_handheld(12)
 
 func _apply_hole_pull(dt: float) -> void:
@@ -870,7 +869,7 @@ func _fall_into(h: Vector2) -> void:
 	vel = Vector2.ZERO
 	lives -= 1
 	_refresh_lives()
-	_sfx("res://sounds/fx/sfx_sounds_falling4.wav", -8.0)
+	_sfx("res://sounds/fx/hole_plop.wav", -16.0)
 	Input.vibrate_handheld(90)
 	var t := create_tween()
 	t.tween_property(ball, "position", h, 0.12)
@@ -964,13 +963,14 @@ func _float_text(text: String, at: Vector2) -> void:
 	t.parallel().tween_property(l, "modulate:a", 0.0, 0.6)
 	t.tween_callback(l.queue_free)
 
-func _sfx(path: String, volume_db: float, max_time := 0.0) -> void:
+func _sfx(path: String, volume_db: float, max_time := 0.0, pitch := 1.0) -> void:
 	var stream = load(path) as AudioStream
 	if not stream:
 		return
 	var sfx := AudioStreamPlayer.new()
 	sfx.stream = stream
 	sfx.volume_db = volume_db
+	sfx.pitch_scale = pitch
 	add_child(sfx)
 	sfx.play()
 	sfx.finished.connect(sfx.queue_free)
