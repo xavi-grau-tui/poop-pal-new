@@ -5,7 +5,9 @@ extends Node2D
 ##                page dots, hold = open). Cards are clones of the Games menu card.
 ##   PEDIA        grid of pals, 9 per page, many pages; hold a pal to open its card
 ##   DETAIL       one pal's card: number, name, description / hint, evolution link
-##   BACKGROUNDS / ACCESSORIES / DECOR  cosmetics lists: hold to use (closes the menu, back to the pet)
+##   BACKGROUNDS / ACCESSORIES / DECOR  cosmetics lists: hold to use (closes the menu, back to the pet).
+##                The cards are the food menu's cards (same frame, icon spot, name font, type tag),
+##                3 per page in the same places, so every list in the app looks alike.
 ##
 ## Controls, same everywhere: main button TAP = next item, HOLD = open / confirm,
 ## FORWARD = next page (in a pal card: next pal). Every sub-view has a "Back" item.
@@ -19,11 +21,16 @@ const HUB_CARDS := [
 	{ "view": View.DECOR, "logo": "res://textures/menus/gutdecor.png", "pattern": "res://textures/menus/pattern_bulb_caramel.png" },
 	{ "view": View.BACKGROUNDS, "logo": "res://textures/menus/backgrounds.png", "pattern": "res://textures/menus/pattern_cloud_sage.png" },
 ]
-## Cosmetic list views: Collection category, title, verb shown on usable rows
+## Cosmetic list views: their Collection category
 const LISTS := {
-	View.BACKGROUNDS: { "category": "backgrounds", "title": "BACKGROUNDS", "verb": "Hold to use" },
-	View.ACCESSORIES: { "category": "accessories", "title": "DRESS UP", "verb": "Hold to wear" },
-	View.DECOR: { "category": "decor", "title": "GUT DECOR", "verb": "Hold to hang" },
+	View.BACKGROUNDS: { "category": "backgrounds" },
+	View.ACCESSORIES: { "category": "accessories" },
+	View.DECOR: { "category": "decor" },
+}
+## The type tag on backgrounds / gut decor cards (like the food types): word + pastel colour
+const KIND_TAGS := {
+	"complement": ["Add-on", Color8(180, 208, 226)],
+	"color": ["Color", Color8(232, 182, 196)],
 }
 const PEDIA_PER_PAGE := 9
 const LIST_PER_PAGE := 3              # cosmetics lists: forward flips pages, like the Games menu
@@ -202,8 +209,9 @@ func _open(v: int, select := -1) -> void:
 	hub_root.visible = in_hub
 	hub_dots.visible = in_hub
 	hub_hint.visible = in_hub
-	title.visible = not in_hub
-	status.visible = not in_hub
+	# (the lists are just cards, like the food menu: no title, no hint line)
+	title.visible = v in [View.PEDIA, View.DETAIL]
+	status.visible = v in [View.PEDIA, View.DETAIL]
 	match v:
 		View.HUB:
 			_build_hub()
@@ -379,11 +387,8 @@ func _show_detail(id: String) -> void:
 	_refresh_pager()
 
 func _build_list(v: int) -> void:
-	var info: Dictionary = LISTS[v]
-	var cat: String = info["category"]
+	var cat: String = LISTS[v]["category"]
 	var cat_catalog := Collection.catalog(cat)
-	title.text = info["title"]
-	status.text = info["verb"]
 	var ids := Collection.order(cat)
 	page = clampi(page, 0, _list_pages(v) - 1)
 	for slot in LIST_PER_PAGE:
@@ -393,35 +398,105 @@ func _build_list(v: int) -> void:
 		var id: String = ids[i]
 		var item: Dictionary = cat_catalog[id]
 		var owned := Collection.is_owned(cat, id)
-		var row := _card(Vector2(INNER.position.x + 29, INNER.position.y + 88 + slot * 150), Vector2(600, 138))
-		var box := _icon_box(row, Vector2(14, 12), Vector2(114, 110))
-		var icon := _icon(box, null, Vector2(102, 98))
 		var preview: Texture2D = _item_preview(cat, id) if owned else null
-		icon.texture = preview if preview else load("res://textures/menus/mistery.png")   # same "?" as locked games
-		_add_doughnut(row, box)
-		var t := _label(Vector2(140, 12), Vector2(440, 60), 44, TEXT, row)
-		t.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		t.text = item["name"] if owned else "???"     # locked items stay a mystery
-		_fit_one_line(t, 44)
-		var st := _label(Vector2(140, 68), Vector2(440, 50), 30, TEXT_DARK, row)
-		st.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var row := _food_card(slot, preview if preview else load("res://textures/menus/mistery.png"))   # same "?" as locked games
+		var name_l: Label = row.get_meta("name_label")
+		name_l.text = item["name"] if owned else "???"     # locked items stay a mystery
+		var st: Label = row.get_meta("status_label")
 		if not owned:
 			st.text = "Play to unlock"
 		elif Collection.is_in_use(cat, id):
 			st.text = "In use"
 			st.add_theme_color_override("font_color", IN_USE)
-		# kind tag in the bottom-right corner (gut decor: "complement" / "color")
-		if owned and item.get("kind", "") != "":
-			var tag := _label(Vector2(420, 90), Vector2(166, 36), 24, TEXT, row)
-			tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			tag.text = item["kind"]
+		# backgrounds / gut decor: the kind, on a tag like the food types
+		if owned and KIND_TAGS.has(item.get("kind", "")):
+			_card_tag(row, KIND_TAGS[item["kind"]])
 		row.set_meta("action", { "type": "equip", "category": cat, "id": id } if owned else { "type": "locked" })
 		if Collection.is_new(cat, id):
 			var tag := _new_badge(26)
-			tag.position = Vector2(470, 8)
+			tag.position = Vector2(row.size.x - 128, -6)
 			row.add_child(tag)
 			Collection.mark_seen_item(cat, id)   # seen now: its NEW tag is gone next time
 		_add_item(row)
+
+## A card exactly like the food menu's card in the same slot (0..2): its frame, the icon in the
+## frame's square, the name in the same font and size, the hold ring. The pieces are read
+## from the food menu itself, so both menus stay identical.
+func _food_card(slot: int, icon_tex: Texture2D) -> Control:
+	var food_menu := get_parent().get_node("FoodMenu/Menu")
+	var opt: Node2D = food_menu.get_node("VBoxFood/FoodOption%d" % (slot + 1))
+	var f_frame: Sprite2D = opt.get_node("Frame")
+	var f_icon: Sprite2D = opt.get_node("Icon")
+	var f_name: Label = opt.get_node("Name")
+	var f_ring: Control = opt.get_node("Doughnut")
+	# the two menus' backgrounds sit a few px apart: line the card up with this one's frame
+	var shift: Vector2 = get_node("Menu/Sprite2D").position - food_menu.get_node("Background").position
+	var frame_tex: Texture2D = load("res://textures/menus/foodmenulabel_food.png")
+	var frame_size := frame_tex.get_size() * f_frame.scale
+	var top_left := opt.position + f_frame.position - frame_size / 2.0 + shift
+	var row := Control.new()
+	row.position = top_left
+	row.size = frame_size
+	row.pivot_offset = frame_size / 2.0
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var origin := opt.position + shift - top_left            # option space -> row space
+	var frame := Sprite2D.new()
+	frame.texture = frame_tex
+	frame.scale = f_frame.scale
+	frame.position = f_frame.position + origin
+	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	row.add_child(frame)
+	# the icon: in the frame's square, as big as a food icon (any picture, aspect kept)
+	var box := Vector2(32, 32) * f_icon.scale
+	var icon := TextureRect.new()
+	icon.texture = icon_tex
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.size = box
+	icon.position = f_icon.position + origin - box / 2.0
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(icon)
+	# the name: the food name's own label (font, size, colour)
+	var name_l: Label = f_name.duplicate()
+	name_l.z_index = 0
+	name_l.position = f_name.position + origin
+	name_l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	row.add_child(name_l)
+	row.set_meta("name_label", name_l)
+	# "In use" / "Play to unlock", under the name
+	var st := _label(Vector2(name_l.position.x + 6, frame_size.y * 0.56), Vector2(frame_size.x * 0.5, 44), 30, TEXT_DARK, row)
+	st.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	st.z_index = 0
+	row.set_meta("status_label", st)
+	# hold ring round the icon square, where the food menu has it
+	_add_doughnut(row, Rect2(f_ring.position + origin, f_ring.size))
+	return row
+
+## The coloured type tag of a food card (foodtag.png at the same spot), with its word
+func _card_tag(row: Control, info: Array) -> void:
+	var tag_tex: Texture2D = load("res://textures/menus/foodtag.png")
+	var frame: Sprite2D = row.get_child(0)
+	var top_left := frame.position - frame.texture.get_size() * frame.scale / 2.0
+	var tag := Sprite2D.new()
+	tag.texture = tag_tex
+	tag.centered = false
+	tag.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	tag.scale = frame.scale * 0.84                 # (the food menu's TAG_SCALE / TAG_AT)
+	tag.position = top_left + (Vector2(274, 55) + tag_tex.get_size() / 2.0) * frame.scale - tag_tex.get_size() * tag.scale / 2.0
+	tag.modulate = info[1] * Color(1.06, 1.06, 1.06)
+	row.add_child(tag)
+	var l := Label.new()
+	l.position = tag.position
+	l.size = tag_tex.get_size() * tag.scale
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_font_override("font", (row.get_meta("name_label") as Label).get_theme_font("font"))
+	l.add_theme_font_size_override("font_size", 36)
+	l.add_theme_color_override("font_color", Color8(92, 60, 44))
+	l.text = info[0]
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(l)
 
 func _new_badge(font_size: int) -> Label:
 	var l := Label.new()
@@ -584,7 +659,7 @@ func _icon(box: Control, tex: Texture2D, sz: Vector2) -> TextureRect:
 	box.add_child(icon)
 	return icon
 
-func _add_doughnut(parent: Control, around: Control) -> void:
+func _add_doughnut(parent: Control, around) -> void:
 	# Hold-to-confirm ring (main_button looks for a "Doughnut" child on the selected item)
 	var d := TextureProgressBar.new()
 	d.name = "Doughnut"
@@ -594,8 +669,12 @@ func _add_doughnut(parent: Control, around: Control) -> void:
 	d.tint_under = Color(1, 1, 1, 0.56)
 	d.tint_over = Color(1, 1, 1, 0.31)
 	d.tint_progress = Color8(243, 182, 126)   # pastel apricot, like every hold ring
-	d.position = around.position - Vector2(6, 6)
-	d.size = around.size + Vector2(12, 12)
+	if around is Rect2:                       # (a food-card ring: exactly that rect)
+		d.position = around.position
+		d.size = around.size
+	else:
+		d.position = around.position - Vector2(6, 6)
+		d.size = around.size + Vector2(12, 12)
 	d.visible = false
 	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var border := TextureProgressBar.new()
