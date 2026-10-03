@@ -13,11 +13,11 @@ var game_music_player: AudioStreamPlayer2D = null
 
 # Map page indices to minigame scene paths.
 var game_scenes := {
-	0: "res://scenes/minigames/super_puff.tscn",
-	1: "res://scenes/minigames/poo_maze.tscn",
-	2: "res://scenes/minigames/poo_splash.tscn",
-	3: "res://scenes/minigames/poo_dash.tscn",
-	4: "res://scenes/minigames/poo_break.tscn",
+	0: "res://scenes/minigames/pipe_dream.tscn",
+	1: "res://scenes/minigames/tilt_maze.tscn",
+	2: "res://scenes/minigames/splash_hoops.tscn",
+	3: "res://scenes/minigames/pal_dash.tscn",
+	4: "res://scenes/minigames/tile_break.tscn",
 	5: "res://scenes/minigames/germ_zap.tscn",
 	6: "res://scenes/minigames/tummy_tunes.tscn",
 	7: "res://scenes/minigames/flipper_belly.tscn",

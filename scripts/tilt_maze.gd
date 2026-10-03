@@ -546,7 +546,7 @@ func _create_static_nodes() -> void:
 	frame.position = Vector2(ORIGIN.x + BOARD_PX * PX - 20 - frame.size.x, ORIGIN.y + 3)
 	add_child(frame)
 	var box := ColorRect.new()
-	box.color = Color(0.65, 0.72, 0.6)   # LCD green, like Super Puff
+	box.color = Color(0.65, 0.72, 0.6)   # LCD green, like Pipe Dream
 	box.position = frame.position + Vector2(5, 5)
 	box.size = frame.size - Vector2(10, 10)
 	add_child(box)

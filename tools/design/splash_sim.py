@@ -1,6 +1,6 @@
-"""Poo Splash reach map: where does a ball land for a given pump pattern?
+"""Splash Hoops reach map: where does a ball land for a given pump pattern?
 
-Mirror of the ball physics in scripts/poo_splash.gd (one ball, no noise, NO basket or
+Mirror of the ball physics in scripts/splash_hoops.gd (one ball, no noise, NO basket or
 ball-ball collisions, so treat results as "can reach", then confirm in game).
 Keep the constants in sync with the script when tuning.
 

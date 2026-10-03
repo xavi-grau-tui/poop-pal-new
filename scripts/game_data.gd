@@ -13,16 +13,16 @@ var games := {}
 
 # Progress thresholds: when a game hits X%, unlock game Y
 var unlock_thresholds := {
-	0: { 50.0: 1 },  # Super Puff at 50% unlocks game 2
+	0: { 50.0: 1 },  # Pipe Dream at 50% unlocks game 2
 }
 
 # Target score for 100% progress per game
 var progress_target := {
-	0: 300,  # Super Puff: 300 pipes = 100%
-	1: 1500, # Poo Maze: 1500 points = 100%
-	2: 2000, # Poo Splash
-	3: 3000, # Poo Dash
-	4: 5000, # Poo Break
+	0: 300,  # Pipe Dream: 300 pipes = 100%
+	1: 1500, # Tilt Maze: 1500 points = 100%
+	2: 2000, # Splash Hoops
+	3: 3000, # Pal Dash
+	4: 5000, # Tile Break
 	5: 8000, # Germ Zap
 	6: 6000, # Tummy Tunes
 	7: 10000, # Flipper Belly
@@ -34,7 +34,7 @@ const DEBUG_UNLOCKED := [1, 2, 3, 4, 5, 6, 7]
 const RESET_SCORES_ON_LAUNCH := true
 
 func _ready() -> void:
-	_init_game(0, true)   # Super Puff — unlocked by default
+	_init_game(0, true)   # Pipe Dream — unlocked by default
 	_init_game(1, false)
 	_init_game(2, false)
 	_init_game(3, false)
@@ -147,5 +147,5 @@ func load_data() -> void:
 				games[idx]["progress"] = float(parsed[key].get("progress", 0.0))
 				games[idx]["unlocked"] = bool(parsed[key].get("unlocked", false))
 				games[idx]["intro"] = bool(parsed[key].get("intro", false))
-		# Super Puff always unlocked
+		# Pipe Dream always unlocked
 		games[0]["unlocked"] = true

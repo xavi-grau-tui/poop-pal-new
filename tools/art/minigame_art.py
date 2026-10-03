@@ -1,4 +1,4 @@
-"""Sprites for Poo Splash (water ring toy) and Poo Dash (runner).
+"""Sprites for Splash Hoops (water ring toy) and Pal Dash (runner).
 
 Shapes are drawn as masks at high resolution, given a rounded height from their distance
 to the edge, shaded + outlined with the hires helpers and shrunk (same look as the pals).
