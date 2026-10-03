@@ -876,7 +876,7 @@ func _process(delta: float) -> void:
 		_check_finish()
 		_check_holes()
 
-	if state != State.FALLING:
+	if state == State.PLAY:                 # (falling / flushed: the tweens move the ball)
 		ball.position = ball_pos
 	shadow.position = ball.position + Vector2(8, 20) * (ball.scale.x / BALL_SCALE)
 	shadow.visible = state != State.FALLING
@@ -959,7 +959,8 @@ func _check_finish() -> void:
 	Input.vibrate_handheld(60)
 	# Flushed! Spiral into the swirl
 	var t := create_tween()
-	t.tween_property(ball, "position", finish_pos, 0.25)
+	ball_pos = finish_pos
+	t.tween_property(ball, "position", finish_pos, 0.25).set_ease(Tween.EASE_OUT)
 	t.parallel().tween_property(ball, "rotation", ball.rotation + TAU * 3.0, 1.0)
 	t.parallel().tween_property(ball, "scale", Vector2(0.1, 0.1) * BALL_SCALE, 1.0).set_ease(Tween.EASE_IN)
 	_show_banner("LEVEL %d CLEAR!\n+%d" % [level, bonus], 1.6)
