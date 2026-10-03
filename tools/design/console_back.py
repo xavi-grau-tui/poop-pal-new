@@ -37,6 +37,9 @@ SHADE_DARK = (200, 166, 130)
 SCREW_BROWN = (122, 73, 45)
 HILITE = (255, 249, 238)
 
+# Corner screws (final px): top-left, top-right, bottom-left, bottom-right
+SCREWS = ((48, 46), (1031, 48), (48, 1871), (1031, 1871))
+
 # Battery lid rectangle (final px, multiples of 4 so the pixel markings sit on the grid)
 LID = (336, 1316, 744, 1680)
 
@@ -174,19 +177,34 @@ def draw_mask(pix, fn):
 
 def shell(img):
     d = ImageDraw.Draw(img)
-    # dark rim, then a softer edge ring, then the body (mirrored front: the
-    # shaded side strip is now on the left)
+    # dark rim, then a softer edge ring, then the body
     d.rounded_rectangle(s(0, 0, W - 1, H - 1), radius=34 * K, fill=OUTLINE)
     d.rounded_rectangle(s(10, 10, W - 11, H - 11), radius=26 * K, fill=EDGE)
     d.rounded_rectangle(s(13, 13, W - 14, H - 14), radius=23 * K, fill=BODY)
-    d.rectangle(s(13, 40, 26, H - 40), fill=SHADE_DARK)
-    d.rectangle(s(19, 40, 31, H - 40), fill=SHADE)
+    side_bevels(img)
     # faint grain so the big flat back reads as plastic
     rng = np.random.default_rng(7)
     a = np.asarray(img).astype(np.int16)
     n = rng.normal(0, 1.6, a.shape[:2])[..., None]
     a[..., :3] = np.clip(a[..., :3] + n, 0, 255)
     img.paste(Image.fromarray(a.astype(np.uint8), "RGBA"))
+
+
+def side_bevels(img):
+    """Shaded strips down both long sides (the front has one on its right), mitred at
+    45 degrees from each corner into the corner screw's recess, like a bevelled frame."""
+    layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    for left, (top, bot) in ((True, (SCREWS[0], SCREWS[2])), (False, (SCREWS[1], SCREWS[3]))):
+        def X(x):
+            return x if left else W - 1 - x
+        tx, bx = X(top[0]), X(bot[0])   # screw x mirrored into left-side space
+        d.polygon(s(X(13), 13, X(tx), top[1], X(31), top[1] + 14,
+                    X(31), bot[1] - 14, X(bx), bot[1], X(13), H - 14), fill=SHADE)
+        d.polygon(s(X(13), 13, X(19), 19, X(19), H - 20, X(13), H - 14), fill=SHADE_DARK)
+    body = mask_new()
+    ImageDraw.Draw(body).rounded_rectangle(s(13, 13, W - 14, H - 14), radius=23 * K, fill=255)
+    img.paste(layer, (0, 0), ImageChops.multiply(layer.getchannel("A"), body))
 
 
 def screw(img, cx, cy, r=13, angle=None):
@@ -416,7 +434,7 @@ def main():
     shell(hi)
     grip(hi, 1075)
     bay(hi)
-    for (x, y) in ((48, 46), (1031, 48), (48, 1871), (1031, 1871)):
+    for (x, y) in SCREWS:
         screw(hi, x, y)
     back = down(hi)
 
