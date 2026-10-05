@@ -155,11 +155,12 @@ func _button_at(screen_pos: Vector2) -> TextureButton:
 			return b
 	return null
 
-## Pushed with no power: shows its pressed face and clicks, but never gets the tap
+## Pushed with no power: clicks (and shows its pressed face), but never gets the tap.
+## The top menu buttons' pressed face is their LED lit, so with no power they only click.
 func _push(b: TextureButton) -> void:
 	held_button = b
 	held_texture = b.texture_normal
-	if b.texture_pressed:
+	if b.texture_pressed and not b.is_in_group("menu_toggle_buttons"):
 		b.texture_normal = b.texture_pressed
 	var click := b.get_node_or_null("ClickSound") as AudioStreamPlayer2D
 	if click:
