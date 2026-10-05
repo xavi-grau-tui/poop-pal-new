@@ -21,7 +21,7 @@ SCREEN_FILM = (63, 607, 1016, 1565)     # its brown frame's outer edge
 LCD_FILM = (92, 77, 537, 278)           # the small LCD's brown frame's outer edge
 FRAME_R = 10                            # the frames' corner rounding
 
-INK = (38, 70, 120)                     # printed blue ink, like real protective films
+INK = (236, 238, 242)                   # white print: readable over the dark, unlit screen
 P = 3                                   # print pixel size
 
 
@@ -123,21 +123,23 @@ def battery_strip():
 
 
 def screen_off():
-    """The big screen without power: the small LCD's own texture at the same scale the
-    console draws it (its Background sprite), tiled with mirrored copies so no seams show."""
+    """The big screen without power: an unlit reflective colour screen (original-GBA
+    style), unlike the small Casio-style LCD. Dark cool grey, a soft sheen across the
+    top-left, a whisper of grain and its pixel grid just showing in the light."""
     w, h = SCREEN[2] - SCREEN[0], SCREEN[3] - SCREEN[1]
-    lcd = Image.open(ROOT / "textures" / "console" / "lcd.png").convert("RGB")
-    tile = lcd.crop((40, 40, lcd.width - 40, lcd.height - 40))
-    tile = tile.resize((round(tile.width * 0.729), round(tile.height * 0.594)), Image.LANCZOS)
-    tw, th = tile.size
-    flips = {(0, 0): tile, (1, 0): tile.transpose(Image.FLIP_LEFT_RIGHT),
-             (0, 1): tile.transpose(Image.FLIP_TOP_BOTTOM),
-             (1, 1): tile.transpose(Image.ROTATE_180)}
-    img = Image.new("RGB", (w, h))
-    for j in range(0, h // th + 1):
-        for i in range(0, w // tw + 1):
-            img.paste(flips[(i % 2, j % 2)], (i * tw, j * th))
-    return img.convert("RGBA")
+    yy, xx = np.mgrid[0:h, 0:w]
+    t = xx / w * 0.45 + yy / h * 0.55
+    base = np.array([96, 103, 104]) * (1 - t[..., None]) + np.array([70, 76, 79]) * t[..., None]
+    base += np.random.default_rng(2).normal(0, 1.4, (h, w))[..., None]
+    # the pixel grid: thin, slightly darker lines every 5 px
+    grid = (xx % 5 == 0) | (yy % 5 == 0)
+    base[grid] *= 0.94
+    img = Image.fromarray(np.clip(base, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
+    sheen = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    ImageDraw.Draw(sheen).polygon(((w * 0.05, 0), (w * 0.42, 0), (w * 0.02, h * 0.62), (0, h * 0.62), (0, h * 0.08)),
+                                  fill=(255, 255, 255, 16))
+    img.alpha_composite(sheen.filter(ImageFilter.GaussianBlur(30)))
+    return img
 
 
 def main():
