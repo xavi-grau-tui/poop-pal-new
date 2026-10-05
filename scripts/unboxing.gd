@@ -74,9 +74,9 @@ func _ready() -> void:
 	front.add_child(screen_off)
 
 	# [glass, print, tab scale, how much of the tab is stuck on the film (its px)]: the small
-	# screen's tab sits further in, so it stays clear of the games button below
+	# screen's tab is smaller, so it sits the same way and stays clear of the games button below
 	for spec in [[SCREEN_FILM, preload("res://textures/unboxing/film_screen.png"), 0.8, 90.0],
-			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.8, 124.0]]:
+			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.5, 90.0]]:
 		var film := Film.new()
 		film.tex = spec[1]
 		film.size = spec[0].size
@@ -353,11 +353,13 @@ class Film extends Node2D:
 		for p in flap:
 			shadow.append(p + Vector2(8, 10))
 		draw_colored_polygon(shadow, Color(0.16, 0.11, 0.07, 0.22))
-		if _tab_turn() < 0.0:
-			_draw_tab()              # turned over: its stuck end lies under the film's flap
 		# the film's back: whitish plastic, the print showing through mirrored, as grey
 		# (the white ink would vanish against the whitish back)
 		draw_colored_polygon(flap, Color(0.93, 0.95, 0.98, 0.9))
+		if _tab_turn() < 0.0:
+			# turned over, it folds with the film: seen through the flap's plastic
+			_draw_tab_turned(flap)
+			draw_colored_polygon(flap, Color(0.93, 0.95, 0.98, 0.35))
 		draw_polygon(flap, PackedColorArray([Color(0.48, 0.5, 0.54, 0.75)]), _uvs(src), tex)
 		var edge := PackedVector2Array(flap)
 		edge.append(flap[0])
@@ -370,6 +372,23 @@ class Film extends Node2D:
 	## flap showing its blank back, still attached to the film's corner.
 	func _tab_turn() -> float:       # 1 flat on the film, 0 edge-on, -1 turned over onto the flap
 		return cos(PI * clampf(d / (TAB_TURN * tab_scale), 0.0, 1.0))
+
+	## Turned over, the tab has folded with the corner: it lies on the flap, from the
+	## corner in, swinging down onto it, and never reaches past the film.
+	func _draw_tab_turned(flap: PackedVector2Array) -> void:
+		var c := -_tab_turn()
+		if c < 0.03:
+			return
+		var xf := Transform2D(v * c * tab_scale, Vector2(-v.y, v.x) * tab_scale, tip())
+		var h := TAB_BACK.get_height() / 2.0
+		var quad := xf * PackedVector2Array([Vector2(0, -h), Vector2(tab_stuck, -h), Vector2(tab_stuck, h), Vector2(0, h)])
+		var inv := xf.affine_inverse()
+		var tsize := TAB_BACK.get_size()
+		for poly in Geometry2D.intersect_polygons(quad, flap):
+			var uv := PackedVector2Array()
+			for p in poly:
+				uv.append((inv * p + Vector2(0, h)) / tsize)
+			draw_polygon(poly, PackedColorArray([Color.WHITE]), uv, TAB_BACK)
 
 	func _draw_tab() -> void:
 		var c := _tab_turn()
