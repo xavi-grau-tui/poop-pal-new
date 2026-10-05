@@ -66,13 +66,13 @@ def screen_print(w, h):
     sh = (SCREEN[3] - SCREEN[1]) // P
     cx = ox + sw // 2
     y = oy + 26
-    t.text((cx, y), "WELCOME TO POOP PAL!", font=big, fill=INK + (255,), anchor="mm")
+    t.text((cx, y), "WELCOME TO HARATOMO!", font=big, fill=INK + (255,), anchor="mm")
     y += 22
     t.text((cx, y), "Before you start:", font=bold, fill=INK + (255,), anchor="mm")
     y += 30
     steps = [
         ("1", "Peel off this film", "from the corner tab"),
-        ("2", "Double-tap the logo", "to turn your Poop Pal over"),
+        ("2", "Double-tap the logo", "to turn your HaraTomo over"),
         ("3", "Pull the battery tab", "out of the back to power on"),
     ]
     x0 = ox + 30

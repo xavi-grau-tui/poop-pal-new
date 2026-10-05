@@ -160,7 +160,7 @@ def molded_text(img):
     f = font("Arial Bold.ttf", 21)
     carve(img, text_mask("© 1997 KOBAYA TECH CO., LTD.   MADE IN JAPAN", f, W / 2, 1808, spacing=1.5), depth=1.4, floor=SHADE)
     f2 = font("Arial Bold.ttf", 17)
-    carve(img, text_mask("KBT-0721   NOT A TOY FOR CHILDREN UNDER 3 · CONTAINS SMALL POOPS", f2, W / 2, 1842, spacing=1),
+    carve(img, text_mask("KBT-0721   NOT A TOY FOR CHILDREN UNDER 3 · CONTAINS SMALL PARTS", f2, W / 2, 1842, spacing=1),
           depth=1.2, floor=SHADE)
 
 
@@ -214,8 +214,8 @@ def sticker():
     big = font("Arial Bold.ttf", 34)
     mid = font("Arial Bold.ttf", 25)
     t(sw - 32, 34, "MODEL NO. KBT-0721", big, anchor="ra")
-    t(sw - 32, 84, "POOP PAL", mid, anchor="ra")
-    pp_w = d.textlength("POOP PAL", font=mid) / K
+    t(sw - 32, 84, "HARATOMO", mid, anchor="ra")
+    pp_w = d.textlength("HARATOMO", font=mid) / K
     t(sw - 44 - pp_w, 81, "便友", cjk_font(26), anchor="ra")
 
     t(32, 96, "© 1996-1997 Kobaya Tech", mid)

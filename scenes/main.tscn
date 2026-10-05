@@ -1,4 +1,4 @@
-[gd_scene load_steps=106 format=4 uid="uid://ddvdpi5i0hjuf"]
+[gd_scene load_steps=107 format=4 uid="uid://ddvdpi5i0hjuf"]
 
 [ext_resource type="Texture2D" uid="uid://1ih05ji667nr" path="res://textures/pet-background/background.png" id="2_lquwl"]
 [ext_resource type="Script" uid="uid://duenauvyyugd4" path="res://scripts/audio_stream_player_2d.gd" id="2_ryguw"]
@@ -83,6 +83,7 @@
 [ext_resource type="Texture2D" uid="uid://bp0inh6d5hkcq" path="res://textures/menus/circle_small.png" id="96_ring_s"]
 [ext_resource type="Script" uid="uid://br65ke7ejkwg0" path="res://scripts/collection_menu.gd" id="98_coll"]
 [ext_resource type="Script" uid="uid://dj723c5131mb7" path="res://scripts/boot_sequence.gd" id="99_boot"]
+[ext_resource type="Texture2D" uid="uid://b4lookriaasyv" path="res://textures/console/logo2.png" id="100_logo2"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_w48qg"]
 shader = ExtResource("3_ycdy4")
@@ -506,17 +507,25 @@ scale = Vector2(1.37117, 1.28481)
 texture = ExtResource("19_0rl1p")
 
 [node name="LogoMain" type="Sprite2D" parent="Main UI/Console"]
+visible = false
 z_index = 4
 y_sort_enabled = true
-position = Vector2(799.523, -1738.68)
-scale = Vector2(0.873274, 0.991457)
+position = Vector2(783.798, -1732)
+scale = Vector2(0.927135, 1.08858)
 texture = ExtResource("19_lswn8")
+
+[node name="Logo2" type="Sprite2D" parent="Main UI/Console"]
+z_index = 4
+y_sort_enabled = true
+position = Vector2(785.5, -1727.46)
+scale = Vector2(0.750951, 1.05414)
+texture = ExtResource("100_logo2")
 
 [node name="V1" type="Sprite2D" parent="Main UI/Console"]
 z_index = 4
 y_sort_enabled = true
-position = Vector2(687.536, -1722.58)
-scale = Vector2(0.958082, 0.821741)
+position = Vector2(665, -1697)
+scale = Vector2(1.05543, 1.10318)
 texture = ExtResource("20_htxhm")
 
 [node name="BottomFrame" type="Sprite2D" parent="Main UI/Console"]

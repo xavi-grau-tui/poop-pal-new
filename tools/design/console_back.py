@@ -297,7 +297,7 @@ def sticker(pix, x, y):
     d.text((sw - 7, 13), "MODEL NO. KBT-0721", font=big, fill=ink, anchor="rm")
     # rows 2-3
     d.text((7, 30), "© 2025-2026 Kobaya Tech", font=bold, fill=ink, anchor="lm")
-    d.text((sw - 7, 30), "POOP PAL", font=bold, fill=ink, anchor="rm")
+    d.text((sw - 7, 30), "HARATOMO", font=bold, fill=ink, anchor="rm")
     d.text((7, 42), "RATING: DC3V 0.1W", font=bold, fill=ink, anchor="lm")
     d.text((sw - 7, 42), "BATTERY: LR44 x2", font=bold, fill=ink, anchor="rm")
 
@@ -344,7 +344,7 @@ def sticker(pix, x, y):
 def molded_text(pix):
     m = pix.mask()
     for row, text in ((449, "(C) 2026 KOBAYA TECH CO., LTD.  MADE IN JAPAN"),
-                      (457, "KBT-0721  CONTAINS SMALL POOPS. NOT FOR AGES 0-3")):
+                      (457, "KBT-0721  CONTAINS SMALL PARTS. NOT FOR AGES 0-3")):
         tiny(m, (pix.w - tiny_width(text)) // 2, row, text)
     pix.carve(m)
 
