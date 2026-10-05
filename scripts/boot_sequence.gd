@@ -16,6 +16,7 @@ signal finished
 @export var text_type_time := 2.4
 @export var text_hold := 3.0
 @export var screen_on_time := 0.8
+@export var bunny_volume_db := -24.0     # the rabbit's sniff-sniff-hop as the logo shows: barely there
 
 const SCREEN_COLOR := Color(0.078, 0.078, 0.078)  # matches the logo's background
 const TEXT_COLOR := Color(0.98, 0.94, 0.86)
@@ -86,6 +87,7 @@ func _run() -> void:
 	tween.tween_interval(start_delay)
 	# Developer logo
 	tween.tween_property(logo, "modulate:a", 1.0, logo_fade_in).set_trans(Tween.TRANS_SINE)
+	tween.tween_callback(_bunny)
 	tween.tween_interval(logo_hold)
 	tween.tween_property(logo, "modulate:a", 0.0, logo_fade_out).set_trans(Tween.TRANS_SINE)
 	tween.tween_interval(0.5)
@@ -144,6 +146,15 @@ func _lcd_power_on() -> void:
 			for n in nodes:
 				n.visible = on)
 		t.tween_interval(0.07)
+
+## The Kobaya Tech rabbit: two tiny sniffs and a soft hop (tools/design/boot_sfx.py)
+func _bunny() -> void:
+	var sfx := AudioStreamPlayer.new()
+	sfx.stream = preload("res://sounds/fx/kobaya_bunny.wav")
+	sfx.volume_db = bunny_volume_db
+	add_child(sfx)
+	sfx.finished.connect(sfx.queue_free)
+	sfx.play()
 
 func _music_off() -> void:
 	var music = get_node_or_null("/root/PoopPal/MusicController")
