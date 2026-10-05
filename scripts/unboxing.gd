@@ -161,7 +161,7 @@ class Film extends Node2D:
 	const TAB := preload("res://textures/unboxing/pull_tab.png")
 	const PEEL_SOUND := preload("res://sounds/fx/film_peel.wav")
 	const PEEL_LOUD_AT := 900.0      # fold speed (px/s) at which the crackle is at full volume
-	const PEEL_DB := -12.0           # ...and that full volume
+	const PEEL_DB := -19.0           # ...and that full volume (kept subtle)
 	const LET_GO := 0.28             # pulled past this share of the diagonal it comes off...
 	const LET_GO_MAX := 190.0        # ...or past this fold depth, so the big film needs no huge drag
 
@@ -201,7 +201,7 @@ class Film extends Node2D:
 			if not crackle.playing:
 				crackle.play(randf() * 0.8)
 			crackle.volume_db = PEEL_DB + linear_to_db(sqrt(amount))
-			crackle.pitch_scale = 1.05 + 0.35 * amount
+			crackle.pitch_scale = 1.35 + 0.35 * amount
 		elif crackle.playing:
 			crackle.stop()
 

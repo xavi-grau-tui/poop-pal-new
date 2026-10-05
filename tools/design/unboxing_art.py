@@ -108,24 +108,17 @@ def pull_tab():
 
 def battery_strip():
     """The clear plastic strip that keeps the cells from touching: most of it sits under
-    the battery lid, the end (top of the image) pokes out above it. Printed 'PULL TO ACTIVATE'."""
+    the battery lid, the end (top of the image) pokes out above it, printed with 3 red arrows."""
     w, h = 84, 520
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     d.rounded_rectangle((0, 0, w - 1, h - 1), radius=16, fill=(242, 236, 228, 235), outline=(150, 120, 100, 255), width=3)
     d.line((10, 6, 10, h - 12), fill=(255, 255, 255, 200), width=3)          # plastic shine
-    # vertical print in red on the end that sticks out
-    lw, lh = 150, 20
-    txt = Image.new("RGBA", (lw, lh), (0, 0, 0, 0))
-    td = ImageDraw.Draw(txt)
-    td.fontmode = "1"
-    td.text((lw // 2, lh // 2), "PULL TO ACTIVATE", font=ImageFont.truetype(FONT_BOLD, 8), fill=(206, 62, 62, 255), anchor="mm")
-    bbox = txt.getbbox()
-    txt = txt.crop(bbox).resize(((bbox[2] - bbox[0]) * 3, (bbox[3] - bbox[1]) * 3), Image.NEAREST).rotate(90, expand=True)
-    img.alpha_composite(txt, ((w - txt.width) // 2, 70))
-    # an arrow at the end, pointing the way to pull (up, out of the lid's top edge)
+    # three red arrows on the end that sticks out, pointing the way to pull (up)
     cx = w // 2
-    d.polygon(((cx - 15, 52), (cx + 15, 52), (cx, 30)), fill=(206, 62, 62, 255))
+    for y in (26, 72, 118):
+        d.polygon(((cx - 22, y + 26), (cx, y), (cx + 22, y + 26), (cx + 22, y + 38), (cx, y + 14), (cx - 22, y + 38)),
+                  fill=(206, 62, 62, 255))
     return img
 
 
