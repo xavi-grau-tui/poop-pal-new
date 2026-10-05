@@ -73,16 +73,15 @@ func _ready() -> void:
 	screen_off.z_index = 2           # over the boot's black screen, under the console frame
 	front.add_child(screen_off)
 
-	# [glass, print, tab scale, tab direction, tab's sideways shift (its px)]: the small
-	# screen's tab points right, lying along the glass's bottom edge, clear of the games button
-	for spec in [[SCREEN_FILM, preload("res://textures/unboxing/film_screen.png"), 0.8, Vector2.ONE.normalized(), 0.0],
-			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.8, Vector2.RIGHT, -22.0]]:
+	# [glass, print, tab scale, how much of the tab is stuck on the film (its px)]: the small
+	# screen's tab sits further in, so it stays clear of the games button below
+	for spec in [[SCREEN_FILM, preload("res://textures/unboxing/film_screen.png"), 0.8, 90.0],
+			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.8, 124.0]]:
 		var film := Film.new()
 		film.tex = spec[1]
 		film.size = spec[0].size
 		film.tab_scale = spec[2]
-		film.tab_dir = spec[3]
-		film.tab_shift = spec[4]
+		film.tab_stuck = spec[3]
 		film.transform = to_front * Transform2D(0.0, spec[0].position)
 		film.z_index = 60            # above the console and every menu
 		film.peeled.connect(func(): films.erase(film); _maybe_done())
@@ -207,7 +206,6 @@ class Film extends Node2D:
 
 	const TAB := preload("res://textures/unboxing/pull_tab.png")
 	const TAB_BACK := preload("res://textures/unboxing/pull_tab_back.png")
-	const TAB_STUCK := 90.0          # how much of the tab (its own px) is stuck onto the film's corner
 	const TAB_TURN := 50.0           # fold depth over which the tab swings over onto its back
 	const PEEL_SOUND := preload("res://sounds/fx/film_peel.wav")
 	const PEEL_LOUD_AT := 900.0      # fold speed (px/s) at which the crackle is at full volume
@@ -217,8 +215,7 @@ class Film extends Node2D:
 	var tex: Texture2D
 	var size: Vector2
 	var tab_scale := 0.8
-	var tab_dir := Vector2.ONE.normalized()   # the way the tab sticks out of the corner
-	var tab_shift := 0.0             # the tab moved sideways off the corner (its px)
+	var tab_stuck := 90.0            # how much of the tab (its own px) is stuck onto the film's corner
 	var d_rest := 0.0                # fully applied at rest, the PULL tab sticking out of the corner
 	var d := 0.0                     # fold line's distance in from the corner
 	var grab_offset := Vector2.ZERO
@@ -378,13 +375,10 @@ class Film extends Node2D:
 		var c := _tab_turn()
 		if absf(c) < 0.03:
 			return                   # edge-on
-		# its axes turn over the fold line: the part across the fold (along v) shrinks and flips
-		var u := tab_dir
-		var n := Vector2(-u.y, u.x)
-		var x := (u - (1.0 - c) * u.dot(v) * v) * tab_scale
-		var y := (n - (1.0 - c) * n.dot(v) * v) * tab_scale
+		var x := v * c * tab_scale
+		var y := Vector2(-v.y, v.x) * tab_scale
 		draw_set_transform_matrix(Transform2D(x, y, tip()))
-		draw_texture(TAB if c > 0.0 else TAB_BACK, Vector2(-TAB_STUCK, -TAB.get_height() / 2.0 + tab_shift))
+		draw_texture(TAB if c > 0.0 else TAB_BACK, Vector2(-tab_stuck, -TAB.get_height() / 2.0))
 		draw_set_transform(Vector2.ZERO)
 
 
