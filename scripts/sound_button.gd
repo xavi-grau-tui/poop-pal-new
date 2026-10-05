@@ -31,7 +31,8 @@ func update_visual():
 func update_audio():
 	var volume := 0.0 if button_pressed else 1.0
 	if music_node:
-		music_node.volume_db = linear_to_db(volume)
+		var base = music_node.get("BASE_DB")      # (the main music plays a little below 0 dB)
+		music_node.volume_db = linear_to_db(volume) + (base if base != null else 0.0)
 
 	for sfx in pal_sounds:
 		if is_instance_valid(sfx):

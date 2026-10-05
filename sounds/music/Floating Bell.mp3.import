@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dfosdrffclb0a"
+path="res://.godot/imported/Floating Bell.mp3-5da11cee4bf03a1030e0b95cb1178853.mp3str"
+
+[deps]
+
+source_file="res://sounds/music/Floating Bell.mp3"
+dest_files=["res://.godot/imported/Floating Bell.mp3-5da11cee4bf03a1030e0b95cb1178853.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

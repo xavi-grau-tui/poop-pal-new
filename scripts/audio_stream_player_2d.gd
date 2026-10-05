@@ -2,22 +2,34 @@ extends AudioStreamPlayer2D
 
 @export var sound_button: TextureButton
 
-# List of all possible songs (full playlist)
-var all_songs = [
-	preload("res://sounds/music/Frédéric Chopin - Nocturne： Op. 9 No. 2 [8 bits].mp3"),
-	preload("res://sounds/music/Johann Sebastian Bach - Prelude 1_ BWV 846 [Well Tempered Clavier] [8 bits].mp3"),
-	preload("res://sounds/music/Franz Liszt - La Campanella [8 bits].mp3"),
-	preload("res://sounds/music/M.T. - Hoffnungslos [8 bits].mp3"),
+# Main pet screen music: soft lo-fi kawaii / bubbly ambient loops (~2 min each), played in a
+# random order (never the same one twice in a row). Loaded when they play, not all at once.
+const SONGS := [
+	"res://sounds/music/Bouncy Toy Groove.mp3",
+	"res://sounds/music/Bubbly Menu.mp3",
+	"res://sounds/music/Floating Bell.mp3",
+	"res://sounds/music/Game Menu Music.mp3",
+	"res://sounds/music/Soft Water Plucks.mp3",
+	"res://sounds/music/Sunny Groove.mp3",
+	"res://sounds/music/Sweet Dreams, Pet.mp3",
+	"res://sounds/music/Underwater Pads.mp3",
+	"res://sounds/music/Underwater Plucks.mp3",
+	"res://sounds/music/Untitled.mp3",
 ]
+## These are ~2 dB louder than the old 8-bit pieces: played a touch lower so the level feels
+## the same (the sound button mutes / unmutes around this)
+const BASE_DB := -2.0
 
 # This list will be dynamically filled with unlocked songs
-var unlocked_songs := all_songs.duplicate()
+var unlocked_songs: Array = SONGS.duplicate()
 
-var current_stream: AudioStream = null
+var current_stream: String = ""
 
 func _ready():
 	# TEMP: All songs unlocked for now (can change this later)
-	unlocked_songs = all_songs.duplicate()
+	unlocked_songs = SONGS.duplicate()
+	pitch_scale = 1.0          # (the old 8-bit pieces were slowed to 0.85; these play as made)
+	volume_db = BASE_DB
 
 	# Play a random song on start
 	play_random_song()
@@ -34,7 +46,7 @@ func play_random_song():
 			next_song = unlocked_songs[randi() % unlocked_songs.size()]
 		current_stream = next_song
 
-	stream = current_stream
+	stream = load(current_stream)
 	play()
 
 func _on_song_finished():
