@@ -10,9 +10,9 @@ signal finished
 @export var logo_texture: Texture2D = preload("res://textures/boot/kobaya_logo.png")
 @export var welcome_text := "Welcome to Poop Pal!\n\nFeed it, raise it and watch it evolve through its natural cycle.\n\nPlay to unlock items and pals."
 @export var start_delay := 0.8
-@export var logo_fade_in := 1.3
+@export var logo_fade_in := 0.6      # same plain fade as the welcome text's fade-out
 @export var logo_hold := 1.4
-@export var logo_fade_out := 1.3
+@export var logo_fade_out := 0.6
 @export var text_type_time := 2.4
 @export var text_hold := 3.0
 @export var screen_on_time := 0.8
@@ -87,10 +87,10 @@ func _run() -> void:
 	tween = create_tween()
 	tween.tween_interval(start_delay)
 	# Developer logo
-	tween.tween_property(logo, "modulate:a", 1.0, logo_fade_in).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(logo, "modulate:a", 1.0, logo_fade_in)
 	tween.tween_callback(_bunny)
 	tween.tween_interval(logo_hold)
-	tween.tween_property(logo, "modulate:a", 0.0, logo_fade_out).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(logo, "modulate:a", 0.0, logo_fade_out)
 	tween.tween_interval(0.5)
 	# Welcome text, typed out
 	tween.tween_property(text, "visible_ratio", 1.0, text_type_time)
