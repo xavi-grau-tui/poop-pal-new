@@ -76,7 +76,7 @@ func _ready() -> void:
 	# [glass, print, tab scale, how much of the tab is stuck on the film (its px)]: the small
 	# screen's tab is smaller, so it sits the same way and stays clear of the games button below
 	for spec in [[SCREEN_FILM, preload("res://textures/unboxing/film_screen.png"), 0.8, 90.0],
-			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.5, 90.0]]:
+			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.68, 90.0]]:
 		var film := Film.new()
 		film.tex = spec[1]
 		film.size = spec[0].size
@@ -366,6 +366,8 @@ class Film extends Node2D:
 		draw_polyline(edge, Color(0.55, 0.62, 0.7, 0.9), 2.0)
 		if _tab_turn() >= 0.0:
 			_draw_tab()
+		else:
+			_draw_tab_free_end(flap)
 
 	## The red tab is stuck on the corner and sticks out past it. As the corner lifts it
 	## swings over with it (foreshortened, as if turning in 3D) and lies on the folded
@@ -389,6 +391,24 @@ class Film extends Node2D:
 			for p in poly:
 				uv.append((inv * p + Vector2(0, h)) / tsize)
 			draw_polygon(poly, PackedColorArray([Color.WHITE]), uv, TAB_BACK)
+
+	## ...and its free end, which stuck out past the corner, folds back over the corner's
+	## edge onto the flap: lying on top, its front (with part of the print) showing.
+	func _draw_tab_free_end(flap: PackedVector2Array) -> void:
+		var c := -_tab_turn()
+		if c < 0.03:
+			return
+		var xf := Transform2D(v * c * tab_scale, Vector2(-v.y, v.x) * tab_scale, tip())
+		var tsize := TAB.get_size()
+		var h := tsize.y / 2.0
+		var free := tsize.x - tab_stuck
+		var quad := xf * PackedVector2Array([Vector2(0, -h), Vector2(free, -h), Vector2(free, h), Vector2(0, h)])
+		var inv := xf.affine_inverse()
+		for poly in Geometry2D.intersect_polygons(quad, flap):
+			var uv := PackedVector2Array()
+			for p in poly:
+				uv.append((inv * p + Vector2(tab_stuck, h)) / tsize)
+			draw_polygon(poly, PackedColorArray([Color.WHITE]), uv, TAB)
 
 	func _draw_tab() -> void:
 		var c := _tab_turn()
