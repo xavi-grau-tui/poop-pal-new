@@ -73,14 +73,12 @@ func _ready() -> void:
 	screen_off.z_index = 2           # over the boot's black screen, under the console frame
 	front.add_child(screen_off)
 
-	for spec in [[SCREEN_FILM, preload("res://textures/unboxing/film_screen.png"), 0.8, 70.0],
-			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.8, 70.0]]:
+	for spec in [[SCREEN_FILM, preload("res://textures/unboxing/film_screen.png"), 0.8],
+			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.8]]:
 		var film := Film.new()
 		film.tex = spec[1]
 		film.size = spec[0].size
 		film.tab_scale = spec[2]
-		film.d_rest = spec[3]
-		film.d = spec[3]
 		film.transform = to_front * Transform2D(0.0, spec[0].position)
 		film.z_index = 60            # above the console and every menu
 		film.peeled.connect(func(): films.erase(film); _maybe_done())
@@ -204,6 +202,9 @@ class Film extends Node2D:
 	signal peeled
 
 	const TAB := preload("res://textures/unboxing/pull_tab.png")
+	const TAB_BACK := preload("res://textures/unboxing/pull_tab_back.png")
+	const TAB_STUCK := 90.0          # how much of the tab (its own px) is stuck onto the film's corner
+	const TAB_TURN := 50.0           # fold depth over which the tab swings over onto its back
 	const PEEL_SOUND := preload("res://sounds/fx/film_peel.wav")
 	const PEEL_LOUD_AT := 900.0      # fold speed (px/s) at which the crackle is at full volume
 	const PEEL_DB := -19.0           # ...and that full volume (kept subtle)
@@ -212,8 +213,8 @@ class Film extends Node2D:
 	var tex: Texture2D
 	var size: Vector2
 	var tab_scale := 0.8
-	var d_rest := 70.0               # the corner sits a little lifted, its PULL tab showing
-	var d := 70.0                    # fold line's distance in from the corner
+	var d_rest := 0.0                # fully applied at rest, the PULL tab sticking out of the corner
+	var d := 0.0                     # fold line's distance in from the corner
 	var grab_offset := Vector2.ZERO
 	var tw: Tween
 	var gone := false
@@ -340,6 +341,7 @@ class Film extends Node2D:
 			draw_polygon(flat, PackedColorArray([Color.WHITE]), _uvs(flat), tex)
 		var src := _clip(rect, true)
 		if src.size() < 3:
+			_draw_tab()
 			return
 		var flap := PackedVector2Array()
 		for p in src:
@@ -355,10 +357,19 @@ class Film extends Node2D:
 		var edge := PackedVector2Array(flap)
 		edge.append(flap[0])
 		draw_polyline(edge, Color(0.55, 0.62, 0.7, 0.9), 2.0)
-		# the red tab rides on the folded corner, pointing back towards the fold
-		var t := tip()
-		draw_set_transform(t, v.angle(), Vector2(tab_scale, tab_scale))
-		draw_texture(TAB, Vector2(-6, -TAB.get_height() / 2.0))
+		_draw_tab()
+
+	## The red tab is stuck on the corner and sticks out past it. As the corner lifts it
+	## swings over with it (foreshortened, as if turning in 3D) and lies on the folded
+	## flap showing its blank back, still attached to the film's corner.
+	func _draw_tab() -> void:
+		var c := cos(PI * clampf(d / (TAB_TURN * tab_scale), 0.0, 1.0))
+		if absf(c) < 0.03:
+			return                   # edge-on
+		var x := v * c * tab_scale
+		var y := Vector2(-v.y, v.x) * tab_scale
+		draw_set_transform_matrix(Transform2D(x, y, tip()))
+		draw_texture(TAB if c > 0.0 else TAB_BACK, Vector2(-TAB_STUCK, -TAB.get_height() / 2.0))
 		draw_set_transform(Vector2.ZERO)
 
 

@@ -106,6 +106,14 @@ def pull_tab():
     return tab
 
 
+def pull_tab_back():
+    """The same tab seen from behind once the corner folds over: blank, a shade darker."""
+    tab = Image.new("RGBA", (150, 56), (0, 0, 0, 0))
+    ImageDraw.Draw(tab).rounded_rectangle((0, 0, 149, 55), radius=12, fill=(176, 52, 52, 255),
+                                          outline=(110, 28, 28, 255), width=3)
+    return tab
+
+
 def battery_strip():
     """The clear plastic strip that keeps the cells from touching: most of it sits under
     the battery lid, the end (top of the image) pokes out above it, printed with 3 red arrows."""
@@ -142,6 +150,7 @@ def main():
     film(SCREEN_FILM, screen_print).save(OUT / "film_screen.png")
     film(LCD_FILM).save(OUT / "film_lcd.png")
     pull_tab().save(OUT / "pull_tab.png")
+    pull_tab_back().save(OUT / "pull_tab_back.png")
     battery_strip().save(OUT / "battery_strip.png")
     screen_off().save(OUT / "screen_off.png")
     print("wrote", ", ".join(sorted(p.name for p in OUT.glob("*.png"))))
