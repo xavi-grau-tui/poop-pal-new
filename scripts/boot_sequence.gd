@@ -23,7 +23,6 @@ const TEXT_COLOR := Color(0.98, 0.94, 0.86)
 
 var screen: ColorRect
 var logo: Sprite2D
-var nose: Sprite2D                       # the rabbit's nose, cut out of the logo so it can twitch
 var text: Label
 var blocker: CanvasLayer
 var tween: Tween
@@ -54,10 +53,11 @@ func _build() -> void:
 	add_child(screen)
 
 	logo = Sprite2D.new()
+	logo.texture = logo_texture
 	logo.position = center
 	logo.modulate.a = 0.0
 	add_child(logo)
-	_split_nose()
+	_setup_nose()
 
 	text = Label.new()
 	text.text = welcome_text
@@ -148,31 +148,58 @@ func _lcd_power_on() -> void:
 				n.visible = on)
 		t.tween_interval(0.07)
 
-## The rabbit's nose (logo texture px): the triangle above the mouth line
-const NOSE_RECT := Rect2i(80, 199, 54, 18)
+## The rabbit's nose (logo texture px): the triangle above the mouth line, and the point
+## on its base it grows from (where the mouth line starts)
+const NOSE_RECT := Rect2(80, 199, 54, 17)
+const NOSE_BASE := Vector2(107, 216)
+const NOSE_PUFF := Vector2(0.12, 0.35)   # extra width / height at the peak of a twitch
 
-## Cut the nose out of the logo into its own sprite, pivoting on its base (where the mouth
-## line starts), so it can twitch without coming apart from the mouth.
-func _split_nose() -> void:
-	var img := logo_texture.get_image()
-	if img.is_compressed():
-		img.decompress()
-	var nose_img := img.get_region(NOSE_RECT)
-	var rest := img.duplicate() as Image
-	# leave the base's bottom rows: the nose overlaps them, so no seam shows at the mouth
-	rest.fill_rect(Rect2i(NOSE_RECT.position, NOSE_RECT.size - Vector2i(0, 4)), Color(0, 0, 0, 0))
-	logo.texture = ImageTexture.create_from_image(rest)
-	nose = Sprite2D.new()
-	nose.texture = ImageTexture.create_from_image(nose_img)
-	nose.offset = Vector2(0, -NOSE_RECT.size.y / 2.0)          # origin at the base's centre
-	nose.position = Vector2(NOSE_RECT.position.x + NOSE_RECT.size.x / 2.0, NOSE_RECT.end.y) - Vector2(img.get_size()) / 2.0
-	logo.add_child(nose)
+## The twitch is a shader on the logo itself (no cut-out pieces, so no seams): at twitch 0
+## it draws the logo untouched; above 0 it enlarges just the nose around its base.
+const NOSE_SHADER := """
+shader_type canvas_item;
+uniform float twitch = 0.0;
+uniform vec4 nose_rect;     // x, y, w, h in UV
+uniform vec2 nose_base;     // UV
+uniform vec2 puff;
+bool in_nose(vec2 uv) {
+	return uv.x >= nose_rect.x && uv.x <= nose_rect.x + nose_rect.z
+		&& uv.y >= nose_rect.y && uv.y <= nose_rect.y + nose_rect.w;
+}
+void fragment() {
+	if (twitch <= 0.0) {
+		COLOR = texture(TEXTURE, UV);
+	} else {
+		vec2 s = vec2(1.0) + puff * twitch;
+		vec2 src = nose_base + (UV - nose_base) / s;
+		if (in_nose(src)) {
+			COLOR = texture(TEXTURE, src);
+		} else if (in_nose(UV)) {
+			COLOR = vec4(0.0);           // where the nose was before it grew
+		} else {
+			COLOR = texture(TEXTURE, UV);
+		}
+	}
+}
+"""
 
-## A sniff: the nose puffs up a touch and settles (timed with the sound's sniffs)
+func _setup_nose() -> void:
+	var size := logo_texture.get_size()
+	var mat := ShaderMaterial.new()
+	mat.shader = Shader.new()
+	mat.shader.code = NOSE_SHADER
+	mat.set_shader_parameter("nose_rect", Vector4(NOSE_RECT.position.x / size.x, NOSE_RECT.position.y / size.y,
+			NOSE_RECT.size.x / size.x, NOSE_RECT.size.y / size.y))
+	mat.set_shader_parameter("nose_base", NOSE_BASE / size)
+	mat.set_shader_parameter("puff", NOSE_PUFF)
+	logo.material = mat
+
+## A sniff: the nose puffs up and settles (timed with the sound's sniffs)
 func _twitch_nose() -> void:
-	var t := nose.create_tween()
-	t.tween_property(nose, "scale", Vector2(1.06, 1.18), 0.03).set_ease(Tween.EASE_OUT)
-	t.tween_property(nose, "scale", Vector2.ONE, 0.05).set_ease(Tween.EASE_IN)
+	var mat := logo.material as ShaderMaterial
+	var t := logo.create_tween()
+	t.tween_method(func(v): mat.set_shader_parameter("twitch", v), 0.0, 1.0, 0.04).set_ease(Tween.EASE_OUT)
+	t.tween_method(func(v): mat.set_shader_parameter("twitch", v), 1.0, 0.0, 0.07).set_ease(Tween.EASE_IN)
 
 ## The Kobaya Tech rabbit: two tiny sniffs and a soft hop (tools/design/boot_sfx.py)
 func _bunny() -> void:
