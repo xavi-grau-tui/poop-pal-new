@@ -74,7 +74,7 @@ func _ready() -> void:
 	front.add_child(screen_off)
 
 	for spec in [[SCREEN_FILM, preload("res://textures/unboxing/film_screen.png"), 0.8, 70.0],
-			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.55, 46.0]]:
+			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.8, 70.0]]:
 		var film := Film.new()
 		film.tex = spec[1]
 		film.size = spec[0].size
@@ -207,8 +207,7 @@ class Film extends Node2D:
 	const PEEL_SOUND := preload("res://sounds/fx/film_peel.wav")
 	const PEEL_LOUD_AT := 900.0      # fold speed (px/s) at which the crackle is at full volume
 	const PEEL_DB := -19.0           # ...and that full volume (kept subtle)
-	const LET_GO := 0.28             # pulled past this share of the diagonal it comes off...
-	const LET_GO_MAX := 190.0        # ...or past this fold depth, so the big film needs no huge drag
+	const LET_GO := 0.55             # peeled past this share of its area it comes off; less springs back
 
 	var tex: Texture2D
 	var size: Vector2
@@ -276,7 +275,7 @@ class Film extends Node2D:
 		queue_redraw()
 
 	func release() -> void:
-		if d > minf(d_max() * LET_GO, LET_GO_MAX):
+		if peeled_share() > LET_GO:
 			gone = true
 			Input.vibrate_handheld(12)
 			# the fly-off is fast; don't let that speed spike the crackle, just let it die away.
@@ -294,6 +293,16 @@ class Film extends Node2D:
 		else:
 			tw = create_tween()
 			tw.tween_method(_set_d, d, d_rest, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+	func peeled_share() -> float:    # how much of the film's area is lifted off the glass
+		var rect := PackedVector2Array([Vector2.ZERO, Vector2(size.x, 0), size, Vector2(0, size.y)])
+		var lifted := _clip(rect, true)
+		if lifted.size() < 3:
+			return 0.0
+		var area := 0.0
+		for i in lifted.size():
+			area += lifted[i].cross(lifted[(i + 1) % lifted.size()])
+		return absf(area) / 2.0 / (size.x * size.y)
 
 	func _set_d(x: float) -> void:
 		d = x
