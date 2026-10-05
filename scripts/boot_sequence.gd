@@ -162,24 +162,26 @@ uniform float twitch = 0.0;
 uniform vec4 nose_rect;     // x, y, w, h in UV
 uniform vec2 nose_base;     // UV
 uniform vec2 puff;
+varying vec4 tint;          // the sprite's modulate (its fades): keep applying it
+void vertex() {
+	tint = COLOR;
+}
 bool in_nose(vec2 uv) {
 	return uv.x >= nose_rect.x && uv.x <= nose_rect.x + nose_rect.z
 		&& uv.y >= nose_rect.y && uv.y <= nose_rect.y + nose_rect.w;
 }
 void fragment() {
-	if (twitch <= 0.0) {
-		COLOR = texture(TEXTURE, UV);
-	} else {
+	vec4 c = texture(TEXTURE, UV);
+	if (twitch > 0.0) {
 		vec2 s = vec2(1.0) + puff * twitch;
 		vec2 src = nose_base + (UV - nose_base) / s;
 		if (in_nose(src)) {
-			COLOR = texture(TEXTURE, src);
+			c = texture(TEXTURE, src);
 		} else if (in_nose(UV)) {
-			COLOR = vec4(0.0);           // where the nose was before it grew
-		} else {
-			COLOR = texture(TEXTURE, UV);
+			c = vec4(0.0);               // where the nose was before it grew
 		}
 	}
+	COLOR = c * tint;
 }
 """
 
