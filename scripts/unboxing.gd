@@ -73,12 +73,16 @@ func _ready() -> void:
 	screen_off.z_index = 2           # over the boot's black screen, under the console frame
 	front.add_child(screen_off)
 
-	for spec in [[SCREEN_FILM, preload("res://textures/unboxing/film_screen.png"), 0.8],
-			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.8]]:
+	# [glass, print, tab scale, tab direction, tab's sideways shift (its px)]: the small
+	# screen's tab points right, lying along the glass's bottom edge, clear of the games button
+	for spec in [[SCREEN_FILM, preload("res://textures/unboxing/film_screen.png"), 0.8, Vector2.ONE.normalized(), 0.0],
+			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.8, Vector2.RIGHT, -22.0]]:
 		var film := Film.new()
 		film.tex = spec[1]
 		film.size = spec[0].size
 		film.tab_scale = spec[2]
+		film.tab_dir = spec[3]
+		film.tab_shift = spec[4]
 		film.transform = to_front * Transform2D(0.0, spec[0].position)
 		film.z_index = 60            # above the console and every menu
 		film.peeled.connect(func(): films.erase(film); _maybe_done())
@@ -213,6 +217,8 @@ class Film extends Node2D:
 	var tex: Texture2D
 	var size: Vector2
 	var tab_scale := 0.8
+	var tab_dir := Vector2.ONE.normalized()   # the way the tab sticks out of the corner
+	var tab_shift := 0.0             # the tab moved sideways off the corner (its px)
 	var d_rest := 0.0                # fully applied at rest, the PULL tab sticking out of the corner
 	var d := 0.0                     # fold line's distance in from the corner
 	var grab_offset := Vector2.ZERO
@@ -350,6 +356,8 @@ class Film extends Node2D:
 		for p in flap:
 			shadow.append(p + Vector2(8, 10))
 		draw_colored_polygon(shadow, Color(0.16, 0.11, 0.07, 0.22))
+		if _tab_turn() < 0.0:
+			_draw_tab()              # turned over: its stuck end lies under the film's flap
 		# the film's back: whitish plastic, the print showing through mirrored, as grey
 		# (the white ink would vanish against the whitish back)
 		draw_colored_polygon(flap, Color(0.93, 0.95, 0.98, 0.9))
@@ -357,19 +365,26 @@ class Film extends Node2D:
 		var edge := PackedVector2Array(flap)
 		edge.append(flap[0])
 		draw_polyline(edge, Color(0.55, 0.62, 0.7, 0.9), 2.0)
-		_draw_tab()
+		if _tab_turn() >= 0.0:
+			_draw_tab()
 
 	## The red tab is stuck on the corner and sticks out past it. As the corner lifts it
 	## swings over with it (foreshortened, as if turning in 3D) and lies on the folded
 	## flap showing its blank back, still attached to the film's corner.
+	func _tab_turn() -> float:       # 1 flat on the film, 0 edge-on, -1 turned over onto the flap
+		return cos(PI * clampf(d / (TAB_TURN * tab_scale), 0.0, 1.0))
+
 	func _draw_tab() -> void:
-		var c := cos(PI * clampf(d / (TAB_TURN * tab_scale), 0.0, 1.0))
+		var c := _tab_turn()
 		if absf(c) < 0.03:
 			return                   # edge-on
-		var x := v * c * tab_scale
-		var y := Vector2(-v.y, v.x) * tab_scale
+		# its axes turn over the fold line: the part across the fold (along v) shrinks and flips
+		var u := tab_dir
+		var n := Vector2(-u.y, u.x)
+		var x := (u - (1.0 - c) * u.dot(v) * v) * tab_scale
+		var y := (n - (1.0 - c) * n.dot(v) * v) * tab_scale
 		draw_set_transform_matrix(Transform2D(x, y, tip()))
-		draw_texture(TAB if c > 0.0 else TAB_BACK, Vector2(-TAB_STUCK, -TAB.get_height() / 2.0))
+		draw_texture(TAB if c > 0.0 else TAB_BACK, Vector2(-TAB_STUCK, -TAB.get_height() / 2.0 + tab_shift))
 		draw_set_transform(Vector2.ZERO)
 
 
