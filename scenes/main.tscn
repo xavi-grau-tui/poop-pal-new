@@ -622,6 +622,7 @@ text = "Drink"
 
 [node name="ScoreCounter" type="Node2D" parent="Main UI/LCD Screen"]
 z_index = 3
+position = Vector2(46, 0)
 
 [node name="ScoreCounter" type="Label" parent="Main UI/LCD Screen/ScoreCounter"]
 z_index = 3
@@ -636,6 +637,7 @@ text = "000245"
 
 [node name="FoodTimer" type="Node2D" parent="Main UI/LCD Screen"]
 z_index = 3
+position = Vector2(46, 0)
 
 [node name="FoodTimer" type="Label" parent="Main UI/LCD Screen/FoodTimer"]
 z_index = 3
@@ -650,6 +652,7 @@ text = "00:00:00"
 
 [node name="DrinkTimer" type="Node2D" parent="Main UI/LCD Screen"]
 z_index = 3
+position = Vector2(46, 0)
 
 [node name="DrinkTimer" type="Label" parent="Main UI/LCD Screen/DrinkTimer"]
 z_index = 3
