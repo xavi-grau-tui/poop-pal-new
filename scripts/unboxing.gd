@@ -358,7 +358,7 @@ class Film extends Node2D:
 		draw_colored_polygon(flap, Color(0.93, 0.95, 0.98, 0.9))
 		if _tab_turn() < 0.0:
 			# turned over, it folds with the film: seen through the flap's plastic
-			_draw_tab_turned(flap)
+			_draw_tab_turned(flap, true)
 			draw_colored_polygon(flap, Color(0.93, 0.95, 0.98, 0.35))
 		draw_polygon(flap, PackedColorArray([Color(0.48, 0.5, 0.54, 0.75)]), _uvs(src), tex)
 		var edge := PackedVector2Array(flap)
@@ -367,7 +367,7 @@ class Film extends Node2D:
 		if _tab_turn() >= 0.0:
 			_draw_tab()
 		else:
-			_draw_tab_free_end(flap)
+			_draw_tab_turned(flap, false)
 
 	## The red tab is stuck on the corner and sticks out past it. As the corner lifts it
 	## swings over with it (foreshortened, as if turning in 3D) and lies on the folded
@@ -375,40 +375,26 @@ class Film extends Node2D:
 	func _tab_turn() -> float:       # 1 flat on the film, 0 edge-on, -1 turned over onto the flap
 		return cos(PI * clampf(d / (TAB_TURN * tab_scale), 0.0, 1.0))
 
-	## Turned over, the tab has folded with the corner: it lies on the flap, from the
-	## corner in, swinging down onto it, and never reaches past the film.
-	func _draw_tab_turned(flap: PackedVector2Array) -> void:
-		var c := -_tab_turn()
-		if c < 0.03:
+	## Turned over, the tab has folded with the corner as one piece, its blank back up: the
+	## part stuck on the film lies under the flap (seen through the plastic, only as far as
+	## the flap reaches), and its free end sticks out past the folded corner's tip.
+	func _draw_tab_turned(flap: PackedVector2Array, stuck_part: bool) -> void:
+		var c := _tab_turn()
+		if c > -0.03:
 			return
 		var xf := Transform2D(v * c * tab_scale, Vector2(-v.y, v.x) * tab_scale, tip())
-		var h := TAB_BACK.get_height() / 2.0
-		var quad := xf * PackedVector2Array([Vector2(0, -h), Vector2(tab_stuck, -h), Vector2(tab_stuck, h), Vector2(0, h)])
-		var inv := xf.affine_inverse()
 		var tsize := TAB_BACK.get_size()
-		for poly in Geometry2D.intersect_polygons(quad, flap):
-			var uv := PackedVector2Array()
-			for p in poly:
-				uv.append((inv * p + Vector2(0, h)) / tsize)
-			draw_polygon(poly, PackedColorArray([Color.WHITE]), uv, TAB_BACK)
-
-	## ...and its free end, which stuck out past the corner, folds back over the corner's
-	## edge onto the flap: lying on top, its front (with part of the print) showing.
-	func _draw_tab_free_end(flap: PackedVector2Array) -> void:
-		var c := -_tab_turn()
-		if c < 0.03:
-			return
-		var xf := Transform2D(v * c * tab_scale, Vector2(-v.y, v.x) * tab_scale, tip())
-		var tsize := TAB.get_size()
 		var h := tsize.y / 2.0
-		var free := tsize.x - tab_stuck
-		var quad := xf * PackedVector2Array([Vector2(0, -h), Vector2(free, -h), Vector2(free, h), Vector2(0, h)])
+		var x0 := -tab_stuck if stuck_part else 0.0
+		var x1 := 0.0 if stuck_part else tsize.x - tab_stuck
+		var quad := xf * PackedVector2Array([Vector2(x0, -h), Vector2(x1, -h), Vector2(x1, h), Vector2(x0, h)])
+		var polys: Array = Geometry2D.intersect_polygons(quad, flap) if stuck_part else [quad]
 		var inv := xf.affine_inverse()
-		for poly in Geometry2D.intersect_polygons(quad, flap):
+		for poly in polys:
 			var uv := PackedVector2Array()
 			for p in poly:
 				uv.append((inv * p + Vector2(tab_stuck, h)) / tsize)
-			draw_polygon(poly, PackedColorArray([Color.WHITE]), uv, TAB)
+			draw_polygon(poly, PackedColorArray([Color.WHITE]), uv, TAB_BACK)
 
 	func _draw_tab() -> void:
 		var c := _tab_turn()
