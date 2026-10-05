@@ -339,9 +339,10 @@ class Film extends Node2D:
 		for p in flap:
 			shadow.append(p + Vector2(8, 10))
 		draw_colored_polygon(shadow, Color(0.16, 0.11, 0.07, 0.22))
-		# the film's back: whitish plastic, the print showing through mirrored
+		# the film's back: whitish plastic, the print showing through mirrored, as grey
+		# (the white ink would vanish against the whitish back)
 		draw_colored_polygon(flap, Color(0.93, 0.95, 0.98, 0.9))
-		draw_polygon(flap, PackedColorArray([Color(1, 1, 1, 0.45)]), _uvs(src), tex)
+		draw_polygon(flap, PackedColorArray([Color(0.48, 0.5, 0.54, 0.75)]), _uvs(src), tex)
 		var edge := PackedVector2Array(flap)
 		edge.append(flap[0])
 		draw_polyline(edge, Color(0.55, 0.62, 0.7, 0.9), 2.0)
