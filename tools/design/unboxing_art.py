@@ -124,8 +124,8 @@ def battery_strip():
 
 def screen_off():
     """The big screen without power: an unlit reflective colour screen (original-GBA
-    style), unlike the small Casio-style LCD. Dark cool grey, a soft sheen across the
-    top-left, a whisper of grain and its pixel grid just showing in the light."""
+    style), unlike the small Casio-style LCD. Dark cool grey with a gentle shading, a
+    whisper of grain and its pixel grid just showing. No reflections: only the films shine."""
     w, h = SCREEN[2] - SCREEN[0], SCREEN[3] - SCREEN[1]
     yy, xx = np.mgrid[0:h, 0:w]
     t = xx / w * 0.45 + yy / h * 0.55
@@ -134,12 +134,7 @@ def screen_off():
     # the pixel grid: thin, slightly darker lines every 5 px
     grid = (xx % 5 == 0) | (yy % 5 == 0)
     base[grid] *= 0.94
-    img = Image.fromarray(np.clip(base, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
-    sheen = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    ImageDraw.Draw(sheen).polygon(((w * 0.05, 0), (w * 0.42, 0), (w * 0.02, h * 0.62), (0, h * 0.62), (0, h * 0.08)),
-                                  fill=(255, 255, 255, 16))
-    img.alpha_composite(sheen.filter(ImageFilter.GaussianBlur(30)))
-    return img
+    return Image.fromarray(np.clip(base, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
 
 
 def main():
