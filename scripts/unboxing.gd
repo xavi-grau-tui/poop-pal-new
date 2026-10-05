@@ -193,6 +193,8 @@ class Film extends Node2D:
 	## Peeling speed drives the crackle: sustained while you pull slowly, louder and
 	## higher when fast, silent when the finger stops or the film springs back.
 	func _process(delta: float) -> void:
+		if gone:
+			return                   # flying off: the crackle just fades (see release)
 		var inst := maxf(d - last_d, 0.0) / maxf(delta, 0.001)
 		last_d = d
 		speed = lerpf(speed, inst, 0.35 if inst > speed else 0.12)
@@ -231,6 +233,11 @@ class Film extends Node2D:
 		if d > minf(d_max() * LET_GO, LET_GO_MAX):
 			gone = true
 			Input.vibrate_handheld(12)
+			# the fly-off is fast; don't let that speed spike the crackle, just let it die away
+			if crackle.playing:
+				var fade := create_tween()
+				fade.tween_property(crackle, "volume_db", -60.0, 0.18)
+				fade.tween_callback(crackle.stop)
 			tw = create_tween().set_parallel(true)
 			tw.tween_method(_set_d, d, d_max() * 1.15, 0.35).set_ease(Tween.EASE_OUT)
 			tw.tween_property(self, "position", position - v * 260.0, 0.35).set_ease(Tween.EASE_IN)
