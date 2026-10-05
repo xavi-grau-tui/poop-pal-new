@@ -32,6 +32,9 @@ func _ready() -> void:
 	_music_off()
 	_set_lcd_visible(false)
 	_build()
+	# straight out of the box the device has no power yet: wait for the battery strip
+	while Unboxing.waiting():
+		await get_tree().process_frame
 	_run()
 
 func _build() -> void:
@@ -95,7 +98,7 @@ func _run() -> void:
 	tween.tween_callback(_finish)
 
 func _on_blocker_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and not done:
+	if event is InputEventMouseButton and event.pressed and not done and not Unboxing.waiting():
 		if tween:
 			tween.kill()
 		var t := create_tween()

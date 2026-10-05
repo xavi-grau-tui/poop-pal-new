@@ -103,7 +103,8 @@ func _input(event: InputEvent) -> void:
 		last_tap = now
 
 func _can_turn() -> bool:
-	return front.get_node_or_null("BootSequence") == null   # not during the power-on sequence
+	# not during the power-on sequence (but yes before it, while unboxing: no power yet)
+	return Unboxing.waiting() or front.get_node_or_null("BootSequence") == null
 
 func _on_logo(screen_pos: Vector2) -> bool:
 	var world := get_viewport().get_canvas_transform().affine_inverse() * screen_pos

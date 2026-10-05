@@ -1,0 +1,305 @@
+extends Node2D
+class_name Unboxing
+## First launch, straight out of the box: the device has no power, its two screens wear
+## protective films (the big one prints the instructions) and a plastic strip pokes out
+## of the battery lid on the back. Peel the films from their corner tabs, double-tap the
+## logo to turn it over, pull the strip: the device powers on, turns itself back round
+## and the normal boot sequence (BootSequence waits on waiting()) starts.
+##
+## Created at runtime by MenuManager as a sibling of "Main UI", after DeviceFlip, so it
+## sees input first. Art: tools/design/unboxing_art.py -> textures/unboxing/.
+
+## TESTING: show the unboxing on every launch. Turn off before release (then it shows
+## only once, remembered in SAVE_PATH).
+const SHOW_EVERY_LAUNCH := true
+const SAVE_PATH := "user://device.json"
+
+# Screen-space rects on the front at rest (match tools/design/unboxing_art.py)
+const SCREEN := Rect2(76, 623, 926, 926)
+const SCREEN_FILM := Rect2(63, 607, 953, 958)
+const LCD_FILM := Rect2(92, 77, 445, 201)
+# The battery strip on the back, in back-art pixels: centred under the lid's bottom edge
+const LID_BOTTOM := 1680.0
+const STRIP_OUT := 170.0            # how much of it pokes out below the lid
+const STRIP_PULL := 300.0           # pulled this far it comes free
+
+const BUZZ_MS := 30
+
+static var _state := -1             # -1 not decided yet, 1 waiting for power, 0 powered
+
+## True until the battery strip is pulled (BootSequence waits on this).
+static func waiting() -> bool:
+	if _state == -1:
+		_state = 1 if SHOW_EVERY_LAUNCH or not _saved_unboxed() else 0
+	return _state == 1
+
+static func _saved_unboxed() -> bool:
+	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if not f:
+		return false
+	var data = JSON.parse_string(f.get_as_text())
+	return data is Dictionary and data.get("unboxed", false)
+
+static func _save_unboxed() -> void:
+	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"unboxed": true}))
+
+var front: Node2D
+var flip: Node                       # DeviceFlip
+var screen_off: Sprite2D
+var films: Array[Film] = []
+var strip: Strip
+var dragging: Node = null            # the film or strip under the finger
+
+func _ready() -> void:
+	if not waiting():
+		queue_free()
+		return
+	front = get_parent().get_node("Main UI")
+	flip = get_parent().get_node("DeviceFlip")
+	# front pieces are children of Main UI (so they turn with the device), placed so their
+	# local pixels line up with the screen at rest
+	var to_front := front.get_global_transform_with_canvas().affine_inverse()
+
+	screen_off = Sprite2D.new()
+	screen_off.texture = preload("res://textures/unboxing/screen_off.png")
+	screen_off.centered = false
+	screen_off.transform = to_front * Transform2D(0.0, SCREEN.position)
+	screen_off.z_index = 2           # over the boot's black screen, under the console frame
+	front.add_child(screen_off)
+
+	for spec in [[SCREEN_FILM, preload("res://textures/unboxing/film_screen.png"), 0.8, 70.0],
+			[LCD_FILM, preload("res://textures/unboxing/film_lcd.png"), 0.55, 46.0]]:
+		var film := Film.new()
+		film.tex = spec[1]
+		film.size = spec[0].size
+		film.tab_scale = spec[2]
+		film.d_rest = spec[3]
+		film.d = spec[3]
+		film.transform = to_front * Transform2D(0.0, spec[0].position)
+		film.z_index = 60            # above the console and every menu
+		film.peeled.connect(func(): films.erase(film); _maybe_done())
+		front.add_child(film)
+		films.append(film)
+
+	strip = Strip.new()
+	strip.position = Vector2(540.0, LID_BOTTOM - 1920.0 + STRIP_OUT)   # back-local, its bottom end
+	var back: Node2D = flip.back
+	back.add_child(strip)
+	back.move_child(strip, back.get_node("BatteryLid").get_index())    # under the lid
+	strip.pulled.connect(_power_on)
+
+func _input(event: InputEvent) -> void:
+	var tap := event as InputEventMouseButton
+	var motion := event as InputEventMouseMotion
+	if not tap and not motion:
+		return
+	if tap and tap.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if flip.turning:
+		return
+	var pos: Vector2 = event.position
+	if dragging:
+		get_viewport().set_input_as_handled()
+		if motion:
+			dragging.drag_to(_local_to(dragging, pos))
+		elif not tap.pressed:
+			dragging.release()
+			dragging = null
+		return
+	if not tap or not tap.pressed:
+		if waiting() and flip.progress == 0.0 and not flip._on_logo(pos):
+			get_viewport().set_input_as_handled()
+		return
+	if flip.progress == 1.0:
+		if strip and is_instance_valid(strip) and strip.grabs(_local_to(strip, pos)):
+			dragging = strip
+	elif flip.progress == 0.0:
+		for film in films:
+			if film.grabs(_local_to(film, pos)):
+				dragging = film
+				break
+	if dragging:
+		get_viewport().set_input_as_handled()
+		dragging.press(_local_to(dragging, pos))
+	elif waiting() and flip.progress == 0.0 and not flip._on_logo(pos):
+		get_viewport().set_input_as_handled()   # no power: the buttons are dead
+
+func _local_to(node: Node2D, screen_pos: Vector2) -> Vector2:
+	return node.get_global_transform_with_canvas().affine_inverse() * screen_pos
+
+func _power_on() -> void:
+	strip = null
+	Input.vibrate_handheld(BUZZ_MS)
+	_save_unboxed()
+	await get_tree().create_timer(0.6).timeout
+	if flip.progress > 0.0:
+		flip._turn(0.0)
+		while flip.turning:
+			await get_tree().process_frame
+	await get_tree().create_timer(0.25).timeout
+	var t := create_tween()
+	t.tween_property(screen_off, "modulate:a", 0.0, 0.2)
+	t.tween_callback(screen_off.queue_free)
+	_state = 0                       # BootSequence starts now
+	_maybe_done()
+
+func _maybe_done() -> void:
+	if _state == 0 and films.is_empty():
+		queue_free()
+
+
+## A protector film that peels from its bottom-right corner: a fold line moves in from
+## the corner as you pull the tab, the folded part shows the film's (mirrored) back.
+class Film extends Node2D:
+	signal peeled
+
+	const TAB := preload("res://textures/unboxing/pull_tab.png")
+	const LET_GO := 0.28             # pulled past this share of the diagonal it comes off...
+	const LET_GO_MAX := 190.0        # ...or past this fold depth, so the big film needs no huge drag
+
+	var tex: Texture2D
+	var size: Vector2
+	var tab_scale := 0.8
+	var d_rest := 70.0               # the corner sits a little lifted, its PULL tab showing
+	var d := 70.0                    # fold line's distance in from the corner
+	var grab_offset := Vector2.ZERO
+	var tw: Tween
+	var gone := false
+	var v := Vector2.ONE.normalized()   # diagonal, towards the corner
+
+	func corner() -> Vector2:
+		return size
+
+	func tip() -> Vector2:            # where the folded-back corner is now
+		return corner() - 2.0 * d * v
+
+	func d_max() -> float:
+		return (size.x + size.y) / sqrt(2.0)
+
+	func grabs(p: Vector2) -> bool:
+		return not gone and (p.distance_to(tip()) < 140.0 * tab_scale or _side(p) > 0.0 and Rect2(Vector2.ZERO, size).has_point(p))
+
+	func press(p: Vector2) -> void:
+		if tw:
+			tw.kill()
+		grab_offset = p - tip()
+
+	func drag_to(p: Vector2) -> void:
+		var t := p - grab_offset
+		d = clampf((corner() - t).dot(v) / 2.0, d_rest, d_max())
+		queue_redraw()
+
+	func release() -> void:
+		if d > minf(d_max() * LET_GO, LET_GO_MAX):
+			gone = true
+			Input.vibrate_handheld(12)
+			tw = create_tween().set_parallel(true)
+			tw.tween_method(_set_d, d, d_max() * 1.15, 0.35).set_ease(Tween.EASE_OUT)
+			tw.tween_property(self, "position", position - v * 260.0, 0.35).set_ease(Tween.EASE_IN)
+			tw.tween_property(self, "modulate:a", 0.0, 0.35).set_delay(0.1)
+			tw.chain().tween_callback(func(): peeled.emit(); queue_free())
+		else:
+			tw = create_tween()
+			tw.tween_method(_set_d, d, d_rest, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+	func _set_d(x: float) -> void:
+		d = x
+		queue_redraw()
+
+	func _side(p: Vector2) -> float:  # > 0 on the folded (corner) side of the fold line
+		return (p - corner()).dot(v) + d
+
+	func _reflect(p: Vector2) -> Vector2:
+		return p - 2.0 * _side(p) * v
+
+	func _clip(poly: PackedVector2Array, keep_folded: bool) -> PackedVector2Array:
+		var out := PackedVector2Array()
+		for i in poly.size():
+			var a := poly[i]
+			var b := poly[(i + 1) % poly.size()]
+			var fa := _side(a) * (-1.0 if keep_folded else 1.0)
+			var fb := _side(b) * (-1.0 if keep_folded else 1.0)
+			if fa <= 0.0:
+				out.append(a)
+			if fa * fb < 0.0:
+				out.append(a.lerp(b, fa / (fa - fb)))
+		return out
+
+	func _uvs(pts: PackedVector2Array) -> PackedVector2Array:
+		var uv := PackedVector2Array()
+		for p in pts:
+			uv.append(p / size)
+		return uv
+
+	func _draw() -> void:
+		var rect := PackedVector2Array([Vector2.ZERO, Vector2(size.x, 0), size, Vector2(0, size.y)])
+		var flat := _clip(rect, false)
+		if flat.size() >= 3:
+			draw_polygon(flat, PackedColorArray([Color.WHITE]), _uvs(flat), tex)
+		var src := _clip(rect, true)
+		if src.size() < 3:
+			return
+		var flap := PackedVector2Array()
+		for p in src:
+			flap.append(_reflect(p))
+		var shadow := PackedVector2Array()
+		for p in flap:
+			shadow.append(p + Vector2(8, 10))
+		draw_colored_polygon(shadow, Color(0.16, 0.11, 0.07, 0.22))
+		# the film's back: whitish plastic, the print showing through mirrored
+		draw_colored_polygon(flap, Color(0.93, 0.95, 0.98, 0.9))
+		draw_polygon(flap, PackedColorArray([Color(1, 1, 1, 0.45)]), _uvs(src), tex)
+		var edge := PackedVector2Array(flap)
+		edge.append(flap[0])
+		draw_polyline(edge, Color(0.55, 0.62, 0.7, 0.9), 2.0)
+		# the red tab rides on the folded corner, pointing back towards the fold
+		var t := tip()
+		draw_set_transform(t, v.angle(), Vector2(tab_scale, tab_scale))
+		draw_texture(TAB, Vector2(-6, -TAB.get_height() / 2.0))
+		draw_set_transform(Vector2.ZERO)
+
+
+## The plastic strip between the cells: drag it down out of the battery bay.
+class Strip extends Node2D:
+	signal pulled
+
+	const TEX := preload("res://textures/unboxing/battery_strip.png")
+	var pull := 0.0
+	var press_y := 0.0
+	var tw: Tween
+	var gone := false
+
+	func _draw() -> void:
+		# local origin = the strip's end; it runs up under the lid
+		draw_texture(TEX, Vector2(-TEX.get_width() / 2.0, -TEX.get_height() + pull))
+
+	func grabs(p: Vector2) -> bool:
+		var out_len := Unboxing.STRIP_OUT + pull
+		return not gone and Rect2(-TEX.get_width() / 2.0 - 30, -out_len - 20, TEX.get_width() + 60, out_len + 60).has_point(p)
+
+	func press(p: Vector2) -> void:
+		if tw:
+			tw.kill()
+		press_y = p.y - pull
+
+	func drag_to(p: Vector2) -> void:
+		pull = clampf(p.y - press_y, 0.0, Unboxing.STRIP_PULL + 60.0)
+		queue_redraw()
+
+	func release() -> void:
+		if pull >= Unboxing.STRIP_PULL:
+			gone = true
+			tw = create_tween().set_parallel(true)
+			tw.tween_method(_set_pull, pull, pull + 420.0, 0.35).set_ease(Tween.EASE_IN)
+			tw.tween_property(self, "rotation", 0.25, 0.35)
+			tw.tween_property(self, "modulate:a", 0.0, 0.3).set_delay(0.1)
+			tw.chain().tween_callback(func(): pulled.emit(); queue_free())
+		else:
+			tw = create_tween()
+			tw.tween_method(_set_pull, pull, 0.0, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+	func _set_pull(x: float) -> void:
+		pull = x
+		queue_redraw()

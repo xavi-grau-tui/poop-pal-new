@@ -29,6 +29,10 @@ func _ready():
 	var flip := preload("res://scripts/device_flip.gd").new()
 	flip.name = "DeviceFlip"
 	get_parent().get_parent().add_child.call_deferred(flip)
+	# first launch: films to peel and a battery strip to pull before it powers on
+	var unboxing := preload("res://scripts/unboxing.gd").new()
+	unboxing.name = "Unboxing"
+	get_parent().get_parent().add_child.call_deferred(unboxing)
 
 ## Menu details stack their z (card frame + label + badge...) up to ~6, above the console's
 ## frame (2-3): caught mid-slide they showed over it. The console body, its frame, LCD and
