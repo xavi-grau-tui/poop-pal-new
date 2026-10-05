@@ -228,6 +228,7 @@ class Film extends Node2D:
 	var crackle: AudioStreamPlayer
 	var last_d := 0.0
 	var speed := 0.0                 # how fast the fold is moving in (smoothed), px/s
+	var hushed := false              # let go before it came off: silent while it springs back
 
 	func _ready() -> void:
 		# the adhesive crackle: one looping player, silent until the film is peeling
@@ -246,6 +247,9 @@ class Film extends Node2D:
 	func _process(delta: float) -> void:
 		if gone:
 			return                   # flying off: the crackle just fades (see release)
+		if hushed:
+			last_d = d
+			return
 		var inst := maxf(d - last_d, 0.0) / maxf(delta, 0.001)
 		last_d = d
 		speed = lerpf(speed, inst, 0.35 if inst > speed else 0.06)
@@ -274,6 +278,7 @@ class Film extends Node2D:
 	func press(p: Vector2) -> void:
 		if tw:
 			tw.kill()
+		hushed = false
 		grab_offset = p - tip()
 
 	func drag_to(p: Vector2) -> void:
@@ -298,6 +303,13 @@ class Film extends Node2D:
 			tw.tween_property(self, "modulate:a", 0.0, 0.35).set_delay(0.1)
 			tw.chain().tween_callback(func(): peeled.emit(); queue_free())
 		else:
+			# let go too soon: it springs back flat, and the crackle stops (a quick fade, no cut)
+			hushed = true
+			speed = 0.0
+			if crackle.playing:
+				var fade := crackle.create_tween()
+				fade.tween_property(crackle, "volume_db", -60.0, 0.06)
+				fade.tween_callback(crackle.stop)
 			tw = create_tween()
 			tw.tween_method(_set_d, d, d_rest, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 

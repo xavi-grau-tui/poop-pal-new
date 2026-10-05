@@ -96,6 +96,8 @@ func _input(event: InputEvent) -> void:
 		_press(tap.position)
 	elif motion and dragging:
 		_drag(motion.position - press_pos)
+		if step == SEAL:
+			_seal_crackle(motion.position)
 	elif tap and not tap.pressed and dragging:
 		dragging = false
 		_release(tap.position - press_pos)
@@ -105,12 +107,34 @@ func _press(pos: Vector2) -> void:
 		SEAL:
 			dragging = Rect2(SEAL_C - SEAL_SIZE / 2.0, SEAL_SIZE).grow(60.0).has_point(pos)
 			if dragging:
-				crackle.play()
+				crackle.volume_db = -80.0
+				crackle.play(randf() * 0.8)
+				seal_last = pos
 		LID:
 			dragging = true
 		DEVICE:
 			dragging = DEV_RECT.grow(30).has_point(pos)
 	press_pos = pos
+
+var seal_last := Vector2.ZERO
+var seal_speed := 0.0
+
+## The seal's peel sound follows the finger's speed (like the films): quiet when it stops.
+func _seal_crackle(pos: Vector2) -> void:
+	var dt := maxf(get_process_delta_time(), 0.001)
+	seal_speed = lerpf(seal_speed, pos.distance_to(seal_last) / dt, 0.4)
+	seal_last = pos
+	_seal_volume()
+
+func _seal_volume() -> void:
+	var amount := clampf(seal_speed / 900.0, 0.0, 1.0)
+	crackle.volume_db = -20.0 + linear_to_db(sqrt(maxf(amount, 0.001)))
+	crackle.pitch_scale = 1.3 + 0.4 * amount
+
+func _process(_delta: float) -> void:
+	if step == SEAL and dragging:            # the finger stopped: the crackle trails off
+		seal_speed *= 0.85
+		_seal_volume()
 
 func _drag(d: Vector2) -> void:
 	match step:
@@ -118,7 +142,6 @@ func _drag(d: Vector2) -> void:
 			d = d.limit_length(320.0)
 			seal.position = SEAL_C - lid.position + d
 			seal.rotation = d.x * 0.002
-			crackle.volume_db = -22.0 + clampf(d.length() / 30.0, 0.0, 6.0)
 		LID:                                     # lifted off upwards, a little towards you
 			var up := clampf(-d.y, 0.0, 900.0)
 			lid.position.y = 960.0 - up
@@ -136,8 +159,8 @@ func _full_size_device() -> void:
 func _release(d: Vector2) -> void:
 	match step:
 		SEAL:
-			var fade := crackle.create_tween()
-			fade.tween_property(crackle, "volume_db", -60.0, 0.25)
+			var fade := crackle.create_tween()   # (let go too soon: gone at once; peeled off: a short tail)
+			fade.tween_property(crackle, "volume_db", -60.0, 0.2 if d.length() > 90.0 else 0.06)
 			fade.tween_callback(crackle.stop)
 			if d.length() > 90.0:
 				step = LID
@@ -172,15 +195,16 @@ func _release(d: Vector2) -> void:
 				create_tween().tween_property(device, "position:y", DEV_RECT.get_center().y, 0.25) \
 					.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
-## Up out of the tray (the booklet shows underneath: it's there, for later), then back
-## down towards you, growing until it is the game's own device, and a soft landing.
+## Up out of the tray and straight back down towards you in one movement (the booklet
+## shows underneath as it passes: it's there, for later), growing until it is the game's
+## own device, and a soft landing.
 func _take_out() -> void:
 	_full_size_device()
 	var t := create_tween()
-	t.tween_property(device, "position:y", -260.0, 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	t.tween_interval(0.75)
-	t.tween_property(device, "position", Vector2(540, 960), 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	t.parallel().tween_property(device, "scale", Vector2.ONE, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	# one fluent arc: up (the booklet shows for about a second as it passes) and straight down
+	t.tween_property(device, "position:y", -260.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	t.tween_property(device, "position", Vector2(540, 960), 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	t.parallel().tween_property(device, "scale", Vector2.ONE, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	t.tween_callback(func():
 		Input.vibrate_handheld(30)
 		_sfx(LAND_SOUND, -10.0))

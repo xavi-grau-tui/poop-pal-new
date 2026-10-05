@@ -2,12 +2,11 @@
 
     <python with numpy> tools/design/unboxing_sfx.py
 
-sounds/fx/film_peel.wav   a seamless 1 s loop of the film's adhesive crackling away: bright
-                          hiss full of tiny pops. The game plays it while a film peels,
-                          its volume and pitch following the peeling speed.
-sounds/fx/box_lid.wav     the box's cardboard lid sliding off: a grainy scrape, then the
-                          soft whump of air as it comes free.
-sounds/fx/box_land.wav    the device set down in your hand: a soft plastic thud."""
+sounds/fx/film_peel.wav   a seamless 1 s loop of tape/film peeling: steady tiny stick-slip
+                          snaps. The game plays it while a film or the box seal peels, its
+                          volume and pitch following the peeling speed.
+sounds/fx/box_lid.wav     the box's lid lifted off: a dull cardboard tap.
+sounds/fx/box_land.wav    the device set down in your hand: a soft plastic tap."""
 import wave
 from pathlib import Path
 
@@ -18,21 +17,23 @@ RATE = 44100
 
 
 def film_peel():
-    n = RATE                                   # 1 s, looped
+    """Tape/film peeling: the adhesive lets go in tiny stick-slip snaps at a fairly steady
+    rate (the game raises the pitch, so the rate, as you pull faster), each snap a short
+    crisp resonance; only a little hiss under it. A seamless 1 s loop."""
+    n = RATE
     rng = np.random.default_rng(5)
-    noise = rng.normal(0, 1, n)
-    # bright: subtract a short smoothed copy (a crude high-pass), keep the top end crisp
-    hiss = noise - np.convolve(noise, np.ones(6) / 6, mode="same")
-    # adhesive pops at irregular, fast intervals
-    pops = np.zeros(n)
-    i = 0
+    x = np.zeros(n + RATE // 10)
+    # the snap: two damped resonances, a brighter one and a softer body
+    k = np.arange(int(RATE * 0.004))
+    snap = (np.sin(2 * np.pi * 3300 * k / RATE) * np.exp(-k / (RATE * 0.00045))
+            + 0.5 * np.sin(2 * np.pi * 1700 * k / RATE + 1.0) * np.exp(-k / (RATE * 0.0008)))
+    i = 0.0
     while i < n:
-        pops[i] = rng.uniform(0.5, 1.0)
-        i += int(RATE / rng.uniform(260, 420))
-    pops = np.convolve(pops, np.exp(-np.arange(30) / 5.0), mode="same")
-    x = hiss * (0.3 + 0.7 * pops / pops.max())
-    # seamless loop: crossfade the last 60 ms into the first
-    f = int(RATE * 0.06)
+        j = int(i)
+        x[j:j + len(snap)] += rng.uniform(0.35, 1.0) * snap * (1 if rng.random() > 0.5 else -1)
+        i += RATE / (520 * rng.uniform(0.82, 1.18))           # ~520 snaps a second, jittered
+    x = x[:n] + band(rng.normal(0, 1, n), 2500, 9000) * 0.12
+    f = int(RATE * 0.06)                                       # seamless loop
     ramp = np.linspace(0, 1, f)
     x[:f] = x[:f] * ramp + x[-f:] * (1 - ramp)
     return x[:-f]
@@ -45,31 +46,29 @@ def band(x, lo, hi):
     return a - b
 
 
-def box_lid():
-    n = int(RATE * 0.62)
+def knock(modes, contact_ms, contact_band, length=0.25, seed=1):
+    """An impact, the way real ones sound: a burst of contact noise and a few inharmonic
+    resonances dying away fast (freq Hz, decay s, amplitude)."""
+    n = int(RATE * length)
     t = np.arange(n) / RATE
-    rng = np.random.default_rng(11)
-    noise = rng.normal(0, 1, n)
-    scrape = band(noise, 250, 2600)
-    # stick-slip: the cardboard catching and letting go, a rough grain
-    grain = np.abs(rng.normal(0, 1, n))
-    grain = np.convolve(grain, np.ones(int(RATE / 60)) / int(RATE / 60), mode="same")
-    env = np.clip(t / 0.06, 0, 1) * np.clip((0.46 - t) / 0.12, 0, 1)
-    x = scrape * (0.35 + grain) * env
-    # it comes free: a soft low whump of air
-    t0 = 0.40
-    tw = np.clip(t - t0, 0, None)
-    whump = np.sin(2 * np.pi * (150 * tw - 160 * tw * tw)) * np.exp(-tw / 0.05) * (t >= t0)
-    return x + whump * 0.9
+    rng = np.random.default_rng(seed)
+    x = np.zeros(n)
+    for f, dec, amp in modes:
+        x += amp * np.sin(2 * np.pi * f * t + rng.uniform(0, 6.28)) * np.exp(-t / dec)
+    x += band(rng.normal(0, 1, n), *contact_band) * np.exp(-t / (contact_ms / 1000)) * 0.9
+    return x * np.clip(t / 0.0008, 0, 1)                       # no click at the very start
+
+
+def box_lid():
+    """The lid lifted off: a dull cardboard tap."""
+    return knock([(190, 0.035, 1.0), (430, 0.022, 0.55), (980, 0.012, 0.3), (2100, 0.006, 0.15)],
+                 4, (500, 4000), seed=11)
 
 
 def box_land():
-    n = int(RATE * 0.25)
-    t = np.arange(n) / RATE
-    rng = np.random.default_rng(3)
-    thud = np.sin(2 * np.pi * 110 * t * (1 - 0.3 * t / 0.25)) * np.exp(-t / 0.045)
-    tick = band(rng.normal(0, 1, n), 1500, 6000) * np.exp(-t / 0.006) * 0.5
-    return thud + tick
+    """The device set down in your hand: a soft plastic tap."""
+    return knock([(320, 0.030, 0.9), (870, 0.016, 0.5), (1900, 0.008, 0.3), (3700, 0.004, 0.15)],
+                 2.5, (1200, 7000), seed=3)
 
 
 def save(name, x, peak=0.5):
