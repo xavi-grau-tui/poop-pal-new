@@ -23,6 +23,7 @@ const TEXT_COLOR := Color(0.98, 0.94, 0.86)
 
 var screen: ColorRect
 var logo: Sprite2D
+var nose: Sprite2D                       # the rabbit's nose, cut out of the logo so it can twitch
 var text: Label
 var blocker: CanvasLayer
 var tween: Tween
@@ -53,10 +54,10 @@ func _build() -> void:
 	add_child(screen)
 
 	logo = Sprite2D.new()
-	logo.texture = logo_texture
 	logo.position = center
 	logo.modulate.a = 0.0
 	add_child(logo)
+	_split_nose()
 
 	text = Label.new()
 	text.text = welcome_text
@@ -147,8 +148,36 @@ func _lcd_power_on() -> void:
 				n.visible = on)
 		t.tween_interval(0.07)
 
+## The rabbit's nose (logo texture px): the triangle above the mouth line
+const NOSE_RECT := Rect2i(80, 199, 54, 18)
+
+## Cut the nose out of the logo into its own sprite, pivoting on its base (where the mouth
+## line starts), so it can twitch without coming apart from the mouth.
+func _split_nose() -> void:
+	var img := logo_texture.get_image()
+	if img.is_compressed():
+		img.decompress()
+	var nose_img := img.get_region(NOSE_RECT)
+	var rest := img.duplicate() as Image
+	# leave the base's bottom rows: the nose overlaps them, so no seam shows at the mouth
+	rest.fill_rect(Rect2i(NOSE_RECT.position, NOSE_RECT.size - Vector2i(0, 4)), Color(0, 0, 0, 0))
+	logo.texture = ImageTexture.create_from_image(rest)
+	nose = Sprite2D.new()
+	nose.texture = ImageTexture.create_from_image(nose_img)
+	nose.offset = Vector2(0, -NOSE_RECT.size.y / 2.0)          # origin at the base's centre
+	nose.position = Vector2(NOSE_RECT.position.x + NOSE_RECT.size.x / 2.0, NOSE_RECT.end.y) - Vector2(img.get_size()) / 2.0
+	logo.add_child(nose)
+
+## A sniff: the nose puffs up a touch and settles (timed with the sound's sniffs)
+func _twitch_nose() -> void:
+	var t := nose.create_tween()
+	t.tween_property(nose, "scale", Vector2(1.06, 1.18), 0.03).set_ease(Tween.EASE_OUT)
+	t.tween_property(nose, "scale", Vector2.ONE, 0.05).set_ease(Tween.EASE_IN)
+
 ## The Kobaya Tech rabbit: two tiny sniffs and a soft hop (tools/design/boot_sfx.py)
 func _bunny() -> void:
+	_twitch_nose()
+	get_tree().create_timer(0.075).timeout.connect(_twitch_nose)   # the second sniff
 	var sfx := AudioStreamPlayer.new()
 	sfx.stream = preload("res://sounds/fx/kobaya_bunny.wav")
 	sfx.volume_db = bunny_volume_db
