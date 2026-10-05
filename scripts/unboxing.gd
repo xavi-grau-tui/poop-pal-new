@@ -95,6 +95,9 @@ func _ready() -> void:
 	back.move_child(strip, back.get_node("BatteryLid").get_index())    # under the lid
 	strip.pulled.connect(_power_on)
 
+	# before all that, it's still in its box (it hears every touch until it's opened)
+	add_child(preload("res://scripts/unbox_box.gd").new())
+
 func _input(event: InputEvent) -> void:
 	var tap := event as InputEventMouseButton
 	var motion := event as InputEventMouseMotion
