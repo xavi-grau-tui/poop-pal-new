@@ -96,14 +96,23 @@ func _stop_all_tweens():
 			t.kill()
 
 func blink(custom_times := -1, custom_opacity := -1.0, custom_speed := -1.0):
-	if not PetState.has_poop():
-		return
-	if breathing_tween:
-		breathing_tween.kill()
-
 	var times = blink_times if custom_times < 0 else custom_times
 	var opacity = blink_opacity if custom_opacity < 0.0 else custom_opacity
 	var speed = initial_blink_speed if custom_speed < 0.0 else custom_speed
+
+	# no pal yet: the "EAT" sign in its place blinks the same way
+	if not PetState.has_poop():
+		if mystery and mystery.visible:
+			if mystery_tween:
+				mystery_tween.kill()
+			mystery_tween = create_tween()
+			for i in range(times):
+				mystery_tween.tween_property(mystery, "modulate:a", opacity, speed)
+				mystery_tween.tween_property(mystery, "modulate:a", 1.0, speed)
+				speed *= 0.75
+		return
+	if breathing_tween:
+		breathing_tween.kill()
 
 	blink_tween = create_tween()
 
