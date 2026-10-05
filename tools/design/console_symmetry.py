@@ -21,7 +21,7 @@ W = 1080
 EDGE = 37                 # outer columns mirrored for the full height (case edge + shaded strip)
 PANEL = 80                # columns mirrored within the screen panel's rows (beige panel + frame)
 PANEL_ROWS = (570, 1601)  # the beige panel around the screen spans ~584..1587
-CLEAR = (77, 77, 77)      # the default clear colour behind the device
+CLEAR = (0, 0, 0)         # the clear colour behind the device (black, like the phone's bezel)
 
 
 def main(capture):

@@ -165,6 +165,37 @@ def booklet_layer():
     return im
 
 
+def cut_corners():
+    """device.png is a game capture: outside the device's rounded brown frame its corners
+    showed the screen's background. Make them transparent (the frame's soft edge pixels keep
+    their share as alpha), so in the tray the box shows around the corners. Idempotent."""
+    path = BOX_DIR / "device.png"
+    a = np.array(Image.open(path).convert("RGBA")).astype(float)
+    h, w = a.shape[:2]
+    frame = np.array([72, 49, 37], float)
+    bg = a[0, 0, :3].copy()
+    if a[0, 0, 3] == 0:
+        return
+    outside = np.zeros((h, w), bool)
+    q = deque([(0, 0), (0, w - 1), (h - 1, 0), (h - 1, w - 1)])
+    for y, x in q:
+        outside[y, x] = True
+    near_bg = np.abs(a[..., :3] - bg).sum(2) < 6
+    while q:
+        y, x = q.popleft()
+        for yy, xx in ((y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)):
+            if 0 <= yy < h and 0 <= xx < w and not outside[yy, xx] and near_bg[yy, xx]:
+                outside[yy, xx] = True
+                q.append((yy, xx))
+    a[outside, 3] = 0
+    # the soft edge: pixels touching the cut that blend background into the frame
+    edge = ~outside & (np.roll(outside, 1, 0) | np.roll(outside, -1, 0) | np.roll(outside, 1, 1) | np.roll(outside, -1, 1))
+    t = np.clip((a[..., 1] - bg[1]) / (frame[1] - bg[1]), 0, 1)        # how much frame is in it
+    a[edge, :3] = frame
+    a[edge, 3] = 255 * t[edge]
+    Image.fromarray(a.astype(np.uint8), "RGBA").save(path)
+
+
 def device_layer():
     dev = Image.open(BOX_DIR / "device.png").convert("RGBA")
     return dev.resize((DEV_W, DEV_H), Image.LANCZOS)
@@ -289,6 +320,7 @@ def closed_box():
 
 def main():
     BOX_DIR.mkdir(exist_ok=True)
+    cut_corners()
     lid_layer().save(BOX_DIR / "lid.png")
     insert_base().save(BOX_DIR / "insert.png")
     booklet_layer().save(BOX_DIR / "booklet.png")

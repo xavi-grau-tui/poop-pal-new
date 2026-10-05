@@ -29,6 +29,7 @@ var press_pos := Vector2.ZERO
 var seal: Sprite2D
 var lid: Node2D
 var lid_shadow: ColorRect
+var fade_out: ColorRect
 var device: Sprite2D
 var crackle: AudioStreamPlayer
 
@@ -42,6 +43,14 @@ func _ready() -> void:
 	device.texture = preload("res://textures/unboxing/box/device_tray.png")
 	device.position = DEV_RECT.get_center()
 	add_child(device)
+	# the box fades to black behind the device as it comes towards you: it lands with the
+	# game's black around its corners
+	fade_out = ColorRect.new()
+	fade_out.size = Vector2(1080, 1920)
+	fade_out.color = Color(0, 0, 0, 0)
+	fade_out.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(fade_out)
+	move_child(fade_out, device.get_index())
 	lid_shadow = ColorRect.new()
 	lid_shadow.size = Vector2(1080, 1920)
 	lid_shadow.color = Color(0, 0, 0, 0)
@@ -214,6 +223,7 @@ func _take_out() -> void:
 	t.tween_property(device, "position:y", -260.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	t.tween_property(device, "position", Vector2(540, 960), 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	t.parallel().tween_property(device, "scale", Vector2.ONE, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	t.parallel().tween_property(fade_out, "color:a", 1.0, 0.55)
 	t.tween_callback(func(): Input.vibrate_handheld(30))   # (no sound: just in your hand)
 	t.tween_property(device, "scale", Vector2.ONE * 1.015, 0.06).set_ease(Tween.EASE_OUT)
 	t.tween_property(device, "scale", Vector2.ONE, 0.1).set_ease(Tween.EASE_IN_OUT)
