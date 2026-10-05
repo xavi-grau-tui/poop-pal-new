@@ -4,7 +4,7 @@ peel tab, the battery pull strip on the back and the unpowered main screen.
     <python with Pillow + numpy> tools/design/unboxing_art.py
 
 Writes into textures/unboxing/. Sizes match the front at 1080x1920 (screen coords):
-the films end exactly at the outer edge of the brown frames they cover."""
+the films cover only the screens' glass, leaving the brown frames bare."""
 from pathlib import Path
 
 import numpy as np
@@ -17,9 +17,9 @@ FONT_BOLD = str(ROOT / "fonts" / "pixChicago.ttf")
 
 # Screen-space rects on the front (x0, y0, x1, y1), exclusive ends
 SCREEN = (76, 623, 1002, 1549)          # the big screen itself
-SCREEN_FILM = (63, 607, 1016, 1565)     # its brown frame's outer edge
-LCD_FILM = (92, 77, 537, 278)           # the small LCD's brown frame's outer edge
-FRAME_R = 10                            # the frames' corner rounding
+SCREEN_FILM = (77, 623, 1003, 1549)     # the screen glass only (inside its brown frame)
+LCD_FILM = (101, 85, 526, 270)          # the small LCD's glass only (inside its frame)
+FRAME_R = 3                             # the glass corners are nearly square
 
 INK = (236, 238, 242)                   # white print: readable over the dark, unlit screen
 P = 3                                   # print pixel size

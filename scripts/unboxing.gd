@@ -16,8 +16,8 @@ const SAVE_PATH := "user://device.json"
 
 # Screen-space rects on the front at rest (match tools/design/unboxing_art.py)
 const SCREEN := Rect2(76, 623, 926, 926)
-const SCREEN_FILM := Rect2(63, 607, 953, 958)
-const LCD_FILM := Rect2(92, 77, 445, 201)
+const SCREEN_FILM := Rect2(77, 623, 926, 926)
+const LCD_FILM := Rect2(101, 85, 425, 185)
 # The battery strip on the back, in back-art pixels: it comes out of the lid's top edge
 # (pulled upwards, where there's room for a finger), a little right of the lid's screw
 const LID_TOP := 1316.0

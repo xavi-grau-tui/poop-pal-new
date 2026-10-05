@@ -871,6 +871,7 @@ offset_right = 40.0
 offset_bottom = 40.0
 
 [node name="FoodMenu" type="Node2D" parent="Main UI/Menus"]
+position = Vector2(-2.4, 0)
 script = ExtResource("43_blkrb")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Main UI/Menus/FoodMenu"]
@@ -1410,6 +1411,7 @@ offset_bottom = -448.007
 texture = ExtResource("54_rnkwl")
 
 [node name="GameMenu" type="Node2D" parent="Main UI/Menus"]
+position = Vector2(-2.4, 0)
 script = ExtResource("67_cyx1q")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Main UI/Menus/GameMenu"]
@@ -2554,6 +2556,7 @@ offset_bottom = -448.007
 texture = ExtResource("54_rnkwl")
 
 [node name="Settings Menu" type="Node2D" parent="Main UI/Menus"]
+position = Vector2(-8.6, 0)
 script = ExtResource("98_coll")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Main UI/Menus/Settings Menu"]
@@ -2577,6 +2580,7 @@ pet_view_animation_player = NodePath("../PetView/AnimationPlayer")
 game_screen = NodePath("../GameScreen")
 
 [node name="GameScreen" parent="Main UI" instance=ExtResource("78_ygd8o")]
+position = Vector2(6.7, 0)
 
 [node name="BootSequence" type="Node2D" parent="Main UI"]
 script = ExtResource("99_boot")
