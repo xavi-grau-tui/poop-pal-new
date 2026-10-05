@@ -346,6 +346,9 @@ class Film extends Node2D:
 		if src.size() < 3:
 			_draw_tab()
 			return
+		if _tab_turn() < 0.0:
+			# the tab bends at the fold too: the end not yet reached stays flat on the film
+			_draw_tab_piece(Transform2D(v * tab_scale, Vector2(-v.y, v.x) * tab_scale, corner()), TAB)
 		var flap := PackedVector2Array()
 		for p in src:
 			flap.append(_reflect(p))
@@ -373,16 +376,30 @@ class Film extends Node2D:
 	func _tab_turn() -> float:       # 1 flat on the film, 0 edge-on, -1 turned over onto the flap
 		return cos(PI * clampf(d / (TAB_TURN * tab_scale), 0.0, 1.0))
 
-	## Turned over, the tab has folded with the corner as one piece, its blank back up and
-	## whole: the end stuck on the film lies under the flap, which shows over it, and the
-	## free end sticks out past the folded corner's tip.
+	## Turned over, the tab has folded with the corner, its blank back up: it bends at the
+	## fold line like the film, so it appears from the fold as you pull, its free end
+	## sticking out past the folded corner's tip; the flap shows over the rest.
 	func _draw_tab_turned() -> void:
 		var c := _tab_turn()
 		if c > -0.03:
 			return
-		draw_set_transform_matrix(Transform2D(v * c * tab_scale, Vector2(-v.y, v.x) * tab_scale, tip()))
-		draw_texture(TAB_BACK, Vector2(-tab_stuck, -TAB_BACK.get_height() / 2.0))
-		draw_set_transform(Vector2.ZERO)
+		_draw_tab_piece(Transform2D(v * c * tab_scale, Vector2(-v.y, v.x) * tab_scale, tip()), TAB_BACK)
+
+	## Draws the tab placed by xf (its stuck length behind the origin), cut at the fold line:
+	## only what lies on the flap's side of it.
+	func _draw_tab_piece(xf: Transform2D, t: Texture2D) -> void:
+		var tsize := t.get_size()
+		var h := tsize.y / 2.0
+		var quad := xf * PackedVector2Array([Vector2(-tab_stuck, -h), Vector2(tsize.x - tab_stuck, -h),
+				Vector2(tsize.x - tab_stuck, h), Vector2(-tab_stuck, h)])
+		var piece := _clip(quad, false)
+		if piece.size() < 3:
+			return
+		var inv := xf.affine_inverse()
+		var uv := PackedVector2Array()
+		for p in piece:
+			uv.append((inv * p + Vector2(tab_stuck, h)) / tsize)
+		draw_polygon(piece, PackedColorArray([Color.WHITE]), uv, t)
 
 	func _draw_tab() -> void:
 		var c := _tab_turn()
