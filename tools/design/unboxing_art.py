@@ -65,9 +65,13 @@ def screen_print(w, h):
     sw = (SCREEN[2] - SCREEN[0]) // P
     sh = (SCREEN[3] - SCREEN[1]) // P
     cx = ox + sw // 2
-    y = oy + 26
-    t.text((cx, y), "WELCOME TO HARATOMO!", font=big, fill=INK + (255,), anchor="mm")
-    y += 22
+    t.text((cx, oy + 26), "WELCOME TO HARATOMO!", font=big, fill=INK + (255,), anchor="mm")
+    title_bottom = txt.getbbox()[3]
+    # the instructions are drawn on their own layer, then centred between the title and the logo
+    block = Image.new("RGBA", (lw, lh), (0, 0, 0, 0))
+    t = ImageDraw.Draw(block)
+    t.fontmode = "1"
+    y = 30
     t.text((cx, y), "Before you start:", font=bold, fill=INK + (255,), anchor="mm")
     y += 30
     steps = [
@@ -89,7 +93,12 @@ def screen_print(w, h):
     mark = np.zeros(a.shape + (4,), np.uint8)
     mark[a] = INK + (230,)
     mk = Image.fromarray(mark, "RGBA")
-    txt.alpha_composite(mk, (cx - mk.width // 2, oy + sh - mk.height - 26))
+    mk_y = oy + sh - mk.height - 26
+    txt.alpha_composite(mk, (cx - mk.width // 2, mk_y))
+    logo_top = mk_y + mk.getbbox()[1]
+    _, b_top, _, b_bottom = block.getbbox()
+    shift = (title_bottom + logo_top) // 2 - (b_top + b_bottom) // 2
+    txt.alpha_composite(block.crop((0, -shift, lw, lh)) if shift < 0 else block, (0, max(shift, 0)))
     return txt.resize((lw * P, lh * P), Image.NEAREST).crop((0, 0, w, h))
 
 
