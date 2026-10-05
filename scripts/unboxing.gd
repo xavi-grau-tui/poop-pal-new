@@ -159,7 +159,9 @@ class Film extends Node2D:
 	signal peeled
 
 	const TAB := preload("res://textures/unboxing/pull_tab.png")
-	const ZIP := preload("res://sounds/fx/film_peel.wav")
+	const PEEL_SOUND := preload("res://sounds/fx/film_peel.wav")
+	const PEEL_LOUD_AT := 900.0      # fold speed (px/s) at which the crackle is at full volume
+	const PEEL_DB := -12.0           # ...and that full volume
 	const LET_GO := 0.28             # pulled past this share of the diagonal it comes off...
 	const LET_GO_MAX := 190.0        # ...or past this fold depth, so the big film needs no huge drag
 
@@ -172,6 +174,36 @@ class Film extends Node2D:
 	var tw: Tween
 	var gone := false
 	var v := Vector2.ONE.normalized()   # diagonal, towards the corner
+	var crackle: AudioStreamPlayer
+	var last_d := 0.0
+	var speed := 0.0                 # how fast the fold is moving in (smoothed), px/s
+
+	func _ready() -> void:
+		# the adhesive crackle: one looping player, silent until the film is peeling
+		var stream: AudioStreamWAV = PEEL_SOUND.duplicate()
+		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		stream.loop_begin = 0
+		stream.loop_end = int(stream.get_length() * stream.mix_rate)
+		crackle = AudioStreamPlayer.new()
+		crackle.stream = stream
+		crackle.volume_db = -80.0
+		add_child(crackle)
+		last_d = d
+
+	## Peeling speed drives the crackle: sustained while you pull slowly, louder and
+	## higher when fast, silent when the finger stops or the film springs back.
+	func _process(delta: float) -> void:
+		var inst := maxf(d - last_d, 0.0) / maxf(delta, 0.001)
+		last_d = d
+		speed = lerpf(speed, inst, 0.35 if inst > speed else 0.12)
+		var amount := clampf(speed / PEEL_LOUD_AT, 0.0, 1.0) * modulate.a
+		if amount > 0.02:
+			if not crackle.playing:
+				crackle.play(randf() * 0.8)
+			crackle.volume_db = PEEL_DB + linear_to_db(sqrt(amount))
+			crackle.pitch_scale = 1.05 + 0.35 * amount
+		elif crackle.playing:
+			crackle.stop()
 
 	func corner() -> Vector2:
 		return size
@@ -199,7 +231,6 @@ class Film extends Node2D:
 		if d > minf(d_max() * LET_GO, LET_GO_MAX):
 			gone = true
 			Input.vibrate_handheld(12)
-			_zip()
 			tw = create_tween().set_parallel(true)
 			tw.tween_method(_set_d, d, d_max() * 1.15, 0.35).set_ease(Tween.EASE_OUT)
 			tw.tween_property(self, "position", position - v * 260.0, 0.35).set_ease(Tween.EASE_IN)
@@ -208,16 +239,6 @@ class Film extends Node2D:
 		else:
 			tw = create_tween()
 			tw.tween_method(_set_d, d, d_rest, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-
-	## The soft 'zip' of the film coming away (lives on the parent: this film is about to go).
-	func _zip() -> void:
-		var sfx := AudioStreamPlayer.new()
-		sfx.stream = ZIP
-		sfx.volume_db = -14.0
-		sfx.pitch_scale = randf_range(0.95, 1.08)
-		get_parent().add_child(sfx)
-		sfx.finished.connect(sfx.queue_free)
-		sfx.play()
 
 	func _set_d(x: float) -> void:
 		d = x

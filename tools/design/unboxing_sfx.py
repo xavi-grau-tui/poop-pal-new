@@ -2,7 +2,9 @@
 
     <python with numpy> tools/design/unboxing_sfx.py
 
-sounds/fx/film_peel.wav   a short, soft 'zip': crackly bright noise that rises and fades"""
+sounds/fx/film_peel.wav   a seamless 1 s loop of the film's adhesive crackling away: bright
+                          hiss full of tiny pops. The game plays it while a film peels,
+                          its volume and pitch following the peeling speed."""
 import wave
 from pathlib import Path
 
@@ -13,20 +15,24 @@ RATE = 44100
 
 
 def film_peel():
-    t = np.arange(int(RATE * 0.32)) / RATE
+    n = RATE                                   # 1 s, looped
     rng = np.random.default_rng(5)
-    noise = rng.normal(0, 1, t.size)
-    # brighten: subtract a smoothed copy (crude high-pass), then soften the very top
-    smooth = np.convolve(noise, np.ones(12) / 12, mode="same")
-    hiss = np.convolve(noise - smooth, np.ones(3) / 3, mode="same")
-    # the zip: tiny adhesive pops, getting faster as the film comes away
-    rate = 90 + 260 * (t / t[-1])
-    phase = np.cumsum(rate) / RATE
-    pops = (np.sin(2 * np.pi * phase) > 0.6).astype(float)
-    pops = np.convolve(pops, np.exp(-np.arange(40) / 8.0), mode="same")
-    x = hiss * (0.35 + 0.65 * pops / max(pops.max(), 1e-9))
-    env = np.minimum(1.0, t / 0.05) * np.exp(-np.clip(t - 0.12, 0, None) / 0.08)
-    return x * env
+    noise = rng.normal(0, 1, n)
+    # bright: subtract a short smoothed copy (a crude high-pass), keep the top end crisp
+    hiss = noise - np.convolve(noise, np.ones(6) / 6, mode="same")
+    # adhesive pops at irregular, fast intervals
+    pops = np.zeros(n)
+    i = 0
+    while i < n:
+        pops[i] = rng.uniform(0.5, 1.0)
+        i += int(RATE / rng.uniform(260, 420))
+    pops = np.convolve(pops, np.exp(-np.arange(30) / 5.0), mode="same")
+    x = hiss * (0.3 + 0.7 * pops / pops.max())
+    # seamless loop: crossfade the last 60 ms into the first
+    f = int(RATE * 0.06)
+    ramp = np.linspace(0, 1, f)
+    x[:f] = x[:f] * ramp + x[-f:] * (1 - ramp)
+    return x[:-f]
 
 
 def save(name, x, peak=0.5):
