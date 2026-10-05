@@ -197,8 +197,9 @@ func _launch_game() -> void:
 					return
 
 			if mgr and mgr.has_method("transition_to_game_screen"):
+				# (the Lucky Pinch bonus has no music of its own: the pet screen's song goes on)
 				var music = get_node_or_null("/root/PoopPal/MusicController")
-				if music:
+				if music and page_index != LuckyPinch.GAME_INDEX:
 					music.stop()
 				mgr.transition_to_game_screen(page_index)
 			break

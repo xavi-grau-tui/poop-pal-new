@@ -213,8 +213,8 @@ func exit_game_screen() -> void:
 		game_screen._stop_game_music()
 	if was_active:
 		var music = get_node_or_null("/root/PoopPal/MusicController")
-		if music and music.has_method("play_random_song"):
-			music.play_random_song()
+		if music and music.has_method("play_random_song") and not music.playing:
+			music.play_random_song()          # (still playing, e.g. after Lucky Pinch: let it go on)
 	
 	# Quick slide: game screen out left, pet view in from right
 	var gs_anim = get_animation_player(game_screen)
@@ -243,8 +243,8 @@ func _stop_game_and_resume_music() -> void:
 	# Only resume music if the game screen was actually active
 	if was_active:
 		var music = get_node_or_null("/root/PoopPal/MusicController")
-		if music and music.has_method("play_random_song"):
-			music.play_random_song()
+		if music and music.has_method("play_random_song") and not music.playing:
+			music.play_random_song()          # (still playing, e.g. after Lucky Pinch: let it go on)
 	# Wait for slide to finish, then destroy the game and hide
 	_cleanup_game_after_slide()
 
