@@ -197,9 +197,10 @@ class Film extends Node2D:
 			return                   # flying off: the crackle just fades (see release)
 		var inst := maxf(d - last_d, 0.0) / maxf(delta, 0.001)
 		last_d = d
-		speed = lerpf(speed, inst, 0.35 if inst > speed else 0.12)
+		speed = lerpf(speed, inst, 0.35 if inst > speed else 0.06)
 		var amount := clampf(speed / PEEL_LOUD_AT, 0.0, 1.0) * modulate.a
-		if amount > 0.02:
+		# (the smoothed speed decays gradually, so slowing down trails off rather than cutting)
+		if amount > 0.003:
 			if not crackle.playing:
 				crackle.play(randf() * 0.8)
 			crackle.volume_db = PEEL_DB + linear_to_db(sqrt(amount))
@@ -233,11 +234,13 @@ class Film extends Node2D:
 		if d > minf(d_max() * LET_GO, LET_GO_MAX):
 			gone = true
 			Input.vibrate_handheld(12)
-			# the fly-off is fast; don't let that speed spike the crackle, just let it die away
+			# the fly-off is fast; don't let that speed spike the crackle, just let it die away.
+			# It moves to the parent first: this film is freed before the fade would end.
 			if crackle.playing:
-				var fade := create_tween()
-				fade.tween_property(crackle, "volume_db", -60.0, 0.18)
-				fade.tween_callback(crackle.stop)
+				crackle.reparent(get_parent())
+				var fade := crackle.create_tween()
+				fade.tween_property(crackle, "volume_db", -60.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+				fade.tween_callback(crackle.queue_free)
 			tw = create_tween().set_parallel(true)
 			tw.tween_method(_set_d, d, d_max() * 1.15, 0.35).set_ease(Tween.EASE_OUT)
 			tw.tween_property(self, "position", position - v * 260.0, 0.35).set_ease(Tween.EASE_IN)
