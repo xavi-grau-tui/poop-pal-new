@@ -5,8 +5,8 @@
 sounds/fx/film_peel.wav   a seamless 1 s loop of tape/film peeling: steady tiny stick-slip
                           snaps. The game plays it while a film or the box seal peels, its
                           volume and pitch following the peeling speed.
-sounds/fx/box_lid.wav     the box's lid lifted off: a dull cardboard tap.
-sounds/fx/box_land.wav    the device set down in your hand: a soft plastic tap."""
+sounds/fx/box_lid.wav     the box's lid lifted off: a papery rustle, then the box's hollow
+                          low "thup"."""
 import wave
 from pathlib import Path
 
@@ -60,15 +60,24 @@ def knock(modes, contact_ms, contact_band, length=0.25, seed=1):
 
 
 def box_lid():
-    """The lid lifted off: a dull cardboard tap."""
-    return knock([(190, 0.035, 1.0), (430, 0.022, 0.55), (980, 0.012, 0.3), (2100, 0.006, 0.15)],
-                 4, (500, 4000), seed=11)
-
-
-def box_land():
-    """The device set down in your hand: a soft plastic tap."""
-    return knock([(320, 0.030, 0.9), (870, 0.016, 0.5), (1900, 0.008, 0.3), (3700, 0.004, 0.15)],
-                 2.5, (1200, 7000), seed=3)
+    """The lid lifted off the box: a short papery rustle as it slides free, then the hollow
+    low "thup" of the box's air space (what makes it sound like cardboard), softened."""
+    n = int(RATE * 0.32)
+    t = np.arange(n) / RATE
+    rng = np.random.default_rng(11)
+    grain = np.abs(rng.normal(0, 1, n))
+    grain = np.convolve(grain, np.ones(int(RATE / 90)) / int(RATE / 90), mode="same")
+    rustle = band(rng.normal(0, 1, n), 700, 5000) * grain * np.clip(t / 0.015, 0, 1) * np.exp(-t / 0.035)
+    t0 = 0.045
+    tt = np.clip(t - t0, 0, None)
+    on = t >= t0
+    f = 150 * (1 - 0.25 * np.clip(tt / 0.08, 0, 1))                 # the cavity, its pitch sagging
+    phase = 2 * np.pi * np.cumsum(f) / RATE
+    cavity = np.sin(phase) * np.exp(-tt / 0.055) * on
+    body = np.sin(2 * np.pi * 360 * tt + 0.7) * np.exp(-tt / 0.025) * on * 0.45
+    puff = band(rng.normal(0, 1, n), 150, 900) * np.exp(-tt / 0.03) * on * 0.6
+    x = rustle * 0.5 + cavity + body + puff
+    return np.convolve(x, np.ones(6) / 6, mode="same")               # soft, no hard edges
 
 
 def save(name, x, peak=0.5):
@@ -83,5 +92,4 @@ def save(name, x, peak=0.5):
 if __name__ == "__main__":
     save("film_peel.wav", film_peel())
     save("box_lid.wav", box_lid(), peak=0.6)
-    save("box_land.wav", box_land(), peak=0.6)
-    print("wrote film_peel.wav, box_lid.wav, box_land.wav")
+    print("wrote film_peel.wav, box_lid.wav")

@@ -18,7 +18,6 @@ const SEAL_SIZE := Vector2(320, 120)
 
 const PEEL_SOUND := preload("res://sounds/fx/film_peel.wav")
 const LID_SOUND := preload("res://sounds/fx/box_lid.wav")
-const LAND_SOUND := preload("res://sounds/fx/box_land.wav")
 const FULL_DEVICE := preload("res://textures/unboxing/box/device.png")
 
 enum { SEAL, LID, DEVICE, OUT }
@@ -159,8 +158,8 @@ func _full_size_device() -> void:
 func _release(d: Vector2) -> void:
 	match step:
 		SEAL:
-			var fade := crackle.create_tween()   # (let go too soon: gone at once; peeled off: a short tail)
-			fade.tween_property(crackle, "volume_db", -60.0, 0.2 if d.length() > 90.0 else 0.06)
+			var fade := crackle.create_tween()
+			fade.tween_property(crackle, "volume_db", -60.0, 0.06)       # (it stops as it comes off)
 			fade.tween_callback(crackle.stop)
 			if d.length() > 90.0:
 				step = LID
@@ -205,9 +204,7 @@ func _take_out() -> void:
 	t.tween_property(device, "position:y", -260.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	t.tween_property(device, "position", Vector2(540, 960), 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	t.parallel().tween_property(device, "scale", Vector2.ONE, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	t.tween_callback(func():
-		Input.vibrate_handheld(30)
-		_sfx(LAND_SOUND, -10.0))
+	t.tween_callback(func(): Input.vibrate_handheld(30))   # (no sound: just in your hand)
 	t.tween_property(device, "scale", Vector2.ONE * 1.015, 0.06).set_ease(Tween.EASE_OUT)
 	t.tween_property(device, "scale", Vector2.ONE, 0.1).set_ease(Tween.EASE_IN_OUT)
 	t.tween_interval(0.05)
