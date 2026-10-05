@@ -8,7 +8,7 @@ extends Node2D
 signal finished
 
 @export var logo_texture: Texture2D = preload("res://textures/boot/kobaya_logo.png")
-@export var welcome_text := "Welcome to Poop Pal!\n\nFeed it, raise it and watch it evolve through its natural cycle.\n\nPlay to unlock items and pals."
+@export var welcome_text := "Welcome to HaraTomo!\n\nFeed it, raise it and watch it evolve through its natural cycle.\n\nPlay to unlock items and pals."
 @export var start_delay := 0.8
 @export var logo_fade_in := 0.6      # same plain fade as the welcome text's fade-out
 @export var logo_hold := 1.4
