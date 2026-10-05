@@ -53,6 +53,8 @@ var screen_off: Sprite2D
 var films: Array[Film] = []
 var strip: Strip
 var dragging: Node = null            # the film or strip under the finger
+var held_button: TextureButton = null   # pushed while unpowered: it goes down, does nothing
+var held_texture: Texture2D
 
 func _ready() -> void:
 	if not waiting():
@@ -102,6 +104,11 @@ func _input(event: InputEvent) -> void:
 	if flip.turning:
 		return
 	var pos: Vector2 = event.position
+	if held_button:
+		get_viewport().set_input_as_handled()
+		if tap and not tap.pressed:
+			_unpush()
+		return
 	if dragging:
 		get_viewport().set_input_as_handled()
 		if motion:
@@ -126,9 +133,46 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		dragging.press(_local_to(dragging, pos))
 	elif waiting() and flip.progress == 0.0 and not flip._on_logo(pos):
-		get_viewport().set_input_as_handled()   # no power: the buttons are dead
+		get_viewport().set_input_as_handled()   # no power: nothing reaches the buttons...
+		var b := _button_at(pos)
+		if b:
+			_push(b)                     # ...but they still click down like real ones
 
-func _local_to(node: Node2D, screen_pos: Vector2) -> Vector2:
+## The console's buttons (menu, sound, forward, main)
+func _buttons() -> Array:
+	var out := []
+	for path in ["MenuButtons", "SoundButtons", "MainButton"]:
+		var n := front.get_node_or_null(path)
+		if n is TextureButton:
+			out.append(n)
+		elif n:
+			out.append_array(n.get_children().filter(func(c): return c is TextureButton))
+	return out
+
+func _button_at(screen_pos: Vector2) -> TextureButton:
+	for b in _buttons():
+		if b.is_visible_in_tree() and Rect2(Vector2.ZERO, b.size).has_point(_local_to(b, screen_pos)):
+			return b
+	return null
+
+## Pushed with no power: shows its pressed face and clicks, but never gets the tap
+func _push(b: TextureButton) -> void:
+	held_button = b
+	held_texture = b.texture_normal
+	if b.texture_pressed:
+		b.texture_normal = b.texture_pressed
+	var click := b.get_node_or_null("ClickSound") as AudioStreamPlayer2D
+	if click:
+		click.play()
+
+func _unpush() -> void:
+	held_button.texture_normal = held_texture
+	var rel := held_button.get_node_or_null("ReleaseSound") as AudioStreamPlayer2D
+	if rel:
+		rel.play()
+	held_button = null
+
+func _local_to(node: CanvasItem, screen_pos: Vector2) -> Vector2:
 	return node.get_global_transform_with_canvas().affine_inverse() * screen_pos
 
 func _power_on() -> void:
