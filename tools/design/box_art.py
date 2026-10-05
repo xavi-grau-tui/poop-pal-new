@@ -116,19 +116,18 @@ def print_logo():
     return Image.fromarray(a, "RGBA")
 
 
-SEAL_C, SEAL_W, SEAL_H = (W // 2, H - 34), 320, 120
+SEAL_C, SEAL_W, SEAL_H = (W // 2, H - 92), 420, 170
 
 
 def seal_layer():
     """The clear tape seal across the lid's bottom edge, on its own (it is peeled off)."""
-    w, h, r = SEAL_W, SEAL_H, 26
+    w, h, r = SEAL_W, SEAL_H, 30
     im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    d.rounded_rectangle((0, 0, w - 1, h - 1), radius=r, fill=(255, 255, 255, 50), outline=(255, 255, 255, 140), width=5)
-    d.rounded_rectangle((18, 12, 70, 22), radius=5, fill=(255, 255, 255, 150))          # glare
-    f = ImageFont.truetype(CHICAGO, 16)
-    d.text((w // 2, 38), "KOBAYA TECH", font=f, fill=(255, 255, 255, 185), anchor="mm")
-    d.text((w // 2, 62), "- SEAL -", font=f, fill=(255, 255, 255, 150), anchor="mm")
+    d.rounded_rectangle((0, 0, w - 1, h - 1), radius=r, fill=(255, 255, 255, 64), outline=(255, 255, 255, 150), width=5)
+    d.rounded_rectangle((22, 14, 96, 26), radius=6, fill=(255, 255, 255, 150))           # glare
+    d.text((w // 2, 52), "KOBAYA TECH", font=ImageFont.truetype(CHICAGO, 16), fill=(255, 255, 255, 170), anchor="mm")
+    d.text((w // 2, 100), "REMOVE SEAL", font=ImageFont.truetype(PIXELLARI, 48), fill=(255, 255, 255, 230), anchor="mm")
     return im
 
 
@@ -253,14 +252,14 @@ def lid_layer():
             art.paste(NAVY + (255,), (LW // 2 - 100 + dx, 112 + dy), tag)
     art.paste(WHITE + (255,), (LW // 2 - 100, 112), tag)
     text(d, (LW // 2, 140), "YOUR TUMMY FRIEND!", 16, YELLOW, outline=NAVY)
-    d.rectangle((0, LH - 62, LW, LH), fill=NAVY)                    # bottom band
-    text(d, (LW // 2, LH - 46), "FEED  -  PLAY  -  EVOLVE", 16, WHITE)
-    text(d, (LW // 2, LH - 28), "120+ PALS TO DISCOVER!", 16, YELLOW)
-    d.rounded_rectangle((8, LH - 52, 56, LH - 26), radius=4, fill=WHITE)
-    text(d, (32, LH - 44), "AGES", 8, NAVY, font=CHICAGO)
-    text(d, (32, LH - 34), "4+", 16, NAVY)
-    text(d, (LW - 8, LH - 46), "BATTERIES", 8, WHITE, font=CHICAGO, anchor="rm")
-    text(d, (LW - 8, LH - 35), "INCLUDED", 8, WHITE, font=CHICAGO, anchor="rm")
+    # bottom band: the slogan on top, the seal in the middle, age and batteries either side
+    d.rectangle((0, LH - 74, LW, LH), fill=NAVY)
+    text(d, (LW // 2, LH - 63), "120+ PALS TO DISCOVER!", 16, YELLOW)
+    d.rounded_rectangle((10, LH - 44, 58, LH - 18), radius=4, fill=WHITE)
+    text(d, (34, LH - 36), "AGES", 8, NAVY, font=CHICAGO)
+    text(d, (34, LH - 26), "4+", 16, NAVY)
+    text(d, (LW - 10, LH - 37), "BATTERIES", 8, WHITE, font=CHICAGO, anchor="rm")
+    text(d, (LW - 10, LH - 26), "INCLUDED", 8, WHITE, font=CHICAGO, anchor="rm")
     img.alpha_composite(up(art))
     logo = print_logo()
     k = 820 / logo.width

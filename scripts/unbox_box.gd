@@ -13,8 +13,9 @@ signal opened
 
 const DEV_RECT := Rect2(216, 500, 648, 1152)        # the device in its tray (scale 0.6)
 const BOOK_POS := Vector2(255, 716)
-const SEAL_C := Vector2(540, 1886)                  # a wide clear tape strip
-const SEAL_SIZE := Vector2(320, 120)
+const SEAL_C := Vector2(540, 1828)                  # a wide clear tape strip
+const SEAL_SIZE := Vector2(420, 170)
+const SEAL_OFF := 110.0                             # pulled this far it has come off
 
 const PEEL_SOUND := preload("res://sounds/fx/film_peel.wav")
 const LID_SOUND := preload("res://sounds/fx/box_lid.wav")
@@ -95,8 +96,14 @@ func _input(event: InputEvent) -> void:
 		_press(tap.position)
 	elif motion and dragging:
 		_drag(motion.position - press_pos)
-		if step == SEAL:
-			_seal_crackle(motion.position)
+		if step == SEAL and not seal_free:
+			if (motion.position - press_pos).length() > SEAL_OFF:
+				seal_free = true                 # off: the sound stops, it just hangs on the finger
+				var fade := crackle.create_tween()
+				fade.tween_property(crackle, "volume_db", -60.0, 0.06)
+				fade.tween_callback(crackle.stop)
+			else:
+				_seal_crackle(motion.position)
 	elif tap and not tap.pressed and dragging:
 		dragging = false
 		_release(tap.position - press_pos)
@@ -106,6 +113,7 @@ func _press(pos: Vector2) -> void:
 		SEAL:
 			dragging = Rect2(SEAL_C - SEAL_SIZE / 2.0, SEAL_SIZE).grow(60.0).has_point(pos)
 			if dragging:
+				seal_free = false
 				crackle.volume_db = -80.0
 				crackle.play(randf() * 0.8)
 				seal_last = pos
@@ -116,6 +124,7 @@ func _press(pos: Vector2) -> void:
 	press_pos = pos
 
 var seal_last := Vector2.ZERO
+var seal_free := false                 # pulled clear of the lid
 var seal_speed := 0.0
 
 ## The seal's peel sound follows the finger's speed (like the films): quiet when it stops.
@@ -131,7 +140,7 @@ func _seal_volume() -> void:
 	crackle.pitch_scale = 1.3 + 0.4 * amount
 
 func _process(_delta: float) -> void:
-	if step == SEAL and dragging:            # the finger stopped: the crackle trails off
+	if step == SEAL and dragging and not seal_free:   # the finger stopped: the crackle trails off
 		seal_speed *= 0.85
 		_seal_volume()
 
@@ -158,10 +167,11 @@ func _full_size_device() -> void:
 func _release(d: Vector2) -> void:
 	match step:
 		SEAL:
-			var fade := crackle.create_tween()
-			fade.tween_property(crackle, "volume_db", -60.0, 0.06)       # (it stops as it comes off)
-			fade.tween_callback(crackle.stop)
-			if d.length() > 90.0:
+			if crackle.playing:
+				var fade := crackle.create_tween()
+				fade.tween_property(crackle, "volume_db", -60.0, 0.06)
+				fade.tween_callback(crackle.stop)
+			if seal_free:
 				step = LID
 				var t := seal.create_tween().set_parallel(true)
 				t.tween_property(seal, "position", seal.position + d.normalized() * 500.0, 0.3).set_ease(Tween.EASE_IN)
