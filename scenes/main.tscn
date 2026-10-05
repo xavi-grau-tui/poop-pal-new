@@ -351,7 +351,6 @@ shader_parameter/screen_size = Vector2(128, 128)
 
 [node name="PoopPal" type="Node2D"]
 position = Vector2(-1, -38)
-rotation = 0.000849863
 
 [node name="MusicController" type="AudioStreamPlayer2D" parent="." node_paths=PackedStringArray("sound_button")]
 pitch_scale = 0.85

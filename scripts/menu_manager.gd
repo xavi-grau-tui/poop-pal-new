@@ -21,6 +21,7 @@ func _ready():
 	if game_screen:
 		game_screen.visible = false
 	_lift_console()
+	_mirror_left_edge()
 	# 3D wallpaper effect: the sky and clouds slide behind the gut when the phone tilts
 	var tilt := preload("res://scripts/tilt_parallax.gd").new()
 	tilt.name = "TiltParallax"
@@ -48,6 +49,26 @@ func _lift_console() -> void:
 		var part := ui.get_node_or_null(n) as CanvasItem
 		if part:
 			part.z_index += CONSOLE_Z_LIFT
+
+## The front's art has a shaded side strip and a thicker screen frame on the right only, so
+## the screen sat ~1 px off centre with uneven beige. A screen-space overlay mirrors the
+## right edge onto the left (tools/design/console_symmetry.py), making the front symmetric.
+func _mirror_left_edge() -> void:
+	var console := get_parent().get_node_or_null("Console") as Node2D
+	var cam := get_node_or_null("/root/PoopPal/Camera2D") as Camera2D
+	if not console or not cam:
+		return
+	var fix := Sprite2D.new()
+	fix.name = "LeftEdgeMirror"
+	fix.texture = preload("res://textures/console/front_left_mirror.png")
+	fix.centered = false
+	fix.z_index = 5                              # over the frame pieces (2-4) in Console
+	console.add_child(fix)
+	# screen pixels at rest: the camera centres its position (it ignores rotation)
+	var screen_size := Vector2(ProjectSettings.get_setting("display/window/size/viewport_width"),
+			ProjectSettings.get_setting("display/window/size/viewport_height"))
+	var canvas := Transform2D(0.0, screen_size / 2.0 - cam.global_position - cam.offset)
+	fix.transform = (canvas * console.global_transform).affine_inverse()
 
 func get_animation_player(node: Node) -> AnimationPlayer:
 	var anim = node.get_node_or_null("AnimationPlayer")
