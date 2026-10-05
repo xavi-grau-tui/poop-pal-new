@@ -60,8 +60,14 @@ func _gui_input(event):
 
 	# No poop yet: games stay closed until the first meal (a pending bonus can still be played)
 	if PetState.needs_first_meal() and not LuckyPinch.pending and not button_pressed and target_menu is GameMenuSwitcher:
-		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			_refuse_until_first_meal()
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+			# it still clicks like a real button, it just doesn't toggle
+			var sfx := click_sound if event.pressed else release_sound
+			if sfx:
+				sfx.stop()
+				sfx.play()
+			if event.pressed:
+				_refuse_until_first_meal()
 		accept_event()
 		return
 
