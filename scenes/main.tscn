@@ -440,7 +440,7 @@ fall_sound = NodePath("FallSound")
 
 [node name="FallSound" type="AudioStreamPlayer2D" parent="Main UI/PetView/FoodRainSpawner"]
 stream = ExtResource("12_ntx8l")
-volume_db = -17.0
+volume_db = -23.0
 pitch_scale = 0.4
 
 [node name="DrinkWaterfallSpawner" type="Node2D" parent="Main UI/PetView" node_paths=PackedStringArray("fall_sound")]
