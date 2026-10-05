@@ -18,9 +18,11 @@ const SAVE_PATH := "user://device.json"
 const SCREEN := Rect2(76, 623, 926, 926)
 const SCREEN_FILM := Rect2(63, 607, 953, 958)
 const LCD_FILM := Rect2(92, 77, 445, 201)
-# The battery strip on the back, in back-art pixels: centred under the lid's bottom edge
-const LID_BOTTOM := 1680.0
-const STRIP_OUT := 170.0            # how much of it pokes out below the lid
+# The battery strip on the back, in back-art pixels: it comes out of the lid's top edge
+# (pulled upwards, where there's room for a finger), a little right of the lid's screw
+const LID_TOP := 1316.0
+const STRIP_X := 620.0
+const STRIP_OUT := 170.0            # how much of it pokes out above the lid
 const STRIP_PULL := 300.0           # pulled this far it comes free
 
 const BUZZ_MS := 30
@@ -84,7 +86,7 @@ func _ready() -> void:
 		films.append(film)
 
 	strip = Strip.new()
-	strip.position = Vector2(540.0, LID_BOTTOM - 1920.0 + STRIP_OUT)   # back-local, its bottom end
+	strip.position = Vector2(STRIP_X, LID_TOP - 1920.0 - STRIP_OUT)   # back-local, its free end
 	var back: Node2D = flip.back
 	back.add_child(strip)
 	back.move_child(strip, back.get_node("BatteryLid").get_index())    # under the lid
@@ -139,7 +141,8 @@ func _power_on() -> void:
 		while flip.turning:
 			await get_tree().process_frame
 	await get_tree().create_timer(0.25).timeout
-	var t := create_tween()
+	# (the fade belongs to the screen: this node may be gone before it ends)
+	var t := screen_off.create_tween()
 	t.tween_property(screen_off, "modulate:a", 0.0, 0.2)
 	t.tween_callback(screen_off.queue_free)
 	_state = 0                       # BootSequence starts now
@@ -156,6 +159,7 @@ class Film extends Node2D:
 	signal peeled
 
 	const TAB := preload("res://textures/unboxing/pull_tab.png")
+	const ZIP := preload("res://sounds/fx/film_peel.wav")
 	const LET_GO := 0.28             # pulled past this share of the diagonal it comes off...
 	const LET_GO_MAX := 190.0        # ...or past this fold depth, so the big film needs no huge drag
 
@@ -195,6 +199,7 @@ class Film extends Node2D:
 		if d > minf(d_max() * LET_GO, LET_GO_MAX):
 			gone = true
 			Input.vibrate_handheld(12)
+			_zip()
 			tw = create_tween().set_parallel(true)
 			tw.tween_method(_set_d, d, d_max() * 1.15, 0.35).set_ease(Tween.EASE_OUT)
 			tw.tween_property(self, "position", position - v * 260.0, 0.35).set_ease(Tween.EASE_IN)
@@ -203,6 +208,16 @@ class Film extends Node2D:
 		else:
 			tw = create_tween()
 			tw.tween_method(_set_d, d, d_rest, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+	## The soft 'zip' of the film coming away (lives on the parent: this film is about to go).
+	func _zip() -> void:
+		var sfx := AudioStreamPlayer.new()
+		sfx.stream = ZIP
+		sfx.volume_db = -14.0
+		sfx.pitch_scale = randf_range(0.95, 1.08)
+		get_parent().add_child(sfx)
+		sfx.finished.connect(sfx.queue_free)
+		sfx.play()
 
 	func _set_d(x: float) -> void:
 		d = x
@@ -261,31 +276,31 @@ class Film extends Node2D:
 		draw_set_transform(Vector2.ZERO)
 
 
-## The plastic strip between the cells: drag it down out of the battery bay.
+## The plastic strip between the cells: drag it up out of the battery bay.
 class Strip extends Node2D:
 	signal pulled
 
 	const TEX := preload("res://textures/unboxing/battery_strip.png")
-	var pull := 0.0
+	var pull := 0.0                  # how far it has been drawn out (upwards)
 	var press_y := 0.0
 	var tw: Tween
 	var gone := false
 
 	func _draw() -> void:
-		# local origin = the strip's end; it runs up under the lid
-		draw_texture(TEX, Vector2(-TEX.get_width() / 2.0, -TEX.get_height() + pull))
+		# local origin = the strip's free end at rest; the rest runs down under the lid
+		draw_texture(TEX, Vector2(-TEX.get_width() / 2.0, -pull))
 
 	func grabs(p: Vector2) -> bool:
-		var out_len := Unboxing.STRIP_OUT + pull
-		return not gone and Rect2(-TEX.get_width() / 2.0 - 30, -out_len - 20, TEX.get_width() + 60, out_len + 60).has_point(p)
+		var w := TEX.get_width()
+		return not gone and Rect2(-w / 2.0 - 30, -pull - 40, w + 60, Unboxing.STRIP_OUT + 60).has_point(p)
 
 	func press(p: Vector2) -> void:
 		if tw:
 			tw.kill()
-		press_y = p.y - pull
+		press_y = p.y + pull
 
 	func drag_to(p: Vector2) -> void:
-		pull = clampf(p.y - press_y, 0.0, Unboxing.STRIP_PULL + 60.0)
+		pull = clampf(press_y - p.y, 0.0, Unboxing.STRIP_PULL + 60.0)
 		queue_redraw()
 
 	func release() -> void:
@@ -293,7 +308,7 @@ class Strip extends Node2D:
 			gone = true
 			tw = create_tween().set_parallel(true)
 			tw.tween_method(_set_pull, pull, pull + 420.0, 0.35).set_ease(Tween.EASE_IN)
-			tw.tween_property(self, "rotation", 0.25, 0.35)
+			tw.tween_property(self, "rotation", -0.25, 0.35)
 			tw.tween_property(self, "modulate:a", 0.0, 0.3).set_delay(0.1)
 			tw.chain().tween_callback(func(): pulled.emit(); queue_free())
 		else:

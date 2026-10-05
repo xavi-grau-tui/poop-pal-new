@@ -108,7 +108,7 @@ def pull_tab():
 
 def battery_strip():
     """The clear plastic strip that keeps the cells from touching: most of it sits under
-    the battery lid, the end pokes out below it. Printed 'PULL TO ACTIVATE'."""
+    the battery lid, the end (top of the image) pokes out above it. Printed 'PULL TO ACTIVATE'."""
     w, h = 84, 520
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -122,24 +122,29 @@ def battery_strip():
     td.text((lw // 2, lh // 2), "PULL TO ACTIVATE", font=ImageFont.truetype(FONT_BOLD, 8), fill=(206, 62, 62, 255), anchor="mm")
     bbox = txt.getbbox()
     txt = txt.crop(bbox).resize(((bbox[2] - bbox[0]) * 3, (bbox[3] - bbox[1]) * 3), Image.NEAREST).rotate(90, expand=True)
-    img.alpha_composite(txt, ((w - txt.width) // 2, h - txt.height - 70))
-    # an arrow pointing down at the end
+    img.alpha_composite(txt, ((w - txt.width) // 2, 70))
+    # an arrow at the end, pointing the way to pull (up, out of the lid's top edge)
     cx = w // 2
-    d.polygon(((cx - 15, h - 52), (cx + 15, h - 52), (cx, h - 30)), fill=(206, 62, 62, 255))
+    d.polygon(((cx - 15, 52), (cx + 15, 52), (cx, 30)), fill=(206, 62, 62, 255))
     return img
 
 
 def screen_off():
-    """The big screen without power: the small LCD's grey-green and its faint dot grid."""
+    """The big screen without power: the small LCD's own texture at the same scale the
+    console draws it (its Background sprite), tiled with mirrored copies so no seams show."""
     w, h = SCREEN[2] - SCREEN[0], SCREEN[3] - SCREEN[1]
-    lcd = Image.open(ROOT / "textures" / "console" / "lcd.png").convert("RGBA")
-    img = lcd.crop((40, 40, lcd.width - 40, lcd.height - 40)).resize((w, h), Image.NEAREST)
-    d = ImageDraw.Draw(img)
-    for y in range(0, h, 5):
-        d.line((0, y, w, y), fill=(0, 0, 0, 10))
-    for x in range(0, w, 5):
-        d.line((x, 0, x, h), fill=(0, 0, 0, 10))
-    return img
+    lcd = Image.open(ROOT / "textures" / "console" / "lcd.png").convert("RGB")
+    tile = lcd.crop((40, 40, lcd.width - 40, lcd.height - 40))
+    tile = tile.resize((round(tile.width * 0.729), round(tile.height * 0.594)), Image.LANCZOS)
+    tw, th = tile.size
+    flips = {(0, 0): tile, (1, 0): tile.transpose(Image.FLIP_LEFT_RIGHT),
+             (0, 1): tile.transpose(Image.FLIP_TOP_BOTTOM),
+             (1, 1): tile.transpose(Image.ROTATE_180)}
+    img = Image.new("RGB", (w, h))
+    for j in range(0, h // th + 1):
+        for i in range(0, w // tw + 1):
+            img.paste(flips[(i % 2, j % 2)], (i * tw, j * th))
+    return img.convert("RGBA")
 
 
 def main():
