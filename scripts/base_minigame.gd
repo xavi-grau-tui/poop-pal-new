@@ -377,6 +377,120 @@ func _hide_game_over() -> void:
 		game_over_overlay.queue_free()
 		game_over_overlay = null
 
+# --- Direct touch (phones) ---
+# The device buttons reach a game through the emulated mouse, which follows ONE finger: fast
+# drumming or a tap while another finger holds a button gets lost. Games that need every tap
+# read the touches themselves (_input) and use this to tell which button a finger is on.
+
+## 0 = main button, 1 = forward button, -1 = neither
+func device_button_at(screen_pos: Vector2) -> int:
+	var paths := ["/root/PoopPal/Main UI/MainButton", "/root/PoopPal/Main UI/SoundButtons/ForwardButton"]
+	for i in paths.size():
+		var b := get_node_or_null(paths[i]) as Control
+		if b and (b.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, b.size)).grow(20).has_point(screen_pos):
+			return i
+	return -1
+
+# --- Teaching: button hints and the coach (first-time tutorials) ---
+
+const BUTTON_ICONS := ["res://textures/buttons/mainbuttonnormal.png", "res://textures/buttons/forwardbuttonnormal.png"]
+var coach: Control = null
+var _coach_text: Label = null
+var _coach_icon: TextureRect = null
+var _coach_small: Label = null
+
+## One device button's icon (0 = main, 1 = forward) with a word next to it, for a game's
+## control legend ("DASH", "GUARD"...)
+func make_button_hint(which: int, text: String) -> HBoxContainer:
+	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	var icon := TextureRect.new()
+	icon.texture = load(BUTTON_ICONS[which])
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2(56 if which == 1 else 42, 40)
+	box.add_child(icon)
+	var l := Label.new()
+	l.text = text
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var font = load("res://fonts/pixChicago.ttf")
+	if font:
+		l.add_theme_font_override("font", font)
+	l.add_theme_font_size_override("font_size", 30)
+	l.add_theme_color_override("font_color", Color(1, 0.97, 0.9))
+	l.add_theme_color_override("font_outline_color", Color8(43, 33, 26))
+	l.add_theme_constant_override("outline_size", 10)
+	box.add_child(l)
+	add_child(box)
+	return box
+
+## The coach: a little card at the top of the screen with ONE short line and the button to
+## press (pulsing); `small` is an optional second line (e.g. how to skip). which = -1: no icon.
+func show_coach(text: String, which := -1, small := "") -> void:
+	if not coach:
+		var font = load("res://fonts/pixChicago.ttf")
+		coach = Control.new()
+		coach.size = Vector2(820, 150)
+		coach.position = Vector2((PLAY_WIDTH - coach.size.x) / 2.0, 104)
+		coach.pivot_offset = coach.size / 2.0
+		coach.z_index = 10
+		add_child(coach)
+		var bg := NinePatchRect.new()
+		bg.texture = _label_frame_texture()
+		bg.patch_margin_left = 4
+		bg.patch_margin_right = 4
+		bg.patch_margin_top = 4
+		bg.patch_margin_bottom = 7
+		bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		bg.scale = Vector2(3, 3)
+		bg.size = coach.size / 3.0
+		coach.add_child(bg)
+		_coach_icon = TextureRect.new()
+		_coach_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_coach_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_coach_icon.position = Vector2(30, 30)
+		_coach_icon.size = Vector2(90, 76)
+		_coach_icon.pivot_offset = _coach_icon.size / 2.0
+		coach.add_child(_coach_icon)
+		var pulse := _coach_icon.create_tween().set_loops()
+		pulse.tween_property(_coach_icon, "scale", Vector2(1.12, 1.12), 0.35).set_trans(Tween.TRANS_SINE)
+		pulse.tween_property(_coach_icon, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_SINE)
+		_coach_text = Label.new()
+		_coach_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_coach_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_coach_small = Label.new()
+		for l in [_coach_text, _coach_small]:
+			if font:
+				l.add_theme_font_override("font", font)
+			l.add_theme_color_override("font_color", Color8(92, 60, 44))
+			coach.add_child(l)
+		_coach_text.add_theme_font_size_override("font_size", 36)
+		_coach_small.add_theme_font_size_override("font_size", 22)
+		_coach_small.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		_coach_small.position = Vector2(30, 104)
+		_coach_small.size = Vector2(coach.size.x - 60, 26)
+	var has_icon := which >= 0
+	_coach_icon.visible = has_icon
+	if has_icon:
+		_coach_icon.texture = load(BUTTON_ICONS[which])
+	_coach_text.text = text
+	_coach_text.position = Vector2(140 if has_icon else 30, 14)
+	_coach_text.size = Vector2(coach.size.x - _coach_text.position.x - 30, 96)
+	_coach_small.text = small
+	coach.visible = true
+	coach.scale = Vector2(0.9, 0.9)
+	coach.modulate.a = 0.0
+	var t := coach.create_tween()
+	t.tween_property(coach, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.parallel().tween_property(coach, "modulate:a", 1.0, 0.12)
+	_play_clack()
+
+func hide_coach() -> void:
+	if coach and coach.visible:
+		var t := coach.create_tween()
+		t.tween_property(coach, "modulate:a", 0.0, 0.15)
+		t.tween_callback(func(): coach.visible = false)
+
 # --- Input hooks (called by main_button / forward_button) ---
 
 func on_main_button_pressed() -> void:

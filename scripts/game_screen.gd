@@ -21,6 +21,8 @@ var game_scenes := {
 	5: "res://scenes/minigames/germ_zap.tscn",
 	6: "res://scenes/minigames/tummy_tunes.tscn",
 	7: "res://scenes/minigames/flipper_belly.tscn",
+	8: "res://scenes/minigames/top_spin.tscn",                # prototype: the 9th card
+	9: "res://scenes/minigames/paper_sumo.tscn",              # prototype: the 10th card
 	LuckyPinch.GAME_INDEX: "res://scenes/minigames/lucky_pinch.tscn",   # the bonus (not a card)
 }
 

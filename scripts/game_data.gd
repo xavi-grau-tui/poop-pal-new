@@ -26,10 +26,12 @@ var progress_target := {
 	5: 8000, # Germ Zap
 	6: 6000, # Tummy Tunes
 	7: 10000, # Flipper Belly
+	8: 3000, # Top Spin (prototype)
+	9: 3000, # Paper Sumo (prototype)
 }
 
 ## Prototype/testing: games unlocked regardless of progress
-const DEBUG_UNLOCKED := [1, 2, 3, 4, 5, 6, 7]
+const DEBUG_UNLOCKED := [1, 2, 3, 4, 5, 6, 7, 8, 9]
 ## Prototype/testing: every launch starts with no best scores and no progress (fresh start)
 const RESET_SCORES_ON_LAUNCH := true
 
@@ -42,6 +44,8 @@ func _ready() -> void:
 	_init_game(5, false)
 	_init_game(6, false)
 	_init_game(7, false)
+	_init_game(8, false)
+	_init_game(9, false)
 	load_data()
 	if RESET_SCORES_ON_LAUNCH:
 		for idx in games:

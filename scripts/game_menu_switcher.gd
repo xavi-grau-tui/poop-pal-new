@@ -27,16 +27,38 @@ const CARD_ART := {
 	5: { "logo": "res://textures/menus/germzap.png", "background": "res://textures/menus/pattern_germ_olive.png" },
 	6: { "logo": "res://textures/menus/tummytunes.png", "background": "res://textures/menus/pattern_note_lilac.png" },
 	7: { "logo": "res://textures/menus/flipperbelly.png", "background": "res://textures/menus/pattern_flipper_rose.png" },
+	8: { "logo": "res://textures/menus/topspin.png", "background": "res://textures/menus/pattern_top_slate.png" },
+	9: { "logo": "res://textures/menus/papersumo.png", "background": "res://textures/menus/pattern_sumo_vermilion.png" },
 }
+
+## Prototype cards not in the scene yet: copies of the last card (and its dot), added at launch
+const EXTRA_PAGES := 2
 
 # LUCKY PINCH bonus pending: the menu shows only its card (2 tries), no paging
 const BONUS_ART := { "logo": "res://textures/menus/luckypinch.png", "background": "res://textures/menus/pattern_claw_gold.png" }
 var bonus_page: Node = null
 
 func _ready():
+	_add_extra_pages()
 	show_page(current_page)
 	LuckyPinch.changed.connect(func(_on): show_page(current_page))
 	LuckyPinch.tries_changed.connect(_on_bonus_tries)
+
+## Each extra card is a copy of the last one; the dots row grows by one and stays centred
+func _add_extra_pages() -> void:
+	var step: float = dots[1].position.x - dots[0].position.x
+	for i in EXTRA_PAGES:
+		var page: Node = pages[-1].duplicate()
+		page.name = "VBoxGame%d" % (pages.size() + 1)
+		$Menu.add_child(page)
+		pages.append(page)
+		var dot: Control = dots[-1].duplicate()
+		dot.name = "Dot%d" % (dots.size() + 1)
+		dot.position.x += step
+		$Menu/Dots.add_child(dot)
+		dots.append(dot)
+		for d in dots:
+			d.position.x -= step / 2.0
 
 func show_page(index: int) -> void:
 	var bonus := LuckyPinch.pending
