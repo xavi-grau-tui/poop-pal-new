@@ -15,8 +15,10 @@ extends BaseMinigame
 const GAME_INDEX := 8
 
 # --- Stadium (play-area coordinates, 950x948) ---
-const C := Vector2(475, 500)          # bowl centre
-const R := 370.0                      # bowl radius (inside the rim; room for the controls below)
+const C_FULL := Vector2(475, 500)     # bowl centre
+const R_FULL := 370.0                 # bowl radius (inside the rim; room for the controls below)
+const C_TUT := Vector2(475, 615)      # the tutorial's bowl: smaller and lower, so the coach's
+const R_TUT := 268.0                  # card above it never covers the action
 const PX := 4                         # world px per stadium pixel
 const DETAIL := 3                     # world px per texture px for the tops
 const GAP_HALF := 0.17                # half-width of a rim gap (radians)
@@ -40,14 +42,16 @@ const DASH_TIME := 0.3
 const TILT_GAIN := 2.2
 const DEADZONE := 0.04
 const INVERT_TILT := false
-const WINDUP := 0.45                  # a rival flashes this long before it dashes (time to GUARD)
+const WINDUP := 0.5                   # a rival flashes this long before it dashes (time to GUARD)...
+const WINDUP_MIN := 0.2               # ...less and less as the levels go up, down to this
 
 # --- Wind-up ---
 const WIND_TIME := 6.0
 const WIND_START := 20.0
 const WIND_MAX := 130.0               # 100+ = over-wound
 const WIND_GOOD := 16.0
-const WIND_MEH := 5.0
+const WIND_SLIP := 6.0                # a tap off the gold slips the cord: spin lost...
+const WIND_JAM := 0.35                # ...and it jams this long (taps do nothing): mashing never pays
 const ZONE_HALF := 0.32
 const LIVES := 3
 
@@ -114,6 +118,8 @@ class Top:
 	var shadow: Sprite2D
 
 enum Phase { WIND, DROP, BATTLE, RESULT }
+var C := C_FULL                       # (the bowl in use: full size, or the tutorial's)
+var R := R_FULL
 ## First-time tutorial: one step at a time, each waits until you've done it
 enum Tut { NONE, WIND, DROP, MOVE, DASH, DASHED, GUARD, GUARDED, FIGHT }
 
@@ -136,19 +142,22 @@ var wind_left := WIND_TIME
 var needle := 0.0
 var zone := 0.0
 var combo := 0
+var wind_jam := 0.0
 # drop
-var aim := C
+var aim := C_FULL
 var drop_left := 0.0
 var dropping := false
 
-var calib := Vector2.ZERO
 var forward_held := false
 var _touch_mode := false              # phone: buttons come from _input, not the emulated mouse
 var _guard_touch := -1                # the finger holding GUARD
 var tut := Tut.NONE
+var practice := false                 # this match is the tutorial's (no level, it doesn't count)
 var tut_good := 0                     # good pulls while learning to wind
 var tut_dist := 0.0                   # how far you've rolled while learning to tilt
-var tut_warned := false
+var tut_count := 0                    # successes in the current step (two each)
+var tut_counted := false              # this dash / attack has been counted
+var bar_flash := 0.0                  # your spin bar blinks (the tutorial points at it)
 var hint_main: HBoxContainer          # control legend: main button + what it does now
 var hint_fwd: HBoxContainer           # ...and the forward button
 
@@ -195,6 +204,9 @@ func _level_data() -> Dictionary:
 
 func _start_match() -> void:
 	loop = maxi(0, (level - 1 - LEVELS.size()) / 4 + 1) if level > LEVELS.size() else 0
+	C = C_TUT if tut != Tut.NONE else C_FULL         # (the tutorial's bowl is smaller and lower)
+	R = R_TUT if tut != Tut.NONE else R_FULL
+	stadium.position = C
 	var data := _level_data()
 	bumpers.clear()
 	for b in data["bumpers"]:
@@ -204,6 +216,8 @@ func _start_match() -> void:
 		slimes.append(C + s)
 	gap_angles.clear()
 	var n: int = data["gaps"]
+	if tut != Tut.NONE:
+		n = 0                                        # the tutorial bowl has no gaps: nobody flies out
 	for i in n:
 		gap_angles.append(PI / 2.0 + i * TAU / n)
 	stadium.texture = ImageTexture.create_from_image(_paint_stadium())
@@ -231,7 +245,7 @@ func _start_match() -> void:
 		var o := _make_top(false, rivals[i][0], st["color"])
 		o.spin = float(rivals[i][1]) * (1.0 + 0.15 * loop)
 		var a := -PI / 2.0 + 0.5 + i * TAU / maxf(rivals.size(), 2)
-		o.pos = C + Vector2.from_angle(a) * 210.0
+		o.pos = C + Vector2.from_angle(a) * R * 0.57
 		tops.append(o)
 
 	perfects = 0
@@ -246,7 +260,8 @@ func _start_match() -> void:
 	player.root.position = C
 	player.root.scale = Vector2(2.2, 2.2)
 	player.shadow.visible = false
-	hud_level.text = "LV %d" % level
+	practice = tut != Tut.NONE
+	hud_level.text = "TUTORIAL" if practice else "LV %d" % level
 	_set_legend("PULL", "DONE")
 	_refresh_lives()
 	if tut == Tut.WIND:
@@ -295,6 +310,7 @@ func _process(delta: float) -> void:
 	if not is_running:
 		return
 	time += delta
+	bar_flash = maxf(0.0, bar_flash - delta)
 	match phase:
 		Phase.WIND:
 			_wind_step(delta)
@@ -307,6 +323,7 @@ func _process(delta: float) -> void:
 
 func _wind_step(delta: float) -> void:
 	needle = fposmod(needle + (2.6 + wind_spin * 0.025) * (0.8 if tut == Tut.WIND else 1.0) * delta, TAU)
+	wind_jam = maxf(0.0, wind_jam - delta)
 	if tut != Tut.WIND:
 		wind_left -= delta
 	player.spin = wind_spin
@@ -314,8 +331,18 @@ func _wind_step(delta: float) -> void:
 		_begin_drop()
 
 func _wind_pull() -> void:
+	if wind_jam > 0.0:
+		return                                         # (still jammed from a slip)
 	var off := absf(angle_difference(needle, zone))
-	var gain := WIND_MEH
+	if off >= ZONE_HALF:
+		combo = 0
+		wind_jam = WIND_JAM
+		wind_spin = maxf(WIND_START, wind_spin - WIND_SLIP)
+		_sfx("res://sounds/fx/click-5.mp3", -12.0, 0.0, 0.6)
+		_float_text("SLIP!", C + Vector2(0, -230))
+		Input.vibrate_handheld(40)
+		return                                         # (the gold zone stays put: try again)
+	var gain := 0.0
 	if off < ZONE_HALF:
 		combo += 1
 		gain = WIND_GOOD + combo * 2.0
@@ -330,9 +357,6 @@ func _wind_pull() -> void:
 				_after(1.3, func():
 					if phase == Phase.WIND:
 						_begin_drop())
-	else:
-		combo = 0
-		_sfx("res://sounds/fx/click-5.mp3", -12.0, 0.0, 0.8)
 	wind_spin = minf(WIND_MAX, wind_spin + gain)
 	Input.vibrate_handheld(15)
 	# the gold zone jumps somewhere else
@@ -344,7 +368,7 @@ func _begin_drop() -> void:
 	player.unsteady = maxf(0.0, wind_spin - 100.0) * 0.06     # over-wound: wobbly landing
 	drop_left = 3.5
 	aim = C
-	calib = _sensor_tilt()
+	calibrate_tilt()
 	player.root.scale = Vector2(1.8, 1.8)
 	_set_legend("DROP", "")
 	if tut == Tut.WIND:
@@ -451,6 +475,8 @@ func _battle_step(delta: float) -> void:
 				if tops[a].alive and tops[b].alive:
 					_collide(tops[a], tops[b])
 	for t in tops:
+		if tut != Tut.NONE and (t.is_player or _learning()):
+			t.spin = maxf(t.spin, 25.0)               # nobody loses while learning; you never do in the tutorial
 		if t.alive and t.spin <= 0.0:
 			_topple(t)
 	_check_match_end()
@@ -462,12 +488,18 @@ func _move_top(t: Top, tilt: Vector2, dt: float) -> void:
 	if off.length() > 1.0:
 		acc += Vector2(-off.y, off.x).normalized() * DRIFT * t.dir * clampf(t.spin / 100.0, 0.2, 1.0)
 	var steer := TILT_ACCEL * (1.0 if t.is_player else RIVAL_TILT)
+	if tut == Tut.GUARD or tut == Tut.GUARDED:
+		steer = 0.0                                  # (learning to guard: you hold still, it comes to you)
 	if t.is_player and t.unsteady > 0.0:
 		steer *= 0.3
 	acc += tilt * steer / m
 	if not t.is_player:
 		if tut == Tut.GUARD:
-			acc += (player.pos - t.pos).normalized() * 260.0 / m     # (comes at you, slowly)
+			# keeps a short run-up away from you, then the attack
+			var to := player.pos - t.pos
+			if t.windup <= 0.0 and t.dash_t > DASH_TIME:
+				var want := 210.0 - to.length()
+				acc += -to.normalized() * clampf(want * 6.0, -500.0, 500.0) / m
 		elif not _learning():
 			acc += _rival_accel(t) / m
 	if t.unsteady > 0.0 or t.spin < 20.0:
@@ -586,6 +618,7 @@ func _dash(t: Top, dir: Vector2) -> void:
 	t.dash_t = 0.0
 	t.dash_cd = 0.45
 	if t.is_player:
+		tut_counted = false
 		_sfx("res://sounds/fx/pin_flipper.wav", -10.0)
 		Input.vibrate_handheld(20)
 
@@ -622,7 +655,7 @@ func _rival_think(t: Top, delta: float) -> void:
 	t.ai_t += delta
 	var every: float = st["dash_every"]
 	if every > 0.0 and t.ai_t >= every / (1.0 + 0.15 * loop) and d < 320.0:
-		t.windup = WINDUP                            # flashes first, then dashes
+		t.windup = _windup_time()                    # flashes first, then dashes
 		t.ai_t = randf() * 0.6
 	# guard when the player comes in fast
 	if t.braced:
@@ -645,35 +678,56 @@ func _learning() -> bool:
 ## (Learning to guard) the rival comes for you every couple of seconds, with its warning
 func _tut_attack(t: Top, delta: float) -> void:
 	t.ai_t += delta
-	if t.windup <= 0.0 and t.ai_t > 2.2 and t.pos.distance_to(player.pos) < 420.0:
+	var d := t.pos.distance_to(player.pos)
+	if t.windup <= 0.0 and t.dash_t > 0.8 and t.ai_t > 1.4 and d > 130.0 and d < 330.0:
 		t.windup = WINDUP + 0.25                     # (a longer warning while learning)
 		t.ai_t = 0.0
+		tut_counted = false
 
-## A hit between you and the rival, during the tutorial
+## A hit between you and the rival, during the tutorial. Each step wants it TWICE (a dash or an
+## attack counts once, however many times it bumps)
 func _tut_hit(perfect: bool) -> void:
-	if tut == Tut.DASH and player.dash_t < DASH_TIME:
-		tut = Tut.DASHED
-		show_coach("Nice hit! But dashing costs spin")
-		_after(1.8, func():
-			tut = Tut.GUARD
-			tut_warned = false
-			show_coach("Its turn! When it flashes, HOLD to GUARD", 1))
-	elif tut == Tut.GUARD:
-		if player.braced:
+	if tut == Tut.DASH and player.dash_t < DASH_TIME and not tut_counted:
+		tut_counted = true
+		tut_count += 1
+		if tut_count == 1:
+			show_coach("Nice hit! Do it again", 0)
+		else:
+			tut = Tut.DASHED
+			bar_flash = 2.5
+			show_coach("Cool! But each dash costs spin: watch your bar")
+			_after(2.6, func():
+				tut = Tut.GUARD
+				tut_count = 0
+				show_coach("Its turn! When it flashes, HOLD to GUARD", 1))
+	elif tut == Tut.GUARD and not tut_counted and tops[1].dash_t < DASH_TIME + 0.1:
+		tut_counted = true
+		if not player.braced:
+			show_coach("Too late! HOLD GUARD before it hits you", 1)
+			return
+		tut_count += 1
+		if tut_count == 1:
+			show_coach("PERFECT! Once more" if perfect else "Blocked! Again (guard right AS it hits = PERFECT)", 1)
+		else:
 			tut = Tut.GUARDED
-			show_coach("PERFECT GUARD! It bounced off" if perfect else "Blocked! Guard right as it hits = PERFECT")
+			show_coach("PERFECT GUARD! It bounced off" if perfect else "Great guarding!")
 			_after(2.2, func():
 				tut = Tut.FIGHT
+				player.spin = maxf(player.spin, 80.0)         # a fresh, short real fight
+				for o in tops:
+					if o != player:
+						o.spin = 55.0
 				show_coach("Now knock it out!", 0)
 				_after(2.0, hide_coach))
-		elif not tut_warned:
-			tut_warned = true
-			show_coach("HOLD GUARD before it hits you!", 1)
 
 func _finish_tutorial() -> void:
 	tut = Tut.NONE
 	GameData.mark_intro_seen(GAME_INDEX)
 	hide_coach()
+
+## How long a rival's warning flash lasts: long at first, shorter as the levels go up
+func _windup_time() -> float:
+	return maxf(WINDUP_MIN, WINDUP - 0.035 * (level - 1))
 
 # ================================================================== OUT / RESULT
 
@@ -724,6 +778,13 @@ func _check_match_end() -> void:
 			return
 	phase = Phase.RESULT
 	player.braced = false
+	if practice:                                  # the tutorial's done: now the real level 1
+		_sfx("res://sounds/fx/unlock_ding.wav", -8.0)
+		_show_banner("TUTORIAL DONE!", 1.2)
+		_after(1.8, func():
+			_start_match()
+			_show_banner("LEVEL %d" % level, 0.8))
+		return
 	var bonus := 100 + int(player.spin) + 30 * perfects
 	add_score(bonus)
 	_sfx("res://sounds/fx/unlock_ding.wav", -8.0)
@@ -807,7 +868,7 @@ func _draw_overlay() -> void:
 		overlay.draw_arc(C, rr, zone - ZONE_HALF, zone + ZONE_HALF, 16, GOLD, 16)
 		var tip := C + Vector2.from_angle(needle) * (rr + 22)
 		overlay.draw_line(C + Vector2.from_angle(needle) * (rr - 30), tip, OUTLINE, 14)
-		overlay.draw_line(C + Vector2.from_angle(needle) * (rr - 26), tip - Vector2.from_angle(needle) * 3, Color.WHITE, 8)
+		overlay.draw_line(C + Vector2.from_angle(needle) * (rr - 26), tip - Vector2.from_angle(needle) * 3, Color8(240, 80, 70) if wind_jam > 0.0 else Color.WHITE, 8)
 		_draw_gauge()
 		var l := Rect2(C.x - 60, C.y + 220, 120, 12)
 		overlay.draw_rect(l, OUTLINE)
@@ -866,6 +927,8 @@ func _spin_bar(r: Rect2, t: Top) -> void:
 	overlay.draw_rect(Rect2(r.position, Vector2(r.size.x * f, r.size.y)), col)
 	if t.braced:
 		overlay.draw_rect(r.grow(4), Color8(160, 200, 255), false, 3)
+	if t == player and bar_flash > 0.0 and fmod(bar_flash, 0.3) < 0.15:
+		overlay.draw_rect(r.grow(8), Color.WHITE, false, 5)        # (the tutorial points at it)
 
 func _sparks(at: Vector2, n: int) -> void:
 	for i in n:
@@ -1066,21 +1129,16 @@ func _make_shadow_texture() -> Texture2D:
 # ================================================================== INPUT
 
 func _has_tilt_sensor() -> bool:
-	return Input.get_gravity() != Vector3.ZERO or Input.get_accelerometer() != Vector3.ZERO
+	return has_tilt_sensor()
 
 func _sensor_tilt() -> Vector2:
-	var g := Input.get_gravity()
-	if g == Vector3.ZERO:
-		g = Input.get_accelerometer()
-	if g == Vector3.ZERO:
-		return Vector2.ZERO
-	var v := Vector2(g.x, -g.y) / 9.81
+	var v := device_tilt()                       # (measured from the pose at the round's start)
 	return -v if INVERT_TILT else v
 
 func _read_tilt() -> Vector2:
 	var t := Vector2.ZERO
 	if _has_tilt_sensor():
-		t = (_sensor_tilt() - calib) * TILT_GAIN
+		t = _sensor_tilt() * TILT_GAIN
 	var k := Vector2(
 		float(Input.is_key_pressed(KEY_RIGHT) or Input.is_key_pressed(KEY_D)) - float(Input.is_key_pressed(KEY_LEFT) or Input.is_key_pressed(KEY_A)),
 		float(Input.is_key_pressed(KEY_DOWN) or Input.is_key_pressed(KEY_S)) - float(Input.is_key_pressed(KEY_UP) or Input.is_key_pressed(KEY_W)))
@@ -1126,7 +1184,8 @@ func _forward_down() -> void:
 	if not is_running or is_game_over:
 		return
 	if tut == Tut.WIND:
-		_finish_tutorial()                             # skip the tutorial
+		_finish_tutorial()                             # skip the tutorial: a fresh, real level 1
+		_start_match()
 		return
 	forward_held = true
 	if phase == Phase.WIND:

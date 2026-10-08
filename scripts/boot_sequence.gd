@@ -33,6 +33,10 @@ func _ready() -> void:
 	_music_off()
 	_set_lcd_visible(false)
 	_build()
+	if DevLaunch.skip_boot:                # (development only: STRAIGHT TO GAMES)
+		_finish()
+		DevLaunch.open_games(get_tree())
+		return
 	# straight out of the box the device has no power yet: wait for the battery strip
 	while Unboxing.waiting():
 		await get_tree().process_frame

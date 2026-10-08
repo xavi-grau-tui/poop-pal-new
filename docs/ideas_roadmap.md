@@ -24,6 +24,9 @@ light, playful and visually intuitive: icons over text, learn by doing. Asia fir
 - Testing switches are still ON (everything resets each launch, games unlocked): see the
   project-state memory / GameData, PetState, Collection, LuckyPinch, Unboxing constants.
 - Only Splash is a working drink boost; the other 4 drink types have no effect yet.
+- Dev launcher (debug builds only: the editor and the debug installs on the phone): picks FULL BOOT
+  or STRAIGHT TO GAMES (Picklet as the pal, Games menu open). scripts/dev_launch.gd, started via
+  `run/main_scene.debug` in project.godot; release builds start the real main scene and never see it.
 
 ## What to implement next (pick a few to offer)
 Sizes: S = a session, M = a few sessions, L = a big block. "Needs" = do that first.
@@ -125,6 +128,9 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   an always-visible control legend (the device button's icon + what it does right now).
 - Phones: games that need fast or two-thumb input read the touches directly (device_button_at);
   the emulated mouse only follows one finger and drops taps.
+- Tilt works in ANY holding position (2026-10-07): it's measured from the pose the phone is in when
+  a round starts (BaseMinigame.calibrate_tilt / device_tilt), not from lying flat. Used by Tilt
+  Maze (each level; MAIN re-levels), Top Spin (at the drop), Paper Sumo (each bout).
 - Verdicts:
   - Splash Hoops: the water toy, the first game.
   - Tilt Maze: keep (see "Tilt Maze" below).
@@ -204,7 +210,12 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   through a gap in the rim. Last top spinning wins.
 - In the prototype: 5 rival styles (rookie, charger, wall, heavy, boss), bumpers, slime puddles
   (drain spin), 2-4 rim gaps, 8 levels then the last four repeat tougher, 3 lives. First-time
-  tutorial (wind → drop → roll → dash → guard → fight) and a control legend.
+  tutorial (wind → drop → roll → dash → guard → fight) and a control legend. The tutorial is a
+  practice match (TUTORIAL, then LV 1; dash twice, block two attacks: you hold still while
+  learning to guard so every attack lands) in a smaller, lower bowl with no rim gaps, so the coach's
+  card never covers it and nobody can fall out. Winding: a tap off the gold SLIPS the cord (spin
+  lost + a short jam), so mashing never pays. Rivals' warning flash shrinks with the level
+  (0.5 s at LV 1 → 0.2 s from LV 12).
 - Still to come: whipping (tap in rhythm while free to win spin back), obstacles that hit everyone
   (a sweeper arm, rails, the toilet-bowl arena that flushes halfway), rivals fighting each other,
   goals other than KO (ring-out only, survive, bells, king of the hill), bosses per world,

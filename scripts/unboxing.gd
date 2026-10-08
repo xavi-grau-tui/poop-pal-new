@@ -32,7 +32,7 @@ static var _state := -1             # -1 not decided yet, 1 waiting for power, 0
 ## True until the battery strip is pulled (BootSequence waits on this).
 static func waiting() -> bool:
 	if _state == -1:
-		_state = 1 if SHOW_EVERY_LAUNCH or not _saved_unboxed() else 0
+		_state = 1 if (SHOW_EVERY_LAUNCH or not _saved_unboxed()) and not DevLaunch.skip_boot else 0
 	return _state == 1
 
 static func _saved_unboxed() -> bool:

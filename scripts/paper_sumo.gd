@@ -100,7 +100,6 @@ var lives := LIVES
 var wins := 0                         # bouts won against this rival
 var losses := 0
 var time := 0.0
-var calib := Vector2.ZERO
 
 var me: Wrestler
 var rival: Wrestler
@@ -121,7 +120,7 @@ var hint_fwd: HBoxContainer
 var tut := Tut.NONE
 var tut_hops := 0
 var tut_lean := 0.0                   # how long you've leant forward while learning
-var tut_told_shake := false           # (after the tutorial) the forward button explained once
+var shake_tip_due := false            # right after the tutorial: explain FORWARD at the next bout
 var lcd_font: Font
 var ball_texture: Texture2D
 var _cards := {}                      # path -> folded paper texture
@@ -169,7 +168,7 @@ func _new_rival() -> void:
 	var ids: Array = PetState.FORMS.keys()
 	ids.erase(PetState.form_id)
 	rival_form = ids[randi() % ids.size()] if ids.size() > 0 else ""
-	hud_level.text = "LV %d" % level
+	hud_level.text = "TUTORIAL" if tut != Tut.NONE else "LV %d" % level
 	hud_rival.text = "VS " + str(_rival_data()["name"])
 
 func _start_bout() -> void:
@@ -185,7 +184,7 @@ func _start_bout() -> void:
 	rival.target = float(rival.ai["lean"])
 	rival.card.scale *= 0.9 + 0.15 * rival.mass                # heavier = a bigger card
 	rival.half *= 0.9 + 0.15 * rival.mass
-	calib = _sensor_tilt()
+	calibrate_tilt()
 	_refresh_hud()
 	phase = Phase.READY
 	_show_banner("HAKKEYOI!", 0.7)
@@ -193,8 +192,8 @@ func _start_bout() -> void:
 		phase = Phase.FIGHT
 		if tut == Tut.HOP:
 			show_coach("Tap to make your pal HOP", 0, "FORWARD: skip tutorial")
-		elif tut == Tut.NONE and not tut_told_shake and GameData.intro_seen(GAME_INDEX) and wins + losses == 1:
-			tut_told_shake = true          # (the second bout of your first rival)
+		elif shake_tip_due:
+			shake_tip_due = false
 			show_coach("FORWARD drums ITS side: shake it mid-hop!", 1)
 			_after(3.0, hide_coach))
 
@@ -351,6 +350,8 @@ func _tut_step(delta: float) -> void:
 
 func _finish_tutorial() -> void:
 	tut = Tut.NONE
+	shake_tip_due = true
+	hud_level.text = "LV %d" % level
 	GameData.mark_intro_seen(GAME_INDEX)
 	hide_coach()
 
@@ -375,8 +376,14 @@ func _fall_over(w: Wrestler) -> void:
 
 func _end_bout(won: bool, how: String) -> void:
 	phase = Phase.RESULT
-	if tut != Tut.NONE:
+	if tut != Tut.NONE:                       # the tutorial's bout doesn't count: now the real level 1
 		_finish_tutorial()
+		_sfx("res://sounds/fx/unlock_ding.wav", -8.0)
+		_show_banner("%s\nTUTORIAL DONE!" % how, 1.2)
+		_after(1.8, func():
+			hud_level.text = "LV %d" % level
+			_start_bout())
+		return
 	if won:
 		wins += 1
 		add_score(50)
@@ -629,21 +636,16 @@ func _tap_finger(f: Sprite2D) -> void:
 # ================================================================== INPUT
 
 func _has_tilt_sensor() -> bool:
-	return Input.get_gravity() != Vector3.ZERO or Input.get_accelerometer() != Vector3.ZERO
+	return has_tilt_sensor()
 
 func _sensor_tilt() -> Vector2:
-	var g := Input.get_gravity()
-	if g == Vector3.ZERO:
-		g = Input.get_accelerometer()
-	if g == Vector3.ZERO:
-		return Vector2.ZERO
-	var v := Vector2(g.x, -g.y) / 9.81
+	var v := device_tilt()                       # (measured from the pose at the round's start)
 	return -v if INVERT_TILT else v
 
 func _read_tilt() -> Vector2:
 	var t := Vector2.ZERO
 	if _has_tilt_sensor():
-		t = (_sensor_tilt() - calib) * TILT_GAIN
+		t = _sensor_tilt() * TILT_GAIN
 	t.x += (float(Input.is_key_pressed(KEY_RIGHT) or Input.is_key_pressed(KEY_D)) - float(Input.is_key_pressed(KEY_LEFT) or Input.is_key_pressed(KEY_A))) * 0.8
 	if t.length() < DEADZONE:
 		return Vector2.ZERO

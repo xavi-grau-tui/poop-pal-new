@@ -57,6 +57,7 @@ func dismiss_intro() -> void:
 	if not intro_card:
 		return
 	GameData.mark_intro_seen(_game_index())
+	calibrate_tilt()                             # (the pose they're holding now = level)
 	var card := intro_card
 	intro_card = null
 	var t := create_tween()
@@ -391,6 +392,41 @@ func device_button_at(screen_pos: Vector2) -> int:
 			return i
 	return -1
 
+# --- Tilt, in any holding position ---
+# Tilt is measured from the way the phone is held when a round starts (calibrate_tilt), not
+# from lying flat: held upright, flat or anywhere between, tilting it a little responds the same.
+# The reference gravity gives the two axes to measure along: the screen's left-right, and the
+# direction "forward" from that pose.
+
+var tilt_ref := Vector3.ZERO           # gravity in the neutral pose (ZERO = not set yet)
+
+func has_tilt_sensor() -> bool:
+	return _gravity() != Vector3.ZERO
+
+func _gravity() -> Vector3:
+	var g := Input.get_gravity()
+	return g if g != Vector3.ZERO else Input.get_accelerometer()
+
+## The way the phone is held right now becomes "level"
+func calibrate_tilt() -> void:
+	var g := _gravity()
+	if g != Vector3.ZERO:
+		tilt_ref = g
+
+## Tilt away from the neutral pose: x = right side down, y = top edge down (+ = towards the
+## bottom of the screen), roughly the sine of the angle (about -1..1)
+func device_tilt() -> Vector2:
+	var g := _gravity()
+	if g == Vector3.ZERO:
+		return Vector2.ZERO
+	if tilt_ref == Vector3.ZERO:
+		tilt_ref = g
+	var n := g.normalized()
+	var n0 := tilt_ref.normalized()
+	var ex := (Vector3.RIGHT - n0 * n0.x).normalized()      # the screen's left-right, level in this pose
+	var ey := n0.cross(ex)                                  # "forward / back" in this pose
+	return Vector2(n.dot(ex), n.dot(ey))
+
 # --- Teaching: button hints and the coach (first-time tutorials) ---
 
 const BUTTON_ICONS := ["res://textures/buttons/mainbuttonnormal.png", "res://textures/buttons/forwardbuttonnormal.png"]
@@ -431,7 +467,7 @@ func show_coach(text: String, which := -1, small := "") -> void:
 		var font = load("res://fonts/pixChicago.ttf")
 		coach = Control.new()
 		coach.size = Vector2(820, 150)
-		coach.position = Vector2((PLAY_WIDTH - coach.size.x) / 2.0, 104)
+		coach.position = Vector2((PLAY_WIDTH - coach.size.x) / 2.0, 96)
 		coach.pivot_offset = coach.size / 2.0
 		coach.z_index = 10
 		add_child(coach)
@@ -473,10 +509,22 @@ func show_coach(text: String, which := -1, small := "") -> void:
 	_coach_icon.visible = has_icon
 	if has_icon:
 		_coach_icon.texture = load(BUTTON_ICONS[which])
+	# (width first: a label laid out at 0 px wide would think it needs one letter per line)
+	var text_w := coach.size.x - (140.0 if has_icon else 34.0) - 34.0
+	_coach_text.position = Vector2(140 if has_icon else 34, 26)
+	_coach_text.size = Vector2(text_w, 76)
 	_coach_text.text = text
-	_coach_text.position = Vector2(140 if has_icon else 30, 14)
-	_coach_text.size = Vector2(coach.size.x - _coach_text.position.x - 30, 96)
+	# the card grows to fit the text (and the small line under it)
+	var font: Font = _coach_text.get_theme_font("font")
+	var text_h := maxf(font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, text_w, 36).y, 76.0)
+	_coach_text.size = Vector2(text_w, text_h)
 	_coach_small.text = small
+	_coach_small.position.y = 26.0 + text_h + 6.0
+	var h := _coach_small.position.y + (30.0 if small != "" else 0.0) + 26.0
+	coach.size.y = h
+	coach.pivot_offset = coach.size / 2.0
+	(coach.get_child(0) as NinePatchRect).size = coach.size / 3.0
+	_coach_icon.position.y = (h - _coach_icon.size.y) / 2.0
 	coach.visible = true
 	coach.scale = Vector2(0.9, 0.9)
 	coach.modulate.a = 0.0

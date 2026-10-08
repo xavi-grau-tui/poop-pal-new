@@ -5,7 +5,8 @@ extends BaseMinigame
 ## is always the same board and each level adds more holes.
 ##
 ## Tilt: gravity sensor on device. Desktop: arrow keys / WASD / hold mouse to pull.
-## Main button: set the current phone angle as "flat" (recalibrate).
+## Tilt is measured from how the phone is held when each level starts (any angle works).
+## Main button: set the current phone angle as "level" again (recalibrate).
 
 # --- Board geometry (all logic runs in play-area coordinates, 950x948) ---
 const PX := 4                         # world px per board pixel (chunky, like the pals' pixels)
@@ -71,7 +72,6 @@ var respawn_pos := Vector2.ZERO
 
 var ball_pos := Vector2.ZERO
 var vel := Vector2.ZERO
-var calib := Vector2.ZERO
 var bump_cooldown := 0.0
 
 var board: Sprite2D
@@ -116,6 +116,7 @@ func _build_level() -> void:
 	_place_features(rng)
 	board.texture = ImageTexture.create_from_image(_paint_board())
 	_spawn_level_nodes()
+	calibrate_tilt()                     # however the phone is held now = level
 	ball_pos = start_pos
 	respawn_pos = start_pos
 	vel = Vector2.ZERO
@@ -892,21 +893,16 @@ func _fall_into(h: Vector2) -> void:
 # ================================================================== INPUT
 
 func _has_tilt_sensor() -> bool:
-	return Input.get_gravity() != Vector3.ZERO or Input.get_accelerometer() != Vector3.ZERO
+	return has_tilt_sensor()
 
 func _sensor_tilt() -> Vector2:
-	var g := Input.get_gravity()
-	if g == Vector3.ZERO:
-		g = Input.get_accelerometer()
-	if g == Vector3.ZERO:
-		return Vector2.ZERO
-	var v := Vector2(g.x, -g.y) / 9.81
+	var v := device_tilt()                       # (measured from the pose at the round's start)
 	return -v if INVERT_TILT else v
 
 func _read_tilt() -> Vector2:
 	var t := Vector2.ZERO
 	if _has_tilt_sensor():
-		t = (_sensor_tilt() - calib) * TILT_GAIN
+		t = _sensor_tilt() * TILT_GAIN
 	# Desktop fallbacks
 	var k := Vector2(
 		float(Input.is_key_pressed(KEY_RIGHT) or Input.is_key_pressed(KEY_D)) - float(Input.is_key_pressed(KEY_LEFT) or Input.is_key_pressed(KEY_A)),
@@ -928,7 +924,7 @@ func on_main_button_pressed() -> void:
 		super.on_main_button_pressed()
 		return
 	# Current phone angle becomes "flat"
-	calib = _sensor_tilt()
+	calibrate_tilt()
 	_show_banner("Calibrated", 0.7)
 
 func on_main_button_released() -> void:
