@@ -62,8 +62,43 @@ Big (L)
 19. The instruction booklet (see its outline below), opened from the back sticker. Needs: the
     mechanics it explains to be final, so it comes late; the device and feeding chapters could
     start earlier.
+20. More toy moments on the device: stains to rub clean (S-M), stickers earned and stuck on the
+    back (M), swappable cases (M-L, needs case art). See "More toy moments".
+
+## What makes HaraTomo unique (the pillars; check new ideas against them)
+1. A physical toy in your phone (THE main hook): a handheld you unbox (seal, lid, films to peel,
+   the battery strip), switch on, hold, flip over. Much of the dopamine comes purely from these
+   tactile toy moments; keep adding them (button clicks, the back sticker, the booklet...).
+2. A creature growing in your guts: what you eat shapes who it becomes (120 pals to collect).
+3. Handcrafted toy minigames (real toys, done faithfully) with drink boosts that change how you play.
+4. Collectables: pals, gut decor, backgrounds, accessories.
+5. Calm, uncluttered pixel art: charming, never noisy.
+Lead the trailer and the store screenshots with the device experience (pillar 1).
+
+More toy moments (ideas, 2026-10-08; the user loves them, some were already on their mind)
+- Stickers: earned in the game (a new collectable), stuck on the device's back (and maybe the
+  front frame) by dragging them on. Placed where you like, peelable.
+- Stains (not scratches): the device gets grubby with use (a smudge, a food splat, a sticky
+  fingerprint) and you clean it by rubbing it with your finger, with a squeaky-clean feel.
+  Could tie into care.
+- Cases: shells that change the device's look, snapped on, taken off or swapped (a collectable
+  and a cosmetic, like the backgrounds for the pal).
+- Batteries running low after a while: open the small cover on the back and swap them.
+- Settings as physical controls: a volume wheel / contrast dial on the side instead of menus.
+- No screen protector (too much): the only film is the one peeled off when unboxing.
 
 ## Market
+- Competitor check (quick search, 2026-10-08): every piece exists somewhere, the combination doesn't.
+  - Pet inside a device on screen: Tamagotchi L.i.f.e. (Bandai's app; a classic mode shows the egg
+    casing), Noa Noa!, Hatchi, My Mochi 97 (retro handheld style). None has an unboxing or treats
+    the device as an object.
+  - Food-driven evolution: Gourmet Creature Hungry Mogumon (what you feed decides how it evolves).
+    Closest idea, but no gut, no device, no toy games: different enough.
+  - Poop games in Japan: only small novelty games (うんちがいさがし, a poop chicken race).
+  - Paper sumo apps exist (とんとんバトラーズ, 相撲巻 SumoRoll): different enough; ours is the pal
+    folded as the wrestler, inside the device, tied to boosts and the collection.
+  - First impressions will compare it with Tamagotchi (Bandai owns the genre's name): the device
+    experience and the gut-evolution idea are what set it apart.
 - Aim at Asia first (Japan above all, then Korea, China/Taiwan): poop-as-cute is mainstream there
   (the 💩 emoji, Unko Sensei, Dr. Slump's "unchi"). Plan for localization early: Japanese, Korean,
   Chinese. The 便友 already on the console fits.
