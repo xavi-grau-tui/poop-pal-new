@@ -230,6 +230,17 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
     evolution". Open question: does food become a pantry earned in games, or stay a random menu?
   - Points as a currency to spend (Lucky Pinch tries, a shop, rerolls), so farming has a use.
   - A daily level with a twist (a modifier) for a bonus.
+  - (ideas, 2026-10-08) Daily requests from the pal ("today I'd love to win Paper Sumo 2 with a
+    spicy pal"): small daily goals pointing at old levels, a small reward; ties into care.
+  - Time trials against your own ghost on early levels (Tilt Maze, the Pipe Dream circuit):
+    short, addictive, good for social clips.
+  - A hidden extra in each level (e.g. a sticker for the device), easy to miss the first time.
+  - Remixed early levels later on ("night" / "flooded" world 1): familiar layout, new rules.
+  - Strongest pulls, together: vaults + level-specific items + daily pal requests (they tie
+    replaying to evolution, boosts and care).
+- Keep replaying light, not a chore: early levels short (under a minute); the level select shows
+  what's still missing (stars, a locked vault icon, an uncollected item); no pure grind (an item is
+  certain to drop, or guaranteed after a few tries, never a long chain of random drops).
 - Games feed each other: game A drops the drink whose boost opens game B's secrets.
 
 ## Tilt Maze (the model for the others)
