@@ -422,6 +422,21 @@ Where the facts live (to write each chapter from the code, not from memory)
 ≈ 5-6 months to a first release. Scope levers if needed: fewer pals at launch, fewer Tilt Maze
 worlds, fewer drink tiers; the rest arrives in updates.
 
+## Android port (later; not hard)
+- Godot exports to Android about as easily as iOS; nothing in the game is iPhone-only (the iOS
+  scene-lifecycle plugin just isn't needed there). ~1-2 days to run on a phone, ~a week to polish.
+  Do it after the iPhone version plays well, or alongside TestFlight.
+- Setup: Android SDK + JDK + Godot's Android export templates + a debug key (USB installs like
+  the iPhone); to publish, a Google Play account (one-time fee) and a release key.
+- To handle: many screen shapes (test tall phones and tablets; the device sits on black already),
+  the system Back gesture (probably = leave the menu), the vibration permission, maybe Godot's
+  simpler renderer for old phones, and the purchase code (Google's billing, separate from Apple's).
+- Tilt: our games read gravity, not rotation, so every phone works (the accelerometer is
+  everywhere). Budget phones without a gyroscope (e.g. some Galaxy A32 variants) lack the clean
+  fused "gravity" sensor, so the game falls back to the raw accelerometer (already coded in
+  BaseMinigame._gravity), which also picks up shakes: add a small smoothing (low-pass) filter on
+  that path and test on a cheap phone.
+
 ## Release plan (draft)
 - Launch with the 6 games polished, don't wait for 7 and 8. Then updates: new worlds, new pals,
   then a new game (the marble run). Polish over count.
