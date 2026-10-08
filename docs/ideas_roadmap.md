@@ -116,8 +116,25 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   "Which pal is best at which game?" ties evolution to gameplay.
 - Today many generated pals read as "the previous one, but bigger or with a hat". Each stage and branch
   needs its own silhouette and personality (different body types, not just toppings).
-- Possibly restyle nearly all pals. Better 30-40 great ones at launch, the rest in updates, than 120 samey ones.
+- DECIDED (2026-10-08): the current 120 pals are placeholders; fewer than 5 (maybe none) survive.
+  The foods' and drinks' art gets redone too. Art comes LAST: first the technical side (saving,
+  gameplay, evolution logic, minigames, unlock progression), well tied together; then the design
+  pass, "the fun part". Better 30-40 great pals at launch, the rest in updates, than 120 samey ones.
 - More expressions and moods (._. sad, angry, evil… started), small animations per pal.
+
+## Pal design principles (for the art pass)
+- Every pal is its own creature with its own idea, like Pokémon: different body shapes,
+  personalities, faces and expressions. Not as wild as Pokémon's variety: all pals share one
+  aesthetic (pixel scale, outline, palette rules, top-left light), but within that, real variety.
+- A mix is a NEW IDEA, not a sum: sour + green must not be "the sour baby, bigger, with a green
+  thing on its head". It should be something that makes sense for both ingredients together but
+  isn't obvious (e.g. pulling from food culture: pickles, hot sauce, candied things, fermented
+  things...). If the next evolution can be guessed exactly, it's boring.
+- A light family cue can carry through (a colour accent, a trait), so the line still feels related.
+- Silhouette test: each pal must be recognisable from its silhouette alone (the Pal Pedia shows
+  silhouettes for missing pals, and the game's colour/silhouette hints depend on it).
+- Several expressions per pal (happy, sad, angry, sick, sleepy...) and small idle animations.
+- Size and complexity grow with the stage (baby simple and round, adults more elaborate).
 
 ## Evolution guidance: knowing what to go for without reading (2026-10-07)
 Players must know intuitively what to feed to get new or specific pals, without studying the
@@ -390,6 +407,20 @@ Where the facts live (to write each chapter from the code, not from memory)
   lines in Top Spin and Paper Sumo.
 - Unlocks and progress: scripts/game_data.gd.
 - Device controls: scripts/main_button.gd, scripts/forward_button.gd, scripts/device_flip.gd.
+
+## Release timeline (draft, 2026-10-08; assumes steady work like recent weeks)
+1. Foundation (~1 month): real saving + testing switches off, saved progress per game, stars and
+   levels, evolution guidance layer 1 (the food sparkle), the 4 missing drink boosts.
+   → A TestFlight build friends can play (needs the paid Apple account).
+2. Games and systems (~2 months): Tilt Maze worlds + vaults, Top Spin and Paper Sumo finished
+   (feel, levels), Tummy Tunes as a xylophone, Pipe Dream as a circuit, care consequences, foods
+   that grow up + reroll, unlock progression tied together, first toy moments (stains, stickers).
+3. Art pass (~1-2 months, the fun part, last on purpose): new pals (30-40 great ones for launch),
+   new food and drink art, game art (wooden koma etc.), cases.
+4. Release prep (~1 month): Japanese localisation, the booklet, pricing / the one purchase,
+   store screenshots and a trailer led by the device experience.
+≈ 5-6 months to a first release. Scope levers if needed: fewer pals at launch, fewer Tilt Maze
+worlds, fewer drink tiers; the rest arrives in updates.
 
 ## Release plan (draft)
 - Launch with the 6 games polished, don't wait for 7 and 8. Then updates: new worlds, new pals,
