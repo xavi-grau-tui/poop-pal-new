@@ -288,6 +288,12 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
 - Look: painted wooden koma (Edo-koma: bright concentric rings, lathe-turned) in a turned wooden
   bowl with grain and lathe rings. The rings blur into bands when fast and become stripes as the
   top slows, so spin reads at a glance.
+  Colour (2026-10-08): wooden but NOT brown: blue-grey tones (indigo-stained / aizome wood,
+  weathered grey wood, or whitewashed ash with the grain showing). Wood reads through grain and
+  lathe rings, not colour. The bowl stays calm blue-grey; the tops are painted Edo-koma with
+  bright rings that pop against it (each rival its own ring colours). Fits the slate card and the
+  chiptune music ("Pixel Battle"); if the track then feels too futuristic, regenerate it with a
+  few traditional touches (koto-like square lead, soft taiko), the same recipe as Pixel Sumo.
 - Feel to add: screen shake and a short freeze on big hits, a bigger spark burst; a whirring hum
   that drops in pitch as the top slows, wooden clacks, the ripcord sound while winding.
 - Check on the phone: tilt directions (INVERT_TILT), winding speed, damage, match length.
