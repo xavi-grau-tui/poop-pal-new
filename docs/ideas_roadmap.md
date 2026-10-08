@@ -445,6 +445,20 @@ worlds, fewer drink tiers; the rest arrives in updates.
   that unlocks everything (no ads, no pay-to-win): the unlock structure already fits it.
 
 ## Before release
+- Legal (2026-10-08; not legal advice, check with a trademark attorney before filing):
+  1. Now, free: search the official databases for HaraTomo / ハラトモ / 腹友 / 便友 in classes 9
+     (apps), 41 (entertainment, online games) and maybe 28 (toys): J-PlatPat (Japan), WIPO Global
+     Brand Database, TMview (EU + many national offices), USPTO. A quick web search (2026-10-08)
+     found no app, game, brand or trademark called HaraTomo.
+  2. Just before the game goes public (trailer, open TestFlight, store page): file ONE cheap home
+     trademark (e.g. Spain's OEPM, ~low hundreds of euros for one class).
+  3. Within 6 months of that filing, if the reaction is good: extend through the Madrid system
+     (WIPO) to Japan (+ US / Korea / EU as wanted), keeping the home filing date. Japan is
+     first-to-file, so don't wait long once the game is visible. Check the EU SME Fund (it has
+     refunded much of the trademark fees for small businesses).
+  Also before release: a licence check of every sound, song, font and image (e.g. the Epidemic
+  Sound effect, the 8-bit classical recordings, pixChicago); a privacy policy; the age rating; the
+  kids' app rules if aimed at young children.
 - TestFlight with friends early: watch where they get bored.
 - Rebalance scores and difficulty.
 - Store presence: screenshots and a short video of the handheld + a pal evolving.
