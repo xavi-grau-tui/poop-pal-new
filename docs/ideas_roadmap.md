@@ -561,6 +561,8 @@ exist. To build with the guide cards (G1-G9) and the Pal Pedia pass.
   the Sho on top, its 5 Chu in a row (column = the 2nd food, its icon above), each Chu's 3 Dai
   under it (with the 3rd-food icons), the mutants and the legend at the end. Shown either as one
   scrolling page per family, or 2 pages per family (Chu + Dai, then mutants + legend).
+  DECIDED (user, 2026-10-10): several pages inside each Sho's part (sub-pages): e.g. one per Chu
+  (the Chu + its 3 Dai), then the mutants + legend page. Two levels of dots: families, then pages.
 - Found pals show their picture; missing ones their silhouette with the food icons that lead
   there; the header shows the family's food circle (friends / rivals).
 - Navigation: FORWARD flips family (5 dots), the orange button moves through the pals, hold
