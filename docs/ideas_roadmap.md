@@ -149,6 +149,34 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   gameplay, evolution logic, minigames, unlock progression), well tied together; then the design
   pass, "the fun part". Better 30-40 great pals at launch, the rest in updates, than 120 samey ones.
 - More expressions and moods (._. sad, angry, evil… started), small animations per pal.
+- MOODS = hunger (user idea, 2026-10-10; docs/mockups/pal_brainstorm/v3/moods.png): Ember's face
+  options become a ladder as time passes without food: Just fed (current: glossy eyes, smile,
+  blush) -> Fine (B: smaller eyes) -> Peckish (D: Picklet dots) -> Hungry (A: glossy, no smile) ->
+  Grumpy (C: half-lidded). First guess at the times: 0-30 min, 30 min-2 h, 2-6 h, 6-12 h, 12 h+.
+  Every pal keeps its own face style; the mood modifies it. Sick / back-one-stage can follow
+  Grumpy later (care consequences).
+  UPDATE (user, 2026-10-10): 3 hunger faces per pal (fed / hungry / very hungry), and NOT the same
+  pattern for everyone: each pal's arc fits its personality. A serious pal starts serious and
+  gets a bit upset; a happy one can go happy -> scared -> offended; others their own way. Not
+  linear, not one ladder for all: the 3 faces are part of each pal's design (a field per pal in
+  the data). Idle animations come later, via script.
+- FOOD WITHOUT EVOLUTION (user idea, 2026-10-10, to decide): a snack of the pal's OWN size keeps it
+  happy (back to Just fed, the countdown restarts) without changing it; food of the NEXT size
+  makes it grow. Fits Progression v2 (foods by size): the food menu would offer both sizes, the
+  next size marked as "grows" (its icons one higher). Lets a player keep a pal they like for days.
+- PAL DRAFTS v3 (2026-10-10, the direction the user loved: "the t3 variations... that's the way"):
+  docs/mockups/pal_brainstorm/v3/sheet1.png, sheet2.png, sheet3.png = three full, MIXED 120s in the
+  current pals' render quality. Every kid line (a baby + its 2nd food, with its 3 adults) has three
+  alternatives: a SNACK (a dish that came alive: onigiri, taiyaki, dango, purin, burger, fried egg,
+  takoyaki...), a YOKAI / lucky charm (kappa, tengu, oni, daruma, maneki-neko, karakasa, teru teru,
+  kokeshi, kitsune, tanuki, umibozu...) or a CRITTER (frogs, moths, bees, hedgehogs, crabs, owls,
+  foxes...). The sheets rotate them line by line, so each sheet mixes all three and every
+  alternative appears once: pick per line (or per pal) across the sheets. Bud, Ember (calmer face)
+  and Picklet are in every sheet. Each adult shows the 3rd food that leads to it (the food icons).
+  Rules kept: Power Rangers colours per family, faces mostly cool (dots, half-lids, side-eyes,
+  sleepy) with a few smiles, one idea per pal, no body shape more than twice per family band
+  (check3.py). Files: palgen3.py (renderer: ~45 body plans, ~70 parts, ~22 eyes x 18 mouths),
+  sets3.py (all 351 designs + names and one-liners), build3.py (the sheets), moods3.py (moods.png).
 - DRAFTS (2026-10-10, brainstorm only, to pick from later): docs/mockups/pal_brainstorm/
   (1 = the current 120; 2 = new set A "clean shapes"; 3 = new set B "odd creatures", the user's
   favourite; 4 = Ember face options; v1_rough/ and v2/ = earlier tries). Names and one-liners in
@@ -186,6 +214,26 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   4. First time in a game: its how-to card / tutorial (exists).
   5. First star → the first sticker: "Your first sticker! Flip your HaraTomo over to stick it on."
      (also teaches the device flip).
+- GUIDE CARDS for Progression v2 (PROPOSED 2026-10-10, the user: "after playing a game and exiting,
+  the main screen should tell you: looks like you earned some coins, now you can X, or X..."). Same
+  look as the welcome card; each shown ONCE, on the main pet screen, with the button(s) it names
+  doing the bip-bip. The text lists only what the player can afford / use right now.
+  G1 First game left with coins: "You earned [coin] 6 coins! Spend them on a new game [games] or
+     food for your pal [gear]." (Games button blinks if a game is affordable, else the gear.)
+  G2 First time enough coins for the next game (any later exit): "A new game is ready to open!
+     Hold its card in [games] to buy it." (Tilt Maze the first time.)
+  G3 First time the pal can't grow (a kid, only locked adult foods): "Your pal is ready to grow,
+     but needs bigger food. Find it in the Shop [gear]."
+  G4 First Shop opening: "Coins buy food packs and special foods. Games are bought in [games]."
+  G5 Second game bought: "New game, new drink! Drinks give your pal a perk in the games." (+ the
+     first-drink steps a-c below)
+  G6 First locked food card held: no card, the gear blinks (already built).
+  G7 First world finished: "World 1 done! Every star you add later still gives a coin."
+  G8 First gift track item: the LCD's ITEM UNLOCKED! + "Your first gift! Find it in [gear]."
+  G9 First mood change to Hungry: "Your pal is hungry. Tap [food] when the timer runs out."
+  Rules: max one card per return to the main screen (the rest queue); never during a minigame or
+  a menu; a card that is no longer true when its turn comes is dropped (e.g. G2 after the game was
+  already bought). Saved "seen" flags (with real saving).
   Cards never interrupt: if the moment comes during a minigame or with a menu open, the card WAITS
   (queued) and shows the next time the player is back on the main pet screen.
   - First drink (DECIDED 2026-10-10, replaces the 2026-10-09 note): two marked steps.
@@ -287,6 +335,41 @@ Cosmetics: gifts for playing (DECIDED with the user's question, 2026-10-10)
 - First version: Splash Hoops' track carries the existing items (Pipe Dream's old score rewards
   move there); each game gets its own themed set in the art pass.
 
+Unlockables: the full catalogue and how each one is earned (PROPOSED 2026-10-10, user question)
+- Not by score: scores are not comparable between games (Splash Hoops points vs Tilt Maze points)
+  and favour whoever grinds one game. Stars are the same in every game (45 levels x 3 = 135), so
+  every game gives the same gifts for the same effort. The score stays as bragging (the LCD's
+  lifetime total, best scores); if a cross-game number is wanted, it is total stars (x/810).
+- Three sources, each with a visible goal (the locked card says how: "Tilt Maze: 30 stars"):
+  1. Each game's GIFT TRACK (5 items, at 5 / 15 / 30 / 60 / 100 of its stars), themed after the toy,
+     always in the same category order: 5 = a sky colour, 15 = a gut add-on, 30 = a dress piece,
+     60 = a gut colour, 100 = a background scene (the showpiece). 6 games = 30 items.
+  2. LUCKY PINCH exclusives (8, one capsule each, a party theme), then coin capsules.
+  3. PAL PEDIA milestones (every 10 pals found = 12 items): the long goal, rewarded too.
+  (+ secrets behind drink gates: stickers, see Drinks v2; + later: a care streak gift.)
+- Kinds: DRESS (worn by the pal), GUT = colour (a hue shift) + add-on (hung on the gut), BACKGROUND =
+  sky colour + scene (scrolling layers). Colours are cheap to make (a hue), so they fill the early
+  milestones; scenes and dress pieces are the big ones.
+
+  | Source        | 5 / 10           | 15 / 20            | 30 / 30            | 60 / 40           | 100 / 50          |
+  |---------------|------------------|--------------------|--------------------|-------------------|-------------------|
+  | Splash Hoops  | Aqua sky         | Seaweed (gut)      | Swim goggles       | Aquamarine gut    | Underwater scene  |
+  | Tilt Maze     | Maple sky        | Marble run (gut)   | Explorer hat       | Wooden gut        | Labyrinth scene   |
+  | Paper Sumo    | Washi sky        | Paper cranes (gut) | Sumo topknot       | Origami red gut   | Dohyo scene       |
+  | Pipe Dream/RC | Asphalt sky      | Checkered flags    | Racing helmet      | Neon gut          | Race track scene  |
+  | Top Spin      | Indigo sky       | Koma garland (gut) | Hachimaki          | Vermilion gut     | Festival scene    |
+  | Tummy Tunes   | Lavender sky     | Music notes (gut)  | Headphones         | Disco gut         | Stage lights scene|
+  Lucky Pinch: Party hat, Scarf, Confetti scene, Toilet Rolls scene, Lilac sky, Bunting, Golden gut,
+  Mint gut. Pal Pedia (every 10 pals): 10 Round glasses, 20 Fairy lights, 30 Starry sky, 40 Bow tie,
+  50 Garden scene, 60 Rainbow gut, 70 Flower crown, 80 Night scene, 90 Monocle, 100 Golden frame
+  (gut), 110 Sunglasses, 120 Hall of Fame scene. Defaults: Clouds, Pink sky, the natural gut.
+  In all ~50 items: 11 dress, 10 gut colours, 11 gut add-ons, 9 sky colours, 9 scenes.
+- When (pacing model, regular player): the first gift ~3 min in, then ~one every 10-15 min in the
+  first hours (5 / 15 / 30 stars come fast in each new game), the 100-star scenes are the long
+  goals (~3-4 h of play each), Pal Pedia gifts every few days.
+- Dress pieces must fit every pal: with v3's varied bodies, each pal's renderer exports anchors
+  (head top, eye line, width) so accessories are placed per pal instead of drawn by hand 120 times.
+
 Locked game cards (Games menu)
 - The card's picture is behind the food menu's roll-down shutter, with a small "?" label on it
   (the "?" logo on the "?" looping pattern). The info panel shows the price: a coin and the number.
@@ -387,6 +470,38 @@ testing starts never touch it.
   ways for every main-path item" as a firm rule?
 
 ## Pal design principles (for the art pass)
+- CREATURE TYPES (user, 2026-10-10: keep this naming for the game): every pal line (a kid and its
+  3 adults) is one of three types: SNACK (a dish that came alive: onigiri, taiyaki, dango, burger),
+  YOKAI (a Japanese spirit or lucky charm: kappa, oni, daruma, maneki-neko) or CRITTER (an odd
+  animal: frog, moth, hedgehog, crab). The v3 sheets show three options per line (one per type);
+  the final tree picks one per line, aiming for a good mix in every family. The type can show in
+  the Pal Pedia (a small icon) and maybe matter later (traits, collections: "all the yokai").
+- ADULT KINDS (the tree's rule, keep the names in the game): a kid's 3rd meal decides which of its
+  3 adults it becomes.
+  Mixed kid (2 different foods, e.g. sour then green): ROOT = the 1st food again (back to its
+  origin), PEAK = the 2nd food again (all in on the new side), CHAOS = any other food (the wild one).
+  Pure kid (the same food twice): ULTRA = that food a 3rd time (the purest; the only way to a
+  LEGEND), BLOOM = a friend food (a neighbour on the circle green - sweet - greasy - spicy - sour),
+  CLASH = a rival food (one of the other two).
+  The sheets show which 3rd foods lead to each adult (the food icons on each adult).
+  FRIENDS / RIVALS: the five foods sit on a circle, green - sweet - greasy - spicy - sour - (green).
+  Neighbours are friends (classic pairs: green+sweet = matcha / fruit, sweet+greasy = donuts,
+  greasy+spicy = hot wings, spicy+sour = kimchi, sour+green = pickles); the two not next to it are
+  rivals. A design choice, can be changed (e.g. sweet+sour is a famous pair too).
+- LEGENDS (user, 2026-10-10: "it should be more", to think about later): today only the 5 ULTRA
+  adults can become legends. Idea: BLOOM adults too (10 more), or legends added in updates.
+- STAGE NAMES DECIDED (user, 2026-10-10): SHO / CHU / DAI replace baby / kid / adult, for the pals
+  AND the food sizes. Always shown with their level icons: Sho = level 1 (1 icon), Chu = level 2
+  (2 icons), Dai = level 3 (3 icons): on the food tags, the Shop packs, the locked cards, the Pal
+  Pedia and the evolution moment ("Picklet is now Chu!"). Same language as the drink levels.
+  (Earlier note kept below for the options considered.)
+- STAGE NAMES (the options, 2026-10-10: "baby / kid / adult" felt weird). They name both the
+  pal's stage and the food size it eats (the 1-3 food icons). Options:
+  a) SHO / CHU / DAI (small / medium / large, as on Japanese menus: food sizes and pal sizes at once;
+     Asia first) - recommended
+  b) BITE / MEAL / FEAST (food words: "Feast food", "a Meal pal")
+  c) MINI / MIDI / MAXI (plain and universal)
+  Mutants and legends keep their names (they are not sizes).
 - Every pal is its own creature with its own idea, like Pokémon: different body shapes,
   personalities, faces and expressions. Not as wild as Pokémon's variety: all pals share one
   aesthetic (pixel scale, outline, palette rules, top-left light), but within that, real variety.
@@ -399,6 +514,30 @@ testing starts never touch it.
   silhouettes for missing pals, and the game's colour/silhouette hints depend on it).
 - Several expressions per pal (happy, sad, angry, sick, sleepy...) and small idle animations.
 - Size and complexity grow with the stage (baby simple and round, adults more elaborate).
+
+## Teaching the rules: every mechanic and WHERE the player learns it (2026-10-10)
+Rule: nothing the player needs is hidden in a manual only. Each rule has a moment in the game
+(a guide card, see Onboarding), a picture that keeps repeating it, and a page in the booklet for
+those who want the whole map. One card at a time, shown when the rule first matters.
+
+| Rule | Learned in the game (when) | Repeated by (always visible) | Booklet |
+|---|---|---|---|
+| Food decides the pal | welcome card + "Say hi" (built) | type tags on foods, pal colour = family | ch. Feeding |
+| Sho / Chu / Dai, food sizes | first evolution: "Picklet is now Chu! It eats Chu food now [2 icons]" | 1-3 icons on foods, Shop, Pal Pedia | ch. Growing up |
+| Locked sizes / types in the Shop | G3 (first pal that can't grow) | padlock cards + gear blink (built) | ch. Shop |
+| Stars -> coins -> games / food | G1, G2, G4 | coin counter, prices on cards | ch. Coins |
+| Adult kinds (ROOT/PEAK/CHAOS, ULTRA/BLOOM/CLASH) | first Dai: "Its 3rd meal decided which Dai it became." | Pal Pedia: each Dai shows its kind + the food path that leads there | ch. Evolution |
+| Friends & rivals (the food circle) | first pure Chu (2 same meals): "Same food twice! A 3rd one makes it ULTRA. A friend food [circle] makes it BLOOM, a rival makes it CLASH." | the food circle drawn in the Pal Pedia header; craving bubbles point at friends | ch. Evolution (the circle) |
+| Legends | first ULTRA: "An ULTRA pal! Feed it its legendary food and something amazing happens." | ULTRA's Pedia page shows the legend's silhouette + the legendary food icon | ch. Legends |
+| Mutants (tech / cosmic) | first special food bought or found | special page "?" cards, Shop | ch. Special foods |
+| Drinks, levels, secrets | first-drink steps a-c; first gate seen: "Needs [3 bubbles]: a level 3 Fizzy drink" | level icons on drinks, gates in levels, level menu cells | ch. Drinks |
+| Moods / hunger | G9 (first time Hungry) | the pal's face + the LCD timers | ch. Care |
+| Gifts (cosmetics) | G8 (first gift) | "?" cards say how: "Tilt Maze: 30 stars" | ch. Collection |
+
+The Pal Pedia is the map: for a discovered pal it shows its food path (icons), its kind
+(ROOT...), and for undiscovered NEXT pals a silhouette + the hint (layer 3 tracking below).
+Status: the table is the plan; only the welcome / hatch / bonus cards and the locked-food blink
+exist. To build with the guide cards (G1-G9) and the Pal Pedia pass.
 
 ## Evolution guidance: knowing what to go for without reading (2026-10-07)
 Players must know intuitively what to feed to get new or specific pals, without studying the

@@ -29,3 +29,6 @@ tools/art/out/
 .venv/
 tools/art/__pycache__/
 tools/design/__pycache__/
+
+# pal brainstorm v3: the render cache (rebuilt by build3.py)
+docs/mockups/pal_brainstorm/v3/out/
