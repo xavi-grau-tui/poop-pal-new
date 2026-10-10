@@ -52,6 +52,8 @@ var bonus_page: Node = null
 ## Locked cards (Progression v2): the picture behind the food menu's roll-down shutter, with a small
 ## "?" label on it; the info panel shows the price. Hold with enough coins = bought.
 const PRICE_BLINK := Color(0.85, 0.25, 0.2)
+## the frame's top band: its middle (Main UI coords), where the coins show
+const COIN_BAND_MID := -1233.0
 var coin_tag: PanelContainer
 var coin_tag_label: Label
 var legend: MenuLegend
@@ -190,6 +192,8 @@ func _update_game_card_labels(page_index: int) -> void:
 	_pin_percent_sign(progress_label)
 	_value_coin(score_label, false)
 	_value_coin(progress_label, false)
+	if coin_tag:
+		coin_tag.visible = not unlocked and GameData.can_buy_game(index)     # coins only where they matter
 	if not unlocked:
 		if GameData.can_buy_game(index):
 			# the price, and what you have
@@ -363,17 +367,16 @@ func _build_coin_tag() -> void:
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.custom_minimum_size = Vector2(36, 36)
+	icon.custom_minimum_size = Vector2(30, 30)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
 	coin_tag_label = Label.new()
 	coin_tag_label.add_theme_font_override("font", load("res://fonts/Pixellari.ttf"))
-	coin_tag_label.add_theme_font_size_override("font_size", 36)
+	coin_tag_label.add_theme_font_size_override("font_size", 30)
 	coin_tag_label.add_theme_color_override("font_color", Color8(74, 48, 34))
 	coin_tag_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	coin_tag_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(coin_tag_label)
-	coin_tag.position = Vector2(1180, -1206)
 	coin_tag.z_index = 6
 	$Menu.add_child(coin_tag)
 	_refresh_coin_tag()
@@ -382,6 +385,8 @@ func _refresh_coin_tag() -> void:
 	if coin_tag_label:
 		coin_tag_label.text = str(GameData.coins)
 		coin_tag.reset_size()
+		# in the frame's top band (the bottom band's mirror), ending where the page dots end
+		coin_tag.position = Vector2(round(MenuLegend.FORWARD_LEFT + MenuLegend.FORWARD_W - coin_tag.size.x), round(COIN_BAND_MID - coin_tag.size.y / 2.0))
 
 ## The % sign stays exactly where it is for "0%"; longer numbers grow to its left
 func _pin_percent_sign(label: Label) -> void:
