@@ -5,7 +5,7 @@ class_name Onboarding
 ##   1. A card: "Welcome to HaraTomo! Tap [food button] to eat something and meet your new pal."
 ##      The food button and the EAT sign blink bip-bip … bip-bip, with a short sharp buzz on each
 ##      bip, and only the food button works (MenuButtons checks Onboarding.active).
-##   2. Once the first meal has hatched the pal: "Say hi to <name>! What you eat decides how it
+##   2. Once the first meal has hatched the pal: "Say hi to <name>! It's a <Type [icon]> pal. What you eat decides how it
 ##      grows." (a tap, or a few seconds, puts it away). LuckyPinch waits while a card is up.
 ##   3. If a bonus came with that meal: once the claw has gone back up, "Lucky you! Sometimes a
 ##      bonus turns up after a meal.", then "Tap [games button] to play the bonus game!" with the
@@ -20,6 +20,8 @@ static var showing := false            # a card is up (or about to be): LuckyPin
 const FOOD_ICON := "res://textures/buttons/logofood.png"      # just the buttons' icons, big and clear
 const GAMES_ICON := "res://textures/buttons/logogames.png"
 const INK := Color8(92, 60, 44)
+## the five types' colours, dark enough to read on the card (the Power Rangers set)
+const TYPE_INK := { "green": Color8(46, 128, 60), "sweet": Color8(60, 86, 140), "greasy": Color8(196, 110, 16), "spicy": Color8(196, 46, 40), "sour": Color8(112, 142, 30) }
 
 var food_button: Node
 var game_button: Node
@@ -89,7 +91,12 @@ func _on_form_changed(id: String, reason: String) -> void:
 	await get_tree().create_timer(2.6).timeout
 	if _gone():
 		return
-	_show_card("Say hi to %s! What you eat decides how it grows." % pal_name)
+	# its type (the family of its first meal): the word in the type's colour + the type's icon
+	var fam: String = PetState.get_form().get("family", "")
+	var info: Array = UiArt.TYPE_TAGS.get(fam, [fam.capitalize(), Color.WHITE])
+	var col: Color = TYPE_INK.get(fam, INK)
+	var type_txt := "[color=#%s]%s[/color] [img=40]res://textures/menus/tiers/%s.png[/img]" % [col.to_html(false), info[0], fam]
+	_show_card("Say hi to %s! It's a %s pal. What you eat decides how it grows." % [pal_name, type_txt])
 	await get_tree().create_timer(6.0).timeout
 	if _gone():
 		return
