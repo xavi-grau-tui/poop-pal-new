@@ -552,6 +552,20 @@ The Pal Pedia is the map: for a discovered pal it shows its food path (icons), i
 Status: the table is the plan; only the welcome / hatch / bonus cards and the locked-food blink
 exist. To build with the guide cards (G1-G9) and the Pal Pedia pass.
 
+## Pal Pedia by family (user idea, 2026-10-10, to build later)
+- The Pal Pedia gets 5 parts, one per Sho (Bud, the sweet Sho, the greasy Sho, Ember, Picklet),
+  each showing that family's whole tree instead of a flat list of 120 in number order: less messy,
+  and it IS the evolution map (where the food path, the kinds and the "?" silhouettes live).
+- A family = 24 pals: 1 Sho, 5 Chu, 15 Dai, 2 mutants, 1 legend (2 if BLOOM legends come). Too many
+  for one 3x3 page at today's card size, so each part is its own little tree, like the v3 sheets:
+  the Sho on top, its 5 Chu in a row (column = the 2nd food, its icon above), each Chu's 3 Dai
+  under it (with the 3rd-food icons), the mutants and the legend at the end. Shown either as one
+  scrolling page per family, or 2 pages per family (Chu + Dai, then mutants + legend).
+- Found pals show their picture; missing ones their silhouette with the food icons that lead
+  there; the header shows the family's food circle (friends / rivals).
+- Navigation: FORWARD flips family (5 dots), the orange button moves through the pals, hold
+  opens a pal's detail (as now).
+
 ## Evolution guidance: knowing what to go for without reading (2026-10-07)
 Players must know intuitively what to feed to get new or specific pals, without studying the
 Pal Pedia. The Pedia already has silhouettes + a text hint per missing pal, but that needs reading.
