@@ -348,14 +348,17 @@ Cosmetics: gifts for playing (DECIDED with the user's question, 2026-10-10)
 - First version: Splash Hoops' track carries the existing items (Pipe Dream's old score rewards
   move there); each game gets its own themed set in the art pass.
 
-Shop: stickers, cases, and the special foods by stars (user ideas, 2026-10-11, to design)
-- The Shop sells, besides food packs and drink levels: STICKERS (stuck on the device's back, behind
-  the pal, or over the case) and CASES (device skins / covers for the handheld). Cosmetics stay
-  gifts for playing (backgrounds, dress, gut); stickers and cases are the Shop's own cosmetics.
-- QR idea: a sticker or case bought in the Shop can come with a QR code to "show in a shop":
-  a real-world tie-in (show it at a partner shop / event / merch stand to get the physical
-  sticker or case), so the digital item has a real twin. To clarify with the user: which shops,
-  free or paid, one use per code. (Also possible in-game only: a little stall that scans it.)
+Shop: real stickers and cases, and the special foods by stars (user, 2026-10-11)
+- The Coin Shop gets SECTIONS (pages): FOOD & DRINKS (the packs by size, drink levels, special
+  foods), STICKERS and CASES. Stickers and cases are mid / late game (they show up later, e.g.
+  after enough stars or the 4th game).
+- Stickers and cases are REAL, not in-game: buying one with coins gives a QR code to show in a
+  physical store, which hands over the real sticker or the real case for your phone / device.
+  The point: you can win things outside the game.
+- What it needs (to solve before launch): unique, one-use codes checked by a server (so a copied
+  QR or an edited save can't be cashed twice), partner stores (or events / a merch stand), stock
+  and what happens when an item runs out, local rules for prizes for kids, and the prices in coins
+  (high: these are the late game's big goals). A code stays in a "My codes" list until used.
 - Special foods (tech, cosmic, legendary): on sale only after a number of total stars, on top of
   the pal rule (a Dai for tech / cosmic, the family's ULTRA for its legendary). First guess:
   tech 60 stars, cosmic 120, legendary 250 (of 810); tune with tools/design/pacing.py.
