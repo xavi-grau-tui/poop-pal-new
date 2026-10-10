@@ -54,6 +54,7 @@ var bonus_page: Node = null
 const PRICE_BLINK := Color(0.85, 0.25, 0.2)
 ## the frame's top band: its middle (Main UI coords), where the coins show
 const COIN_BAND_MID := -1233.0
+const COIN_RIGHT := 1292.0          # its right edge: where it always ended (the panel's right margin)
 var coin_tag: PanelContainer
 var coin_tag_label: Label
 var legend: MenuLegend
@@ -386,7 +387,7 @@ func _refresh_coin_tag() -> void:
 		coin_tag_label.text = str(GameData.coins)
 		coin_tag.reset_size()
 		# in the frame's top band (the bottom band's mirror), ending where the page dots end
-		coin_tag.position = Vector2(round(MenuLegend.FORWARD_LEFT + MenuLegend.FORWARD_W - coin_tag.size.x), round(COIN_BAND_MID - coin_tag.size.y / 2.0))
+		coin_tag.position = Vector2(round(COIN_RIGHT - coin_tag.size.x), round(COIN_BAND_MID - coin_tag.size.y / 2.0))
 
 ## The % sign stays exactly where it is for "0%"; longer numbers grow to its left
 func _pin_percent_sign(label: Label) -> void:

@@ -75,6 +75,7 @@ var detail_legend: Node2D          # pal card controls, in the golden band: (o) 
 var font: Font
 ## the frame's top band: its middle (Main UI coords), where the coins show
 const COIN_BAND_MID := -1233.0
+const COIN_RIGHT := 1292.0          # its right edge: where it always ended (the panel's right margin)
 var coin_tag: PanelContainer       # the coins you have (Shop view and its hub card)
 var coin_tag_label: Label
 
@@ -768,7 +769,7 @@ func _refresh_coin_tag() -> void:
 		coin_tag_label.text = str(GameData.coins)
 		coin_tag.reset_size()
 		# in the frame's top band (the bottom band's mirror), ending where the page dots end
-		coin_tag.position = Vector2(round(MenuLegend.FORWARD_LEFT + MenuLegend.FORWARD_W + FRAME_DX - coin_tag.size.x), round(COIN_BAND_MID - coin_tag.size.y / 2.0))
+		coin_tag.position = Vector2(round(COIN_RIGHT + FRAME_DX - coin_tag.size.x), round(COIN_BAND_MID - coin_tag.size.y / 2.0))
 	if view == View.HUB:
 		_update_hub_card_info()
 
