@@ -328,10 +328,7 @@ func _update_hub_card_info() -> void:
 		var cat_catalog := Collection.catalog(cat)
 		lines[v] = ["Unlocked", "%d/%d" % [owned, Collection.order(cat).size()], "In use", Collection.in_use_label(cat)]
 	# the Shop card: what's on sale, and the coins you have
-	var on_sale := 0
-	for it in Shop.ITEMS:
-		if Shop.state(it) in ["ok", "poor"]:
-			on_sale += 1
+	var on_sale := Shop.shop_order().size()
 	lines[View.SHOP] = ["On sale", str(on_sale), "Coins", str(GameData.coins)]
 	for i in HUB_CARDS.size():
 		var v: int = HUB_CARDS[i]["view"]
@@ -505,6 +502,7 @@ func _food_card(slot: int, icon_tex: Texture2D) -> Control:
 	icon.position = f_icon.position + origin - box / 2.0
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
+	row.set_meta("icon_rect", icon)
 	# the name: the food name's own label (font, size, colour)
 	var name_l: Label = f_name.duplicate()
 	name_l.z_index = 0
@@ -635,26 +633,47 @@ const SHOP_PER_PAGE := 3
 var shop_items: Array = []          # the Shop's cards in the order it opened with
 
 func _shop_pages() -> int:
-	return maxi(1, ceili(Shop.ITEMS.size() / float(SHOP_PER_PAGE)))
+	return maxi(1, ceili(shop_items.size() / float(SHOP_PER_PAGE)))
 
-## The Shop: the food menu's cards, 3 a page: the item, its price on the tag (a coin + the
-## number), and under the name what holding it does (or why it can't be bought yet). The food
-## packs your pal needs next come first (Shop.shop_order)
+## The Shop: the food menu's cards, 3 a page, and it grows with the player (Shop.on_sale: only
+## what the pal can use soon). A food pack looks like a food card: the type's word on its tag and
+## the size as 1-3 icons (Sho / Chu / Dai), "NEW!" when it is a type you have no food of yet; the
+## price (a coin + the number) and what holding does go under the name. Specials: their tag.
 func _build_shop() -> void:
-	page = clampi(page, 0, _shop_pages() - 1)
-	if shop_items.size() != Shop.ITEMS.size():
+	if shop_items.is_empty():
 		shop_items = Shop.shop_order()
+	page = clampi(page, 0, _shop_pages() - 1)
 	var items := shop_items
+	if items.is_empty():                        # all bought for now: say when more comes
+		var row := _food_card(1, UiArt.question())
+		(row.get_meta("name_label") as Label).text = "Nothing new"
+		(row.get_meta("status_label") as Label).text = "Grow your pal to see more"
+		row.set_meta("action", { "type": "locked" })
+		_add_item(row)
+		return
 	for slot in SHOP_PER_PAGE:
 		var i := page * SHOP_PER_PAGE + slot
 		if i >= items.size():
 			break
 		var it: Dictionary = items[i]
-		var row := _food_card(slot, load(it["icon"]))
+		var food: bool = it["kind"] == "food"
+		# no food picture: the foods themselves are discovered in the food menu
+		var row := _food_card(slot, null)
 		var name_l: Label = row.get_meta("name_label")
-		name_l.text = it["name"]
-		var st: Label = row.get_meta("status_label")
+		name_l.text = (str(it["family"]).capitalize() + " " + SIZE_NAME[it["tier"]]) if food else it["name"]
+		var fam: String = it["family"] if food else _special_family(it)
+		_card_tag(row, UiArt.TYPE_TAGS.get(fam, [fam.capitalize(), Color8(220, 196, 150)]))
+		var tag: Sprite2D = row.get_child(row.get_child_count() - 2)
+		if food:
+			UiArt.place_tier_icons(row, tag, fam, { "baby": 1, "kid": 2, "adult": 3 }[it["tier"]])
+			if Shop.new_type(fam):
+				var nb := _new_badge(30)
+				nb.position = Vector2(row.size.x * 0.3, -6)
+				row.add_child(nb)
 		var state := Shop.state(it)
+		if state != "owned":
+			_price_box(row, Shop.price(it), state == "ok")
+		var st: Label = row.get_meta("status_label")
 		match state:
 			"owned":
 				st.text = "Yours"
@@ -663,28 +682,37 @@ func _build_shop() -> void:
 				st.text = "Need %d more" % (Shop.price(it) - GameData.coins)
 			_:
 				var have := Shop.pantry_count(it.get("food", ""))
-				st.text = "Have %d · hold: buy" % have if it["kind"] == "special" and have > 0 else "Hold: buy"
-		if state != "owned":
-			_price_tag(row, Shop.price(it), state == "ok")
+				st.text = ("Have %d · hold: buy" % have) if not food and have > 0 else "Hold: buy"
 		row.set_meta("action", { "type": "buy", "id": it["id"] } if state == "ok" else { "type": "locked" })
 		_add_item(row)
 
-## The price on a card's tag spot: a coin and the number (dimmed while you can't afford it)
-func _price_tag(row: Control, price: int, affordable: bool) -> void:
-	_card_tag(row, [str(price), Color8(236, 208, 140) if affordable else Color8(200, 186, 160)])
-	var l: Label = row.get_child(row.get_child_count() - 1)
-	var tag: Sprite2D = row.get_child(row.get_child_count() - 2)
-	l.text = "   " + str(price)
+const SIZE_NAME := { "baby": "Sho", "kid": "Chu", "adult": "Dai" }
+
+## The price in the card's picture square: a big coin and the number under it
+func _price_box(row: Control, price: int, affordable: bool) -> void:
+	var box: TextureRect = row.get_meta("icon_rect")
 	var coin := TextureRect.new()
 	coin.texture = UiArt.coin()
 	coin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	coin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	coin.size = Vector2(33, 33)
-	var w := l.get_theme_font("font").get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 36).x
-	coin.position = tag.position + Vector2((l.size.x - w) / 2.0 - 4, (l.size.y - coin.size.y) / 2.0)
+	var cs := box.size.x * 0.5
+	coin.size = Vector2(cs, cs)
+	coin.position = box.position + Vector2((box.size.x - cs) / 2.0, box.size.y * 0.04)
 	coin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	coin.modulate = Color.WHITE if affordable else Color(1, 1, 1, 0.6)
+	coin.modulate = Color.WHITE if affordable else Color(1, 1, 1, 0.55)
 	row.add_child(coin)
+	var l := _label(box.position + Vector2(0, box.size.y * 0.52), Vector2(box.size.x, box.size.y * 0.48), 38, TEXT_DARK if affordable else Color8(150, 120, 98), row)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.text = str(price)
+	l.z_index = 0
+
+func _special_family(it: Dictionary) -> String:
+	for f in FoodLibrary.SPECIALS:
+		if f["name"] == it.get("food", ""):
+			return f["family"]
+	return "legend"
+
 
 ## Bought: the card hops
 func _bought_pop(sel: Node) -> void:

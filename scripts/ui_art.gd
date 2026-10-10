@@ -12,6 +12,19 @@ const EMPTY_DARK := Color8(118, 92, 74)
 
 static var _cache := {}
 
+## The type tags' words and colours (food menu, Shop): muted pastels, the evolution tree's colours
+const TYPE_TAGS := {
+	"green": ["Green", Color8(176, 200, 150)], "sweet": ["Sweet", Color8(232, 182, 196)],
+	"greasy": ["Greasy", Color8(222, 186, 144)], "spicy": ["Spicy", Color8(226, 160, 144)],
+	"sour": ["Sour", Color8(226, 214, 150)], "tech": ["Tech", Color8(170, 186, 200)],
+	"cosmic": ["Cosmic", Color8(196, 178, 214)], "legend": ["Rare", Color8(236, 208, 140)],
+	# drinks
+	"watery": ["Watery", Color8(180, 208, 226)], "fizzy": ["Fizzy", Color8(232, 192, 184)],
+	"caffeinated": ["Energy", Color8(206, 186, 164)], "milky": ["Milky", Color8(238, 232, 220)],
+	"fruity": ["Fruity", Color8(240, 200, 160)],
+}
+
+
 ## A five-pointed star, 13 x 13 px: gold when won, a dull hollow one when not
 static func star(won: bool) -> Texture2D:
 	var key := "star_%s" % won
@@ -189,3 +202,44 @@ static func scroll_mark(on: bool) -> Texture2D:
 	var tex := ImageTexture.create_from_image(img)
 	_cache[key] = tex
 	return tex
+
+## The level / size icons: a type's icon 1-3 times (foods: Sho 1, Chu 2, Dai 3; drinks: power 1-3).
+## Art: textures/menus/tiers/<type>.png (docs/mockups/food_drafts/tier_icons.py, drink_drafts/level_icons.py)
+static func tier_row(kind: String, n: int) -> Texture2D:
+	var key := "tier_%s_%d" % [kind, n]
+	if key in _cache:
+		return _cache[key]
+	var path := "res://textures/menus/tiers/%s.png" % kind
+	if n <= 0 or not ResourceLoader.exists(path):
+		return null
+	var one: Image = (load(path) as Texture2D).get_image()
+	one.convert(Image.FORMAT_RGBA8)
+	var w := one.get_width()
+	var img := Image.create(w * n + (n - 1), one.get_height(), false, Image.FORMAT_RGBA8)
+	for i in n:
+		img.blit_rect(one, Rect2i(0, 0, w, one.get_height()), Vector2i(i * (w + 1), 0))
+	var tex := ImageTexture.create_from_image(img)
+	_cache[key] = tex
+	return tex
+
+## The 1-3 level icons on a tag's top-right corner (the food menu's cards and the Shop's)
+static func place_tier_icons(parent: Node, tag: Sprite2D, family: String, level: int) -> void:
+	var icons: Sprite2D = parent.get_node_or_null("TierIcons")
+	var tex := UiArt.tier_row(family, level)
+	if not tex:
+		if icons:
+			icons.visible = false
+		return
+	if not icons:
+		icons = Sprite2D.new()
+		icons.name = "TierIcons"
+		icons.centered = false
+		icons.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icons.z_index = tag.z_index + 1
+		parent.add_child(icons)
+	var k: float = tag.scale.x / 0.84 * 2.0          # (the frame's scale x2, like the mock-up)
+	icons.texture = tex
+	icons.scale = Vector2(k, k)
+	var tag_size: Vector2 = tag.texture.get_size() * tag.scale
+	icons.position = tag.position + Vector2(tag_size.x - tex.get_width() * k + 4.0 * k, -tex.get_height() * k * 0.5 - 1.0 * k)
+	icons.visible = true

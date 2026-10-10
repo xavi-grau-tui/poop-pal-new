@@ -101,6 +101,43 @@ func state(it: Dictionary) -> String:
 		return "owned"
 	return "ok" if GameData.coins >= price(it) else "poor"
 
+## How far the player has got: the biggest size any pal has reached (0 = none yet, 1 Sho, 2 Chu,
+## 3 Dai or more). The Shop grows with it.
+func stage_reached() -> int:
+	var best := 0
+	for id in PetState.discovered:
+		best = maxi(best, mini(3, int(PetState.FORMS.get(id, {}).get("stage", 0))))
+	return best
+
+## Is it on sale yet? (progressive: only what the player can use soon)
+##   food packs   a size once a pal is about to need it (Sho from the start, Chu once a Sho pal
+##                has existed, Dai once a Chu has); packs you have are not shown
+##   tech/cosmic  once a pal has reached Dai (they only work on a Dai)
+##   legendary    once its family's ULTRA Dai has been found
+func on_sale(it: Dictionary) -> bool:
+	match it.get("kind", ""):
+		"food":
+			return not has_food(it["family"], it["tier"]) and TIERS.find(it["tier"]) <= stage_reached()
+		"special":
+			var sp: Dictionary = {}
+			for f in FoodLibrary.SPECIALS:
+				if f["name"] == it["food"]:
+					sp = f
+			if sp.get("family", "") != "legend":
+				return stage_reached() >= 3
+			for ultra in PetState.LEGENDS:
+				if ultra in PetState.discovered and PetState.LEGENDS[ultra].get("family", "") == sp.get("legend_of", ""):
+					return true
+			return false
+	return true
+
+## A food type you have no food of yet (its pack is a NEW type for the player)
+func new_type(family: String) -> bool:
+	for tier in TIERS:
+		if has_food(family, tier):
+			return false
+	return true
+
 ## The items in the order the Shop shows them: the food packs for the size your pal needs next
 ## first (then the next size, then the rest), the ones you have last; the special foods after
 func shop_order() -> Array:
@@ -112,7 +149,7 @@ func shop_order() -> Array:
 			return 90
 		var t := TIERS.find(it["tier"]) - TIERS.find(need)
 		return t if t >= 0 else 10 + t + 3
-	var order := ITEMS.duplicate()
+	var order := ITEMS.filter(func(it): return on_sale(it))
 	var idx := {}
 	for i in ITEMS.size():
 		idx[ITEMS[i]["id"]] = i

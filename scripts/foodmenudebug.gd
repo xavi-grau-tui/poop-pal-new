@@ -155,7 +155,7 @@ func _fill_special(option_node: Node, food_data: Dictionary) -> void:
 func populate_foods():
 	_set_items(0, FoodLibrary.get_menu_set())
 
-const LOCKED_FOOD_NAME := { "baby": "Baby food", "kid": "Kid food", "adult": "Adult food" }
+const LOCKED_FOOD_NAME := { "baby": "Sho food", "kid": "Chu food", "adult": "Dai food" }
 
 func _fill_food(option_node: Node, food_data: Dictionary) -> void:
 	var locked: bool = food_data.get("locked", false)
@@ -163,7 +163,7 @@ func _fill_food(option_node: Node, food_data: Dictionary) -> void:
 	# a locked food: its silhouette (like a pal not found yet), a padlock, "Kid food"
 	option_node.get_node("Icon").modulate = Color(0.1, 0.06, 0.05, 0.85) if locked else Color.WHITE
 	option_node.get_node("Name").text = LOCKED_FOOD_NAME.get(food_data.get("tier", ""), "Food") if locked else food_data.name
-	_set_type_tag(option_node, food_data.family)
+	_set_type_tag(option_node, food_data.family, TIER_LEVEL.get(food_data.get("tier", ""), 0))
 	_set_lock(option_node, locked)
 	option_node.set_meta("food", food_data)
 
@@ -225,7 +225,7 @@ func _fill_drink(option_node: Node, drink_data: Dictionary) -> void:
 	option_node.get_node("Icon").texture = drink_data.icon
 	option_node.get_node("Icon").modulate = Color(0.1, 0.06, 0.05, 0.85) if locked else Color.WHITE
 	option_node.get_node("Name").text = "New drink" if locked else drink_data.name
-	_set_type_tag(option_node, drink_data.type)
+	_set_type_tag(option_node, drink_data.type, int(drink_data.get("level", 1)))
 	_set_lock(option_node, locked)
 	option_node.set_meta("is_drink", true)
 	option_node.set_meta("drink", drink_data)
@@ -264,23 +264,17 @@ func _update_scroll_marks() -> void:
 # The food's type (what shapes the evolution) instead of its kcal: a little coloured tag,
 # the same colours as the evolution tree (docs/evolution_tree_draft.png)
 # (muted pastels, so they sit with the menu's creams and browns)
-const TYPE_TAGS := {
-	"green": ["Green", Color8(176, 200, 150)], "sweet": ["Sweet", Color8(232, 182, 196)],
-	"greasy": ["Greasy", Color8(222, 186, 144)], "spicy": ["Spicy", Color8(226, 160, 144)],
-	"sour": ["Sour", Color8(226, 214, 150)], "tech": ["Tech", Color8(170, 186, 200)],
-	"cosmic": ["Cosmic", Color8(196, 178, 214)], "legend": ["Rare", Color8(236, 208, 140)],
-	# drinks
-	"watery": ["Watery", Color8(180, 208, 226)], "fizzy": ["Fizzy", Color8(232, 192, 184)],
-	"caffeinated": ["Energy", Color8(206, 186, 164)], "milky": ["Milky", Color8(238, 232, 220)],
-	"fruity": ["Fruity", Color8(240, 200, 160)],
-}
+const TYPE_TAGS := UiArt.TYPE_TAGS
 
 const FRAME_FOOD := preload("res://textures/menus/foodmenulabel_food.png")   # frame without the kcal box
 const TAG_TEX := preload("res://textures/menus/foodtag.png")                   # that box, pale (tools/art/food_tag.py)
 const TAG_AT := Vector2(274, 55)     # where the box goes in the frame's pixels (6 px lower than the old one)
 const TAG_SCALE := 0.84
 
-func _set_type_tag(option_node: Node, family: String) -> void:
+## A food's size (Sho 1 / Chu 2 / Dai 3) or a drink's power, as 1-3 icons on the tag's corner
+const TIER_LEVEL := { "baby": 1, "kid": 2, "adult": 3 }
+
+func _set_type_tag(option_node: Node, family: String, level := 0) -> void:
 	var kcal: Label = option_node.get_node("Kcal")
 	kcal.visible = false
 	var tag: Sprite2D = option_node.get_node_or_null("TypeTag")
@@ -312,6 +306,8 @@ func _set_type_tag(option_node: Node, family: String) -> void:
 	var info: Array = TYPE_TAGS.get(family, [family.capitalize(), Color8(220, 196, 150)])
 	tag.modulate = info[1] * Color(1.06, 1.06, 1.06)   # (the box art is a little under white)
 	option_node.get_node("TypeText").text = info[0]
+	UiArt.place_tier_icons(option_node, tag, family, level)
+
 
 func update_dots(index: int):
 	for i in range(dots.size()):
