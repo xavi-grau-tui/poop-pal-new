@@ -53,7 +53,7 @@ var bonus_page: Node = null
 ## "?" label on it; the info panel shows the price. Hold with enough coins = bought.
 const PRICE_BLINK := Color(0.85, 0.25, 0.2)
 ## the frame's top band: its middle (Main UI coords), where the coins show
-const COIN_BAND_MID := -1233.0
+const COIN_BAND_MID := -1227.0
 const COIN_RIGHT := 1292.0          # its right edge: where it always ended (the panel's right margin)
 var coin_tag: PanelContainer
 var coin_tag_label: Label

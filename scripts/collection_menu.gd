@@ -74,7 +74,7 @@ var legend: MenuLegend
 var detail_legend: Node2D          # pal card controls, in the golden band: (o) back   next >>
 var font: Font
 ## the frame's top band: its middle (Main UI coords), where the coins show
-const COIN_BAND_MID := -1233.0
+const COIN_BAND_MID := -1227.0
 const COIN_RIGHT := 1292.0          # its right edge: where it always ended (the panel's right margin)
 var coin_tag: PanelContainer       # the coins you have (Shop view and its hub card)
 var coin_tag_label: Label
