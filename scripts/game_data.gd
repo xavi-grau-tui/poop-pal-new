@@ -4,7 +4,7 @@ extends Node
 ##
 ## Progression v2 (docs/ideas_roadmap.md, "Progression v2"): every game is worlds of 9 levels;
 ## a level gives 1-3 stars; each NEW star gives 1 coin; coins buy the next games (here, in the
-## Games menu) and foods / key items (Shop). Each game you own makes the next one cost more (GAME_PRICES).
+## Games menu) and foods / key items (Shop). Each game has its own price (GAME_PRICE), all buyable from the start.
 
 signal score_changed(game_index: int)
 signal progress_changed(game_index: int)
@@ -26,12 +26,11 @@ const FIRST_GAME := 2   # Splash Hoops
 
 ## The six launch games, in the Games menu's order (the four others are on hold)
 const LAUNCH_GAMES := [2, 1, 9, 0, 8, 6]
-## The 2nd game is always Tilt Maze (it teaches tilt); after it any locked game can be bought
-const SECOND_GAME := 1
-## What the 2nd .. 6th game costs (tools/design/pacing.py: Tilt Maze in the first minutes, then
-## about a new game a day in the first week for a regular player; doubling from 5 gave all six in
-## the first hour, since each new game's easy first world pays for the next)
-const GAME_PRICES := [5, 40, 60, 90, 135]
+## Every locked launch game can be bought from the start, each at its own price (user, 2026-10-10:
+## no "opens after Tilt Maze" gate). The prices follow the menu's easy -> hard order, so Tilt Maze
+## (5) is the natural 2nd game and the last ones take a while (tools/design/pacing.py: about a new
+## game a day in the first week for a regular player).
+const GAME_PRICE := { 1: 5, 9: 40, 0: 60, 8: 90, 6: 135 }   # Tilt Maze, Paper Sumo, Pipe Dream / RC car, Top Spin, Tummy Tunes
 
 ## Every game: worlds of LEVELS_PER_WORLD levels (one page of its level menu)
 const LEVELS_PER_WORLD := 9
@@ -227,21 +226,19 @@ func owned_launch_games() -> int:
 			n += 1
 	return n
 
-## What the next game costs (GAME_PRICES)
-func game_price() -> int:
-	return GAME_PRICES[clampi(owned_launch_games() - 1, 0, GAME_PRICES.size() - 1)]
+## What a game costs (GAME_PRICE)
+func game_price(game_index: int) -> int:
+	return int(GAME_PRICE.get(game_index, 0))
 
-## A locked launch game that can be bought now (the 2nd is always Tilt Maze)
+## A locked launch game (any of them can be bought, if you have the coins)
 func can_buy_game(game_index: int) -> bool:
-	if game_index not in LAUNCH_GAMES or is_unlocked(game_index):
-		return false
-	return game_index == SECOND_GAME or is_unlocked(SECOND_GAME)
+	return game_index in GAME_PRICE and not is_unlocked(game_index)
 
 ## Buys a game with coins. Returns true if it was bought.
 func buy_game(game_index: int) -> bool:
 	if not can_buy_game(game_index):
 		return false
-	if not spend_coins(game_price()):
+	if not spend_coins(game_price(game_index)):
 		return false
 	games[game_index]["unlocked"] = true
 	save_data()

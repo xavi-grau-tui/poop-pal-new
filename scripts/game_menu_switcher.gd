@@ -194,15 +194,15 @@ func _update_game_card_labels(page_index: int) -> void:
 		if GameData.can_buy_game(index):
 			# the price, and what you have
 			head1.text = "Price"
-			score_label.text = str(GameData.game_price())
+			score_label.text = str(GameData.game_price(index))
 			head2.text = "You have"
 			progress_label.text = str(GameData.coins)
 			_value_coin(score_label, true)
 			_value_coin(progress_label, true)
 		else:
-			head1.text = "Opens after"
+			head1.text = "Coming soon"
 			score_label.text = ""
-			head2.text = "Tilt Maze" if index in GameData.LAUNCH_GAMES else "Coming soon"
+			head2.text = ""
 			progress_label.text = ""
 		return
 	if index in GameData.LEVEL_COUNTS:
@@ -225,7 +225,7 @@ func can_confirm(_sel: Node) -> bool:
 	var index := get_selected_page()
 	if GameData.is_unlocked(index) or index == LuckyPinch.GAME_INDEX:
 		return true
-	if GameData.can_buy_game(index) and GameData.coins >= GameData.game_price():
+	if GameData.can_buy_game(index) and GameData.coins >= GameData.game_price(index):
 		return true
 	_blink_price()
 	return false

@@ -255,6 +255,15 @@ OFFICIAL (user, 2026-10-10): this progression (with round 2 below: food packs pe
 Dai, game prices 5/40/60/90/135, the progressive Shop that grows with the pals' sizes, special
 foods once a Dai exists, legendary once its ULTRA) is THE way to go. Next: the user picks the pals
 (from the v3 sheets) and their moods; then the guide cards.
+GAMES ARE ALL BUYABLE FROM THE START (user, 2026-10-10; no "opens after Tilt Maze": the player
+doesn't know Tilt Maze yet). Each has its own price, in the menu's easy -> hard order: Tilt Maze 5,
+Paper Sumo 40, Pipe Dream / RC car 60, Top Spin 90, Tummy Tunes 135 (GameData.GAME_PRICE). Cards
+still to make say "Coming soon".
+NEXT STEPS (set 2026-10-10): 1) the user picks the pals and their 3 moods each (from the v3 sheets),
+then tests the progression path with them; 2) guide cards G1-G9; 3) Drinks v2; 4) levels for the
+other games (Tilt Maze first); 5) the RC car (Pipe Dream's rework), the Flipper Belly rework (the
+tummy pinball that changes with what the pal ate) and the marble run (place pieces, watch the ball
+roll; the 7th game, later); 6) real saving; 7) the art pass.
 Replaces the 2026-10-09 framework below where they differ (that one is kept for its reasoning).
 
 The loop in one line: games give STARS, every new star gives a COIN, coins open new GAMES and the

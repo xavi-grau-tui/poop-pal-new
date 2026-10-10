@@ -17,7 +17,7 @@ import sys
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 # --- prices (the game's)
-GAME_PRICES = [5, 40, 60, 90, 135]                # 2nd .. 6th game
+GAME_PRICES = [5, 40, 60, 90, 135]                # the games' own prices, cheapest first (players buy in this order)
 PACK_PRICE = {'baby': 10, 'kid': 15, 'adult': 20}  # a food pack, by its size (9 packs: 145)
 START_FOODS = {'baby': ['green', 'sweet', 'greasy'], 'kid': ['green', 'sweet'], 'adult': ['green']}
 DRINK_PRICE = {2: 15, 3: 30}                      # PROPOSED: a drink type's level 2 / level 3
