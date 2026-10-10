@@ -40,10 +40,76 @@ var intro_icon: Texture2D = null
 var intro_card: Control = null
 
 func _ready() -> void:
+	# a game with levels, played before: its level menu first (the first time: straight into level 1)
+	if uses_levels() and GameData.last_level(_game_index()) > 0:
+		is_running = false
+		open_level_menu()
+		return
 	start_game()
 	if intro_text != "" and not GameData.intro_seen(_game_index()):
 		is_running = false
 		_show_intro()
+
+# --- Levels (Progression v2): worlds of 9 levels, a level menu and a result card (LevelMenu) ---
+
+var level_menu: LevelMenu = null
+
+## Override: true for a game with a level menu
+func uses_levels() -> bool:
+	return false
+
+func level_count() -> int:
+	return GameData.LEVEL_COUNTS.get(_game_index(), 0)
+
+## Override: the worlds' names (one per page of 9 levels)
+func world_names() -> Array:
+	return []
+
+## Override: the picture behind the level menu (the game card's pattern)
+func level_pattern() -> Texture2D:
+	return null
+
+## Override: the colour under that pattern
+func level_backdrop() -> Color:
+	return Color8(214, 196, 160)
+
+## Override: build and start level `n` (from score 0)
+func play_level(_n: int) -> void:
+	pass
+
+func level_menu_open() -> bool:
+	return level_menu != null and level_menu.is_open()
+
+func open_level_menu(focus := -1) -> void:
+	is_running = false
+	_ensure_level_menu()
+	level_menu.show_select(focus)
+
+func _ensure_level_menu() -> void:
+	if level_menu:
+		return
+	level_menu = LevelMenu.new()
+	add_child(level_menu)
+	level_menu.setup(self, _game_index(), world_names(), level_count(), level_pattern(), level_backdrop())
+	level_menu.chosen.connect(_on_level_chosen)
+
+func _on_level_chosen(action: String, level: int) -> void:
+	if action == "levels":
+		level_menu.show_select(level)
+		return
+	level_menu.close()
+	play_level(level)
+
+## A level is over: `stars` 1-3 = cleared, 0 = not (time's up...). Records the stars (each new
+## one is a coin) and shows the result card.
+func finish_level(level: int, stars: int) -> void:
+	is_running = false
+	var idx := _game_index()
+	var won := GameData.record_level(idx, level, stars) if stars > 0 else 0
+	GameData.set_last_level(idx, level)
+	game_ended.emit(score)                       # (the game's best score)
+	_ensure_level_menu()
+	level_menu.show_result(level, stars, won)
 
 func _game_index() -> int:
 	var gs = get_node_or_null("/root/PoopPal/Main UI/GameScreen")
@@ -542,6 +608,9 @@ func hide_coach() -> void:
 # --- Input hooks (called by main_button / forward_button) ---
 
 func on_main_button_pressed() -> void:
+	if level_menu_open():
+		level_menu.press()
+		return
 	if is_game_over:
 		if game_over_selection == 0:
 			# Restart
@@ -561,9 +630,13 @@ func on_main_button_pressed() -> void:
 				menu_mgr.exit_game_screen()
 
 func on_main_button_released() -> void:
-	pass
+	if level_menu_open():
+		level_menu.release()
 
 func on_forward_button_pressed() -> void:
+	if level_menu_open():
+		level_menu.forward()
+		return
 	if is_game_over:
 		# Toggle between Restart and Exit
 		game_over_selection = 1 - game_over_selection

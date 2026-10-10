@@ -17,16 +17,19 @@ const RESET_EQUIPPED_ON_LAUNCH := true
 ## Prototype: every launch forgets earned unlocks (so the unlock flow can be tried again)
 const RESET_UNLOCKS_ON_LAUNCH := true
 
-## Rewards earned in minigames: reaching `score` in one round of `game` unlocks the item.
+## Rewards earned in minigames: each game's GIFT TRACK (Progression v2: cosmetics are gifts for
+## playing, never sold). `stars` = that game's star total reaches it; `levels` = levels cleared in
+## one run (Tilt Maze, until it has a level menu too); `score` = one round's score.
 ## (game = Games menu page index: 0 Pipe Dream, 1 Tilt Maze, 2 Splash Hoops, 3 Pal Dash, 4 Tile Break, 5 Germ Zap)
+## (Splash Hoops carries the items that were Pipe Dream's score rewards; every game gets its own
+## themed set in the art pass)
 const REWARDS := [
-	# Pipe Dream is the first path: backgrounds, then gut decor, then dress-up
-	{ "game": 0, "score": 5, "category": "backgrounds", "id": "tp_rolls" },
-	{ "game": 0, "score": 10, "category": "decor", "id": "fairy_lights" },
-	{ "game": 0, "score": 15, "category": "accessories", "id": "sunglasses" },
-	{ "game": 0, "score": 20, "category": "decor", "id": "purple_gut" },
-	{ "game": 0, "score": 30, "category": "backgrounds", "id": "pastel_yellow" },
-	# Tilt Maze: levels cleared in one run (the unlock path gets reworked later)
+	{ "game": 2, "stars": 5, "category": "backgrounds", "id": "tp_rolls" },
+	{ "game": 2, "stars": 15, "category": "decor", "id": "fairy_lights" },
+	{ "game": 2, "stars": 30, "category": "accessories", "id": "sunglasses" },
+	{ "game": 2, "stars": 60, "category": "decor", "id": "purple_gut" },
+	{ "game": 2, "stars": 100, "category": "backgrounds", "id": "pastel_yellow" },
+	# Tilt Maze: levels cleared in one run (until it gets its level menu)
 	{ "game": 1, "levels": 2, "category": "accessories", "id": "round_glasses" },
 ]
 
@@ -47,7 +50,7 @@ const BACKGROUNDS := {
 		"kind": "complement",
 		"layers": ["res://textures/pet-background/tprolls_far.png", "res://textures/pet-background/tprolls_near.png"],
 		"unlocked": false,
-		"unlock": "Pipe Dream: 5 pts",
+		"unlock": "Splash Hoops: 5 stars",
 	},
 	# "?" slots: items still to come (nothing unlocks them yet). A list shows one page more
 	# each time its current last page is fully unlocked.
@@ -59,7 +62,7 @@ const BACKGROUNDS := {
 		"unlock": "Lucky Pinch",
 	},
 	"pink": { "name": "Pink", "kind": "color", "hue": 0.0, "layers": [], "unlocked": true, "unlock": "" },
-	"pastel_yellow": { "name": "Yellow", "kind": "color", "hue": 0.145, "layers": [], "unlocked": false, "unlock": "Pipe Dream: 30 pts" },
+	"pastel_yellow": { "name": "Yellow", "kind": "color", "hue": 0.145, "layers": [], "unlocked": false, "unlock": "Splash Hoops: 100 stars" },
 	"lilac": { "name": "Lilac", "kind": "color", "hue": -0.12, "layers": [], "unlocked": false, "unlock": "Lucky Pinch" },
 	"mystery_3": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 	"mystery_4": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
@@ -70,7 +73,7 @@ const BACKGROUND_ORDER := ["clouds", "pink", "tp_rolls", "pastel_yellow", "bubbl
 ## drawn on the form's own canvas (see tools/art/accessories.py).
 const ACCESSORIES := {
 	"none": { "name": "Nothing", "dir": "", "unlocked": true, "unlock": "" },
-	"sunglasses": { "name": "Sunglasses", "dir": "res://textures/pet/accessories/sunglasses/", "unlocked": false, "unlock": "Pipe Dream: 15 pts" },
+	"sunglasses": { "name": "Sunglasses", "dir": "res://textures/pet/accessories/sunglasses/", "unlocked": false, "unlock": "Splash Hoops: 30 stars" },
 	"scarf": { "name": "Scarf", "dir": "res://textures/pet/accessories/scarf/", "unlocked": false, "unlock": "Lucky Pinch" },
 	"headphones": { "name": "Headphones", "dir": "res://textures/pet/accessories/headphones/", "unlocked": false, "unlock": "Lucky Pinch" },
 	"round_glasses": { "name": "Round Glasses", "dir": "res://textures/pet/accessories/round_glasses/", "unlocked": false, "unlock": "Tilt Maze: 2 levels" },
@@ -83,8 +86,8 @@ const ACCESSORY_ORDER := ["none", "sunglasses", "round_glasses", "scarf", "headp
 ## the whole gut). "Nothing" takes both off.
 const DECOR := {
 	"none": { "name": "Nothing", "kind": "", "frames": [], "unlocked": true, "unlock": "" },
-	"fairy_lights": { "name": "Fairy Lights", "kind": "complement", "frames": ["res://textures/pet/decor/fairy_lights-1.png", "res://textures/pet/decor/fairy_lights-2.png"], "unlocked": false, "unlock": "Pipe Dream: 10 pts" },
-	"purple_gut": { "name": "Purple Gut", "kind": "color", "hue": -0.235, "frames": [], "unlocked": false, "unlock": "Pipe Dream: 20 pts" },
+	"fairy_lights": { "name": "Fairy Lights", "kind": "complement", "frames": ["res://textures/pet/decor/fairy_lights-1.png", "res://textures/pet/decor/fairy_lights-2.png"], "unlocked": false, "unlock": "Splash Hoops: 15 stars" },
+	"purple_gut": { "name": "Purple Gut", "kind": "color", "hue": -0.235, "frames": [], "unlocked": false, "unlock": "Splash Hoops: 60 stars" },
 	"bunting": { "name": "Bunting", "kind": "complement", "frames": ["res://textures/pet/decor/bunting-1.png", "res://textures/pet/decor/bunting-2.png"], "unlocked": false, "unlock": "Lucky Pinch" },
 	"golden_gut": { "name": "Golden Gut", "kind": "color", "hue": 0.13, "frames": [], "unlocked": false, "unlock": "Lucky Pinch" },
 	"mint_gut": { "name": "Mint Gut", "kind": "color", "hue": 0.44, "frames": [], "unlocked": false, "unlock": "Lucky Pinch" },
@@ -148,6 +151,12 @@ func unlock(category: String, id: String) -> void:
 func report_game_score(game: int, score: int) -> void:
 	for r in REWARDS:
 		if r["game"] == game and r.has("score") and score >= r["score"] and not is_owned(r["category"], r["id"]):
+			unlock(r["category"], r["id"])
+
+## A game's star total changed (GameData.record_level): its gift track
+func report_game_stars(game: int, stars: int) -> void:
+	for r in REWARDS:
+		if r["game"] == game and r.has("stars") and stars >= r["stars"] and not is_owned(r["category"], r["id"]):
 			unlock(r["category"], r["id"])
 
 ## Level-based rewards (Tilt Maze): `levels` = levels cleared in this run

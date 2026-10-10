@@ -40,8 +40,20 @@ Quick wins (S)
 4. Paper Sumo: the rival flashes while it's mid-hop (when FORWARD = SHAKE works best).
 5. Tune both prototypes from phone feedback (tilt directions, damage, bout / match length).
 
+Progression v2 (branch `rearrange`, 2026-10-10): BUILT the level menu + stars + result card
+(Splash Hoops' 45 levels), coins per new star, games bought in the Games menu (shutter cards,
+doubling prices), the Shop (adult foods, Spicy / Sour, special foods in a pantry), foods that
+grow up with the pal (30 foods), Splash Hoops' gift track, the pufferfish leaving and coming back.
+What follows from it:
+- (M each) The other launch games onto levels: Tilt Maze first (its worlds, then the fence
+  vaults), then Paper Sumo, Pipe Dream, Top Spin, Tummy Tunes: a LEVELS table, a star rule and
+  uses_levels() each (BaseMinigame + LevelMenu do the rest).
+- (S) The coin / Shop onboarding cards (listed in Progression v2).
+- (S) Tune Splash Hoops' star marks (STAR_2 / STAR_3) and level times on the phone.
+- (M) Stickers (the Shop's cosmetic, the device's back) and the food reroll.
+
 Medium (M)
-6. Tilt Maze: level select + saving the levels reached, then the first Splash vaults (2-3 levels).
+6. Tilt Maze: its level menu (the shared LevelMenu) + worlds, then the first fence vaults.
 7. Pal traits from data (family = trait, stage = size), used by Tilt Maze, Top Spin, Paper Sumo.
 8. The other drink boosts (Fizz, Focus, Sturdy, Lucky) in the games, per the boost table.
 8b. (S-M, decided 2026-10-10) Water in Splash Hoops (+10 s once per run, wave + "+10" from the
@@ -56,9 +68,10 @@ Big (L)
     progress, care, tracking and unlocks.
 13. Care consequences (grumpy → sick → back one stage) + daily streaks + notifications.
     Needs: 12.
-14. One progression shape for every game: worlds, 3 stars per level, saved progress, unlocks by
-    total stars. Needs: 12.
-15. Foods that grow up with the pal + the reroll item + the luck safety net.
+14. One progression shape for every game: worlds, 3 stars per level, saved progress. STARTED on
+    `rearrange` (Splash Hoops; see Progression v2). Needs: 12 for real saving.
+15. Foods that grow up with the pal: BUILT on `rearrange`. Left: the reroll item + the luck
+    safety net.
 16. Evolution guidance, layer 3: track a pal from the Pal Pedia. Needs: 1.
 17. Tummy Tunes as a toy xylophone; Pipe Dream reworked as a circuit race.
 18. Pal art pass (own silhouettes and personalities per stage and branch).
@@ -185,6 +198,107 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   6. Each new thing explained only when it opens: the first drink ("Drinks give your pal a boost in
      the next game"), the shop at its unlock ("The shop is open! Trade your [token] for treats and
      stickers", with tokens already earned), each new game, each new food type.
+
+## Progression v2: stars, coins, pals (2026-10-10, built on branch `rearrange`)
+Replaces the 2026-10-09 framework below where they differ (that one is kept for its reasoning).
+
+The loop in one line: games give STARS, every new star gives a COIN, coins open new GAMES and the
+FOODS the pal needs to grow, and the PALS (found by feeding, at the pace of real meals) are the
+long goal. Cosmetics come as gifts for playing, never for sale.
+
+Three things, three jobs (nothing else to learn):
+| What               | Earned by                                  | Used for                                         |
+|--------------------|--------------------------------------------|--------------------------------------------------|
+| Stars (1-3/level)  | playing a level well                       | coins (the first time) · each game's gift track |
+| Coins              | each NEW star = 1 coin (+ small daily ones) | games (Games menu) · foods, key items (Shop)     |
+| Pals               | feeding (a meal every 30 min)              | the Pal Pedia: the goal that lasts months        |
+The LCD score stays as bragging only.
+
+Pacing, why it holds together: a pal needs 3 meals to be an adult (= 1 h of real time at least), so
+the 75 adults alone take ~110 h of meals: the pals are the slow spine (weeks to months). Games are
+what you do between meals (minutes). Coins are the bridge: what you earn in a session decides what
+your pal can grow into at the next meal.
+
+Levels (every game, same shape: learn it once)
+- Worlds of 9 levels = one page of the game's level menu (3 x 3, like the Pal Pedia: press = next
+  level, hold = play, forward = next world). Launch: 5 worlds = 45 levels per game (6 games = 270
+  levels, 810 stars, ~12-18 h to 3-star everything); updates add one world (9 levels) at a time.
+  Not 100 at launch: every level has to be tuned and feel different; a grid that never ends feels
+  impossible (the same reason the pals stay at ~120).
+- Clear a level (1 star) = the next one opens; the 9th opens the next world. No star gates (a
+  level you can't 3-star never blocks you; stars pay in coins and gifts instead).
+- First time in a game: straight into level 1 (with its how-to card). After that the game opens
+  on its level menu, on the first level still missing stars.
+- After a level: the stars fill in one by one, new stars fly into the coin counter: NEXT / RETRY /
+  LEVELS. Time's up: RETRY / LEVELS.
+- 1 star = clear it, 2 = clear it well, 3 = clear it great; each game measures its own way (time
+  left, no fall, perfect timing). The HUD shows the three stars and each one dims the moment it's
+  lost, so you always see what you're playing for.
+
+Coins: about 1000 over a whole playthrough
+- +1 coin for each NEW star: 810 at launch. Replaying a level gives no coins once its stars are
+  taken: no grind, ever.
+- Small renewable ones (later): the pal's daily request (+3), Lucky Pinch coin capsules (once its
+  items run out), a bonus for the first time a world is finished. Over months: ~1000.
+
+Prices: about 1000 to buy everything
+- GAMES, bought in the Games menu (hold the locked card): each one costs double the last:
+  5, 10, 20, 40, 80 (155 in all). The 2nd is always Tilt Maze (it teaches tilt); after it any
+  locked card can be bought, at the current price (the menu order is only a suggestion).
+- SHOP, the gear menu's new card:
+  - Food types: Spicy 30, Sour 30 (their baby and kid foods).
+  - Adult foods, per type (both adult foods of that type): 20 for the first you buy, then 30, 40,
+    50, 60 (200 in all).
+  - Special foods (key items, each one = one meal, kept in a pantry): Microchip / Battery (tech)
+    15, Alien Goo / Moon Rock (cosmic) 15, each legendary food 40. A full Pal Pedia needs 15 of
+    them (~350); some come free from Tilt Maze vaults and daily requests.
+  - Later: stickers for the device's back (10-30 each; some only from levels, milestones and
+    Lucky Pinch), food rerolls (3), cases.
+  - In all: 155 + 60 + 200 + ~300 + ~300 = ~1000, so a completionist ends with everything.
+
+When things arrive (a typical player; tune on the phone)
+- 0-10 min: Splash Hoops 1-1 to 1-4 (~6 coins) → Tilt Maze (5).
+- 30 min: the pal is a kid → it needs adult foods to grow up → the first adult foods (20) at ~1 h.
+- 1-2 h: the 3rd game (10), the 4th (20), Spicy (30).
+- 2-5 h: Sour, more adult foods, the 5th game (40), the first Microchip.
+- 5-10 h: the 6th game (80), the rest of the adult foods, special foods for mutants and legends.
+- After: special foods, stickers, the last stars, the Pal Pedia (weeks).
+
+Foods and the pal's growth (the 30 foods: docs/mockups/food_drafts/)
+- A pal grows only by eating food of its next size: baby foods hatch a pal, kid foods grow a baby
+  into a kid, adult foods grow a kid into an adult. The food menu shows the size the pal needs.
+- At the start: Green, Sweet and Greasy, with their baby and kid foods. Spicy and Sour, and every
+  type's adult foods, come from the Shop.
+- A kid looking at a type whose adult foods you don't have yet: that card is locked ("?" + Shop);
+  holding it blinks the gear button (where the Shop is). The pal waits, nothing is lost.
+- Special foods page: the ones in your pantry (with how many), the rest "?". Only an adult can
+  eat them (tech / cosmic = its family's mutant; legendary = only its own ULTRA adult); anyone
+  else is refused softly, so a key item is never wasted.
+
+Cosmetics: gifts for playing (DECIDED with the user's question, 2026-10-10)
+- Backgrounds, dress-up pieces and gut decor are never sold. They come from: each game's GIFT
+  TRACK (its own themed set at star milestones, e.g. 5, 15, 30, 60, 100 stars), Lucky Pinch
+  (its exclusives), and Pal Pedia milestones (every 10 pals found). Why: a surprise gift feels
+  generous (the ITEM UNLOCKED! moment); coins stay for decisions that change what you can DO; a
+  shop full of price tags feels commercial; and every game gets a visible reason to go for 3 stars.
+- First version: Splash Hoops' track carries the existing items (Pipe Dream's old score rewards
+  move there); each game gets its own themed set in the art pass.
+
+Locked game cards (Games menu)
+- The card's picture is behind the food menu's roll-down shutter, with a small "?" label on it
+  (the "?" logo on the "?" looping pattern). The info panel shows the price: a coin and the number.
+  Hold it with enough coins: the coins count down, the shutter rolls up, GAME UNLOCKED! Not enough:
+  a soft buzz and the price blinks. Cards that can't be bought yet (before Tilt Maze) show a lock
+  instead of a price.
+- Bought games show "Stars 12/135 · Levels 4/45" instead of best score / progress.
+- The coin balance shows in the Games menu and in the Shop (and in every game's HUD).
+
+Onboarding to add with it: first coin ("Stars give coins!"), first time enough coins for a game
+(the Games button blinks: "A new game is ready to open"), the first kid ("Your pal needs adult
+food to grow up: get it in the Shop", the gear button blinks), the Shop's first opening.
+
+Testing (rearrange branch): GameData.DEBUG_UNLOCKED now only holds the 4 games on hold, so the 6
+launch games are bought with coins; the dev launcher has a STRAIGHT TO GAMES + 999 COINS button.
 
 ## Progression framework (PROPOSED 2026-10-09, to confirm)
 - Goal: a player progresses whatever games they prefer and in whatever order; no game is required.
@@ -447,18 +561,28 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
 - The pal dives along: its own sprite, small, with a diving mask and a snorkel. It drifts with
   the water and the tilt, is too wide for the baskets (it rests on top, tilt or pump it off),
   never scores, and scares the pufferfish.
-- Five stages in a loop: classic · upside-down triangle (6 baskets) · drifting (each basket its
+- Five basket layouts: classic · upside-down triangle (6 baskets) · drifting (each basket its
   own way) · round and round (one in the centre, two circling it, two on the sides going up and
-  down) · the wheel (5 on a turning wheel). Each lap: baskets 35% faster, 8 s less (min 36 s).
-  All checked reachable with a random-press bot, no tilt (tests deleted; easy to redo). Random-bot
-  clear time: classic ~35 s, triangle ~51 s. Right above a pump balls hardly ever come down from
-  high up, so high baskets go out over the side walls instead (the triangle's top corners).
-- Pufferfish from stage 3: swims back and forth, swallows balls near its mouth (3 at most); bump
-  it with the pal and it puffs up, spits them back out and darts off for 8 s.
-- Coins (first version): 1 coin per stage cleared for the first time (GameData.clear_stage);
-  5 coins buy the next locked game in the menu order on their own (LCD: GAME UNLOCKED!). Replaces
-  the old "50% of Splash Hoops unlocks Tilt Maze". Later: a shop to spend them, and the same
-  coins from every game's stages; decide how coins and stars fit together.
+  down) · the wheel (5 on a turning wheel). All checked reachable with a random-press bot, no tilt
+  (tests deleted; easy to redo). Random-bot clear time: classic ~35 s, triangle ~51 s. Right above
+  a pump balls hardly ever come down from high up, so high baskets go out over the side walls
+  instead (the triangle's top corners).
+- LEVELS (rearrange branch, 2026-10-10; Progression v2): 45 levels in 5 worlds of 9, a table in
+  splash_hoops.gd (LEVELS: layout, which baskets, still / sway, speed, seconds, pufferfish):
+  1 Still Water (two 100s only, then the 200s, then the 300 with both pumps, the triangle, a
+  gentle sway at the end) · 2 Drift · 3 Pufferfish · 4 Round and Round · 5 Storm (everything
+  faster). Stars by the time left at the last basket: 2 stars with 20% left, 3 with 45% (STAR_2 /
+  STAR_3, to tune on the phone); three stars right of the clock, each dims the moment it's lost.
+  First time: straight into 1-1; after that the game opens on its level menu (LevelMenu: 3 x 3,
+  press = next, hold = play, forward = next world; locked levels show a padlock). After a level:
+  the result card (stars fill in, "+N coins") with NEXT / RETRY / LEVELS (forward = change, main
+  = OK); time's up: RETRY / LEVELS.
+- Pufferfish (worlds 3-5): swims across, OUT of the far side, and after a short pause (1.2-2.6 s)
+  comes back the other way at a new depth (it used to turn round on the spot at the wall);
+  swallows balls near its mouth (3 at most); bump it with the pal and it puffs up, spits them back
+  out and darts off for 8 s (then comes back from the side it fled to).
+- Coins: each new star is a coin (GameData.record_level); games are bought in the Games menu
+  (see Progression v2). Its gift track: Splash Hoops' star milestones (Collection.REWARDS).
 - Water boost (DECIDED 2026-10-10, to implement): water = "Splash", a second chance. The first
   time the clock hits 0 in a run, a wave washes over the tank and gives +10 s to finish the stage
   (once per run). Water is the ONLY drink type on offer at the start (Water → Barley tea →
@@ -467,8 +591,7 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   of it and the clock refills with a splash sound; the first time ever, a short card says so
   (onboarding, first drink step c). Rejected alternative: pumps never run dry (bends water's
   "second chance" meaning). Fizzy here = stronger jets (boost table), so the 2nd drink helps both.
-- Ideas: more stages (a basket riding the pufferfish? a current that pushes sideways), stage
-  select once there are stars.
+- Ideas: more layouts (a basket riding the pufferfish? a current that pushes sideways).
 
 ## Tummy Tunes (the music game)
 - Each WORLD a different toy instrument (2026-10-10): a toy xylophone, then a toy piano, then a toy

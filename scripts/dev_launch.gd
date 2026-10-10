@@ -8,6 +8,7 @@ class_name DevLaunch
 ##   FULL BOOT          the real start: unboxing, logo, welcome, as in the final game
 ##   STRAIGHT TO GAMES  no unboxing or boot; the pal is already the sour baby (Picklet) and the
 ##                      Games menu opens by itself
+##   ... + 999 COINS    the same, with 999 coins to try buying games and Shop items
 ## The last choice is remembered and shown highlighted.
 
 const MAIN_SCENE := "res://scenes/main.tscn"
@@ -34,8 +35,9 @@ func _ready() -> void:
 	title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
 	add_child(title)
 	var last := _last_choice()
-	_button("FULL BOOT", "unboxing + boot", 720, last == "full", _full)
-	_button("STRAIGHT TO GAMES", "Picklet, Games menu", 1000, last == "games", _games)
+	_button("FULL BOOT", "unboxing + boot", 680, last == "full", _full)
+	_button("STRAIGHT TO GAMES", "Picklet, Games menu", 930, last == "games", _games)
+	_button("GAMES + 999 COINS", "to try the Shop and buying games", 1180, last == "rich", _rich)
 
 func _button(text: String, sub: String, y: float, highlighted: bool, action: Callable) -> void:
 	var font = load("res://fonts/pixChicago.ttf")
@@ -63,8 +65,12 @@ func _full() -> void:
 	skip_boot = false
 	get_tree().change_scene_to_file(MAIN_SCENE)
 
-func _games() -> void:
-	_save_choice("games")
+func _rich() -> void:
+	GameData.add_coins(999 - GameData.coins)
+	_games("rich")
+
+func _games(choice := "games") -> void:
+	_save_choice(choice)
 	skip_boot = true
 	# the pal is already there (as if its first meal was a sour one), before the scene loads
 	if not PetState.has_poop():

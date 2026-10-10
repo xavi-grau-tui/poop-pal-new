@@ -2,8 +2,11 @@ extends BaseMinigame
 ## Splash Hoops — the classic water toy. Two pumps at the bottom of a water tank blow jets
 ## of bubbles; drop a ball into every basket before the timer runs out. A ball that lands
 ## in a basket lights it up and falls through, and the floor slopes down to the pumps, so
-## every ball always rolls back next to a pump. Five stages of baskets in a loop (STAGES), a
-## pufferfish from stage 3, a coin for each stage cleared the first time.
+## every ball always rolls back next to a pump.
+##
+## Levels (Progression v2): 45 levels in 5 worlds of 9 (LEVELS), picked in the level menu
+## (BaseMinigame / LevelMenu). Stars by the time left when the last basket is filled (STAR_2,
+## STAR_3): the HUD shows them and each one dims the moment it's lost. Each new star = a coin.
 ##
 ## Main button: LEFT pump. Forward button: RIGHT pump. Both work the same way:
 ## hold to keep pumping (a pump runs dry after a moment), release to stop.
@@ -77,14 +80,51 @@ const STAGE_TITLES := {
 	"classic": "Pump the water!", "triangle": "Upside down!", "drift": "Drifting!",
 	"orbit": "Round and round!", "wheel": "The wheel!",
 }
-const LAP_SPEED := 0.35                 # each lap: baskets this much faster...
-const LAP_TIME := 8.0                   # ...and this many seconds less (down to MIN_TIME)
-const MIN_TIME := 36.0
+## The 45 levels: [layout (STAGES), the classic slots used (null = all), basket motion
+## ("still" / "sway"; drift, orbit and wheel always move), speed, seconds, pufferfish]
+## World 1 Still Water: the pumps, one by one (two 100s, then the 200s, then the 300 with both
+## pumps), then a gentle sway · 2 Drift · 3 Pufferfish · 4 Round and Round · 5 Storm.
+const WORLDS := ["Still Water", "Drift", "Pufferfish", "Round and Round", "Storm"]
+const LEVELS := [
+	["classic", [3, 4], "still", 1.0, 30, false], ["classic", [0, 2, 3, 4], "still", 1.0, 45, false],
+	["classic", null, "still", 1.0, 60, false], ["triangle", null, "still", 1.0, 70, false],
+	["classic", null, "still", 1.0, 50, false], ["triangle", null, "still", 1.0, 60, false],
+	["classic", null, "sway", 0.7, 60, false], ["triangle", null, "sway", 0.7, 70, false],
+	["classic", null, "sway", 1.0, 50, false],
+	# 2 Drift
+	["drift", null, "", 0.7, 60, false], ["drift", [0, 2, 3, 4], "", 0.8, 50, false],
+	["drift", null, "", 1.0, 60, false], ["triangle", null, "sway", 1.0, 65, false],
+	["drift", null, "", 1.0, 55, false], ["classic", null, "sway", 1.3, 55, false],
+	["drift", null, "", 1.3, 60, false], ["triangle", null, "sway", 1.3, 65, false],
+	["drift", null, "", 1.5, 55, false],
+	# 3 Pufferfish
+	["classic", null, "still", 1.0, 60, true], ["classic", [0, 2, 3, 4], "still", 1.0, 50, true],
+	["triangle", null, "still", 1.0, 70, true], ["drift", null, "", 0.8, 60, true],
+	["classic", null, "sway", 1.0, 55, true], ["triangle", null, "sway", 1.0, 65, true],
+	["drift", null, "", 1.1, 60, true], ["classic", null, "sway", 1.3, 55, true],
+	["drift", null, "", 1.3, 55, true],
+	# 4 Round and Round
+	["orbit", null, "", 0.8, 60, false], ["wheel", null, "", 0.8, 60, false],
+	["orbit", null, "", 1.0, 60, false], ["wheel", null, "", 1.0, 60, false],
+	["orbit", null, "", 1.0, 60, true], ["wheel", null, "", 1.2, 55, false],
+	["orbit", null, "", 1.3, 55, false], ["wheel", null, "", 1.3, 55, true],
+	["orbit", null, "", 1.5, 55, true],
+	# 5 Storm
+	["classic", null, "sway", 1.6, 50, false], ["drift", null, "", 1.6, 50, false],
+	["triangle", null, "sway", 1.6, 55, false], ["orbit", null, "", 1.6, 50, false],
+	["wheel", null, "", 1.6, 50, false], ["drift", null, "", 1.8, 50, true],
+	["orbit", null, "", 1.8, 50, true], ["wheel", null, "", 1.8, 50, true],
+	["triangle", null, "sway", 2.0, 55, true],
+]
+## Stars: 1 = cleared, 2 = with at least STAR_2 of the time left, 3 = with STAR_3 (tune on the phone)
+const STAR_2 := 0.2
+const STAR_3 := 0.45
 
-## The pufferfish (from stage PUFFER_FROM): swims back and forth and swallows balls that come near
-## its mouth (PUFFER_MAX_EAT at most, so a few always stay). Bump it with the diving pal and it
-## puffs up, spits them all back out and darts off for a while.
-const PUFFER_FROM := 3
+## The pufferfish (the levels marked for it): swims across the tank, out of the far side and, after a
+## short pause, back the other way (it never turns round on the spot), swallowing balls that come
+## near its mouth (PUFFER_MAX_EAT at most, so a few always stay). Bump it with the diving pal and
+## it puffs up, spits them all back out and darts off for a while.
+const PUFFER_FROM := 19                 # (the first level with the pufferfish: world 3's first)
 const PUFFER_R := 30.0
 const PUFFER_S := 6.0                   # its pixels: twice the game's (a chunkier look)
 const PUFFER_MAX_EAT := 3
@@ -92,6 +132,9 @@ const PUFFER_SPEED := 70.0
 const PUFFER_FLEE := 420.0
 const PUFFER_AWAY := 8.0                # seconds gone after a fright
 const PUFFER_FIRST := 3.0               # seconds into a stage before it swims in
+const PUFFER_OFF := 70.0                # how far past the screen's edge it swims before turning back
+const PUFFER_BACK_MIN := 1.2            # seconds off screen before it comes back the other way
+const PUFFER_BACK_MAX := 2.6
 
 const BALL_COLORS := ["pink", "yellow", "mint"]
 const OUTLINE := Color8(74, 44, 32)
@@ -111,7 +154,8 @@ var cups: Array[Dictionary] = []        # { pos, home, rim, full, points, net, r
 var bubbles: Array[Dictionary] = []
 var puffer := {}                        # { node, pos, dir, state: off/away/swim/flee, eaten, timer, base_y, phase }
 var coin_label: Label
-var _bought := false                    # a game was just bought with coins (for the clear banner)
+var hud_stars: Array[TextureRect] = []  # the three stars still possible (dim as the clock passes them)
+var _stars_left := 3
 
 var tex := {}
 var lcd_font: Font
@@ -149,15 +193,39 @@ func _ready() -> void:
 	tex["puffer"] = SplashArt.puffer(false)
 	tex["puffer_puffed"] = SplashArt.puffer(true)
 	tex["coin"] = SplashArt.coin()
-	GameData.game_unlocked.connect(_on_game_unlocked)
+	GameData.coins_changed.connect(func(_c): _refresh_coins())
 	_create_static_nodes()
 	super._ready()
+
+# --- the level menu (BaseMinigame) ---
+
+func uses_levels() -> bool:
+	return true
+
+func world_names() -> Array:
+	return WORLDS
+
+func level_count() -> int:
+	return LEVELS.size()
+
+func level_pattern() -> Texture2D:
+	return load("res://textures/menus/pattern_drop_sage.png")
+
+func level_backdrop() -> Color:
+	return Color8(150, 182, 168)              # (sage water, under the drops)
 
 func start_game() -> void:
 	super.start_game()
 	level = 1
 	_build_level()
 	_show_banner(STAGE_TITLES[_stage()], 1.6)
+
+## Chosen in the level menu (or NEXT / RETRY on the result card)
+func play_level(n: int) -> void:
+	super.start_game()                        # (score from 0, running)
+	level = clampi(n, 1, LEVELS.size())
+	_build_level()
+	_show_banner(STAGE_TITLES[_stage()], 1.4)
 
 # ================================================================== LEVEL
 
@@ -194,45 +262,61 @@ func _build_level() -> void:
 		diver["pos"] = Vector2(CENTER_X, 640)
 		diver["vel"] = Vector2.ZERO
 	calibrate_tilt()                                 # (however the phone is held now = level)
-	hud_level.text = "LV %d" % level
+	var per := GameData.LEVELS_PER_WORLD
+	hud_level.text = "%d-%d" % [(level - 1) / per + 1, (level - 1) % per + 1]
+	_stars_left = 3
+	for s in hud_stars:
+		s.texture = UiArt.star(true)
+		s.modulate = Color.WHITE
 	state = State.PLAY
 
-## This level's stage, and how many laps round the five stages have been done
-func _stage() -> String:
-	return STAGES[(level - 1) % STAGES.size()]
+## This level's row in LEVELS
+func _spec() -> Array:
+	return LEVELS[clampi(level - 1, 0, LEVELS.size() - 1)]
 
-func _lap() -> int:
-	return (level - 1) / STAGES.size()
+## This level's basket layout
+func _stage() -> String:
+	return _spec()[0]
 
 func _speed() -> float:
-	return 1.0 + LAP_SPEED * _lap()
+	return float(_spec()[3])
 
 func _level_time() -> float:
-	return maxf(LEVEL_TIME - LAP_TIME * _lap(), MIN_TIME)
+	return float(_spec()[4])
+
+func _has_puffer() -> bool:
+	return bool(_spec()[5])
+
+## Stars for the time left right now (3, 2 or 1)
+func _stars_now() -> int:
+	var f := time_left / _level_time()
+	return 3 if f >= STAR_3 else (2 if f >= STAR_2 else 1)
 
 ## The baskets for this stage. Each one: points, and how it moves:
 ##   still: home · sway: home + dir * sin(phase) * amp · orbit: centre + radius at angle phase
 ## (phase grows by speed per second)
 func _place_cups() -> void:
 	var specs: Array = []
+	var slots: Array = _spec()[1] if _spec()[1] != null else range(CUP_SLOTS.size())
+	var still: bool = _spec()[2] == "still"
 	match _stage():
 		"classic":
-			for i in CUP_SLOTS.size():
-				# from the second lap they sway a little (staying out of the jets)
-				specs.append({ "home": CUP_SLOTS[i], "points": CUP_POINTS[i], "mode": "sway" if _lap() > 0 else "still",
+			for i in slots:
+				# swaying a little (staying out of the jets), or still
+				specs.append({ "home": CUP_SLOTS[i], "points": CUP_POINTS[i], "mode": "still" if still else "sway",
 					"dir": Vector2.RIGHT, "amp": 24.0, "speed": 0.8, "phase": i * 1.3 })
 		"triangle":
 			# (the top corners out over the side walls: right above a pump a ball hardly ever
 			# comes down from high enough, out at the sides the pumps' throws land easily)
 			for p in [[Vector2(140, 450), 300], [Vector2(475, 390), 300], [Vector2(810, 450), 300],
 					[Vector2(325, 490), 200], [Vector2(625, 490), 200], [Vector2(475, 585), 100]]:
-				specs.append({ "home": p[0], "points": p[1], "mode": "still" if _lap() == 0 else "sway",
+				specs.append({ "home": p[0], "points": p[1], "mode": "still" if still else "sway",
 					"dir": Vector2.RIGHT, "amp": 16.0, "speed": 0.9, "phase": p[0].x * 0.01 })
 		"drift":
 			var dirs := [Vector2(1, 0), Vector2(0, 1), Vector2(-1, 0), Vector2(0.7, -0.7), Vector2(0, 1)]
 			var amps := [60.0, 50.0, 60.0, 50.0, 50.0]
 			var speeds := [0.7, 0.9, 0.8, 0.6, 1.0]
-			for i in CUP_SLOTS.size():
+			for i in slots:
 				specs.append({ "home": CUP_SLOTS[i], "points": CUP_POINTS[i], "mode": "sway",
 					"dir": dirs[i], "amp": amps[i], "speed": speeds[i], "phase": i * 1.7 })
 		"orbit":
@@ -292,10 +376,11 @@ func _process(delta: float) -> void:
 	_update_bubbles(delta)
 	if state == State.PLAY:
 		time_left -= delta
+		_update_hud_stars()
 		if time_left <= 0.0:
 			time_left = 0.0
 			_refresh_hud()
-			end_game()
+			_time_up()
 			return
 		_update_puffer(delta)
 		# the baskets move in the same small steps as the balls (a basket rising past a ball in
@@ -499,48 +584,46 @@ func _fill_cup(_b: Dictionary, c: Dictionary) -> void:
 
 func _level_clear() -> void:
 	state = State.CLEAR
+	var stars := _stars_now()
 	var bonus := int(time_left) * 5
 	if bonus > 0:
 		add_score(bonus)
-	_show_banner("Clear! +%d" % bonus, 1.4)
-	# the first time this stage is cleared: a coin (and 5 coins buy the next game)
-	_bought = false
-	if GameData.clear_stage(_game_index(), level):
-		_coin_pop()
-	await get_tree().create_timer(1.8).timeout
+	_show_banner("Clear! +%d" % bonus, 1.1)
+	await get_tree().create_timer(1.3).timeout
 	if not is_running:
 		return
-	if _bought:
-		_show_banner("New game!", 1.2)
-		await get_tree().create_timer(1.6).timeout
-		if not is_running:
-			return
-	level += 1
-	_build_level()
-	_show_banner(STAGE_TITLES[_stage()], 1.2)
+	_release_pumps()
+	finish_level(level, stars)                     # (the result card: stars, coins, NEXT / RETRY / LEVELS)
 
-func _on_game_unlocked(_idx: int) -> void:
-	_bought = true
+## The clock ran out before the last basket
+func _time_up() -> void:
+	state = State.CLEAR
+	_release_pumps()
+	_play_error_sound()
+	finish_level(level, 0)
 
-## +1 coin: a coin pops up in the middle and flies into the counter
-func _coin_pop() -> void:
-	_refresh_coins()
-	_sfx("res://sounds/fx/claw_prize.wav", -10.0)
-	var c := _sprite(tex["coin"], Vector2(PLAY_WIDTH / 2.0, PLAY_HEIGHT / 2.0 + 70))
-	c.scale = Vector2(S * 1.6, S * 1.6)
-	add_child(c)
-	var t := create_tween()
-	t.tween_property(c, "position:y", c.position.y - 30, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	t.tween_interval(0.4)
-	t.tween_property(c, "position", Vector2(214, 52), 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	t.parallel().tween_property(c, "scale", Vector2(S, S), 0.45)
-	t.tween_callback(c.queue_free)
-	_float_text("+1 coin", Vector2(PLAY_WIDTH / 2.0, PLAY_HEIGHT / 2.0 + 150))
+func _release_pumps() -> void:
+	jets[0]["held"] = false
+	jets[1]["held"] = false
+	_touch_jets.clear()
 
-## The coin counter: "coins/price" while there's a game left to buy
+## The three HUD stars: each one dims the moment the clock passes its mark
+func _update_hud_stars() -> void:
+	var now := _stars_now()
+	if now >= _stars_left:
+		return
+	for k in range(now, _stars_left):
+		var st := hud_stars[k]
+		st.texture = UiArt.star(false)
+		var t := create_tween()
+		t.tween_property(st, "scale", Vector2(1.4, 1.4), 0.08)
+		t.tween_property(st, "scale", Vector2.ONE, 0.2)
+	_stars_left = now
+
+## The coin counter: the coins you have
 func _refresh_coins() -> void:
 	if coin_label:
-		coin_label.text = "%d/%d" % [GameData.coins, GameData.GAME_PRICE] if GameData.next_locked_game() >= 0 else str(GameData.coins)
+		coin_label.text = str(GameData.coins)
 
 # ================================================================== THE PUFFERFISH
 
@@ -549,8 +632,9 @@ func _reset_puffer() -> void:
 		b["node"].queue_free()
 	puffer["eaten"] = []
 	puffer["node"].visible = false
-	puffer["state"] = "away" if level >= PUFFER_FROM else "off"
+	puffer["state"] = "away" if _has_puffer() else "off"
 	puffer["timer"] = PUFFER_FIRST
+	puffer.erase("next_dir")                       # (a new level: it swims in from a random side)
 
 func _update_puffer(delta: float) -> void:
 	var n: Sprite2D = puffer["node"]
@@ -558,15 +642,17 @@ func _update_puffer(delta: float) -> void:
 		"away":
 			puffer["timer"] -= delta
 			if puffer["timer"] <= 0.0:
-				# swims in from one side, at some depth in the middle of the tank
-				puffer["dir"] = 1.0 if rng.randf() < 0.5 else -1.0
+				# swims in from one side, at some depth in the middle of the tank: back from the side
+				# it last swam out of (so it turns round off screen), or a random side the first time
+				puffer["dir"] = puffer.get("next_dir", 1.0 if rng.randf() < 0.5 else -1.0)
+				puffer.erase("next_dir")
 				puffer["base_y"] = rng.randf_range(300, 600)
-				puffer["pos"] = Vector2(-40.0 if puffer["dir"] > 0 else PLAY_WIDTH + 40.0, puffer["base_y"])
+				puffer["pos"] = Vector2(-PUFFER_OFF if puffer["dir"] > 0 else PLAY_WIDTH + PUFFER_OFF, puffer["base_y"])
 				puffer["phase"] = 0.0
 				puffer["state"] = "swim"
 				n.texture = tex["puffer"]
 				n.visible = true
-				if level == PUFFER_FROM and not puffer.get("met", false):
+				if not puffer.get("met", false) and GameData.level_stars(_game_index(), PUFFER_FROM) == 0:
 					puffer["met"] = true
 					_show_banner("Pufferfish!", 1.0)
 					_float_text("bump it with your pal!", Vector2(PLAY_WIDTH / 2.0, PLAY_HEIGHT / 2.0 + 120), 340)
@@ -575,10 +661,16 @@ func _update_puffer(delta: float) -> void:
 			var p: Vector2 = puffer["pos"]
 			p.x += puffer["dir"] * PUFFER_SPEED * _speed() * delta
 			p.y = puffer["base_y"] + sin(puffer["phase"] * 1.6) * 14.0
-			if (p.x < TANK_L + 50 and puffer["dir"] < 0) or (p.x > TANK_R - 50 and puffer["dir"] > 0):
-				puffer["dir"] *= -1.0                                  # turns at the walls...
-				puffer["base_y"] = clampf(puffer["base_y"] + rng.randf_range(-120, 120), 300, 620)   # ...at a new depth
 			puffer["pos"] = p
+			if (p.x < -PUFFER_OFF and puffer["dir"] < 0) or (p.x > PLAY_WIDTH + PUFFER_OFF and puffer["dir"] > 0):
+				# out of the tank on the far side: a short pause, then back the other way (at a new
+				# depth), instead of turning round on the spot at the wall
+				n.visible = false
+				puffer["state"] = "away"
+				puffer["timer"] = rng.randf_range(PUFFER_BACK_MIN, PUFFER_BACK_MAX)
+				puffer["next_dir"] = -puffer["dir"]
+				n.position = p
+				return
 			n.flip_h = puffer["dir"] > 0                               # (the art faces left)
 			# a ball near its mouth: gulp
 			if puffer["eaten"].size() < PUFFER_MAX_EAT:
@@ -599,6 +691,7 @@ func _update_puffer(delta: float) -> void:
 				n.visible = false
 				puffer["state"] = "away"
 				puffer["timer"] = PUFFER_AWAY
+				puffer["next_dir"] = -puffer["dir"]                    # (it comes back from where it fled)
 	n.position = puffer.get("pos", Vector2(-100, 0))
 
 func _puffer_eat(b: Dictionary) -> void:
@@ -689,6 +782,17 @@ func _create_static_nodes() -> void:
 	coin_label = _make_label(Vector2(236, 26), Vector2(120, 52), 30, HORIZONTAL_ALIGNMENT_LEFT, OUTLINE)
 	_refresh_coins()
 	hud_time = _make_label(Vector2(PLAY_WIDTH / 2 - 85, 26), Vector2(170, 52), 38, HORIZONTAL_ALIGNMENT_CENTER, OUTLINE)
+	# the three stars still possible, right of the clock
+	for k in 3:
+		var st := TextureRect.new()
+		st.texture = UiArt.star(true)
+		st.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		st.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		st.size = Vector2(39, 39)
+		st.pivot_offset = st.size / 2.0
+		st.position = Vector2(PLAY_WIDTH / 2 + 92 + k * 42, 32)
+		add_child(st)
+		hud_stars.append(st)
 	var frame := ColorRect.new()
 	frame.color = Color(0, 0, 0)
 	frame.position = Vector2(PLAY_WIDTH - 245, 18)
@@ -768,24 +872,28 @@ func _sfx(path: String, volume_db: float, max_time := 0.0) -> void:
 # ================================================================== INPUT
 
 func on_main_button_pressed() -> void:
-	if is_game_over:
+	if is_game_over or level_menu_open():
 		super.on_main_button_pressed()
 		return
-	_pump(0, true)
+	if is_running:
+		_pump(0, true)
 
 func on_main_button_released() -> void:
+	if level_menu_open():
+		super.on_main_button_released()
+		return
 	_pump(0, false)
 
 func on_forward_button_down() -> void:
-	if not is_game_over:
+	if not is_game_over and not level_menu_open() and is_running:
 		_pump(1, true)
 
 func on_forward_button_up() -> void:
 	_pump(1, false)
 
 func on_forward_button_pressed() -> void:
-	# (fires on release, after on_forward_button_up) only used on the game over screen
-	if is_game_over:
+	# (fires on release, after on_forward_button_up) only used on the menus and end screens
+	if is_game_over or level_menu_open():
 		super.on_forward_button_pressed()
 
 func _input(event: InputEvent) -> void:

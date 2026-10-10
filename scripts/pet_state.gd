@@ -128,6 +128,11 @@ func evolution_for(food: Dictionary, from: String = form_id) -> String:
 	var family: String = food.get("family", "")
 	if from == "":
 		return STARTERS.get(family, "")
+	# foods grow up with the pal (FoodLibrary): a baby grows only on kid food, a kid only on adult food
+	var tier: String = food.get("tier", "")
+	var need: String = { 1: "kid", 2: "adult" }.get(int(FORMS.get(from, {}).get("stage", 0)), "")
+	if tier != "" and need != "" and tier != need:
+		return ""
 	if family == "legend":
 		var lg: Dictionary = LEGENDS.get(from, {})
 		if lg.get("to") != null and lg.get("family", "") == food.get("legend_of", ""):

@@ -52,9 +52,9 @@ func _gui_input(event: InputEvent) -> void:
 
 			await get_tree().create_timer(0.3).timeout
 			if was_pressed and my_press == _press_id:
-				# Don't start filling for locked games
-				# (a locked game never fills; letting go still moves to the next card)
-				if _is_game_menu_active() and not _is_current_game_unlocked():
+				# Don't start filling for locked games, unless it can be bought (hold = buy it)
+				# (letting go still moves to the next card)
+				if _is_game_menu_active() and not _is_current_game_unlocked() and not _game_can_be_bought():
 					return
 				filling = true
 				if selected_doughnut:
@@ -169,6 +169,10 @@ func _handle_hold_confirm(sel: Node) -> void:
 
 	if _is_game_menu_active():
 		if not _is_current_game_unlocked():
+			# a locked card held to the end: buy it (the menu already checked the coins)
+			var gm = _get_active_menu()
+			if gm and gm.has_method("buy_selected"):
+				gm.buy_selected()
 			return
 		_launch_game()
 		return
@@ -242,6 +246,8 @@ func _feed_after_fall(spawner: Node, texture: Texture2D, food: Dictionary) -> vo
 	await spawner.spawn_food_chunks(texture)
 	if not food.is_empty():
 		PetState.feed(food)
+		if food.get("family", "") in ["tech", "cosmic", "legend"]:
+			Shop.use_special(food.get("name", ""))      # (a key item from the pantry: one less)
 	var food_menu = get_node_or_null("../Menus/FoodMenu")
 	if food_menu and food_menu.has_method("populate_foods"):
 		food_menu.populate_foods()  # fresh menu for the next meal
@@ -343,10 +349,15 @@ func _get_selected_doughnut() -> TextureProgressBar:
 	var sel = _get_selected_option_node()
 	if not sel or not sel.has_node("Doughnut"):
 		return null
-	# Don't show doughnut for locked games
-	if _is_game_menu_active() and not _is_current_game_unlocked():
+	# Don't show doughnut for locked games (unless they can be bought)
+	if _is_game_menu_active() and not _is_current_game_unlocked() and not _game_can_be_bought():
 		return null
 	return sel.get_node("Doughnut")
+
+## The Games menu shows a locked card that can be bought (Progression v2)
+func _game_can_be_bought() -> bool:
+	var gm = _get_active_menu()
+	return gm != null and gm.has_method("can_try_buy") and gm.can_try_buy()
 
 func _is_current_game_unlocked() -> bool:
 	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):

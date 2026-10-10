@@ -5,6 +5,9 @@ extends Node2D
 ##                page dots, hold = open). Cards are clones of the Games menu card.
 ##   PEDIA        grid of pals, 9 per page, many pages; hold a pal to open its card
 ##   DETAIL       one pal's card: number, name, description / hint, evolution link
+##   SHOP         what coins buy besides games (Shop autoload): food types, adult foods, special
+##                foods; the same food-menu cards, 3 a page; hold = buy. The coins you have on the
+##                top-right corner, like the Games menu.
 ##   BACKGROUNDS / ACCESSORIES / DECOR  cosmetics lists: hold to use (closes the menu, back to the pet).
 ##                The cards are the food menu's cards (same frame, icon spot, name font, type tag),
 ##                3 per page in the same places, so every list in the app looks alike.
@@ -13,10 +16,11 @@ extends Node2D
 ## FORWARD = next page (in a pal card: next pal). Every sub-view has a "Back" item.
 ## Built in code on top of the existing golden frame (Menu/Sprite2D).
 
-enum View { HUB, PEDIA, DETAIL, BACKGROUNDS, ACCESSORIES, DECOR }
+enum View { HUB, PEDIA, DETAIL, BACKGROUNDS, ACCESSORIES, DECOR, SHOP }
 
 const HUB_CARDS := [
 	{ "view": View.PEDIA, "logo": "res://textures/menus/palpedia.png", "pattern": "res://textures/menus/pooploopbackground.png" },
+	{ "view": View.SHOP, "logo": "res://textures/menus/coinshop.png", "pattern": "res://textures/menus/pattern_coin_caramel.png" },
 	{ "view": View.ACCESSORIES, "logo": "res://textures/menus/dressup.png", "pattern": "res://textures/menus/pattern_glasses_cream.png" },
 	{ "view": View.DECOR, "logo": "res://textures/menus/gutdecor.png", "pattern": "res://textures/menus/pattern_bulb_caramel.png" },
 	{ "view": View.BACKGROUNDS, "logo": "res://textures/menus/backgrounds.png", "pattern": "res://textures/menus/pattern_cloud_sage.png" },
@@ -69,6 +73,8 @@ var page_hint: Sprite2D
 var legend: MenuLegend
 var detail_legend: Node2D          # pal card controls, in the golden band: (o) back   next >>
 var font: Font
+var coin_tag: PanelContainer       # the coins you have (Shop view and its hub card)
+var coin_tag_label: Label
 
 func _ready() -> void:
 	font = load("res://fonts/Pixellari.ttf")
@@ -113,6 +119,11 @@ func _ready() -> void:
 	next_l.text = "next"
 
 	_build_hub_cards(menu)
+	_build_coin_tag(menu)
+	GameData.coins_changed.connect(func(_c): _refresh_coin_tag())
+	Shop.changed.connect(func():
+		if view == View.SHOP:
+			_open(View.SHOP, selection))
 
 	# Always reopen on the card hub: reset as soon as the menu is hidden (not when it's shown,
 	# or the last list flashes for a moment while the menu slides in)
@@ -148,6 +159,9 @@ func flip_page() -> void:
 		View.BACKGROUNDS, View.ACCESSORIES, View.DECOR:
 			page = (page + 1) % _list_pages(view)
 			_open(view)
+		View.SHOP:
+			page = (page + 1) % _shop_pages()
+			_open(View.SHOP)
 		View.DETAIL:
 			var order := PetState.pedia_order()
 			var i := (order.find(detail_id) + 1) % order.size()
@@ -199,6 +213,13 @@ func confirm_selected(sel: Node) -> bool:
 				_sfx("res://sounds/fx/gamecoin.wav", -8.0)
 				return true
 			_sfx("res://sounds/fx/error.mp3", -10.0)
+		"buy":
+			if Shop.buy(action["id"]):
+				_sfx("res://sounds/fx/claw_prize.wav", -8.0)
+				_bought_pop(sel)
+			else:
+				_sfx("res://sounds/fx/error.mp3", -10.0)
+				Input.vibrate_handheld(40)
 		_:
 			_sfx("res://sounds/fx/error.mp3", -10.0)
 	return false
@@ -215,10 +236,12 @@ func _open(v: int, select := -1) -> void:
 		elif v == View.DETAIL:
 			legend.set_lines([])             # (a pal card has its own back / next legend)
 		else:
-			legend.set_lines([["press", "next"], ["hold", "pick"]])
+			legend.set_lines([["press", "next"], ["hold", "buy" if v == View.SHOP else "pick"]])
 	hub_root.visible = in_hub
 	hub_dots.visible = in_hub
 	hub_hint.visible = in_hub
+	if coin_tag:
+		coin_tag.visible = v == View.SHOP or (in_hub and HUB_CARDS[hub_index]["view"] == View.SHOP)
 	# (the lists are just cards, like the food menu: no title, no hint line)
 	title.visible = v in [View.PEDIA, View.DETAIL]
 	status.visible = v in [View.PEDIA, View.DETAIL]
@@ -229,6 +252,8 @@ func _open(v: int, select := -1) -> void:
 			_build_pedia()
 		View.BACKGROUNDS, View.ACCESSORIES, View.DECOR:
 			_build_list(v)
+		View.SHOP:
+			_build_shop()
 	selection = select if select < items.size() else -1
 	_refresh_selection()
 	_refresh_pager()
@@ -300,6 +325,12 @@ func _update_hub_card_info() -> void:
 				owned += 1
 		var cat_catalog := Collection.catalog(cat)
 		lines[v] = ["Unlocked", "%d/%d" % [owned, Collection.order(cat).size()], "In use", Collection.in_use_label(cat)]
+	# the Shop card: what's on sale, and the coins you have
+	var on_sale := 0
+	for it in Shop.ITEMS:
+		if Shop.state(it) in ["ok", "poor"]:
+			on_sale += 1
+	lines[View.SHOP] = ["On sale", str(on_sale), "Coins", str(GameData.coins)]
 	for i in HUB_CARDS.size():
 		var v: int = HUB_CARDS[i]["view"]
 		var cat_of_card: String = LISTS[v]["category"] if v in LISTS else ("pedia" if v == View.PEDIA else "")
@@ -314,9 +345,14 @@ func _update_hub_card_info() -> void:
 				if j == 1:
 					# values: right-aligned to where the Games card's "000000" ends
 					var score_label: Label = pairs[0][1]
-					if not score_label.has_meta("x0"):
-						score_label.set_meta("x0", score_label.position.x)   # template position, measured once
-					var right: float = score_label.get_meta("x0") + font.get_string_size("000000", HORIZONTAL_ALIGNMENT_LEFT, -1, 25).x
+					if not score_label.has_meta("right"):
+						# where the Games card's "000000" ends, measured once (the template may already
+						# have been right-aligned there by the Games menu: then its own right edge)
+						var r: float = score_label.position.x + font.get_string_size("000000", HORIZONTAL_ALIGNMENT_LEFT, -1, 25).x
+						if score_label.has_meta("pinned_right"):
+							r = score_label.position.x + score_label.size.x
+						score_label.set_meta("right", r)
+					var right: float = score_label.get_meta("right")
 					l.size.x = 150
 					l.position.x = right - l.size.x
 					l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -553,8 +589,10 @@ func _refresh_pager() -> void:
 		pages = _pedia_pages()
 	elif view in LISTS:
 		pages = _list_pages(view)
+	elif view == View.SHOP:
+		pages = _shop_pages()
 	var many := view != View.DETAIL and view != View.HUB and pages > 1
-	var is_list := view in LISTS
+	var is_list := view in LISTS or view == View.SHOP
 	list_dots.visible = is_list and pages > 1
 	if list_dots.visible:
 		var dots := list_dots.get_children()
@@ -588,6 +626,119 @@ func _list_pages(v: int) -> int:
 		if full:
 			shown += 1
 	return shown
+
+# ================================================================== SHOP
+
+const SHOP_PER_PAGE := 3
+
+func _shop_pages() -> int:
+	return maxi(1, ceili(Shop.ITEMS.size() / float(SHOP_PER_PAGE)))
+
+## The Shop: the food menu's cards, 3 a page: the item, its price on the tag (a coin + the
+## number), and under the name what holding it does (or why it can't be bought yet)
+func _build_shop() -> void:
+	page = clampi(page, 0, _shop_pages() - 1)
+	for slot in SHOP_PER_PAGE:
+		var i := page * SHOP_PER_PAGE + slot
+		if i >= Shop.ITEMS.size():
+			break
+		var it: Dictionary = Shop.ITEMS[i]
+		var row := _food_card(slot, load(it["icon"]))
+		var name_l: Label = row.get_meta("name_label")
+		name_l.text = it["name"]
+		var st: Label = row.get_meta("status_label")
+		var state := Shop.state(it)
+		match state:
+			"owned":
+				st.text = "Yours"
+				st.add_theme_color_override("font_color", IN_USE)
+			"needs_type":
+				st.text = "%s foods first" % str(it["family"]).capitalize()
+			"poor":
+				st.text = "Need %d more" % (Shop.price(it) - GameData.coins)
+			_:
+				var have := Shop.pantry_count(it.get("food", ""))
+				st.text = "Have %d · hold: buy" % have if it["kind"] == "special" and have > 0 else "Hold: buy"
+		if state != "owned":
+			_price_tag(row, Shop.price(it), state == "ok")
+		row.set_meta("action", { "type": "buy", "id": it["id"] } if state == "ok" else { "type": "locked" })
+		_add_item(row)
+
+## The price on a card's tag spot: a coin and the number (dimmed while you can't afford it)
+func _price_tag(row: Control, price: int, affordable: bool) -> void:
+	_card_tag(row, [str(price), Color8(236, 208, 140) if affordable else Color8(200, 186, 160)])
+	var l: Label = row.get_child(row.get_child_count() - 1)
+	var tag: Sprite2D = row.get_child(row.get_child_count() - 2)
+	l.text = "   " + str(price)
+	var coin := TextureRect.new()
+	coin.texture = UiArt.coin()
+	coin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	coin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	coin.size = Vector2(33, 33)
+	var w := l.get_theme_font("font").get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 36).x
+	coin.position = tag.position + Vector2((l.size.x - w) / 2.0 - 4, (l.size.y - coin.size.y) / 2.0)
+	coin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	coin.modulate = Color.WHITE if affordable else Color(1, 1, 1, 0.6)
+	row.add_child(coin)
+
+## Bought: the card hops
+func _bought_pop(sel: Node) -> void:
+	if sel is Control:
+		var c := sel as Control
+		var t := c.create_tween()
+		t.tween_property(c, "scale", Vector2(1.12, 1.12), 0.08)
+		t.tween_property(c, "scale", Vector2(1.04, 1.04), 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+## The coins you have, on the top-right corner (like the Games menu)
+func _build_coin_tag(menu: Node) -> void:
+	coin_tag = PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = CREAM
+	sb.border_color = CARD_BORDER
+	sb.set_border_width_all(4)
+	sb.set_corner_radius_all(8)
+	sb.content_margin_left = 12
+	sb.content_margin_right = 16
+	sb.content_margin_top = 2
+	sb.content_margin_bottom = 2
+	sb.anti_aliasing = false
+	coin_tag.add_theme_stylebox_override("panel", sb)
+	coin_tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	coin_tag.add_child(row)
+	var icon := TextureRect.new()
+	icon.texture = UiArt.coin()
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2(36, 36)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(icon)
+	coin_tag_label = Label.new()
+	coin_tag_label.add_theme_font_override("font", font)
+	coin_tag_label.add_theme_font_size_override("font_size", 36)
+	coin_tag_label.add_theme_color_override("font_color", TEXT_DARK)
+	coin_tag_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	coin_tag_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(coin_tag_label)
+	coin_tag.position = Vector2(1180 + FRAME_DX, -1206)
+	coin_tag.z_index = 6
+	coin_tag.visible = false
+	menu.add_child(coin_tag)
+	_refresh_coin_tag()
+
+func _refresh_coin_tag() -> void:
+	if coin_tag_label:
+		coin_tag_label.text = str(GameData.coins)
+		coin_tag.reset_size()
+	if view == View.HUB:
+		_update_hub_card_info()
+
+## The food menu's locked cards point here (the gear button blinks)
+func open_shop() -> void:
+	pass
 
 func _pedia_pages() -> int:
 	return maxi(1, ceili(PetState.FORMS.size() / float(PEDIA_PER_PAGE)))

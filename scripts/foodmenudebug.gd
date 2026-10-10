@@ -85,6 +85,13 @@ func _ready():
 	show_page(0)
 	populate_foods()
 	populate_special()
+	# bought in the Shop: locked cards open up right away (and the pantry's special foods show)
+	Shop.changed.connect(func():
+		for o in [food_option_1, food_option_2, food_option_3]:
+			if o.get_meta("food", {}).get("locked", false):
+				populate_foods()
+				break
+		populate_special())
 
 func _build_special_page() -> void:
 	vbox_special = vbox_food.duplicate()
@@ -99,30 +106,59 @@ func _build_special_page() -> void:
 		d.position.x -= 40.0
 	dots = nodedots.get_children()
 
-## Special foods: one tech, one cosmic, one legendary (FoodLibrary.get_special_set)
+## Special foods: a tech, a cosmic and a legendary card, from the pantry (FoodLibrary.get_special_set);
+## the tag says how many you have; none of a kind = a "?" card (get them in the Shop)
 func populate_special():
 	var pool = FoodLibrary.get_special_set()
 	for i in range(mini(special_options.size(), pool.size())):
 		var food_data = pool[i]
 		var option_node = special_options[i]
+		var locked: bool = food_data.get("locked", false)
 		option_node.get_node("Icon").texture = food_data.icon
+		option_node.get_node("Icon").modulate = Color.WHITE
 		option_node.get_node("Name").text = food_data.name
 		_set_type_tag(option_node, food_data.family)
+		var n := Shop.pantry_count(food_data.name)
+		if not locked and n > 1:
+			option_node.get_node("TypeText").text += " x%d" % n
+		_set_lock(option_node, false)
 		option_node.set_meta("food", food_data)
 		option_node.set_meta("special", true)
 
 func populate_foods():
-	# One food per family (green / sweet / greasy) — the family drives poop evolution
+	# Three foods of three types, the size the pal needs to grow (FoodLibrary.get_menu_set):
+	# a type whose adult foods a kid can't have yet shows a locked card (they're in the Shop)
 	var food_pool = FoodLibrary.get_menu_set()
 	var options = [food_option_1, food_option_2, food_option_3]
 
-	for i in range(options.size()):
+	for i in range(mini(options.size(), food_pool.size())):
 		var food_data = food_pool[i]
 		var option_node = options[i]
+		var locked: bool = food_data.get("locked", false)
 		option_node.get_node("Icon").texture = food_data.icon
-		option_node.get_node("Name").text = food_data.name
+		# a locked adult food: its silhouette (like a pal not found yet), a padlock, "Adult food"
+		option_node.get_node("Icon").modulate = Color(0.1, 0.06, 0.05, 0.85) if locked else Color.WHITE
+		option_node.get_node("Name").text = "Adult food" if locked else food_data.name
 		_set_type_tag(option_node, food_data.family)
+		_set_lock(option_node, locked)
 		option_node.set_meta("food", food_data)
+
+## A padlock over a food card's icon (locked adult foods)
+func _set_lock(option_node: Node, on: bool) -> void:
+	var lock: Sprite2D = option_node.get_node_or_null("LockIcon")
+	if not lock:
+		if not on:
+			return
+		var icon: Sprite2D = option_node.get_node("Icon")
+		lock = Sprite2D.new()
+		lock.name = "LockIcon"
+		lock.texture = UiArt.lock()
+		lock.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		lock.scale = Vector2(5, 5)
+		lock.position = icon.position + Vector2(0, 6)
+		lock.z_index = icon.z_index + 1
+		option_node.add_child(lock)
+	lock.visible = on
 
 ## Three drinks of three different types (DrinkLibrary.get_menu_set); the tag shows the type
 func populate_drinks():
@@ -204,6 +240,20 @@ func reset_active_options():
 func can_confirm(sel: Node) -> bool:
 	if barrier_down:
 		Input.vibrate_handheld(20)                   # the shutter is down: not yet
+		return false
+	var food: Dictionary = sel.get_meta("food", {}) if sel else {}
+	# a locked card (adult foods, special foods you don't have): they're in the Shop, behind the
+	# gear button, which blinks
+	if food.get("locked", false):
+		Input.vibrate_handheld(40)
+		for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
+			if b.target_menu and b.target_menu.has_method("open_shop"):
+				b.blink_hint()
+				break
+		return false
+	# a special food only when it would do something (a key item is never wasted)
+	if sel and sel.has_meta("special") and PetState.has_poop() and not FoodLibrary.special_useful(food):
+		Input.vibrate_handheld(40)
 		return false
 	var special_first: bool = sel != null and sel.has_meta("special") and not PetState.can_start_with(sel.get_meta("food", {}))
 	if sel and (sel.has_meta("drink") or special_first) and PetState.needs_first_meal():

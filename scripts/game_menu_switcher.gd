@@ -46,15 +46,29 @@ var _locked_bg: Texture2D
 const BONUS_ART := { "logo": "res://textures/menus/luckypinch.png", "background": "res://textures/menus/pattern_claw_gold.png" }
 var bonus_page: Node = null
 
+## Locked cards (Progression v2): the picture behind the food menu's roll-down shutter, with a small
+## "?" label on it; the info panel shows the price. Hold with enough coins = bought.
+const PRICE_BLINK := Color(0.85, 0.25, 0.2)
+var coin_tag: PanelContainer
+var coin_tag_label: Label
+var legend: MenuLegend
+
 func _ready():
 	var bg0 = pages[1].get_node_or_null("Game/TopFrame/Control/Background")
 	_locked_bg = bg0.texture if bg0 else null           # (a "?" card's background, from the scene)
-	MenuLegend.attach($Menu, $Menu/Background).set_lines([["hold", "play"]])
+	legend = MenuLegend.attach($Menu, $Menu/Background)
+	legend.set_lines([["hold", "play"]])
 	$Menu/ForwardHint.position.x = MenuLegend.forward_center_x()    # (tapping does nothing here: forward flips)
 	_add_extra_pages()
+	_build_coin_tag()
 	show_page(current_page)
 	LuckyPinch.changed.connect(func(_on): show_page(current_page))
 	LuckyPinch.tries_changed.connect(_on_bonus_tries)
+	GameData.coins_changed.connect(func(_c):
+		_refresh_coin_tag()
+		if visible:
+			_update_game_card_labels(current_page))
+	GameData.game_unlocked.connect(_on_game_unlocked)
 
 ## Each extra card is a copy of the last one; the dots row grows by one and stays centred
 func _add_extra_pages() -> void:
@@ -126,9 +140,13 @@ func _update_game_card_labels(page_index: int) -> void:
 	var game_node = page.get_node_or_null("Game")
 	if not game_node:
 		return
+	var unlocked := GameData.is_unlocked(index)
+	if legend:
+		legend.set_lines([["hold", "play"]] if unlocked else ([["hold", "buy"]] if GameData.can_buy_game(index) else []))
+	_lock_overlay(page).visible = not unlocked
 	var logo = game_node.get_node_or_null("TopFrame/Control/GameLogo")
 	var bg = game_node.get_node_or_null("TopFrame/Control/Background")
-	if index in CARD_ART and GameData.is_unlocked(index):
+	if index in CARD_ART and unlocked:
 		var art: Dictionary = CARD_ART[index]
 		if logo:
 			logo.texture = load(art["logo"])
@@ -142,15 +160,208 @@ func _update_game_card_labels(page_index: int) -> void:
 	var bottom = game_node.get_node_or_null("BottomFrame")
 	if not bottom:
 		return
-	# Update max score
-	var score_label = bottom.get_node_or_null("MaxScore/Score")
-	if score_label:
-		score_label.text = "%06d" % GameData.get_max_score(index)
-	# Update progress
-	var progress_label = bottom.get_node_or_null("Progress/Progress")
-	if progress_label:
-		_pin_percent_sign(progress_label)
-		progress_label.text = "%d%%" % int(GameData.get_progress(index))
+	var head1: Label = bottom.get_node_or_null("MaxScore")
+	var head2: Label = bottom.get_node_or_null("Progress")
+	var score_label: Label = bottom.get_node_or_null("MaxScore/Score")
+	var progress_label: Label = bottom.get_node_or_null("Progress/Progress")
+	if not (head1 and head2 and score_label and progress_label):
+		return
+	_pin_right(score_label, "000000")
+	_pin_percent_sign(progress_label)
+	_value_coin(score_label, false)
+	_value_coin(progress_label, false)
+	if not unlocked:
+		if GameData.can_buy_game(index):
+			# the price, and what you have
+			head1.text = "Price"
+			score_label.text = str(GameData.game_price())
+			head2.text = "You have"
+			progress_label.text = str(GameData.coins)
+			_value_coin(score_label, true)
+			_value_coin(progress_label, true)
+		else:
+			head1.text = "Opens after"
+			score_label.text = ""
+			head2.text = "Tilt Maze" if index in GameData.LAUNCH_GAMES else "Coming soon"
+			progress_label.text = ""
+		return
+	if index in GameData.LEVEL_COUNTS:
+		# a game with levels: its stars and levels instead of a best score
+		var n: int = GameData.LEVEL_COUNTS[index]
+		head1.text = "Stars"
+		score_label.text = "%d/%d" % [GameData.game_stars(index), n * 3]
+		head2.text = "Levels"
+		progress_label.text = "%d/%d" % [GameData.levels_cleared(index), n]
+		return
+	head1.text = "Max Score"
+	head2.text = "Progress"
+	score_label.text = "%06d" % GameData.get_max_score(index)
+	progress_label.text = "%d%%" % int(GameData.get_progress(index))
+
+# --- Buying a game (hold on its locked card; main_button asks can_confirm, then buy_selected) ---
+
+## Asked by the main button before the OK sound: a locked card can only be bought with enough coins
+func can_confirm(_sel: Node) -> bool:
+	var index := get_selected_page()
+	if GameData.is_unlocked(index) or index == LuckyPinch.GAME_INDEX:
+		return true
+	if GameData.can_buy_game(index) and GameData.coins >= GameData.game_price():
+		return true
+	_blink_price()
+	return false
+
+## A locked card the main button may fill its ring on (buyable, even without the coins yet)
+func can_try_buy() -> bool:
+	return GameData.can_buy_game(get_selected_page())
+
+func buy_selected() -> void:
+	GameData.buy_game(get_selected_page())        # (GameData.game_unlocked -> _on_game_unlocked)
+
+## Not enough coins: the price blinks red, with a soft buzz
+func _blink_price() -> void:
+	Input.vibrate_handheld(40)
+	var l: Label = pages[current_page].get_node_or_null("Game/BottomFrame/MaxScore/Score")
+	if not l:
+		return
+	if not l.has_meta("color"):
+		l.set_meta("color", l.get_theme_color("font_color"))     # (the card's own brown, from the scene)
+	var normal: Color = l.get_meta("color")
+	var t := l.create_tween()
+	for i in 3:
+		t.tween_callback(func(): l.add_theme_color_override("font_color", PRICE_BLINK))
+		t.tween_interval(0.12)
+		t.tween_callback(func(): l.add_theme_color_override("font_color", normal))
+		t.tween_interval(0.12)
+
+## Bought: the shutter rolls up and the game's picture shows (the LCD says GAME UNLOCKED!)
+func _on_game_unlocked(index: int) -> void:
+	var i := ORDER.find(index)
+	if i < 0:
+		return
+	var ov := _lock_overlay(pages[i])
+	if not visible or i != current_page or not ov.visible:
+		_update_game_card_labels(current_page)
+		return
+	# the real picture goes in behind the shutter first
+	var art: Dictionary = CARD_ART.get(index, {})
+	var game_node = pages[i].get_node("Game")
+	if not art.is_empty():
+		game_node.get_node("TopFrame/Control/GameLogo").texture = load(art["logo"])
+		game_node.get_node("TopFrame/Control/Background").texture = load(art["background"])
+	var h: float = ov.size.y
+	var t := ov.create_tween()
+	t.tween_interval(0.15)
+	t.tween_property(ov.get_node("Mini"), "modulate:a", 0.0, 0.15)
+	t.tween_property(ov.get_node("Shutter"), "position:y", -h, 0.55).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	t.tween_callback(func():
+		ov.visible = false
+		ov.get_node("Shutter").position.y = 0.0
+		ov.get_node("Mini").modulate.a = 1.0
+		_update_game_card_labels(current_page))
+
+## The shutter and its small "?" label over a card's picture (made once per card)
+func _lock_overlay(page: Node) -> Control:
+	var top: TextureRect = page.get_node("Game/TopFrame")
+	var ov: Control = top.get_node_or_null("LockOverlay")
+	if ov:
+		return ov
+	var inner_src: Control = top.get_node("Control")             # the picture area (pattern + logo)
+	ov = Control.new()
+	ov.name = "LockOverlay"
+	ov.position = inner_src.position
+	ov.size = inner_src.size
+	ov.clip_contents = true
+	ov.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var shutter := TextureRect.new()
+	shutter.name = "Shutter"
+	shutter.texture = UiArt.shutter(int(ov.size.x / 1.4), int(ov.size.y / 1.4))   # (~3 screen px a pixel, like the food menu's)
+	shutter.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	shutter.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	shutter.size = ov.size
+	shutter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ov.add_child(shutter)
+	# the reduced label: this card's frame at half size, with the "?" logo on the "?" pattern
+	var mini := TextureRect.new()
+	mini.name = "Mini"
+	mini.texture = top.texture
+	mini.size = top.size
+	mini.scale = Vector2(0.5, 0.5)
+	mini.position = (ov.size - top.size * 0.5) / 2.0 - Vector2(0, 6)
+	mini.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var inner: Control = inner_src.duplicate()
+	inner.get_node("GameLogo").texture = load(LOCKED_LOGO)
+	if _locked_bg:
+		inner.get_node("Background").texture = _locked_bg
+	mini.add_child(inner)
+	ov.add_child(mini)
+	top.add_child(ov)
+	return ov
+
+## A coin before a value in the info panel (price, coins you have)
+func _value_coin(label: Label, on: bool) -> void:
+	var icon: TextureRect = label.get_node_or_null("Coin")
+	if not icon:
+		if not on:
+			return
+		icon = TextureRect.new()
+		icon.name = "Coin"
+		icon.texture = UiArt.coin()
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.size = Vector2(16, 16)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.add_child(icon)
+	icon.visible = on
+	if on:
+		var font: Font = label.get_theme_font("font")
+		var fs := label.get_theme_font_size("font_size")
+		var w := font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		# (the label's text sits at its top: centre the coin on the line of text)
+		icon.position = Vector2(label.size.x - w - icon.size.x - 4, (font.get_height(fs) - icon.size.y) / 2.0)
+
+## The coin balance, on the top-right corner of the card (like the gear menu's NEW tags)
+func _build_coin_tag() -> void:
+	coin_tag = PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color8(250, 244, 214)
+	sb.border_color = Color8(58, 38, 30)
+	sb.set_border_width_all(4)
+	sb.set_corner_radius_all(8)
+	sb.content_margin_left = 12
+	sb.content_margin_right = 16
+	sb.content_margin_top = 2
+	sb.content_margin_bottom = 2
+	sb.anti_aliasing = false
+	coin_tag.add_theme_stylebox_override("panel", sb)
+	coin_tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	coin_tag.add_child(row)
+	var icon := TextureRect.new()
+	icon.texture = UiArt.coin()
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2(36, 36)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(icon)
+	coin_tag_label = Label.new()
+	coin_tag_label.add_theme_font_override("font", load("res://fonts/Pixellari.ttf"))
+	coin_tag_label.add_theme_font_size_override("font_size", 36)
+	coin_tag_label.add_theme_color_override("font_color", Color8(74, 48, 34))
+	coin_tag_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	coin_tag_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(coin_tag_label)
+	coin_tag.position = Vector2(1180, -1206)
+	coin_tag.z_index = 6
+	$Menu.add_child(coin_tag)
+	_refresh_coin_tag()
+
+func _refresh_coin_tag() -> void:
+	if coin_tag_label:
+		coin_tag_label.text = str(GameData.coins)
+		coin_tag.reset_size()
 
 ## The % sign stays exactly where it is for "0%"; longer numbers grow to its left
 func _pin_percent_sign(label: Label) -> void:
@@ -183,6 +394,14 @@ func _ensure_bonus_page() -> void:
 	var game_node = bonus_page.get_node_or_null("Game")
 	if not game_node:
 		return
+	# (a copy of a card: no shutter, no coins on it)
+	var ov = game_node.get_node_or_null("TopFrame/LockOverlay")
+	if ov:
+		ov.queue_free()
+	for path in ["BottomFrame/MaxScore/Score/Coin", "BottomFrame/Progress/Progress/Coin"]:
+		var c = game_node.get_node_or_null(path)
+		if c:
+			c.queue_free()
 	var logo = game_node.get_node_or_null("TopFrame/Control/GameLogo")
 	var bg = game_node.get_node_or_null("TopFrame/Control/Background")
 	if logo:
