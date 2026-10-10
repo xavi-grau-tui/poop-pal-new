@@ -6,8 +6,8 @@ class_name DevLaunch
 ## so the unboxing and the boot run untouched).
 ##
 ##   FULL BOOT          the real start: unboxing, logo, welcome, as in the final game
-##   STRAIGHT TO GAMES  no unboxing or boot; the pal is already the sour baby (Picklet) and the
-##                      Games menu opens by itself
+##   STRAIGHT TO GAMES  no unboxing or boot; the pal is already the sour baby (Picklet), the Games
+##                      menu opens by itself and EVERY game is open (to work on any game, any time)
 ##   ... + 999 COINS    the same, with 999 coins to try buying games and Shop items
 ##   BOOT + PROGRESSION the real game as a player gets it, KEPT between launches (its own save,
 ##                      user://progress/, see SaveSlot): every testing switch off, only the six
@@ -41,7 +41,7 @@ func _ready() -> void:
 	add_child(title)
 	var last := _last_choice()
 	_button("FULL BOOT", "unboxing + boot", 680, last == "full", _full)
-	_button("STRAIGHT TO GAMES", "Picklet, Games menu", 930, last == "games", _games)
+	_button("STRAIGHT TO GAMES", "every game open, Picklet", 930, last == "games", _games)
 	_button("GAMES + 999 COINS", "to try the Shop and buying games", 1180, last == "rich", _rich)
 	_button("BOOT + PROGRESSION", _progress_summary(), 1430, last == "progress", _progress)
 	_start_over_button(1690)
@@ -146,6 +146,9 @@ func _rich() -> void:
 func _games(choice := "games") -> void:
 	_save_choice(choice)
 	skip_boot = true
+	if choice == "games":                # every game open, no coins needed (the testing save only)
+		for idx in GameData.games:
+			GameData.games[idx]["unlocked"] = true
 	# the pal is already there (as if its first meal was a sour one), before the scene loads
 	if not PetState.has_poop():
 		PetState.form_id = QUICK_PAL
