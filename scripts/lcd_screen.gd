@@ -39,6 +39,9 @@ func _ready():
 	Collection.unlocked.connect(func(_c, _id):
 		show_message("ITEM\nUNLOCKED!", UNLOCK_BLINKS * UNLOCK_STEP * 2.0, UNLOCK_BLINKS, UNLOCK_STEP)
 		_ding())
+	GameData.game_unlocked.connect(func(_idx):
+		show_message("GAME\nUNLOCKED!", UNLOCK_BLINKS * UNLOCK_STEP * 2.0, UNLOCK_BLINKS, UNLOCK_STEP)
+		_ding())
 	PetState.pal_discovered.connect(func(_id):
 		show_message("PAL\nUNLOCKED!", UNLOCK_BLINKS * UNLOCK_STEP * 2.0, UNLOCK_BLINKS, UNLOCK_STEP)
 		_ding())

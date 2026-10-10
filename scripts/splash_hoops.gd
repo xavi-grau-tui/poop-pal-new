@@ -2,7 +2,8 @@ extends BaseMinigame
 ## Splash Hoops — the classic water toy. Two pumps at the bottom of a water tank blow jets
 ## of bubbles; drop a ball into every basket before the timer runs out. A ball that lands
 ## in a basket lights it up and falls through, and the floor slopes down to the pumps, so
-## every ball always rolls back next to a pump. From level 2 the baskets drift sideways.
+## every ball always rolls back next to a pump. Five stages of baskets in a loop (STAGES), a
+## pufferfish from stage 3, a coin for each stage cleared the first time.
 ##
 ## Main button: LEFT pump. Forward button: RIGHT pump. Both work the same way:
 ## hold to keep pumping (a pump runs dry after a moment), release to stop.
@@ -64,6 +65,34 @@ const CUP_SLOTS := [
 const CUP_POINTS := [200, 300, 200, 100, 100]
 const LEVEL_TIME := 60.0
 
+## Stages (2026-10-10): five basket layouts in a loop. Each lap round the loop the baskets move
+## faster and there's less time (see _speed / _level_time).
+##   classic   the five spots above, still (swaying from the second lap)
+##   triangle  an upside-down triangle: 3 high, 2 in the middle, 1 low in the centre
+##   drift     the classic spots, each basket drifting its own way (across, up and down, diagonal)
+##   orbit     one in the centre, two circling round it, two on the sides going up and down
+##   wheel     five on a slowly turning wheel
+const STAGES := ["classic", "triangle", "drift", "orbit", "wheel"]
+const STAGE_TITLES := {
+	"classic": "Pump the water!", "triangle": "Upside down!", "drift": "Drifting!",
+	"orbit": "Round and round!", "wheel": "The wheel!",
+}
+const LAP_SPEED := 0.35                 # each lap: baskets this much faster...
+const LAP_TIME := 8.0                   # ...and this many seconds less (down to MIN_TIME)
+const MIN_TIME := 36.0
+
+## The pufferfish (from stage PUFFER_FROM): swims back and forth and swallows balls that come near
+## its mouth (PUFFER_MAX_EAT at most, so a few always stay). Bump it with the diving pal and it
+## puffs up, spits them all back out and darts off for a while.
+const PUFFER_FROM := 3
+const PUFFER_R := 30.0
+const PUFFER_S := 6.0                   # its pixels: twice the game's (a chunkier look)
+const PUFFER_MAX_EAT := 3
+const PUFFER_SPEED := 70.0
+const PUFFER_FLEE := 420.0
+const PUFFER_AWAY := 8.0                # seconds gone after a fright
+const PUFFER_FIRST := 3.0               # seconds into a stage before it swims in
+
 const BALL_COLORS := ["pink", "yellow", "mint"]
 const OUTLINE := Color8(74, 44, 32)
 
@@ -80,6 +109,9 @@ var balls: Array[Dictionary] = []       # { pos, vel, node }
 var diver := {}                         # the pal: { pos, vel, node, r }: floats about, can't score
 var cups: Array[Dictionary] = []        # { pos, home, rim, full, points, net, rim_node, label }
 var bubbles: Array[Dictionary] = []
+var puffer := {}                        # { node, pos, dir, state: off/away/swim/flee, eaten, timer, base_y, phase }
+var coin_label: Label
+var _bought := false                    # a game was just bought with coins (for the clear banner)
 
 var tex := {}
 var lcd_font: Font
@@ -114,6 +146,10 @@ func _ready() -> void:
 	if PetState.has_poop():
 		pal_art = PetState.FORMS[PetState.form_id]["frames"][0]
 	tex["diver"] = SplashArt.diver(pal_art)
+	tex["puffer"] = SplashArt.puffer(false)
+	tex["puffer_puffed"] = SplashArt.puffer(true)
+	tex["coin"] = SplashArt.coin()
+	GameData.game_unlocked.connect(_on_game_unlocked)
 	_create_static_nodes()
 	super._ready()
 
@@ -121,7 +157,7 @@ func start_game() -> void:
 	super.start_game()
 	level = 1
 	_build_level()
-	_show_banner("Pump the water!", 1.6)
+	_show_banner(STAGE_TITLES[_stage()], 1.6)
 
 # ================================================================== LEVEL
 
@@ -140,8 +176,9 @@ func _build_level() -> void:
 	rng.seed = 4271 * level + 3
 
 	var n_balls := 6                                 # 3 per pump; balls are reused, never used up
-	time_left = LEVEL_TIME
+	time_left = _level_time()
 	_place_cups()
+	_reset_puffer()
 
 	for i in n_balls:
 		var jx: float = NOZZLES[i % 2]
@@ -160,14 +197,79 @@ func _build_level() -> void:
 	hud_level.text = "LV %d" % level
 	state = State.PLAY
 
+## This level's stage, and how many laps round the five stages have been done
+func _stage() -> String:
+	return STAGES[(level - 1) % STAGES.size()]
+
+func _lap() -> int:
+	return (level - 1) / STAGES.size()
+
+func _speed() -> float:
+	return 1.0 + LAP_SPEED * _lap()
+
+func _level_time() -> float:
+	return maxf(LEVEL_TIME - LAP_TIME * _lap(), MIN_TIME)
+
+## The baskets for this stage. Each one: points, and how it moves:
+##   still: home · sway: home + dir * sin(phase) * amp · orbit: centre + radius at angle phase
+## (phase grows by speed per second)
 func _place_cups() -> void:
-	for i in CUP_SLOTS.size():
-		var p: Vector2 = CUP_SLOTS[i]
-		var c := _make_cup(p, CUP_POINTS[i])
-		c["home"] = p
-		c["sway"] = minf(12.0 * (level - 1), 36.0)      # level 2+: baskets wobble a little (stay out of the jets)
-		c["phase"] = i * 1.3
+	var specs: Array = []
+	match _stage():
+		"classic":
+			for i in CUP_SLOTS.size():
+				# from the second lap they sway a little (staying out of the jets)
+				specs.append({ "home": CUP_SLOTS[i], "points": CUP_POINTS[i], "mode": "sway" if _lap() > 0 else "still",
+					"dir": Vector2.RIGHT, "amp": 24.0, "speed": 0.8, "phase": i * 1.3 })
+		"triangle":
+			# (the top corners out over the side walls: right above a pump a ball hardly ever
+			# comes down from high enough, out at the sides the pumps' throws land easily)
+			for p in [[Vector2(140, 450), 300], [Vector2(475, 390), 300], [Vector2(810, 450), 300],
+					[Vector2(325, 490), 200], [Vector2(625, 490), 200], [Vector2(475, 585), 100]]:
+				specs.append({ "home": p[0], "points": p[1], "mode": "still" if _lap() == 0 else "sway",
+					"dir": Vector2.RIGHT, "amp": 16.0, "speed": 0.9, "phase": p[0].x * 0.01 })
+		"drift":
+			var dirs := [Vector2(1, 0), Vector2(0, 1), Vector2(-1, 0), Vector2(0.7, -0.7), Vector2(0, 1)]
+			var amps := [60.0, 50.0, 60.0, 50.0, 50.0]
+			var speeds := [0.7, 0.9, 0.8, 0.6, 1.0]
+			for i in CUP_SLOTS.size():
+				specs.append({ "home": CUP_SLOTS[i], "points": CUP_POINTS[i], "mode": "sway",
+					"dir": dirs[i], "amp": amps[i], "speed": speeds[i], "phase": i * 1.7 })
+		"orbit":
+			var mid := Vector2(475, 410)
+			specs.append({ "home": mid, "points": 300, "mode": "still" })
+			for k in 2:
+				specs.append({ "home": mid, "center": mid, "points": 200, "mode": "orbit",
+					"radius": 130.0, "speed": 0.55, "phase": PI * k })
+			for k in 2:
+				specs.append({ "home": Vector2([130.0, 820.0][k], 500), "points": 100, "mode": "sway",
+					"dir": Vector2.DOWN, "amp": 70.0, "speed": 0.8, "phase": PI * k })
+		"wheel":
+			var hub := Vector2(475, 410)
+			for k in 5:
+				specs.append({ "home": hub, "center": hub, "points": 200, "mode": "orbit",
+					"radius": 160.0, "speed": 0.32, "phase": TAU * k / 5.0 - PI / 2.0 })
+	for sp in specs:
+		var c := _make_cup(sp["home"], sp["points"])
+		c.merge(sp, true)
 		cups.append(c)
+		_set_cup_pos(c, _cup_pos(c))
+
+func _cup_pos(c: Dictionary) -> Vector2:
+	match c["mode"]:
+		"sway":
+			return c["home"] + c["dir"] * sin(c["phase"]) * c["amp"]
+		"orbit":
+			return c["center"] + Vector2(cos(c["phase"]), sin(c["phase"])) * c["radius"]
+	return c["home"]
+
+func _set_cup_pos(c: Dictionary, p: Vector2) -> void:
+	p.x = clampf(p.x, TANK_L + CUP_W / 2.0, TANK_R - CUP_W / 2.0)
+	c["pos"] = p
+	c["rim"] = p.y - CUP_H / 2.0 + 12.0
+	c["net"].position = p
+	c["rim_node"].position = p
+	c["label"].position = p + Vector2(-45, -CUP_H / 2.0 - 34)
 
 func _make_cup(center: Vector2, points: int) -> Dictionary:
 	# see-through net + solid rim, drawn over the balls (net_layer comes after world) so a
@@ -195,15 +297,21 @@ func _process(delta: float) -> void:
 			_refresh_hud()
 			end_game()
 			return
-		_move_cups(delta)
+		_update_puffer(delta)
+		# the baskets move in the same small steps as the balls (a basket rising past a ball in
+		# one big jump would miss the ball dropping in: see _collide_cups)
 		const STEPS := 4
 		for i in STEPS:
+			_move_cups(delta / STEPS)
 			_physics(delta / STEPS)
-	for b in _bodies():
+	for b in balls:
 		b["node"].position = b["pos"]
-		b["node"].rotation += b["vel"].x * delta / b.get("r", BALL_R)
+		b["node"].rotation += b["vel"].x * delta / BALL_R
 	if not diver.is_empty():
-		diver["node"].rotation = lerp_angle(diver["node"].rotation, 0.0, minf(1.0, delta * 3.0))   # (it stays upright-ish)
+		# the pal doesn't roll: it stays upright, leaning a little the way it drifts
+		diver["node"].position = diver["pos"]
+		var lean := clampf(diver["vel"].x / 600.0, -0.25, 0.25)
+		diver["node"].rotation = lerpf(diver["node"].rotation, lean, minf(1.0, delta * 6.0))
 	_refresh_hud()
 
 ## Everything that floats: the balls, and the diving pal
@@ -212,16 +320,11 @@ func _bodies() -> Array:
 
 func _move_cups(delta: float) -> void:
 	for c in cups:
-		if c["sway"] <= 0.0:
+		c["prev_pos"] = c["pos"]                     # (where it was when the balls' "prev" was taken)
+		if c["mode"] == "still":
 			continue
-		c["phase"] += delta * 0.8
-		var p: Vector2 = c["home"] + Vector2(sin(c["phase"]) * c["sway"], 0)
-		p.x = clampf(p.x, TANK_L + CUP_W / 2.0, TANK_R - CUP_W / 2.0)
-		c["pos"] = p
-		c["rim"] = p.y - CUP_H / 2.0 + 12.0
-		c["net"].position.x = p.x
-		c["rim_node"].position.x = p.x
-		c["label"].position.x = p.x - 45
+		c["phase"] += delta * c["speed"] * _speed()
+		_set_cup_pos(c, _cup_pos(c))
 
 func _update_jets(delta: float) -> void:
 	_key_jets = [Input.is_key_pressed(KEY_LEFT) or Input.is_key_pressed(KEY_A), Input.is_key_pressed(KEY_RIGHT) or Input.is_key_pressed(KEY_D)]
@@ -346,9 +449,10 @@ func _collide_cups(b: Dictionary) -> void:
 		var d: Vector2 = b["pos"] - cp
 		if absf(d.x) > 80.0 or absf(d.y) > 80.0:
 			continue
-		# scoring: dropped in over the rim, between the knobs
-		var prev_d: Vector2 = b.get("prev", b["pos"]) - cp
-		if not c["full"] and not b.has("r") and b["vel"].y > 0 and prev_d.y <= RIM_LINE_Y and d.y > RIM_LINE_Y and absf(d.x) < RIM_KNOB_R.x - RIM_KNOB_R_SIZE:
+		# scoring: dropped in over the rim, between the knobs. Measured against the basket as it was
+		# a step ago and as it is now, so a moving basket (rising, circling) catches balls too.
+		var prev_d: Vector2 = b.get("prev", b["pos"]) - c.get("prev_pos", cp)
+		if not c["full"] and not b.has("r") and prev_d.y <= RIM_LINE_Y and d.y > RIM_LINE_Y and absf(d.x) < RIM_KNOB_R.x - RIM_KNOB_R_SIZE:
 			_fill_cup(b, c)
 		# rim knobs (for the diver the whole rim is solid: it sits on top of a basket, never in)
 		if b.has("r"):
@@ -399,12 +503,137 @@ func _level_clear() -> void:
 	if bonus > 0:
 		add_score(bonus)
 	_show_banner("Clear! +%d" % bonus, 1.4)
+	# the first time this stage is cleared: a coin (and 5 coins buy the next game)
+	_bought = false
+	if GameData.clear_stage(_game_index(), level):
+		_coin_pop()
 	await get_tree().create_timer(1.8).timeout
 	if not is_running:
 		return
+	if _bought:
+		_show_banner("New game!", 1.2)
+		await get_tree().create_timer(1.6).timeout
+		if not is_running:
+			return
 	level += 1
 	_build_level()
-	_show_banner("Level %d" % level, 1.0)
+	_show_banner(STAGE_TITLES[_stage()], 1.2)
+
+func _on_game_unlocked(_idx: int) -> void:
+	_bought = true
+
+## +1 coin: a coin pops up in the middle and flies into the counter
+func _coin_pop() -> void:
+	_refresh_coins()
+	_sfx("res://sounds/fx/claw_prize.wav", -10.0)
+	var c := _sprite(tex["coin"], Vector2(PLAY_WIDTH / 2.0, PLAY_HEIGHT / 2.0 + 70))
+	c.scale = Vector2(S * 1.6, S * 1.6)
+	add_child(c)
+	var t := create_tween()
+	t.tween_property(c, "position:y", c.position.y - 30, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_interval(0.4)
+	t.tween_property(c, "position", Vector2(214, 52), 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	t.parallel().tween_property(c, "scale", Vector2(S, S), 0.45)
+	t.tween_callback(c.queue_free)
+	_float_text("+1 coin", Vector2(PLAY_WIDTH / 2.0, PLAY_HEIGHT / 2.0 + 150))
+
+## The coin counter: "coins/price" while there's a game left to buy
+func _refresh_coins() -> void:
+	if coin_label:
+		coin_label.text = "%d/%d" % [GameData.coins, GameData.GAME_PRICE] if GameData.next_locked_game() >= 0 else str(GameData.coins)
+
+# ================================================================== THE PUFFERFISH
+
+func _reset_puffer() -> void:
+	for b in puffer.get("eaten", []):
+		b["node"].queue_free()
+	puffer["eaten"] = []
+	puffer["node"].visible = false
+	puffer["state"] = "away" if level >= PUFFER_FROM else "off"
+	puffer["timer"] = PUFFER_FIRST
+
+func _update_puffer(delta: float) -> void:
+	var n: Sprite2D = puffer["node"]
+	match puffer["state"]:
+		"away":
+			puffer["timer"] -= delta
+			if puffer["timer"] <= 0.0:
+				# swims in from one side, at some depth in the middle of the tank
+				puffer["dir"] = 1.0 if rng.randf() < 0.5 else -1.0
+				puffer["base_y"] = rng.randf_range(300, 600)
+				puffer["pos"] = Vector2(-40.0 if puffer["dir"] > 0 else PLAY_WIDTH + 40.0, puffer["base_y"])
+				puffer["phase"] = 0.0
+				puffer["state"] = "swim"
+				n.texture = tex["puffer"]
+				n.visible = true
+				if level == PUFFER_FROM and not puffer.get("met", false):
+					puffer["met"] = true
+					_show_banner("Pufferfish!", 1.0)
+					_float_text("bump it with your pal!", Vector2(PLAY_WIDTH / 2.0, PLAY_HEIGHT / 2.0 + 120), 340)
+		"swim":
+			puffer["phase"] += delta
+			var p: Vector2 = puffer["pos"]
+			p.x += puffer["dir"] * PUFFER_SPEED * _speed() * delta
+			p.y = puffer["base_y"] + sin(puffer["phase"] * 1.6) * 14.0
+			if (p.x < TANK_L + 50 and puffer["dir"] < 0) or (p.x > TANK_R - 50 and puffer["dir"] > 0):
+				puffer["dir"] *= -1.0                                  # turns at the walls...
+				puffer["base_y"] = clampf(puffer["base_y"] + rng.randf_range(-120, 120), 300, 620)   # ...at a new depth
+			puffer["pos"] = p
+			n.flip_h = puffer["dir"] > 0                               # (the art faces left)
+			# a ball near its mouth: gulp
+			if puffer["eaten"].size() < PUFFER_MAX_EAT:
+				var mouth: Vector2 = p + Vector2(puffer["dir"] * 40.0, 6.0)
+				for b in balls:
+					if b["pos"].distance_to(mouth) < 28.0:
+						_puffer_eat(b)
+						break
+			# bumped by the diving pal: a fright
+			if not diver.is_empty() and diver["pos"].distance_to(p) < DIVER_R + PUFFER_R:
+				_puffer_scare()
+		"flee":
+			var p: Vector2 = puffer["pos"]
+			p.x += puffer["dir"] * PUFFER_FLEE * delta
+			p.y -= 40.0 * delta
+			puffer["pos"] = p
+			if p.x < -80 or p.x > PLAY_WIDTH + 80:
+				n.visible = false
+				puffer["state"] = "away"
+				puffer["timer"] = PUFFER_AWAY
+	n.position = puffer.get("pos", Vector2(-100, 0))
+
+func _puffer_eat(b: Dictionary) -> void:
+	balls.erase(b)
+	b["node"].visible = false
+	puffer["eaten"].append(b)
+	_sfx("res://sounds/fx/pin_gulp.wav", -8.0)
+	_float_text("gulp!", puffer["pos"])
+	var n: Sprite2D = puffer["node"]
+	var t := create_tween()
+	t.tween_property(n, "scale", Vector2(PUFFER_S * 1.25, PUFFER_S * 0.85), 0.08)
+	t.tween_property(n, "scale", Vector2(PUFFER_S, PUFFER_S), 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+## The pal bumped it: it puffs up, spits out every ball it swallowed and darts off
+func _puffer_scare() -> void:
+	var p: Vector2 = puffer["pos"]
+	puffer["state"] = "flee"
+	if absf(p.x - diver["pos"].x) > 4.0:
+		puffer["dir"] = signf(p.x - diver["pos"].x)              # away from the pal
+	var n: Sprite2D = puffer["node"]
+	n.texture = tex["puffer_puffed"]
+	n.flip_h = puffer["dir"] > 0
+	for b in puffer["eaten"]:
+		b["pos"] = p + Vector2(rng.randf_range(-12, 12), rng.randf_range(-12, 12))
+		b["vel"] = Vector2(rng.randf_range(-220, 220), rng.randf_range(-320, -140))
+		b["node"].position = b["pos"]
+		b["node"].visible = true
+		balls.append(b)
+	puffer["eaten"] = []
+	diver["vel"] += (diver["pos"] - p).normalized() * 260.0    # (the pal bounces off its spines)
+	_sfx("res://sounds/fx/water_boing.wav", -8.0)
+	_float_text("shoo!", p)
+	var t := create_tween()
+	t.tween_property(n, "scale", Vector2(PUFFER_S * 1.3, PUFFER_S * 1.3), 0.1)
+	t.tween_property(n, "scale", Vector2(PUFFER_S, PUFFER_S), 0.3)
 
 # ================================================================== BUBBLES
 
@@ -447,10 +676,18 @@ func _create_static_nodes() -> void:
 	add_child(net_layer)
 	diver_layer = Node2D.new()
 	add_child(diver_layer)
+	puffer = { "node": _sprite(tex["puffer"], Vector2(-100, 0)), "state": "off", "eaten": [] }
+	puffer["node"].scale = Vector2(PUFFER_S, PUFFER_S)
+	puffer["node"].visible = false
+	diver_layer.add_child(puffer["node"])           # (under the diver, added later)
 	bubble_layer = Node2D.new()
 	add_child(bubble_layer)
 
 	hud_level = _make_label(Vector2(40, 26), Vector2(160, 52), 38, HORIZONTAL_ALIGNMENT_LEFT, OUTLINE)
+	var coin_icon := _sprite(tex["coin"], Vector2(214, 52))
+	add_child(coin_icon)
+	coin_label = _make_label(Vector2(236, 26), Vector2(120, 52), 30, HORIZONTAL_ALIGNMENT_LEFT, OUTLINE)
+	_refresh_coins()
 	hud_time = _make_label(Vector2(PLAY_WIDTH / 2 - 85, 26), Vector2(170, 52), 38, HORIZONTAL_ALIGNMENT_CENTER, OUTLINE)
 	var frame := ColorRect.new()
 	frame.color = Color(0, 0, 0)
@@ -503,8 +740,8 @@ func _show_banner(text: String, hold: float) -> void:
 	t.tween_interval(hold)
 	t.tween_property(banner, "modulate:a", 0.0, 0.3)
 
-func _float_text(text: String, at: Vector2) -> void:
-	var l := _make_label(at + Vector2(-60, -70), Vector2(120, 40), 28, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.95, 0.85))
+func _float_text(text: String, at: Vector2, width := 120.0) -> void:
+	var l := _make_label(at + Vector2(-width / 2.0, -70), Vector2(width, 40), 28, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.95, 0.85))
 	l.add_theme_color_override("font_outline_color", OUTLINE)
 	l.add_theme_constant_override("outline_size", 10)
 	l.text = text

@@ -197,8 +197,8 @@ static func bubble(n: int) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 ## The pal as a diver: its own sprite shrunk to about `width` art px (not a ball), with a
-## diving mask (one wide lens over both eyes, a strap round the sides) and a snorkel up the
-## right side. The eyes are found on the small sprite (its dark pixels inside the outline).
+## diving mask (one wide rounded lens over both eyes, a strap round the sides) and a snorkel up
+## the left side. The eyes are found on the small sprite (its dark pixels inside the outline).
 static func diver(path: String, width := 30) -> Texture2D:
 	var src: Image = (load(path) as Texture2D).get_image()
 	if src.is_compressed():
@@ -256,63 +256,238 @@ static func diver(path: String, width := 30) -> Texture2D:
 				if q.x < 0 or q.y < 0 or q.x >= w or q.y >= h or body.get_pixel(q.x, q.y).a <= 0.0:
 					col = OUTLINE
 			img.set_pixel(x + ox, y + oy, col)
-	# the eyes: dark pixels away from the outline
-	var ex0 := w
-	var ex1 := -1
-	var ey_sum := 0.0
-	var ey_n := 0
-	for y in range(1, h - 1):
-		for x in range(1, w - 1):
-			var inside := true
-			for dd in [Vector2i(2, 0), Vector2i(-2, 0), Vector2i(0, 2), Vector2i(0, -2)]:
-				var q: Vector2i = Vector2i(x, y) + dd
-				if q.x < 0 or q.y < 0 or q.x >= w or q.y >= h or body.get_pixel(q.x, q.y).a <= 0.0:
-					inside = false
-			var px := body.get_pixel(x, y)
-			if inside and px.a > 0.0 and px.get_luminance() < 0.18:
-				ex0 = mini(ex0, x)
-				ex1 = maxi(ex1, x)
-				ey_sum += y
-				ey_n += 1
-	var ey := roundi(ey_sum / ey_n) if ey_n > 0 else h / 2
-	if ey_n == 0 or ex1 - ex0 < 4:
-		ex0 = w / 2 - 4
-		ex1 = w / 2 + 3
-	# the strap: across the whole body at the eyes
-	var strap := Color8(60, 64, 80)
+	# the eyes, found on the full-size sprite, then in the small one's pixels
+	var eyes := _find_eyes(src, used)
+	var ey := h / 2
+	var ex0 := w / 2 - 4
+	var ex1 := w / 2 + 3
+	if eyes.size() > 0:
+		ey = clampi(roundi((eyes[0] - used.position.y) / k), 4, h - 4)
+		ex0 = int((eyes[1] - used.position.x) / k)
+		ex1 = int((eyes[2] - used.position.x) / k)
+	# the lens: centred on the eyes, a sensible width
+	var ec := (ex0 + ex1) / 2.0
+	var half := clampf((ex1 - ex0) / 2.0 + 3.0, 6.5, 8.5)
+	ex0 = int(ec - half) + 3
+	ex1 = int(ec + half) - 3
+	# the mask (like a real snorkel set, minus the nose bit): one wide rounded lens in a blue
+	# frame, a blue strap round the head, a blue snorkel up the left side with a J at the bottom
+	var blue := Color8(66, 114, 190)
+	var blue_light := Color8(126, 168, 226)
+	var blue_dark := Color8(44, 72, 132)
+	var glass := Color8(196, 230, 238)
 	for x in w:
 		if body.get_pixel(x, ey).a > 0.0:
-			img.set_pixel(x + ox, ey + oy, strap)
-	# the mask: one wide lens over both eyes (outlined, a glint top left)
-	var glass := Color8(176, 222, 236)
-	var l0 := maxi(ex0 - 2, 1)
-	var l1 := mini(ex1 + 2, w - 2)
-	for y in range(ey - 3, ey + 3):
-		for x in range(l0, l1 + 1):
-			var edge: bool = y == ey - 3 or y == ey + 2 or x == l0 or x == l1
-			var corner: bool = (y == ey - 3 or y == ey + 2) and (x == l0 or x == l1)
-			if corner:
-				continue
-			img.set_pixel(x + ox, y + oy, OUTLINE if edge else glass)
-	img.set_pixel(l0 + 1 + ox, ey - 2 + oy, Color.WHITE)
-	img.set_pixel(l0 + 2 + ox, ey - 2 + oy, Color.WHITE)
-	img.set_pixel(l0 + 1 + ox, ey - 1 + oy, Color.WHITE)
-	# the snorkel: hugging the body's right side from the strap, its tip a little above the head
-	var side := w - 1
-	while side > 0 and body.get_pixel(side, ey).a <= 0.0:
-		side -= 1
-	var sx := side + ox + 2
+			img.set_pixel(x + ox, ey + oy, blue_dark)            # the strap
+	var l0 := maxi(ex0 - 3, 0)
+	var l1 := mini(ex1 + 3, w - 1)
+	const INSET := [2, 1, 0, 0, 0, 0, 1, 3]                     # its rounded outline, row by row
+	var top := ey - 4
+	var shape := {}
+	for r in INSET.size():
+		for x in range(l0 + INSET[r], l1 - INSET[r] + 1):
+			shape[Vector2i(x, top + r)] = true
+	var rim := {}                                               # its outline: shape pixels at the edge
+	for q: Vector2i in shape:
+		for dd in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			if not shape.has(q + dd):
+				rim[q] = true
+	for q: Vector2i in shape:
+		var col: Color
+		if rim.has(q):
+			col = OUTLINE
+		else:
+			var frame := false                                  # next to the outline: the blue frame
+			for dd in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 1)]:
+				if rim.has(q + dd):
+					frame = true
+			if frame:
+				col = blue_light if q.y <= top + 1 else blue
+			else:
+				# the glass: see-through, the pal's eyes behind it
+				var under := body.get_pixel(q.x, q.y) if q.x >= 0 and q.y >= 0 and q.x < w and q.y < h else Color(0, 0, 0, 0)
+				col = glass if under.a <= 0.0 else Color(under.r, under.g, under.b).lerp(glass, 0.45)
+		img.set_pixel(q.x + ox, q.y + oy, col)
+	# a glint on the glass, top left
+	for g in [Vector2i(l0 + 3, top + 2), Vector2i(l0 + 4, top + 2), Vector2i(l0 + 3, top + 3)]:
+		if shape.has(g):
+			img.set_pixel(g.x + ox, g.y + oy, Color.WHITE)
+	# the snorkel: up the body's left side, its top a little above the head...
+	var side := 0
+	while side < w - 1 and body.get_pixel(side, ey).a <= 0.0:
+		side += 1
+	var sx := maxi(side + ox - 1, 1)
 	var head := 0
-	while head < h and body.get_pixel(mini(side, w - 1) - 3, head).a <= 0.0:
+	while head < h and body.get_pixel(mini(side + 3, w - 1), head).a <= 0.0:
 		head += 1
-	var top := maxi(head + oy - 4, 0)
-	for y in range(top + 1, ey + oy + 2):
+	var tube_top := maxi(head + oy - 4, 0)
+	var tube_end := ey + oy + 4
+	sx = maxi(sx - 1, 1)
+	for y in range(tube_top, tube_end + 1):
 		img.set_pixel(sx - 1, y, OUTLINE)
-		img.set_pixel(sx, y, CORAL)
-		img.set_pixel(sx + 1, y, OUTLINE)
-	for x in range(sx - 2, sx + 2):
-		img.set_pixel(x, top, OUTLINE)
-	img.set_pixel(sx - 2, top + 1, CORAL_LIGHT)
-	img.set_pixel(sx - 1, top + 1, CORAL)
-	img.set_pixel(sx, ey + oy + 2, OUTLINE)
+		img.set_pixel(sx, y, blue_light)
+		img.set_pixel(sx + 1, y, blue)
+		img.set_pixel(sx + 2, y, OUTLINE)
+	for x in range(sx - 1, sx + 3):
+		img.set_pixel(x, tube_top, OUTLINE)
+	# ...and its J: the clear mouthpiece curling in under the mask
+	var clear := Color8(214, 226, 230)
+	var mouth_x := l0 + ox + 3
+	for x in range(sx, mouth_x + 1):
+		img.set_pixel(x, tube_end, clear if x > sx + 1 else blue)
+		img.set_pixel(x, tube_end + 1, OUTLINE)
+	img.set_pixel(mouth_x + 1, tube_end, OUTLINE)
+	img.set_pixel(mouth_x + 1, tube_end - 1, OUTLINE)
+	img.set_pixel(mouth_x, tube_end - 1, clear)
+	return ImageTexture.create_from_image(img)
+
+# the pufferfish: pale mustard with brown spots and a cream belly
+const PUFF := Color8(232, 200, 110)
+const PUFF_BELLY := Color8(250, 238, 204)
+const PUFF_SPOT := Color8(184, 136, 66)
+
+## The pufferfish, facing left (flip it to face right): hand-drawn, chunkier than the rest (the
+## game shows it at twice the scale). Calm: an oval fish with a tail and a few spines on its back;
+## puffed up (scared): a round ball with spines all round and its mouth in an "o".
+##   o outline · y body · s spot · b belly · k pupil · w eye white · m mouth
+const PUFFER_CALM := [
+	"...o.o.o.......",
+	"..ooooooooo....",
+	".oyysyyyysyo.oo",
+	"okwyyyyyyyyyoyo",
+	"oyyyysyyyyyyyyo",
+	"myyyyyyyyyyyoyo",
+	"obbbbbbbbbbo.oo",
+	".obbbbbbbbo....",
+	"..oooooooo.....",
+]
+const PUFFER_PUFFED := [
+	"o......o......o",
+	".o.....o.....o.",
+	".....ooooo.....",
+	"...ooyyysyoo...",
+	"..oyysyyyyyyo..",
+	"..okwyyyysyyo..",
+	".oyyyyyyyyyyyo.",
+	"oomyyysyyyyyyoo",
+	".oyyyyyyyyysyo.",
+	"..obbbbbbbbbo..",
+	"..obbbbbbbbbo..",
+	"...oobbbbboo...",
+	".....ooooo.....",
+	".o.....o.....o.",
+	"o......o......o",
+]
+
+static func puffer(puffed: bool) -> Texture2D:
+	var cols := { "o": OUTLINE, "y": PUFF, "s": PUFF_SPOT, "b": PUFF_BELLY, "k": OUTLINE,
+		"w": Color.WHITE, "m": CORAL_DARK }
+	var rows: Array = PUFFER_PUFFED if puffed else PUFFER_CALM
+	var img := Image.create(rows[0].length(), rows.size(), false, Image.FORMAT_RGBA8)
+	for y in rows.size():
+		for x in rows[y].length():
+			var ch: String = rows[y][x]
+			if cols.has(ch):
+				img.set_pixel(x, y, cols[ch])
+	return ImageTexture.create_from_image(img)
+
+## Where a pal's eyes are on its sprite: [row, left x, right x] (sprite pixels), or [] if not
+## found. The eyes = rows (in the middle band of the pal) with a small near-black blob left of the
+## middle AND one right of it, and nothing dark in the middle of that row (so not the mouth, not a
+## line across the body); the darkest run of such rows, its middle. No eyes like that: a robot's
+## visor (one dark bar across the middle).
+static func _find_eyes(src: Image, used: Rect2i) -> Array:
+	var cx := used.position.x + used.size.x / 2.0
+	var gap := used.size.x * 0.06                    # the middle strip that must stay clear
+	var reach := used.size.x * 0.4                   # how far out an eye can be
+	var m := maxi(5, int(used.size.x * 0.1))         # this far in from the pal's edge (past its outline)
+	# dark = well under the body's own brightness (some pals have dark green eyes, not black)
+	var lums := []
+	for y in range(used.position.y, used.end.y, 2):
+		for x in range(used.position.x, used.end.x, 2):
+			var q := src.get_pixel(x, y)
+			if q.a > 0.5:
+				lums.append(q.get_luminance())
+	lums.sort()
+	var dark := minf(0.32, lums[lums.size() / 2] * 0.55) if lums.size() > 0 else 0.2
+	var rows := []                                   # [y, min x, max x] of each eye row
+	var visor := []                                  # (robots: rows with one dark bar across the middle)
+	# (only the middle band of the pal: leaves, hats and toppings sit above it)
+	for y in range(used.position.y + int(used.size.y * 0.28), used.position.y + int(used.size.y * 0.8)):
+		var mid := false
+		var lx := []                             # the dark pixels' x, left and right of the middle
+		var rx := []
+		var lum_sum := 0.0
+		for x in range(used.position.x + 2, used.end.x - 2):
+			var px := src.get_pixel(x, y)
+			if px.a < 0.5 or px.get_luminance() > dark or px.s > 0.65:
+				continue
+			# (not the sprite's own outline: well inside its shape)
+			if x - m < 0 or x + m >= src.get_width() or src.get_pixel(x - m, y).a < 0.5 or src.get_pixel(x + m, y).a < 0.5 \
+					or src.get_pixel(x, maxi(y - m, 0)).a < 0.5 or src.get_pixel(x, mini(y + m, src.get_height() - 1)).a < 0.5:
+				continue
+			var d := x - cx
+			if absf(d) <= gap:
+				mid = true
+			elif d < 0 and d > -reach:
+				lx.append(x)
+				lum_sum += px.get_luminance()
+			elif d > 0 and d < reach:
+				rx.append(x)
+				lum_sum += px.get_luminance()
+		# an eye is a small blob: each side's dark bit no wider than a fifth of the pal
+		var small := used.size.x * 0.2
+		var ok: bool = not mid and lx.size() > 0 and rx.size() > 0 \
+				and lx.max() - lx.min() < small and rx.max() - rx.min() < small
+		rows.append([y, lx.min(), rx.max(), lum_sum / maxf(lx.size() + rx.size(), 1)] if ok else [])
+		if mid and lx.size() > 0 and rx.size() > 0 and rx.max() - lx.min() < used.size.x * 0.6:
+			visor.append([y, lx.min(), rx.max()])
+	# the runs of eye rows; the eyes = the darkest run (leaves' shading, specks: lighter)
+	var best := []
+	var best_lum := 9.0
+	var run := []
+	for row in rows + [[]]:
+		if row.is_empty():
+			if run.size() >= 2:
+				var lum := 0.0
+				for rr in run:
+					lum += rr[3]
+				lum /= run.size()
+				if lum < best_lum:
+					best = run
+					best_lum = lum
+			run = []
+		else:
+			run.append(row)
+	if visor.size() > best.size():
+		best = visor                                 # (a visor beats a few specks in a robot's metal)
+	if best.is_empty():
+		return []
+	var x_min := 99999
+	var x_max := -1
+	for row in best:
+		x_min = mini(x_min, row[1])
+		x_max = maxi(x_max, row[2])
+	return [(best[0][0] + best[-1][0]) / 2.0, x_min, x_max]
+
+## A coin (11 x 11): gold, outlined, an inner ring, a shine
+static func coin() -> Texture2D:
+	const N := 11
+	var gold := Color8(240, 196, 84)
+	var ring := Color8(204, 150, 52)
+	var img := Image.create(N, N, false, Image.FORMAT_RGBA8)
+	var c := Vector2(N / 2.0, N / 2.0)
+	for y in N:
+		for x in N:
+			var d := Vector2(x + 0.5, y + 0.5).distance_to(c)
+			if d > 5.5:
+				continue
+			var col := gold
+			if d > 4.6:
+				col = OUTLINE
+			elif d > 2.6 and d < 3.6:
+				col = ring
+			img.set_pixel(x, y, col)
+	img.set_pixel(3, 3, Color8(255, 246, 200))
+	img.set_pixel(4, 2, Color8(255, 246, 200))
 	return ImageTexture.create_from_image(img)

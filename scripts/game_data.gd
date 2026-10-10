@@ -5,16 +5,20 @@ extends Node
 signal score_changed(game_index: int)
 signal progress_changed(game_index: int)
 signal game_unlocked(game_index: int)
+signal coins_changed(coins: int)
 
 const SAVE_PATH := "user://game_data.json"
 
 # Per-game data: { game_index: { "max_score": int, "progress": float, "unlocked": bool } }
 var games := {}
 
-# Progress thresholds: when a game hits X%, unlock game Y
-var unlock_thresholds := {
-	2: { 50.0: 1 },  # Splash Hoops at 50% unlocks Tilt Maze (the progression framework will replace this)
-}
+# Progress thresholds: when a game hits X%, unlock game Y (none now: coins buy the games)
+var unlock_thresholds := {}
+
+## Coins (2026-10-10): a game's stage cleared for the first time gives 1 coin; GAME_PRICE coins
+## buy the next locked game (in the Games menu's order) on their own, until there's a shop
+const GAME_PRICE := 5
+var coins := 0
 
 ## The game everyone starts with (the Games menu's first card: GameMenuSwitcher.ORDER)
 const FIRST_GAME := 2   # Splash Hoops
@@ -56,13 +60,15 @@ func _ready() -> void:
 			games[idx]["progress"] = 0.0
 			games[idx]["unlocked"] = idx == FIRST_GAME   # only the first game, as on a new install
 			games[idx]["intro"] = false               # (and the how-to cards show again)
+			games[idx]["stages"] = 0
+		coins = 0
 		save_data()
 	for idx in DEBUG_UNLOCKED:
 		games[idx]["unlocked"] = true
 
 func _init_game(index: int, unlocked: bool) -> void:
 	if index not in games:
-		games[index] = { "max_score": 0, "progress": 0.0, "unlocked": unlocked, "intro": false }
+		games[index] = { "max_score": 0, "progress": 0.0, "unlocked": unlocked, "intro": false, "stages": 0 }
 
 ## The "how to play" card is shown the first time a game is played
 func intro_seen(game_index: int) -> bool:
@@ -119,6 +125,39 @@ func get_total_score() -> int:
 		total += data["max_score"]
 	return total
 
+# --- Stages and coins ---
+
+## A game's stage `stage` (1, 2, ...) was cleared. The first time: +1 coin (returns true), and
+## once there are GAME_PRICE coins they buy the next locked game.
+func clear_stage(game_index: int, stage: int) -> bool:
+	if game_index not in games or stage <= games[game_index].get("stages", 0):
+		return false
+	games[game_index]["stages"] = stage
+	coins += 1
+	coins_changed.emit(coins)
+	_buy_next_game()
+	save_data()
+	return true
+
+func stages_cleared(game_index: int) -> int:
+	return games[game_index].get("stages", 0) if game_index in games else 0
+
+## The next locked game in the Games menu's order, or -1
+func next_locked_game() -> int:
+	for idx in GameMenuSwitcher.ORDER:
+		if idx in games and not games[idx]["unlocked"]:
+			return idx
+	return -1
+
+func _buy_next_game() -> void:
+	var idx := next_locked_game()
+	if coins < GAME_PRICE or idx < 0:
+		return
+	coins -= GAME_PRICE
+	games[idx]["unlocked"] = true
+	coins_changed.emit(coins)
+	game_unlocked.emit(idx)
+
 # --- Unlock checks ---
 
 func _check_unlocks(source_game: int) -> void:
@@ -137,7 +176,7 @@ func _check_unlocks(source_game: int) -> void:
 func save_data() -> void:
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify(games))
+		file.store_string(JSON.stringify({ "games": games, "coins": coins }))
 
 func load_data() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
@@ -147,12 +186,18 @@ func load_data() -> void:
 		return
 	var parsed = JSON.parse_string(file.get_as_text())
 	if parsed is Dictionary:
-		for key in parsed:
+		# { "games": {...}, "coins": n } (older saves: just the games)
+		var saved: Dictionary = parsed.get("games", parsed)
+		coins = int(parsed.get("coins", 0))
+		for key in saved:
+			if not str(key).is_valid_int():
+				continue
 			var idx = int(key)
 			if idx in games:
-				games[idx]["max_score"] = int(parsed[key].get("max_score", 0))
-				games[idx]["progress"] = float(parsed[key].get("progress", 0.0))
-				games[idx]["unlocked"] = bool(parsed[key].get("unlocked", false))
-				games[idx]["intro"] = bool(parsed[key].get("intro", false))
+				games[idx]["max_score"] = int(saved[key].get("max_score", 0))
+				games[idx]["progress"] = float(saved[key].get("progress", 0.0))
+				games[idx]["unlocked"] = bool(saved[key].get("unlocked", false))
+				games[idx]["intro"] = bool(saved[key].get("intro", false))
+				games[idx]["stages"] = int(saved[key].get("stages", 0))
 		# the first game is always unlocked
 		games[FIRST_GAME]["unlocked"] = true
