@@ -4,9 +4,11 @@ extends Node
 ## docs/mockups/food_drafts/; the 8 original foods and the glazed donut kept as they were).
 ##
 ## Foods grow up with the pal: a pal grows only by eating food of its NEXT size. No pal = baby
-## foods (they hatch it), a baby = kid foods, a kid = adult foods, an adult (or more) = adult
-## foods (just eaten; the special page turns it into a mutant or a legend).
-## Which types are on offer, and which types' adult foods you have: the Shop.
+## foods (they hatch it), a baby = kid foods, a kid = adult foods, an adult (or more) = any food
+## (just eaten; the special page turns it into a mutant or a legend).
+## Which types' foods of each size you have: the Shop (3 baby, 2 kid, 1 adult at the start).
+## Nothing on the menu is left to chance: it lists every type you have for that size, always in
+## the same order, then the ones still in the Shop as locked cards.
 
 const FOODS := [
 	# --- green
@@ -83,32 +85,41 @@ func tier_now() -> String:
 	var stage := int(PetState.get_form().get("stage", 0)) if PetState.has_poop() else 0
 	return TIER_FOR_STAGE.get(stage, "adult")
 
+## The type's two foods of a size take turns, meal after meal (the first one listed first: a
+## first-ever sweet meal is the chocolate)
 func _pick(family: String, tier: String) -> Dictionary:
 	var pool := all_foods.filter(func(f): return f["family"] == family and f["tier"] == tier)
-	return pool[randi() % pool.size()] if not pool.is_empty() else {}
+	if pool.is_empty():
+		return {}
+	return pool[PetState.meals_total % pool.size()]
 
-## Three foods of three different types (from the types you have), the size the pal needs.
-## A kid looking at a type whose adult foods you don't have: that card is locked ("locked":
-## true; get them in the Shop). An adult without them just gets that type's kid food.
+## The food menu's cards: every type whose foods of the size the pal needs you have, in the
+## types' order (FAMILIES), then a locked card ("locked": true, a silhouette) for each type still
+## in the Shop. An adult (or more) no longer grows on basic food: every type you have, its biggest
+## size, and no locked cards.
 func get_menu_set() -> Array:
-	var fams: Array = FAMILIES.filter(func(f): return Shop.has_type(f))
-	fams.shuffle()
-	var tier := tier_now()
-	var growing_up := PetState.has_poop() and int(PetState.get_form().get("stage", 0)) == 2
+	var stage := int(PetState.get_form().get("stage", 0)) if PetState.has_poop() else 0
 	var result := []
-	for fam in fams.slice(0, 3):
-		if tier == "adult" and not Shop.has_adult(fam):
-			if growing_up:
-				var lock: Dictionary = _pick(fam, "adult").duplicate()
-				lock["locked"] = true
-				result.append(lock)
-				continue
-			tier = "kid"                       # (an adult just eats; any size will do)
+	if stage >= 3:
+		for fam in FAMILIES:
+			for tier in ["adult", "kid", "baby"]:
+				if Shop.has_food(fam, tier):
+					result.append(_pick(fam, tier))
+					break
+		return result
+	var tier := tier_now()
+	var locked := []
+	for fam in FAMILIES:
 		var f := _pick(fam, tier)
-		if not f.is_empty():
+		if f.is_empty():
+			continue
+		if Shop.has_food(fam, tier):
 			result.append(f)
-		tier = tier_now()
-	return result
+		else:
+			var lock: Dictionary = f.duplicate()
+			lock["locked"] = true
+			locked.append(lock)
+	return result + locked
 
 ## The special page: a tech, a cosmic and a legendary card, each the first one in your pantry
 ## (the legendary one: the current pal's own if you have it). None of a kind = a locked card.

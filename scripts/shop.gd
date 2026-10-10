@@ -2,9 +2,11 @@ extends Node
 ## Autoload "Shop" (Progression v2): what coins buy besides games (games are bought in the
 ## Games menu). Opened from the gear menu's SHOP card (collection_menu.gd).
 ##
-##   food types     Spicy, Sour: their baby and kid foods (Green, Sweet, Greasy come free)
-##   adult foods    per type, both adult foods of that type: a kid only grows up eating them;
-##                  20 coins for the first type, then 30, 40, 50, 60
+##   food packs     one type's foods of one size (baby / kid / adult): a pal grows only on food of
+##                  its next size, so each pack opens new pals. At the start (user, 2026-10-10):
+##                  baby foods of 3 types, kid foods of 2, adult foods of 1, so the first pal can
+##                  grow all the way up; the other 9 packs are bought (2 baby, 3 kid, 4 adult).
+##                  A pack costs by its size, like its icons: baby 10, kid 15, adult 20 (145 in all).
 ##   special foods  key items, kept in a pantry (each one = one meal): tech and cosmic turn an
 ##                  adult into its family's mutant, a legendary food turns its ULTRA adult into
 ##                  a legend. Only offered on the food menu's special page while you have some.
@@ -12,24 +14,26 @@ extends Node
 
 signal changed
 
-const SAVE_PATH := "user://shop.json"
-## Prototype/testing: every launch starts with only the free food types and an empty pantry
+const SAVE_FILE := "shop.json"           # (in SaveSlot.path)
+## Prototype/testing: every launch starts with only the starting foods and an empty pantry
 const RESET_ON_LAUNCH := true
 
-const FREE_TYPES := ["green", "sweet", "greasy"]
-const ADULT_FIRST_PRICE := 20
-const ADULT_STEP := 10
-const TYPE_PRICE := 30
+const TIERS := ["baby", "kid", "adult"]
+## The foods you have from the start: which types, per size
+const START_FOODS := { "baby": ["green", "sweet", "greasy"], "kid": ["green", "sweet"], "adult": ["green"] }
+const PACK_PRICE := { "baby": 10, "kid": 15, "adult": 20 }
 
-## Everything on sale, in the order the Shop shows it
+## Everything on sale, in a fixed order (the Shop shows the packs your pal needs next first)
 const ITEMS := [
-	{ "id": "adult_green", "kind": "adult", "family": "green", "name": "Adult Green", "icon": "res://textures/food/dumplings.png" },
-	{ "id": "adult_sweet", "kind": "adult", "family": "sweet", "name": "Adult Sweet", "icon": "res://textures/food/chococake.png" },
-	{ "id": "adult_greasy", "kind": "adult", "family": "greasy", "name": "Adult Greasy", "icon": "res://textures/food/cheeseburger.png" },
-	{ "id": "type_spicy", "kind": "type", "family": "spicy", "name": "Spicy foods", "icon": "res://textures/food/chili.png", "price": TYPE_PRICE },
-	{ "id": "type_sour", "kind": "type", "family": "sour", "name": "Sour foods", "icon": "res://textures/food/lemon.png", "price": TYPE_PRICE },
-	{ "id": "adult_spicy", "kind": "adult", "family": "spicy", "name": "Adult Spicy", "icon": "res://textures/food/ramen.png" },
-	{ "id": "adult_sour", "kind": "adult", "family": "sour", "name": "Adult Sour", "icon": "res://textures/food/tomyum.png" },
+	{ "id": "baby_spicy", "kind": "food", "family": "spicy", "tier": "baby", "name": "Spicy Baby", "icon": "res://textures/food/chili.png" },
+	{ "id": "baby_sour", "kind": "food", "family": "sour", "tier": "baby", "name": "Sour Baby", "icon": "res://textures/food/lemon.png" },
+	{ "id": "kid_greasy", "kind": "food", "family": "greasy", "tier": "kid", "name": "Greasy Kid", "icon": "res://textures/food/hotdog.png" },
+	{ "id": "kid_spicy", "kind": "food", "family": "spicy", "tier": "kid", "name": "Spicy Kid", "icon": "res://textures/food/skewer.png" },
+	{ "id": "kid_sour", "kind": "food", "family": "sour", "tier": "kid", "name": "Sour Kid", "icon": "res://textures/food/umeboshi.png" },
+	{ "id": "adult_sweet", "kind": "food", "family": "sweet", "tier": "adult", "name": "Sweet Adult", "icon": "res://textures/food/chococake.png" },
+	{ "id": "adult_greasy", "kind": "food", "family": "greasy", "tier": "adult", "name": "Greasy Adult", "icon": "res://textures/food/cheeseburger.png" },
+	{ "id": "adult_spicy", "kind": "food", "family": "spicy", "tier": "adult", "name": "Spicy Adult", "icon": "res://textures/food/ramen.png" },
+	{ "id": "adult_sour", "kind": "food", "family": "sour", "tier": "adult", "name": "Sour Adult", "icon": "res://textures/food/tomyum.png" },
 	{ "id": "microchip", "kind": "special", "food": "Microchip", "name": "Microchip", "icon": "res://textures/food/microchip.png", "price": 15 },
 	{ "id": "battery", "kind": "special", "food": "Battery", "name": "Battery", "icon": "res://textures/food/battery.png", "price": 15 },
 	{ "id": "aliengoo", "kind": "special", "food": "Alien Goo", "name": "Alien Goo", "icon": "res://textures/food/aliengoo.png", "price": 15 },
@@ -41,15 +45,22 @@ const ITEMS := [
 	{ "id": "krakenbrine", "kind": "special", "food": "Kraken Brine", "name": "Kraken Brine", "icon": "res://textures/food/krakenbrine.png", "price": 40 },
 ]
 
-var types: Array = FREE_TYPES.duplicate()     # food types on offer
-var adult: Array = []                         # types whose adult foods you have
+var foods := {}                               # size -> the types whose foods of that size you have
 var pantry := {}                              # special food name -> how many
 
 func _ready() -> void:
+	_start()
+
+## Loads the save again (BOOT + PROGRESSION, once its folder is in use: nothing reset)
+func reload() -> void:
+	_start()
+
+func _start() -> void:
+	foods = START_FOODS.duplicate(true)
+	pantry = {}
 	load_data()
-	if RESET_ON_LAUNCH:
-		types = FREE_TYPES.duplicate()
-		adult = []
+	if RESET_ON_LAUNCH and not SaveSlot.real():
+		foods = START_FOODS.duplicate(true)
 		pantry = {}
 		save_data()
 
@@ -59,34 +70,57 @@ func item(id: String) -> Dictionary:
 			return it
 	return {}
 
-func has_type(family: String) -> bool:
-	return family in types
+## Do you have this type's foods of this size?
+func has_food(family: String, tier: String) -> bool:
+	return family in foods.get(tier, [])
 
-func has_adult(family: String) -> bool:
-	return family in adult
+## Food packs bought so far (the starting foods don't count)
+func packs_bought() -> int:
+	var n := 0
+	for tier in TIERS:
+		for fam in foods.get(tier, []):
+			if fam not in START_FOODS[tier]:
+				n += 1
+	return n
+
+## What a food pack of this size costs
+func food_price(tier: String) -> int:
+	return int(PACK_PRICE.get(tier, 0))
 
 func pantry_count(food_name: String) -> int:
 	return int(pantry.get(food_name, 0))
 
-## What an item costs right now (adult foods: 20, then 10 more for each type you already have)
 func price(it: Dictionary) -> int:
-	if it.get("kind", "") == "adult":
-		return ADULT_FIRST_PRICE + ADULT_STEP * adult.size()
+	if it.get("kind", "") == "food":
+		return food_price(it["tier"])
 	return int(it.get("price", 0))
 
-## "owned" (a one-time item you have), "needs_type" (adult foods of a type you don't have),
-## "ok" (you can buy it), "poor" (not enough coins)
+## "owned" (a food pack you have), "ok" (you can buy it), "poor" (not enough coins)
 func state(it: Dictionary) -> String:
-	match it.get("kind", ""):
-		"type":
-			if has_type(it["family"]):
-				return "owned"
-		"adult":
-			if has_adult(it["family"]):
-				return "owned"
-			if not has_type(it["family"]):
-				return "needs_type"
+	if it.get("kind", "") == "food" and has_food(it["family"], it["tier"]):
+		return "owned"
 	return "ok" if GameData.coins >= price(it) else "poor"
+
+## The items in the order the Shop shows them: the food packs for the size your pal needs next
+## first (then the next size, then the rest), the ones you have last; the special foods after
+func shop_order() -> Array:
+	var need := FoodLibrary.tier_now()
+	var rank := func(it: Dictionary) -> int:
+		if it["kind"] != "food":
+			return 50
+		if state(it) == "owned":
+			return 90
+		var t := TIERS.find(it["tier"]) - TIERS.find(need)
+		return t if t >= 0 else 10 + t + 3
+	var order := ITEMS.duplicate()
+	var idx := {}
+	for i in ITEMS.size():
+		idx[ITEMS[i]["id"]] = i
+	order.sort_custom(func(a, b):
+		var ra: int = rank.call(a)
+		var rb: int = rank.call(b)
+		return ra < rb if ra != rb else idx[a["id"]] < idx[b["id"]])
+	return order
 
 ## Buys an item. Returns true if it was bought.
 func buy(id: String) -> bool:
@@ -96,10 +130,8 @@ func buy(id: String) -> bool:
 	if not GameData.spend_coins(price(it)):
 		return false
 	match it["kind"]:
-		"type":
-			types.append(it["family"])
-		"adult":
-			adult.append(it["family"])
+		"food":
+			foods[it["tier"]].append(it["family"])
 		"special":
 			pantry[it["food"]] = pantry_count(it["food"]) + 1
 	save_data()
@@ -123,23 +155,25 @@ func give_special(food_name: String, n := 1) -> void:
 	changed.emit()
 
 func save_data() -> void:
-	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file = FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({ "types": types, "adult": adult, "pantry": pantry }))
+		file.store_string(JSON.stringify({ "foods": foods, "pantry": pantry }))
 
 func load_data() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not FileAccess.file_exists(SaveSlot.path(SAVE_FILE)):
 		return
-	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file = FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.READ)
 	if not file:
 		return
 	var parsed = JSON.parse_string(file.get_as_text())
 	if parsed is Dictionary:
-		types = parsed.get("types", FREE_TYPES.duplicate())
-		for f in FREE_TYPES:
-			if f not in types:
-				types.append(f)
-		adult = parsed.get("adult", [])
+		foods = START_FOODS.duplicate(true)
+		var f = parsed.get("foods", {})
+		if f is Dictionary:
+			for tier in TIERS:
+				for fam in f.get(tier, []):
+					if str(fam) not in foods[tier]:
+						foods[tier].append(str(fam))
 		pantry = {}
 		var p = parsed.get("pantry", {})
 		if p is Dictionary:

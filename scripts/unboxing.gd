@@ -10,9 +10,9 @@ class_name Unboxing
 ## sees input first. Art: tools/design/unboxing_art.py -> textures/unboxing/.
 
 ## TESTING: show the unboxing on every launch. Turn off before release (then it shows
-## only once, remembered in SAVE_PATH).
+## only once, remembered in SAVE_FILE). BOOT + PROGRESSION already plays it only once.
 const SHOW_EVERY_LAUNCH := true
-const SAVE_PATH := "user://device.json"
+const SAVE_FILE := "device.json"          # (in SaveSlot.path)
 
 # Screen-space rects on the front at rest (match tools/design/unboxing_art.py)
 const SCREEN := Rect2(76, 623, 926, 926)
@@ -32,18 +32,18 @@ static var _state := -1             # -1 not decided yet, 1 waiting for power, 0
 ## True until the battery strip is pulled (BootSequence waits on this).
 static func waiting() -> bool:
 	if _state == -1:
-		_state = 1 if (SHOW_EVERY_LAUNCH or not _saved_unboxed()) and not DevLaunch.skip_boot else 0
+		_state = 1 if ((SHOW_EVERY_LAUNCH and not SaveSlot.real()) or not _saved_unboxed()) and not DevLaunch.skip_boot else 0
 	return _state == 1
 
 static func _saved_unboxed() -> bool:
-	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var f := FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.READ)
 	if not f:
 		return false
 	var data = JSON.parse_string(f.get_as_text())
 	return data is Dictionary and data.get("unboxed", false)
 
 static func _save_unboxed() -> void:
-	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var f := FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify({"unboxed": true}))
 
@@ -105,8 +105,8 @@ func _input(event: InputEvent) -> void:
 		return
 	if tap and tap.button_index != MOUSE_BUTTON_LEFT:
 		return
-	if flip.turning:
-		return
+	if not flip or flip.turning:
+		return                       # (not set up: it's on its way out, already unboxed)
 	var pos: Vector2 = event.position
 	if held_button:
 		get_viewport().set_input_as_handled()

@@ -12,7 +12,7 @@ signal score_changed(total: int)
 signal boost_changed(boost_id: String)                  # "" = no boost
 signal pal_discovered(form_id: String)                  # a form reached for the very first time
 
-const SAVE_PATH := "user://pet_state.json"
+const SAVE_FILE := "pet_state.json"      # (in SaveSlot.path)
 
 ## Prototype/testing: every launch starts from zero — no poop, score 0, empty Poop-Pedia.
 const FRESH_START_ON_LAUNCH := true
@@ -53,6 +53,7 @@ var form_id := ""          # "" = no poop yet, waiting for the first meal
 var meals: Array = []      # food families eaten this cycle, in order
 var discovered: Array = [] # every form ever reached
 var score := 0             # main LCD score: every minigame round adds its points
+var meals_total := 0       # every meal ever eaten (the food menu's two foods of a size take turns by it)
 
 ## Drink boosts: the last drink gives the pal one boost, used up in the next minigame that
 ## has a use for it (each game decides what a boost does; players find out which is best).
@@ -67,15 +68,38 @@ const BOOSTS := {
 }
 var boost := ""
 
+## When the next meal / drink is allowed (Unix seconds; 0 = now). Saved, so the LCD's countdowns
+## keep running while the app is closed (LcdScreen sets them).
+var food_ready_at := 0.0
+var drink_ready_at := 0.0
+
 func _ready() -> void:
 	_load_tree()
+	_start()
+
+## Loads the save again (BOOT + PROGRESSION, once its folder is in use: no fresh start)
+func reload() -> void:
+	_start()
+
+func _start() -> void:
+	form_id = ""
+	meals = []
+	discovered = []
+	score = 0
+	meals_total = 0
+	boost = ""
+	food_ready_at = 0.0
+	drink_ready_at = 0.0
 	load_data()
-	if FRESH_START_ON_LAUNCH:
+	if FRESH_START_ON_LAUNCH and not SaveSlot.real():
 		form_id = ""
 		meals.clear()
 		score = 0
 		discovered.clear()
+		meals_total = 0
 		boost = ""
+		food_ready_at = 0.0
+		drink_ready_at = 0.0
 		save_data()
 
 func has_poop() -> bool:
@@ -114,6 +138,7 @@ func feed(food: Dictionary) -> void:
 	if family == "":
 		return
 	meals.append(family)
+	meals_total += 1
 	fed.emit(food)
 	var to := evolution_for(food)
 	if to == "":
@@ -186,6 +211,8 @@ func flush() -> void:
 	form_id = ""
 	meals.clear()
 	boost = ""                            # the boost goes down with the pal
+	food_ready_at = 0.0
+	drink_ready_at = 0.0
 	save_data()
 	form_changed.emit("", "flush")
 	boost_changed.emit("")
@@ -208,14 +235,15 @@ func _set_form(id: String, reason: String) -> void:
 # --- Save / Load ---
 
 func save_data() -> void:
-	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file = FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({ "form_id": form_id, "meals": meals, "discovered": discovered, "score": score, "boost": boost }))
+		file.store_string(JSON.stringify({ "form_id": form_id, "meals": meals, "discovered": discovered, "score": score, "boost": boost,
+			"meals_total": meals_total, "food_ready_at": food_ready_at, "drink_ready_at": drink_ready_at }))
 
 func load_data() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not FileAccess.file_exists(SaveSlot.path(SAVE_FILE)):
 		return
-	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file = FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.READ)
 	if not file:
 		return
 	var parsed = JSON.parse_string(file.get_as_text())
@@ -226,4 +254,7 @@ func load_data() -> void:
 		meals = parsed.get("meals", [])
 		discovered = parsed.get("discovered", [])
 		score = int(parsed.get("score", 0))
+		meals_total = int(parsed.get("meals_total", 0))
 		boost = str(parsed.get("boost", ""))
+		food_ready_at = float(parsed.get("food_ready_at", 0.0))
+		drink_ready_at = float(parsed.get("drink_ready_at", 0.0))

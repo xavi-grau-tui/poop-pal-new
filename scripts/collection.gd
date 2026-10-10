@@ -7,7 +7,7 @@ signal unlocked(category: String, id: String)
 signal background_changed(id: String)
 signal equipped_changed(category: String, id: String)
 
-const SAVE_PATH := "user://collection.json"
+const SAVE_FILE := "collection.json"     # (in SaveSlot.path)
 
 ## Every launch starts on the default background (unlocked ones stay unlocked)
 const DEFAULT_BACKGROUND := "clouds"
@@ -113,17 +113,34 @@ var equipped_gut_color := ""           # the gut colour in use ("" = the natural
 var new_items := {}                     # "category/id" -> true: unlocked but not looked at yet
 
 func _ready() -> void:
+	_start()
+	# what the pal wears goes down the drain with it
+	PetState.form_changed.connect(func(_id, reason):
+		if reason == "flush" and equipped_accessory != "none":
+			equip("accessories", "none"))
+
+## Loads the save again (BOOT + PROGRESSION, once its folder is in use: nothing reset)
+func reload() -> void:
+	_start()
+
+func _start() -> void:
+	owned = { "backgrounds": [], "accessories": [], "decor": [] }
+	equipped_background = DEFAULT_BACKGROUND
+	equipped_bg_color = DEFAULT_BG_COLOR
+	equipped_accessory = "none"
+	equipped_decor = "none"
+	equipped_gut_color = ""
+	new_items = {}
 	for cat in ["backgrounds", "accessories", "decor"]:
 		var cat_catalog := catalog(cat)
 		for id in cat_catalog:
 			if cat_catalog[id]["unlocked"] and id not in owned[cat]:
 				owned[cat].append(id)
+	if SaveSlot.real():
+		load_data()
+		return
 	if not RESET_UNLOCKS_ON_LAUNCH:
 		load_data()
-	# what the pal wears goes down the drain with it
-	PetState.form_changed.connect(func(_id, reason):
-		if reason == "flush" and equipped_accessory != "none":
-			equip("accessories", "none"))
 	if RESET_BACKGROUND_ON_LAUNCH and (equipped_background != DEFAULT_BACKGROUND or equipped_bg_color != DEFAULT_BG_COLOR):
 		equipped_background = DEFAULT_BACKGROUND
 		equipped_bg_color = DEFAULT_BG_COLOR
@@ -265,15 +282,15 @@ func equip_background(id: String) -> bool:
 	return true
 
 func save_data() -> void:
-	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file = FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify({ "owned": owned, "equipped_background": equipped_background, "equipped_bg_color": equipped_bg_color,
 			"equipped_accessory": equipped_accessory, "equipped_decor": equipped_decor, "equipped_gut_color": equipped_gut_color, "new_items": new_items.keys() }))
 
 func load_data() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not FileAccess.file_exists(SaveSlot.path(SAVE_FILE)):
 		return
-	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file = FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.READ)
 	if not file:
 		return
 	var parsed = JSON.parse_string(file.get_as_text())

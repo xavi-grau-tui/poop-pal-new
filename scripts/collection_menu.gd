@@ -200,6 +200,8 @@ func confirm_selected(sel: Node) -> bool:
 	match action.get("type", ""):
 		"open":
 			page = 0              # (the card's own ConfirmSound already played)
+			if action["view"] == View.SHOP:
+				shop_items = Shop.shop_order()     # (fixed while it's open: a bought card stays put)
 			_open(action["view"])
 		"back":
 			_click()
@@ -630,19 +632,24 @@ func _list_pages(v: int) -> int:
 # ================================================================== SHOP
 
 const SHOP_PER_PAGE := 3
+var shop_items: Array = []          # the Shop's cards in the order it opened with
 
 func _shop_pages() -> int:
 	return maxi(1, ceili(Shop.ITEMS.size() / float(SHOP_PER_PAGE)))
 
 ## The Shop: the food menu's cards, 3 a page: the item, its price on the tag (a coin + the
-## number), and under the name what holding it does (or why it can't be bought yet)
+## number), and under the name what holding it does (or why it can't be bought yet). The food
+## packs your pal needs next come first (Shop.shop_order)
 func _build_shop() -> void:
 	page = clampi(page, 0, _shop_pages() - 1)
+	if shop_items.size() != Shop.ITEMS.size():
+		shop_items = Shop.shop_order()
+	var items := shop_items
 	for slot in SHOP_PER_PAGE:
 		var i := page * SHOP_PER_PAGE + slot
-		if i >= Shop.ITEMS.size():
+		if i >= items.size():
 			break
-		var it: Dictionary = Shop.ITEMS[i]
+		var it: Dictionary = items[i]
 		var row := _food_card(slot, load(it["icon"]))
 		var name_l: Label = row.get_meta("name_label")
 		name_l.text = it["name"]
@@ -652,8 +659,6 @@ func _build_shop() -> void:
 			"owned":
 				st.text = "Yours"
 				st.add_theme_color_override("font_color", IN_USE)
-			"needs_type":
-				st.text = "%s foods first" % str(it["family"]).capitalize()
 			"poor":
 				st.text = "Need %d more" % (Shop.price(it) - GameData.coins)
 			_:

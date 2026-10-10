@@ -22,7 +22,15 @@ const PAGES := 3
 var current_page := 0
 var drinks_populated := false
 
-var current_selection := -1
+## Each page lists everything it offers (every food type of the size the pal needs, then the ones
+## still locked; every drink type...), more than its 3 cards: the cards are a window on that list.
+## Pressing past the last card scrolls it on; the marks on the panel's right edge show where you are.
+const VISIBLE := 3
+var page_items := [[], [], []]
+var page_offset := [0, 0, 0]
+var scroll_marks: Node2D
+
+var current_selection := -1                  # in the page's whole list
 var legend: MenuLegend                 # the orange button's controls, left of the bottom band
 
 ## While the food (or drink) countdown runs, a shutter rolls down over the options with the LCD's
@@ -50,20 +58,36 @@ func show_page(index: int):
 		1: active_options = [drink_option_1, drink_option_2, drink_option_3]
 		_: active_options = special_options
 	current_selection = -1
+	if page_offset[index] != 0:
+		page_offset[index] = 0                     # (each page opens at the top of its list)
+		_fill_window(index)
 	reset_selection()
 	update_dots(index)
+	_update_scroll_marks()
 	_update_barrier()                              # (it also shows / hides the legend)
 
 func select_next():
-	if active_options.size() == 0:
+	var n: int = page_items[current_page].size()
+	if n == 0:
 		return
-	current_selection = (current_selection + 1) % active_options.size()
+	current_selection = (current_selection + 1) % n
+	# keep the selected one on screen: the window follows it (and jumps back to the top)
+	var off: int = page_offset[current_page]
+	if current_selection < off:
+		off = current_selection
+	elif current_selection >= off + VISIBLE:
+		off = current_selection - VISIBLE + 1
+	if off != page_offset[current_page]:
+		page_offset[current_page] = off
+		_fill_window(current_page)
+		_update_scroll_marks()
 	update_selection()
 
 func update_selection():
+	var local: int = current_selection - page_offset[current_page]
 	for i in range(active_options.size()):
 		var node = active_options[i]
-		node.scale = Vector2.ONE * 1.015 if i == current_selection else Vector2.ONE
+		node.scale = Vector2.ONE * 1.015 if i == local else Vector2.ONE
 
 func reset_selection():
 	for node in [food_option_1, food_option_2, food_option_3, drink_option_1, drink_option_2, drink_option_3] + special_options:
@@ -82,16 +106,18 @@ func _ready():
 	$Menu/ForwardHint.position.x = MenuLegend.forward_center_x()
 	MenuLegend.layout_dots(dots)
 	_build_special_page()
+	_build_scroll_marks()
 	show_page(0)
 	populate_foods()
 	populate_special()
 	# bought in the Shop: locked cards open up right away (and the pantry's special foods show)
 	Shop.changed.connect(func():
-		for o in [food_option_1, food_option_2, food_option_3]:
-			if o.get_meta("food", {}).get("locked", false):
-				populate_foods()
-				break
+		populate_foods()
 		populate_special())
+	# a new game brings a new drink type
+	GameData.game_unlocked.connect(func(_idx):
+		if drinks_populated:
+			populate_drinks())
 
 func _build_special_page() -> void:
 	vbox_special = vbox_food.duplicate()
@@ -109,39 +135,68 @@ func _build_special_page() -> void:
 ## Special foods: a tech, a cosmic and a legendary card, from the pantry (FoodLibrary.get_special_set);
 ## the tag says how many you have; none of a kind = a "?" card (get them in the Shop)
 func populate_special():
-	var pool = FoodLibrary.get_special_set()
-	for i in range(mini(special_options.size(), pool.size())):
-		var food_data = pool[i]
-		var option_node = special_options[i]
-		var locked: bool = food_data.get("locked", false)
-		option_node.get_node("Icon").texture = food_data.icon
-		option_node.get_node("Icon").modulate = Color.WHITE
-		option_node.get_node("Name").text = food_data.name
-		_set_type_tag(option_node, food_data.family)
-		var n := Shop.pantry_count(food_data.name)
-		if not locked and n > 1:
-			option_node.get_node("TypeText").text += " x%d" % n
-		_set_lock(option_node, false)
-		option_node.set_meta("food", food_data)
-		option_node.set_meta("special", true)
+	_set_items(2, FoodLibrary.get_special_set())
 
+func _fill_special(option_node: Node, food_data: Dictionary) -> void:
+	var locked: bool = food_data.get("locked", false)
+	option_node.get_node("Icon").texture = food_data.icon
+	option_node.get_node("Icon").modulate = Color.WHITE
+	option_node.get_node("Name").text = food_data.name
+	_set_type_tag(option_node, food_data.family)
+	var n := Shop.pantry_count(food_data.name)
+	if not locked and n > 1:
+		option_node.get_node("TypeText").text += " x%d" % n
+	_set_lock(option_node, false)
+	option_node.set_meta("food", food_data)
+	option_node.set_meta("special", true)
+
+## The foods of the size the pal needs to grow (FoodLibrary.get_menu_set): every type you have,
+## then the types still in the Shop as locked cards
 func populate_foods():
-	# Three foods of three types, the size the pal needs to grow (FoodLibrary.get_menu_set):
-	# a type whose adult foods a kid can't have yet shows a locked card (they're in the Shop)
-	var food_pool = FoodLibrary.get_menu_set()
-	var options = [food_option_1, food_option_2, food_option_3]
+	_set_items(0, FoodLibrary.get_menu_set())
 
-	for i in range(mini(options.size(), food_pool.size())):
-		var food_data = food_pool[i]
-		var option_node = options[i]
-		var locked: bool = food_data.get("locked", false)
-		option_node.get_node("Icon").texture = food_data.icon
-		# a locked adult food: its silhouette (like a pal not found yet), a padlock, "Adult food"
-		option_node.get_node("Icon").modulate = Color(0.1, 0.06, 0.05, 0.85) if locked else Color.WHITE
-		option_node.get_node("Name").text = "Adult food" if locked else food_data.name
-		_set_type_tag(option_node, food_data.family)
-		_set_lock(option_node, locked)
-		option_node.set_meta("food", food_data)
+const LOCKED_FOOD_NAME := { "baby": "Baby food", "kid": "Kid food", "adult": "Adult food" }
+
+func _fill_food(option_node: Node, food_data: Dictionary) -> void:
+	var locked: bool = food_data.get("locked", false)
+	option_node.get_node("Icon").texture = food_data.icon
+	# a locked food: its silhouette (like a pal not found yet), a padlock, "Kid food"
+	option_node.get_node("Icon").modulate = Color(0.1, 0.06, 0.05, 0.85) if locked else Color.WHITE
+	option_node.get_node("Name").text = LOCKED_FOOD_NAME.get(food_data.get("tier", ""), "Food") if locked else food_data.name
+	_set_type_tag(option_node, food_data.family)
+	_set_lock(option_node, locked)
+	option_node.set_meta("food", food_data)
+
+## A page's list changed: the window goes back to the top, nothing selected
+func _set_items(page: int, items: Array) -> void:
+	page_items[page] = items
+	page_offset[page] = 0
+	if page == current_page:
+		current_selection = -1
+		reset_selection()
+	_fill_window(page)
+	if page == current_page:
+		_update_scroll_marks()
+
+func _page_nodes(page: int) -> Array:
+	match page:
+		0: return [food_option_1, food_option_2, food_option_3]
+		1: return [drink_option_1, drink_option_2, drink_option_3]
+	return special_options
+
+## The page's 3 cards show its list from page_offset on
+func _fill_window(page: int) -> void:
+	var nodes := _page_nodes(page)
+	var items: Array = page_items[page]
+	for i in nodes.size():
+		var idx: int = page_offset[page] + i
+		nodes[i].visible = idx < items.size()
+		if idx >= items.size():
+			continue
+		match page:
+			0: _fill_food(nodes[i], items[idx])
+			1: _fill_drink(nodes[i], items[idx])
+			_: _fill_special(nodes[i], items[idx])
 
 ## A padlock over a food card's icon (locked adult foods)
 func _set_lock(option_node: Node, on: bool) -> void:
@@ -160,20 +215,51 @@ func _set_lock(option_node: Node, on: bool) -> void:
 		option_node.add_child(lock)
 	lock.visible = on
 
-## Three drinks of three different types (DrinkLibrary.get_menu_set); the tag shows the type
+## The drinks (DrinkLibrary.get_menu_set): every type you have, then the ones still to come
+## (one comes with each new game) as locked cards
 func populate_drinks():
-	var drink_pool = DrinkLibrary.get_menu_set()
-	var options = [drink_option_1, drink_option_2, drink_option_3]
-	for i in range(mini(options.size(), drink_pool.size())):
-		var drink_data = drink_pool[i]
-		var option_node = options[i]
-		option_node.get_node("Icon").texture = drink_data.icon
-		option_node.get_node("Name").text = drink_data.name
-		_set_type_tag(option_node, drink_data.type)
-		option_node.set_meta("is_drink", true)
-		option_node.set_meta("drink", drink_data)
-		var col: Color = drink_data.color if drink_data.has("color") else Color(1, 1, 1, 0.3)
-		option_node.set_meta("color", col)
+	_set_items(1, DrinkLibrary.get_menu_set())
+
+func _fill_drink(option_node: Node, drink_data: Dictionary) -> void:
+	var locked: bool = drink_data.get("locked", false)
+	option_node.get_node("Icon").texture = drink_data.icon
+	option_node.get_node("Icon").modulate = Color(0.1, 0.06, 0.05, 0.85) if locked else Color.WHITE
+	option_node.get_node("Name").text = "New drink" if locked else drink_data.name
+	_set_type_tag(option_node, drink_data.type)
+	_set_lock(option_node, locked)
+	option_node.set_meta("is_drink", true)
+	option_node.set_meta("drink", drink_data)
+	var col: Color = drink_data.color if drink_data.has("color") else Color(1, 1, 1, 0.3)
+	option_node.set_meta("color", col)
+
+## Where the page's window is in its list: a small mark per item on the panel's right edge (the
+## ones on screen filled in), only when the list is longer than the 3 cards
+func _build_scroll_marks() -> void:
+	scroll_marks = Node2D.new()
+	scroll_marks.name = "ScrollMarks"
+	scroll_marks.z_index = 3
+	$Menu.add_child(scroll_marks)
+
+func _update_scroll_marks() -> void:
+	if not scroll_marks:
+		return
+	for c in scroll_marks.get_children():
+		c.queue_free()
+	var n: int = page_items[current_page].size()
+	scroll_marks.visible = n > VISIBLE and not barrier_down
+	if n <= VISIBLE:
+		return
+	var step := 34.0
+	var x := PANEL.position.x + PANEL.size.x - 19.0          # (on the panel's wooden edge)
+	var y0 := PANEL.position.y + PANEL.size.y / 2.0 - step * (n - 1) / 2.0
+	for i in n:
+		var on: bool = i >= page_offset[current_page] and i < page_offset[current_page] + VISIBLE
+		var m := Sprite2D.new()
+		m.texture = UiArt.scroll_mark(on)
+		m.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		m.scale = Vector2(4, 4)
+		m.position = Vector2(x, y0 + step * i)
+		scroll_marks.add_child(m)
 
 # The food's type (what shapes the evolution) instead of its kcal: a little coloured tag,
 # the same colours as the evolution tree (docs/evolution_tree_draft.png)
@@ -242,8 +328,16 @@ func can_confirm(sel: Node) -> bool:
 		Input.vibrate_handheld(20)                   # the shutter is down: not yet
 		return false
 	var food: Dictionary = sel.get_meta("food", {}) if sel else {}
-	# a locked card (adult foods, special foods you don't have): they're in the Shop, behind the
-	# gear button, which blinks
+	# a drink type still to come: it comes with a new game (the Games button blinks)
+	if sel and sel.get_meta("drink", {}).get("locked", false):
+		Input.vibrate_handheld(40)
+		for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
+			if b.target_menu is GameMenuSwitcher:
+				b.blink_hint()
+				break
+		return false
+	# a locked card (foods of a size you don't have, special foods you don't have): they're in the
+	# Shop, behind the gear button, which blinks
 	if food.get("locked", false):
 		Input.vibrate_handheld(40)
 		for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
@@ -306,6 +400,7 @@ func _process(_delta: float) -> void:
 ## The shutter rolls down over the options (or back up), with a clack as it lands
 func _roll(down: bool) -> void:
 	barrier_down = down
+	_update_scroll_marks()
 	var h := PANEL.size.y
 	var t := create_tween()
 	t.tween_property(barrier, "position:y", 0.0 if down else -h, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN if down else Tween.EASE_OUT)
@@ -396,6 +491,7 @@ static func _shutter_texture(w: int, h: int) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 func get_selected_option():
-	if current_selection >= 0 and current_selection < active_options.size():
-		return active_options[current_selection]
+	var local: int = current_selection - page_offset[current_page]
+	if current_selection >= 0 and local >= 0 and local < active_options.size():
+		return active_options[local]
 	return null

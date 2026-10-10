@@ -3,6 +3,11 @@ extends Node
 ## minigame decides what a boost does there (players find out which is best where).
 ##   watery  -> splash (a boing and a second chance)        [in Pipe Dream, Pal Dash, Flipper Belly]
 ##   fizzy, caffeinated, milky, fruity -> boosts to come (fizz, focus, sturdy, lucky)
+## The types come with the games (decided 2026-10-09: a drink is on offer only once a game it
+## helps is yours): one more type with each game you own, in TYPES order. Watery with the first
+## game (Splash Hoops), Fizzy with the 2nd (always Tilt Maze: its low fences), then Energy, Milky,
+## Fruity (each helps a game you have by then, whichever you bought: the boost table in
+## docs/ideas_roadmap.md). Nothing random: the menu lists the types you have, then the rest locked.
 
 const TYPES := ["watery", "fizzy", "caffeinated", "milky", "fruity"]
 const BOOST_OF_TYPE := { "watery": "splash" }       # the others get theirs later
@@ -26,13 +31,24 @@ func _ready() -> void:
 		if b != "":
 			d["boost"] = b
 
-## Three random drinks of three different (random) types, like the foods
+## The drink types on offer: one per game you own (at least Watery)
+func owned_types() -> Array:
+	return TYPES.slice(0, clampi(GameData.owned_launch_games(), 1, TYPES.size()))
+
+## The drink menu's cards: each type you have (its first drink), in TYPES order, then a locked
+## card for each type still to come ("locked": true; it comes with your next game)
 func get_menu_set() -> Array:
-	var types := TYPES.duplicate()
-	types.shuffle()
+	var have := owned_types()
 	var result := []
-	for t in types.slice(0, 3):
+	var locked := []
+	for t in TYPES:
 		var pool = all_drinks.filter(func(d): return d["type"] == t)
-		if pool.size() > 0:
-			result.append(pool[randi() % pool.size()])
-	return result
+		if pool.is_empty():
+			continue
+		if t in have:
+			result.append(pool[0])
+		else:
+			var lock: Dictionary = pool[0].duplicate()
+			lock["locked"] = true
+			locked.append(lock)
+	return result + locked

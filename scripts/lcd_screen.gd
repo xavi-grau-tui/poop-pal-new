@@ -31,9 +31,12 @@ func _ready():
 	PetState.form_changed.connect(_on_form_changed)
 	_align_timers_to_score()
 	running = PetState.has_poop()
-	if running:
-		food_time_left = food_duration
-		drink_time_left = drink_duration
+	if running and PetState.food_ready_at <= 0.0 and PetState.drink_ready_at <= 0.0:
+		# a pal with no clocks saved (e.g. the dev launcher's ready-made pal): both start full
+		PetState.food_ready_at = _now() + food_duration
+		PetState.drink_ready_at = _now() + drink_duration
+		PetState.save_data()
+	update_timers()
 	_update_labels()
 	# (blinking in step with the gear button's own blink_hint(6, 0.18), which starts with it)
 	Collection.unlocked.connect(func(_c, _id):
@@ -132,15 +135,24 @@ func _update_score_display() -> void:
 	if score_counter_label:
 		score_counter_label.text = "%06d" % PetState.score
 
+## The countdowns are real times saved with the pal (PetState.food_ready_at / drink_ready_at):
+## they keep running while the app is closed
+func _now() -> float:
+	return Time.get_unix_time_from_system()
+
 func _on_fed(_food: Dictionary) -> void:
-	food_time_left = food_duration
+	PetState.food_ready_at = _now() + food_duration
 	if not running:
-		drink_time_left = drink_duration      # the first meal starts the drink countdown too
+		PetState.drink_ready_at = _now() + drink_duration      # the first meal starts the drink countdown too
 	running = true
+	PetState.save_data()
+	update_timers()
 	_update_labels()
 
 func _on_drank(_drink: Dictionary) -> void:
-	drink_time_left = drink_duration
+	PetState.drink_ready_at = _now() + drink_duration
+	PetState.save_data()
+	update_timers()
 	_update_labels()
 
 func _on_form_changed(_form_id: String, reason: String) -> void:
@@ -162,8 +174,8 @@ func _process(delta):
 func update_timers():
 	if not running:
 		return
-	food_time_left = maxi(0, food_time_left - 1)
-	drink_time_left = maxi(0, drink_time_left - 1)
+	food_time_left = maxi(0, ceili(PetState.food_ready_at - _now()))
+	drink_time_left = maxi(0, ceili(PetState.drink_ready_at - _now()))
 
 func _update_labels() -> void:
 	# A timer that ran out blinks at 00:00:00 (the pal is hungry / thirsty)

@@ -49,7 +49,10 @@ What follows from it:
   vaults), then Paper Sumo, Pipe Dream, Top Spin, Tummy Tunes: a LEVELS table, a star rule and
   uses_levels() each (BaseMinigame + LevelMenu do the rest).
 - (S) The coin / Shop onboarding cards (listed in Progression v2).
-- (S) Tune Splash Hoops' star marks (STAR_2 / STAR_3) and level times on the phone.
+- (S) Tune Splash Hoops' star marks (STAR_2 / STAR_3) and level times on the phone, then put the
+  measured numbers into tools/design/pacing.py.
+- (M) Drinks v2 ("Progression v2, round 2" below, to confirm): drink levels in the Shop, the 15 drinks' art, the
+  level and size icons on the tags, the first secrets (Tilt Maze fences).
 - (M) Stickers (the Shop's cosmetic, the device's back) and the food reroll.
 
 Medium (M)
@@ -299,6 +302,61 @@ food to grow up: get it in the Shop", the gear button blinks), the Shop's first 
 
 Testing (rearrange branch): GameData.DEBUG_UNLOCKED now only holds the 4 games on hold, so the 6
 launch games are bought with coins; the dev launcher has a STRAIGHT TO GAMES + 999 COINS button.
+
+## Progression v2, round 2 (2026-10-10, branch `rearrange`): balance, drinks, food sizes
+Rule (user): nothing left to chance. Every price comes from a timing target, checked with the pacing
+model `tools/design/pacing.py` (a fixed player model, no dice, the real evolution tree; replace its
+ASSUMED numbers with phone measurements). Three players: casual (20 min day 1, then 12/day), regular
+(60, then 30), keen (180, then 60).
+
+Foods (BUILT, the user's rule): from the start you have baby foods of 3 types (green, sweet, greasy),
+kid foods of 2 (green, sweet) and adult foods of 1 (green), so the first pal grows all the way up.
+The other 9 packs (2 baby, 3 kid, 4 adult) are in the Shop, priced by size like their icons: baby
+10, kid 15, adult 20 (145 in all). Any pack is useful at once (no pack needs another).
+Menus with nothing random (BUILT): the food menu lists every type you have for the size the pal
+needs, always in the same order, then the rest as locked cards (silhouette + padlock + "Kid food";
+holding one blinks the gear = the Shop). The two foods of a size take turns meal after meal
+(a first-ever sweet meal = the chocolate). More than 3 cards: the list scrolls (press past the 3rd),
+pips on the panel's right edge show where you are. An adult gets every type it has, no locks.
+The drink menu: one drink type per game owned (Watery, Fizzy with Tilt Maze, Energy, Milky,
+Fruity), the rest locked (holding one blinks the Games button: it comes with a new game).
+The Shop opens with the packs your pal needs next first.
+
+Game prices (BUILT): 5, 40, 60, 90, 135 (330). Doubling from 5 gave a regular player all six games
+within ~1 h of play (each new game's easy world 1 pays for the next), then nothing to look forward to.
+Now, regular player: Tilt Maze 3 min, 3rd game 17 min, 4th 45 min (day 1), 5th day 3, 6th day 9.
+The model also says: the starting foods last about a week before a pack is needed; the 10th pal
+~day 4, the 30th ~day 14, the 60th ~day 31; ~260 coins are left over for special foods.
+
+Drinks v2 (PROPOSED, to confirm):
+- Types come with games (built, see above); each type arrives at level 1.
+- Levels 2 and 3 are bought in the Shop per type, permanent (that type's drink in the menu becomes
+  the stronger one; you always get it, every 15 min): level 2 = 15, level 3 = 30 (needs level 2).
+- What a level does: the same effect, stronger (Splash Hoops water: +10 / +15 / +20 s) AND it opens
+  SECRETS: from world 2 on, one level per world holds a gate marked with a drink type's icons x1-3
+  (Tilt Maze: a fence with 3 bubbles = Fizzy level 3). Only a boost of that type at that level
+  opens it; the boost is spent there. The level menu shows the gate's icons on that level's cell
+  and the prize's silhouette (bright once taken). World 2 = level 1, worlds 3-4 = level 2, 5 = level 3.
+- Prizes: the 15 special foods the Pal Pedia needs (10 tech / cosmic for the mutants, 5 legendary
+  for the legends, the legendary ones behind level-3 gates) + stickers. The Shop still sells them
+  (15 / 40): two ways for every main-path item.
+- Why buy level 3 (the user's question): you SEE the gate and its prize long before you can open it;
+  one level-3 drink (30) opens every gate of its type, and a legendary food behind one is worth 40;
+  it also makes the hardest 3-stars easier. Stars stay reachable without any boost (no pay to win).
+- Pacing (model): first secret ~17 min, first level 2 day 2, first level 3 day 6 (regular).
+
+Food size icons (DRAFT, docs/mockups/food_drafts/foods_tier_sheet.png, tier_icons.py): the drinks'
+level icons' sibling: the type's icon once = baby food, twice = kid, three times = adult, on the
+tag's top-right corner (menu, Shop packs, locked cards). Green = a leaf, Sweet = a wrapped sweet
+(blue), Greasy = a burger, Spicy = a flame, Sour = a lemon. Not in the game yet: goes in with the
+drink icons. Open: the tags still use the old pastel colours (sweet = pink) while the icons use the
+new type colours (sweet = blue): recolour the tags too?
+
+Dev launcher BOOT + PROGRESSION (BUILT): the real game kept between launches, its own save
+(user://progress/, scripts/save_slot.gd), every testing switch off, only the six launch games, the
+unboxing only the first time, real Lucky Pinch chance. The meal / drink countdowns are now saved as
+real times (they run while the app is closed). START OVER (two taps) wipes that save; the three
+testing starts never touch it.
 
 ## Progression framework (PROPOSED 2026-10-09, to confirm)
 - Goal: a player progresses whatever games they prefer and in whatever order; no game is required.

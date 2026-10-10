@@ -4,7 +4,7 @@ extends Node
 ##
 ## Progression v2 (docs/ideas_roadmap.md, "Progression v2"): every game is worlds of 9 levels;
 ## a level gives 1-3 stars; each NEW star gives 1 coin; coins buy the next games (here, in the
-## Games menu) and foods / key items (Shop). Each game you own makes the next one cost double.
+## Games menu) and foods / key items (Shop). Each game you own makes the next one cost more (GAME_PRICES).
 
 signal score_changed(game_index: int)
 signal progress_changed(game_index: int)
@@ -12,7 +12,7 @@ signal game_unlocked(game_index: int)
 signal coins_changed(coins: int)
 signal stars_changed(game_index: int)
 
-const SAVE_PATH := "user://game_data.json"
+const SAVE_FILE := "game_data.json"     # (in SaveSlot.path: the testing save or BOOT + PROGRESSION's)
 
 # Per-game data: { game_index: { "max_score", "progress", "unlocked", "intro", "levels", "last" } }
 #   levels: { level number: best stars (1-3) }   last: the last level played
@@ -28,8 +28,10 @@ const FIRST_GAME := 2   # Splash Hoops
 const LAUNCH_GAMES := [2, 1, 9, 0, 8, 6]
 ## The 2nd game is always Tilt Maze (it teaches tilt); after it any locked game can be bought
 const SECOND_GAME := 1
-## Each game costs double the last one bought: 5, 10, 20, 40, 80 coins
-const FIRST_PRICE := 5
+## What the 2nd .. 6th game costs (tools/design/pacing.py: Tilt Maze in the first minutes, then
+## about a new game a day in the first week for a regular player; doubling from 5 gave all six in
+## the first hour, since each new game's easy first world pays for the next)
+const GAME_PRICES := [5, 40, 60, 90, 135]
 
 ## Every game: worlds of LEVELS_PER_WORLD levels (one page of its level menu)
 const LEVELS_PER_WORLD := 9
@@ -53,15 +55,28 @@ var progress_target := {
 }
 
 ## Prototype/testing: games unlocked regardless of coins (now only the four on hold: the six
-## launch games are bought with coins, see the dev launcher's 999 COINS start)
+## launch games are bought with coins, see the dev launcher's 999 COINS start). Not in BOOT +
+## PROGRESSION, where only the six launch games exist (GameMenuSwitcher hides the rest).
 const DEBUG_UNLOCKED := [3, 4, 5, 7]
 ## Prototype/testing: every launch starts with no best scores, stars, coins or bought games
 const RESET_SCORES_ON_LAUNCH := true
 
 func _ready() -> void:
+	_start()
+
+## Loads the save. BOOT + PROGRESSION (SaveSlot.real) calls it again once its folder is in use:
+## nothing reset, nothing unlocked for testing
+func reload() -> void:
+	_start()
+
+func _start() -> void:
+	games = {}
+	coins = 0
 	for idx in 10:
 		_init_game(idx, idx == FIRST_GAME)   # Splash Hoops — unlocked by default (FIRST_GAME)
 	load_data()
+	if SaveSlot.real():
+		return
 	if RESET_SCORES_ON_LAUNCH:
 		for idx in games:
 			games[idx]["max_score"] = 0
@@ -212,9 +227,9 @@ func owned_launch_games() -> int:
 			n += 1
 	return n
 
-## What the next game costs: double the last one (5, 10, 20, 40, 80)
+## What the next game costs (GAME_PRICES)
 func game_price() -> int:
-	return FIRST_PRICE * (1 << maxi(0, owned_launch_games() - 1))
+	return GAME_PRICES[clampi(owned_launch_games() - 1, 0, GAME_PRICES.size() - 1)]
 
 ## A locked launch game that can be bought now (the 2nd is always Tilt Maze)
 func can_buy_game(game_index: int) -> bool:
@@ -249,14 +264,14 @@ func _check_unlocks(source_game: int) -> void:
 # --- Save / Load ---
 
 func save_data() -> void:
-	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file = FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify({ "games": games, "coins": coins }))
 
 func load_data() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not FileAccess.file_exists(SaveSlot.path(SAVE_FILE)):
 		return
-	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file = FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.READ)
 	if not file:
 		return
 	var parsed = JSON.parse_string(file.get_as_text())

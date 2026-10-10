@@ -19,7 +19,8 @@ const GAME_INDEX := 100               # its "page" for GameScreen (not a regular
 const TRIES := 2
 const CHANCE := 0.2                   # after each meal (never two meals in a row)
 const VISIT_DELAY := 2.2              # (by then a new pal's PAL UNLOCKED! has started; it plays out first)
-## Prototype/testing: the first meal after every launch always brings the claw
+## Prototype/testing: the first meal after every launch always brings the claw (not in BOOT +
+## PROGRESSION: there it's the real chance)
 const TEST_FIRST_MEAL := true
 
 # The pit: 3 depth rows x 4 slots (x in the game's px, d = depth 0 front .. 1 back)
@@ -45,7 +46,7 @@ func _on_fed(_food: Dictionary) -> void:
 	if pending:
 		return
 	var go := false
-	if TEST_FIRST_MEAL and not _test_done:
+	if TEST_FIRST_MEAL and not _test_done and not SaveSlot.real():
 		go = true
 		_test_done = true
 	elif not _last_meal_bonus:

@@ -39,6 +39,9 @@ const EXTRA_PAGES := 2
 ## Break, Germ Zap, Flipper Belly). Only the display order: each game keeps its own number
 ## (GameScreen.game_scenes, GameData, Collection.REWARDS).
 const ORDER := [2, 1, 9, 0, 8, 6, 3, 4, 5, 7]
+## The cards in this menu: ORDER, or only the six launch games in BOOT + PROGRESSION (the real
+## game: the four on hold aren't there)
+var order: Array = ORDER
 const LOCKED_LOGO := "res://textures/menus/mistery.png"
 var _locked_bg: Texture2D
 
@@ -60,6 +63,8 @@ func _ready():
 	legend.set_lines([["hold", "play"]])
 	$Menu/ForwardHint.position.x = MenuLegend.forward_center_x()    # (tapping does nothing here: forward flips)
 	_add_extra_pages()
+	if SaveSlot.real():
+		_drop_cards_on_hold()
 	_build_coin_tag()
 	show_page(current_page)
 	LuckyPinch.changed.connect(func(_on): show_page(current_page))
@@ -84,6 +89,21 @@ func _add_extra_pages() -> void:
 		$Menu/Dots.add_child(dot)
 		dots.append(dot)
 	MenuLegend.layout_dots(dots)                       # (two staggered rows when there are many)
+
+## The real game: only the launch games' cards (and their dots)
+func _drop_cards_on_hold() -> void:
+	var keep := []
+	for i in range(pages.size() - 1, -1, -1):
+		if ORDER[i] in GameData.LAUNCH_GAMES:
+			keep.push_front(ORDER[i])
+			continue
+		for n in [pages[i], dots[i]]:
+			n.get_parent().remove_child(n)
+			n.queue_free()
+		pages.remove_at(i)
+		dots.remove_at(i)
+	order = keep
+	MenuLegend.layout_dots(dots)
 
 func show_page(index: int) -> void:
 	var bonus := LuckyPinch.pending
@@ -111,7 +131,7 @@ func flip_page() -> void:
 	show_page(current_page)
 
 func get_selected_page() -> int:
-	return LuckyPinch.GAME_INDEX if LuckyPinch.pending else ORDER[current_page]
+	return LuckyPinch.GAME_INDEX if LuckyPinch.pending else order[current_page]
 
 # --- Interface expected by main_button / menu_buttons ---
 
@@ -136,7 +156,7 @@ func reset_active_options() -> void:
 
 func _update_game_card_labels(page_index: int) -> void:
 	var page = pages[page_index]
-	var index: int = ORDER[page_index]                   # the game on this card
+	var index: int = order[page_index]                   # the game on this card
 	var game_node = page.get_node_or_null("Game")
 	if not game_node:
 		return
@@ -235,7 +255,7 @@ func _blink_price() -> void:
 
 ## Bought: the shutter rolls up and the game's picture shows (the LCD says GAME UNLOCKED!)
 func _on_game_unlocked(index: int) -> void:
-	var i := ORDER.find(index)
+	var i := order.find(index)
 	if i < 0:
 		return
 	var ov := _lock_overlay(pages[i])

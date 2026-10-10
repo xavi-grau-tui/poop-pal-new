@@ -164,3 +164,28 @@ static func question() -> Texture2D:
 	var tex := ImageTexture.create_from_image(img)
 	_cache["question"] = tex
 	return tex
+
+## A list's scroll mark (the food menu's right edge): a small round pip, filled in for the items
+## on screen, hollow for the rest
+static func scroll_mark(on: bool) -> Texture2D:
+	var key := "scroll_%s" % on
+	if key in _cache:
+		return _cache[key]
+	var rows := [
+		".###.",
+		"#fff#",
+		"#fff#",
+		"#fff#",
+		".###.",
+	]
+	var fill := Color8(92, 60, 44) if on else Color8(240, 214, 170)
+	var cols := { "#": Color8(92, 60, 44), "f": fill }
+	var img := Image.create(5, 5, false, Image.FORMAT_RGBA8)
+	for y in 5:
+		for x in 5:
+			var ch: String = rows[y][x]
+			if ch in cols:
+				img.set_pixel(x, y, cols[ch])
+	var tex := ImageTexture.create_from_image(img)
+	_cache[key] = tex
+	return tex
