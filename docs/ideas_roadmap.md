@@ -251,6 +251,10 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
      stickers", with tokens already earned), each new game, each new food type.
 
 ## Progression v2: stars, coins, pals (2026-10-10, built on branch `rearrange`)
+OFFICIAL (user, 2026-10-10): this progression (with round 2 below: food packs per size, Sho / Chu /
+Dai, game prices 5/40/60/90/135, the progressive Shop that grows with the pals' sizes, special
+foods once a Dai exists, legendary once its ULTRA) is THE way to go. Next: the user picks the pals
+(from the v3 sheets) and their moods; then the guide cards.
 Replaces the 2026-10-09 framework below where they differ (that one is kept for its reasoning).
 
 The loop in one line: games give STARS, every new star gives a COIN, coins open new GAMES and the

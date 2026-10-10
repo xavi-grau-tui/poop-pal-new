@@ -19,8 +19,8 @@ extends Node2D
 enum View { HUB, PEDIA, DETAIL, BACKGROUNDS, ACCESSORIES, DECOR, SHOP }
 
 const HUB_CARDS := [
-	{ "view": View.PEDIA, "logo": "res://textures/menus/palpedia.png", "pattern": "res://textures/menus/pooploopbackground.png" },
 	{ "view": View.SHOP, "logo": "res://textures/menus/coinshop.png", "pattern": "res://textures/menus/pattern_coin_caramel.png" },
+	{ "view": View.PEDIA, "logo": "res://textures/menus/palpedia.png", "pattern": "res://textures/menus/pooploopbackground.png" },
 	{ "view": View.ACCESSORIES, "logo": "res://textures/menus/dressup.png", "pattern": "res://textures/menus/pattern_glasses_cream.png" },
 	{ "view": View.DECOR, "logo": "res://textures/menus/gutdecor.png", "pattern": "res://textures/menus/pattern_bulb_caramel.png" },
 	{ "view": View.BACKGROUNDS, "logo": "res://textures/menus/backgrounds.png", "pattern": "res://textures/menus/pattern_cloud_sage.png" },
