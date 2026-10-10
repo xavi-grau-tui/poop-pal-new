@@ -12,11 +12,11 @@ config_version=5
 
 config/name="HaraTomo"
 run/main_scene="uid://ddvdpi5i0hjuf"
-run/main_scene.debug="res://scenes/dev_launch.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
-config/icon="res://icon.png"
 boot_splash/bg_color=Color(0, 0, 0, 1)
 boot_splash/image="res://textures/boot/splash.png"
+config/icon="res://icon.png"
+run/main_scene.debug="res://scenes/dev_launch.tscn"
 
 [autoload]
 
@@ -37,5 +37,5 @@ window/handheld/orientation=1
 
 [rendering]
 
-environment/defaults/default_clear_color=Color(0, 0, 0, 1)
 textures/vram_compression/import_etc2_astc=true
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)

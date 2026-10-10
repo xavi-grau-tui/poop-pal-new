@@ -20,6 +20,9 @@ const GAME_INDEX := 9
 const RING_C := Vector2(475, 690)     # the ring's centre; the wrestlers stand on this line
 const RING_RX := 330.0
 const RING_RY := 118.0
+const FRONT_Y := 846.0                # where the box's lid ends and its front face begins
+const PX := 4                         # world px per stage pixel (pixel art, like Top Spin)
+const DARK := 0.38                    # how much darker everything outside the spotlight is
 const RING_HALF := 300.0              # a foot past this (from the centre) = stepped out
 
 # --- Wrestler physics ---
@@ -92,7 +95,7 @@ class Wrestler:
 
 enum Phase { READY, FIGHT, RESULT }
 ## First-time tutorial: one step at a time, each waits until you've done it
-enum Tut { NONE, HOP, BEAT, LEAN, PUSH }
+enum Tut { NONE, HOP, LEAN, PUSH }
 
 var phase := Phase.READY
 var level := 1
@@ -127,7 +130,7 @@ var _cards := {}                      # path -> folded paper texture
 var _touch_mode := false              # phone: taps come from _input, not the emulated mouse
 
 func _ready() -> void:
-	game_music_path = "res://sounds/music/Sunny Groove.mp3"
+	game_music_path = "res://sounds/music/Pixel Sumo.ogg"     # (93.75 BPM, loops on the beat: 0.28 s → 130.84 s)
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	ball_texture = PalBall.texture()
 	_create_static_nodes()
@@ -314,6 +317,8 @@ func _drum(w: Wrestler, power: float) -> void:
 	if w.ground_t < GOOD_WINDOW:
 		w.combo = mini(w.combo + 1, 4)
 		power *= 1.0 + w.combo * 0.08
+		if w == me:
+			_good_hop_sparks(w)                                   # (good timing shows, nothing to read)
 	else:
 		w.combo = 0
 		power *= 0.85
@@ -329,12 +334,8 @@ func _tut_step(delta: float) -> void:
 	match tut:
 		Tut.HOP:
 			if tut_hops >= 2:
-				tut = Tut.BEAT
-				show_coach("Now tap right AS IT LANDS (listen for the tick)", 0)
-		Tut.BEAT:
-			if me.combo >= 3:
 				tut = Tut.LEAN
-				show_coach("Great rhythm = strong hops! Now TILT to lean forward")
+				show_coach("Now TILT the phone to lean forward")
 		Tut.LEAN:
 			if me.target > 0.28:
 				tut_lean += delta
@@ -343,7 +344,7 @@ func _tut_step(delta: float) -> void:
 				show_coach("Leaning pushes harder. Push it out!", 0)
 				_after(2.5, hide_coach)
 	# nobody loses while learning (the rival just stands there until the last step)
-	if tut in [Tut.HOP, Tut.BEAT, Tut.LEAN]:
+	if tut in [Tut.HOP, Tut.LEAN]:
 		for w in [me, rival]:
 			w.lean = clampf(w.lean, -0.8, 0.8)
 			w.x = clampf(w.x, RING_C.x - RING_HALF + 40.0, RING_C.x + RING_HALF - 40.0)
@@ -354,6 +355,20 @@ func _finish_tutorial() -> void:
 	hud_level.text = "LV %d" % level
 	GameData.mark_intro_seen(GAME_INDEX)
 	hide_coach()
+
+## A hop timed right as the wrestler landed (a bit stronger): a little burst of sparks at its feet
+func _good_hop_sparks(w: Wrestler) -> void:
+	for i in 5:
+		var sp := ColorRect.new()
+		sp.size = Vector2(8, 8)
+		sp.color = Color8(255, 236, 150) if i % 2 == 0 else Color.WHITE
+		sp.position = Vector2(w.x, RING_C.y) - sp.size / 2.0
+		fx.add_child(sp)
+		var dir := Vector2.from_angle(PI + (i + 0.5) * PI / 5.0)       # (a fan, upwards)
+		var t := create_tween()
+		t.tween_property(sp, "position", sp.position + dir * randf_range(30.0, 50.0), 0.22).set_ease(Tween.EASE_OUT)
+		t.parallel().tween_property(sp, "modulate:a", 0.0, 0.22)
+		t.tween_callback(sp.queue_free)
 
 func _check_bout() -> void:
 	var lost: Wrestler = null
@@ -455,6 +470,12 @@ func _far_tap(w: Wrestler) -> void:
 # ================================================================== DRAWING
 
 func _create_static_nodes() -> void:
+	var painted := Sprite2D.new()
+	painted.texture = ImageTexture.create_from_image(_paint_stage())
+	painted.centered = false
+	painted.scale = Vector2(PX, PX)
+	painted.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(painted)
 	stage = Node2D.new()
 	stage.draw.connect(_draw_stage)
 	add_child(stage)
@@ -463,8 +484,8 @@ func _create_static_nodes() -> void:
 	fx = Node2D.new()
 	add_child(fx)
 	var ftex := _make_finger_texture()
-	finger_l = _make_finger(ftex, Vector2(80, 900))
-	finger_r = _make_finger(ftex, Vector2(PLAY_WIDTH - 80, 900))
+	finger_l = _make_finger(ftex, Vector2(82, 892))
+	finger_r = _make_finger(ftex, Vector2(PLAY_WIDTH - 82, 892))
 
 	hud_level = _make_label(Vector2(30, 20), Vector2(200, 50), 36, HORIZONTAL_ALIGNMENT_LEFT, OUTLINE)
 	hud_rival = _make_label(Vector2(PLAY_WIDTH - 430, 20), Vector2(400, 50), 32, HORIZONTAL_ALIGNMENT_RIGHT, OUTLINE)
@@ -478,10 +499,10 @@ func _create_static_nodes() -> void:
 	add_child(bouts_box)
 	# the control legend on the box's front: what each finger does
 	hint_main = make_button_hint(0, "HOP")
-	hint_main.position = Vector2(120, PLAY_HEIGHT - 54)
+	hint_main.position = Vector2(134, PLAY_HEIGHT - 90)            # (on the box's front, clear of the screen's rounded corners)
 	hint_fwd = make_button_hint(1, "SHAKE")
 	hint_fwd.size = hint_fwd.get_combined_minimum_size()
-	hint_fwd.position = Vector2(PLAY_WIDTH - 120 - hint_fwd.size.x, PLAY_HEIGHT - 54)
+	hint_fwd.position = Vector2(PLAY_WIDTH - 134 - hint_fwd.size.x, PLAY_HEIGHT - 90)
 	banner = _make_label(Vector2(0, 300), Vector2(PLAY_WIDTH, 140), 50, HORIZONTAL_ALIGNMENT_CENTER, TEXT)
 	banner.add_theme_color_override("font_outline_color", OUTLINE)
 	banner.add_theme_constant_override("outline_size", 14)
@@ -496,31 +517,106 @@ func _make_finger(tex: Texture2D, at: Vector2) -> Sprite2D:
 	add_child(f)
 	return f
 
-## The box (top + front), the ring drawn on it (sand, straw rope, the two start lines)
-func _draw_stage() -> void:
-	stage.draw_rect(Rect2(0, 0, PLAY_WIDTH, PLAY_HEIGHT), WALL)
-	for i in range(0, int(PLAY_WIDTH), 90):
-		stage.draw_rect(Rect2(i, 0, 4, 470), WALL_LINE)
-	var top := PackedVector2Array([Vector2(110, 470), Vector2(PLAY_WIDTH - 110, 470), Vector2(PLAY_WIDTH - 20, 880), Vector2(20, 880)])
-	stage.draw_colored_polygon(top, BOX_TOP)
-	for i in 9:                                                  # corrugation showing through
-		var f := float(i + 1) / 10.0
-		var y := lerpf(470.0, 880.0, f * f)
-		stage.draw_line(Vector2(lerpf(110, 20, f * f), y), Vector2(lerpf(PLAY_WIDTH - 110, PLAY_WIDTH - 20, f * f), y), BOX_LINE, 2)
-	stage.draw_rect(Rect2(20, 880, PLAY_WIDTH - 40, 68), BOX_FRONT)
-	stage.draw_polyline(top + PackedVector2Array([top[0]]), OUTLINE, 4)
-	stage.draw_rect(Rect2(20, 880, PLAY_WIDTH - 40, 68), OUTLINE, false, 4)
+## The stage, painted once as pixel art (4 world px per pixel, like Top Spin's bowl): a wooden
+## panelled wall, the wooden box (planks running left to right in perspective, grain, a front face,
+## two-pixel dark outlines) and the ring on it (speckled sand, a darker apron, the twisted straw
+## rope with dark edges, the two white start lines). Hard pixels, no blending.
+func _paint_stage() -> Image:
+	var w := int(ceil(PLAY_WIDTH / PX))
+	var h := int(ceil(PLAY_HEIGHT / PX))
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var box := PackedByteArray()
+	box.resize(w * h)
+	for y in h:
+		for x in w:
+			box[y * w + x] = 1 if _in_box(_px(x, y)) else 0
+	for y in h:
+		for x in w:
+			var p := _px(x, y)
+			var col := WALL
+			if box[y * w + x] == 0:
+				# wall: wooden panels (a seam every 90 px, faint vertical grain)
+				if fposmod(p.x, 90.0) < PX:
+					col = WALL_LINE.darkened(0.08)
+				elif sin(p.x * 0.2 + sin(p.y * 0.02 + p.x * 0.01) * 2.0) > 0.88:
+					col = WALL_LINE
+			else:
+				# the box's dark outline, two pixels thick, and the edge between lid and front
+				var edge := false
+				for dy in range(-2, 3):
+					for dx in range(-2, 3):
+						var nx := x + dx
+						var ny := y + dy
+						if nx < 0 or ny < 0 or nx >= w or ny >= h or box[ny * w + nx] == 0:
+							edge = true
+				if edge or absf(p.y - FRONT_Y) < PX:
+					col = OUTLINE
+				elif p.y > FRONT_Y:
+					col = BOX_FRONT                                   # the front face
+					if sin(p.y * 0.5 + sin(p.x * 0.015) * 1.5) > 0.82:
+						col = BOX_FRONT.darkened(0.12)
+				else:
+					col = _lid_colour(p)
+			img.set_pixel(x, y, col.darkened(1.0 - _light(p)))
+	return img
+
+## The spotlight from above: a cone coming down onto the ring, and the ring (a little beyond its
+## apron) fully lit; everything else darker, with a soft one-step edge between them
+func _light(p: Vector2) -> float:
+	var d := p - RING_C
+	var e := pow(d.x / (RING_RX + 44.0), 2) + pow(d.y / (RING_RY + 34.0), 2)
+	var lit := e < 1.0
+	var edge := e < 1.14
+	if p.y < RING_C.y:                                    # the cone, narrow at the top
+		var hw := lerpf(90.0, RING_RX + 30.0, clampf(p.y / RING_C.y, 0.0, 1.0))
+		lit = lit or absf(d.x) < hw
+		edge = edge or absf(d.x) < hw + 22.0
+	return 1.0 if lit else (1.0 - DARK * 0.5 if edge else 1.0 - DARK)
+
+## The world position of a stage pixel's centre
+func _px(x: int, y: int) -> Vector2:
+	return Vector2(x + 0.5, y + 0.5) * PX
+
+func _in_box(p: Vector2) -> bool:
+	if p.y >= FRONT_Y:
+		return p.x >= 20.0 and p.x <= PLAY_WIDTH - 20.0 and p.y < PLAY_HEIGHT + 8.0
+	if p.y < 470.0:
+		return false
+	var t := (p.y - 470.0) / (FRONT_Y - 470.0)
+	return p.x >= lerpf(110.0, 20.0, t) and p.x <= lerpf(PLAY_WIDTH - 110.0, PLAY_WIDTH - 20.0, t)
+
+## The lid: wooden planks (seams closer together towards the back), grain, and the ring on top
+func _lid_colour(p: Vector2) -> Color:
+	var col := BOX_TOP
+	if sin(p.y * 0.22 + sin(p.x * 0.01 + p.y * 0.03) * 2.0) > 0.8:
+		col = BOX_LINE                                       # grain
+	for i in 6:                                               # plank seams in perspective
+		var f := float(i + 1) / 7.0
+		if absf(p.y - lerpf(470.0, FRONT_Y, f * f)) < PX * 0.5:
+			col = BOX_LINE.darkened(0.15)
 	# the ring
-	stage.draw_colored_polygon(_ellipse(RING_C, RING_RX + 16, RING_RY + 8, 48), SAND_DARK)
-	stage.draw_colored_polygon(_ellipse(RING_C, RING_RX, RING_RY, 48), SAND)
-	var rope := _ellipse(RING_C, RING_RX, RING_RY, 48)
-	rope.append(rope[0])
-	stage.draw_polyline(rope, ROPE_DARK, 16)
-	stage.draw_polyline(rope, ROPE, 10)
-	for sx in [-1.0, 1.0]:
-		var x: float = RING_C.x + sx * 40.0
-		stage.draw_line(Vector2(x, RING_C.y - 14), Vector2(x, RING_C.y + 14), Color.WHITE, 5)
-	# a soft shadow under each wrestler (smaller while hopping)
+	var d := p - RING_C
+	var e := (d.x * d.x) / (RING_RX * RING_RX) + (d.y * d.y) / (RING_RY * RING_RY)
+	var g := 2.0 * sqrt((d.x * d.x) / pow(RING_RX, 4) + (d.y * d.y) / pow(RING_RY, 4))
+	var dist := (e - 1.0) / maxf(g, 0.0001)                  # ~ world px from the rope's middle line
+	if absf(dist) < 9.0:
+		var ang := atan2(d.y / RING_RY, d.x / RING_RX)
+		col = ROPE_DARK if fposmod(ang * 40.0 + dist * 0.12, 1.0) < 0.3 else ROPE   # twisted straw
+	elif absf(dist) < 17.0:
+		col = ROPE_DARK.darkened(0.25)                       # the rope's dark edges
+	elif dist < 0.0:
+		col = SAND
+		if fposmod(sin(p.x * 12.9898 + p.y * 78.233) * 43758.5453, 1.0) < 0.07:
+			col = SAND_DARK                                  # speckles in the sand (scattered)
+		for sx in [-1.0, 1.0]:                               # the two start lines
+			if absf(p.x - (RING_C.x + sx * 40.0)) < PX and absf(d.y) < 16.0:
+				col = Color.WHITE
+	elif dist < 34.0:
+		col = SAND_DARK                                      # the ring's apron
+	return col
+
+## On top of the painted stage: a small shadow under each wrestler (smaller while hopping)
+func _draw_stage() -> void:
 	for w in [me, rival]:
 		if w and not w.down:
 			var k := clampf(1.0 + w.y / 120.0, 0.4, 1.0)
@@ -629,8 +725,8 @@ func _make_finger_texture() -> Texture2D:
 
 func _tap_finger(f: Sprite2D) -> void:
 	var t := create_tween()
-	t.tween_property(f, "position:y", 868.0, 0.04)
-	t.tween_property(f, "position:y", 900.0, 0.08)
+	t.tween_property(f, "position:y", 860.0, 0.04)
+	t.tween_property(f, "position:y", 892.0, 0.08)
 	_sfx("res://sounds/fx/wood_tap.wav", -12.0, 0.0, 0.75)
 
 # ================================================================== INPUT

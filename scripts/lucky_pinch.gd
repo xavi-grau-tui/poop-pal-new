@@ -3,8 +3,9 @@ extends BaseMinigame
 ## a meal and must be played). Two tries; every capsule holds a prize (LuckyPinch keeps the
 ## pile between bonuses: what's inside each one and where it lies, also after being knocked).
 ##
-##   hold MAIN     = the claw slides right (let go: it stops; one go only, like the real one)
-##   hold FORWARD  = the claw moves to the back (let go: it drops)
+##   hold FORWARD  = the claw slides right (let go: it stops; one go only, like the real one)
+##   hold MAIN     = the claw moves to the back (let go: it drops)
+## (swapped 2026-10-10: the forward sign's arrows point the way the claw slides)
 ## The claw sways a little after moving, so when you let go matters. It grabs firmly when it
 ## comes down right on a capsule, loosely when it's a bit off (and a loose capsule can slip
 ## on the way back; if it slips over the chute it still counts).
@@ -56,8 +57,8 @@ var held_loose := 1.0                   # chance it slips on the way back
 var slip_at := 2.0                      # progress (0..2: lift, return) where it slips
 var _progress := 0.0
 var _wait := 0.0
-var main_down := false
-var fwd_down := false
+var slide_held := false               # FORWARD held: the claw slides right
+var back_held := false                # MAIN held: the claw moves to the back
 var capsules: Array[Dictionary] = []    # LuckyPinch.pit entries still lying in the pit (+ "node")
 var _won: Dictionary = {}               # the capsule on its way down the chute
 var _clock := 0.0
@@ -76,6 +77,8 @@ var prize_layer: Node2D
 var window_clip: Control               # the flap's window: the prize capsule shows only inside it
 var chute_front: Control
 var hint: Label
+var controls: Node2D                  # the tag: "→ hold [orange]" / "↑ hold [forward]"
+var control_rows: Array[Node2D] = []
 var tries_label: Label
 var banner: Label
 var motor: AudioStreamPlayer
@@ -92,7 +95,7 @@ func _ready() -> void:
 func start_game() -> void:
 	super.start_game()
 	_reset_claw()
-	_show_banner("Lucky Pinch!", 1.2)
+	# (no "Lucky Pinch!" banner: the sticker on the back panel already says it)
 
 # ================================================================== DEPTH HELPERS
 
@@ -118,16 +121,16 @@ func _process(delta: float) -> void:
 	sway_t += delta
 	match phase:
 		P.MOVE_X:
-			if main_down and claw_x < X_MAX:
+			if slide_held and claw_x < X_MAX:
 				claw_x = minf(X_MAX, claw_x + MOVE_SPEED * delta)
 			else:
 				_motor(false)
 				sway_amp = 16.0
 				sway_t = 0.0
 				phase = P.WAIT_D
-				hint.text = "now hold forward"
+				_controls_step(1)
 		P.MOVE_D:
-			if fwd_down and claw_d < 1.0:
+			if back_held and claw_d < 1.0:
 				claw_d = minf(1.0, claw_d + DEPTH_SPEED * delta)
 			else:
 				_motor(false)
@@ -169,7 +172,7 @@ func _process(delta: float) -> void:
 
 func _start_drop() -> void:
 	phase = P.DROP
-	hint.text = ""
+	_controls_step(-1)
 	LuckyPinch.use_try()
 	_refresh_tries()
 	claw_sprite.texture = tex["claw_open"]
@@ -432,7 +435,7 @@ func _reset_claw() -> void:
 	sway_amp = 0.0
 	held = {}
 	claw_sprite.texture = tex["claw_closed"]
-	hint.text = "hold the orange button"
+	_controls_step(0)
 	_refresh_tries()
 
 # ================================================================== NODES
@@ -469,6 +472,7 @@ func _create_nodes() -> void:
 	cab.scale = Vector2(K, K)
 	cab.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(cab)
+	_add_sticker()
 	# claw shadow on the pit floor
 	shadow = Sprite2D.new()
 	shadow.texture = _oval_texture()
@@ -537,6 +541,7 @@ func _create_nodes() -> void:
 	hint = _make_label(Vector2(250, 170), Vector2(680, 50), 30, HORIZONTAL_ALIGNMENT_CENTER, Color8(250, 228, 180))
 	hint.add_theme_color_override("font_outline_color", OUTLINE)
 	hint.add_theme_constant_override("outline_size", 10)
+	_build_controls()
 	banner = _make_label(Vector2(0, 340), Vector2(PLAY_WIDTH, 120), 56, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
 	banner.add_theme_color_override("font_outline_color", OUTLINE)
 	banner.add_theme_constant_override("outline_size", 14)
@@ -547,9 +552,6 @@ func _draw_cabinet() -> void:
 	# back panel with soft stripes
 	for i in 12:
 		c.draw_rect(Rect2(i * 80, 80, 40, 860), Color8(96, 54, 96))
-	# glass glints
-	c.draw_line(Vector2(270, 240), Vector2(390, 120), Color8(140, 100, 140), 9)
-	c.draw_line(Vector2(300, 270), Vector2(360, 210), Color8(140, 100, 140), 6)
 	# marquee: chasing bulbs all along it (except behind the tries screen)
 	c.draw_rect(Rect2(0, 0, PLAY_WIDTH, 80), GOLD)
 	c.draw_rect(Rect2(0, 0, PLAY_WIDTH, 12), Color8(255, 228, 150))
@@ -657,6 +659,114 @@ static func _oval_texture() -> Texture2D:
 func _refresh_tries() -> void:
 	tries_label.text = "TRIES %d" % LuckyPinch.tries
 
+## The controls, on a tag like the menus' legend (pixel art on a 3 px grid, cut corners):
+##   →  hold  [forward sign]      the claw slides right
+##   ↑  hold  [orange button]     the claw moves to the back
+## The row for the step you're on is lit, the other dimmed; hidden while the claw drops.
+const CTRL_PX := 3
+const CTRL_INK := Color8(84, 66, 50)
+const CTRL_TAG := Color8(250, 238, 206)
+const CTRL_AT := Vector2(475, 196)           # the tag's centre
+const CTRL_GAP := 40.0
+
+func _build_controls() -> void:
+	controls = Node2D.new()
+	controls.position = CTRL_AT
+	controls.z_index = 5
+	add_child(controls)
+	var font: Font = load("res://fonts/pixChicago.ttf")
+	var arrow_w := 9 * CTRL_PX
+	var word_w := font.get_string_size("hold", HORIZONTAL_ALIGNMENT_LEFT, -1, 28).x
+	var icon_w := 37.0
+	var row_w := arrow_w + 12.0 + word_w + 12.0 + icon_w
+	var size := Vector2(row_w + 24.0, CTRL_GAP + 33.0 + 12.0)
+	var tag := Sprite2D.new()
+	tag.texture = MenuLegend._tag_texture(int(ceil(size.x / CTRL_PX)), int(ceil(size.y / CTRL_PX)), CTRL_TAG)
+	tag.scale = Vector2(CTRL_PX, CTRL_PX)
+	tag.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	controls.add_child(tag)
+	var arrows := [_arrow_texture(false), _arrow_texture(true)]
+	var buttons := [load("res://textures/buttons/logoforward.png"), MenuLegend._icon()]
+	for i in 2:
+		var row := Node2D.new()
+		row.position = Vector2(-row_w / 2.0, (i - 0.5) * CTRL_GAP)
+		controls.add_child(row)
+		control_rows.append(row)
+		var arrow := Sprite2D.new()
+		arrow.texture = arrows[i]
+		arrow.scale = Vector2(CTRL_PX, CTRL_PX)
+		arrow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		arrow.position = Vector2(arrow_w / 2.0, 0)
+		row.add_child(arrow)
+		var l := Label.new()
+		l.text = "hold"
+		l.position = Vector2(arrow_w + 12.0, -round(8.5 * 3.5))       # (lowercase centred on the row)
+		l.size = Vector2(word_w + 4, 52)
+		if font:
+			l.add_theme_font_override("font", font)
+		l.add_theme_font_size_override("font_size", 28)
+		l.add_theme_color_override("font_color", CTRL_INK)
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(l)
+		var b := Sprite2D.new()
+		b.texture = buttons[i]
+		b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		b.scale = Vector2(0.75, 0.75) if i == 0 else Vector2(CTRL_PX, CTRL_PX)
+		b.position = Vector2(arrow_w + 12.0 + word_w + 12.0 + icon_w / 2.0, 0)
+		row.add_child(b)
+	_controls_step(0)
+
+## 0 = slide right (forward), 1 = to the back (the orange button), -1 = hidden (dropping)
+func _controls_step(step: int) -> void:
+	if not controls:
+		return
+	controls.visible = step >= 0
+	for i in control_rows.size():
+		control_rows[i].modulate.a = 1.0 if i == step else 0.35
+
+## A pixel arrow in the ink colour (9 x 9): right, or up
+static func _arrow_texture(up: bool) -> Texture2D:
+	var rows := ["...#.....", "...##....", "...###...", "#######..", "########.", "#######..", "...###...", "...##....", "...#....."]
+	var img := Image.create(9, 9, false, Image.FORMAT_RGBA8)
+	for y in 9:
+		for x in 9:
+			if rows[y][x] == "#":
+				if up:
+					img.set_pixel(y, 8 - x, CTRL_INK)
+				else:
+					img.set_pixel(x, y, CTRL_INK)
+	return ImageTexture.create_from_image(img)
+
+## A LUCKY PINCH sticker on the machine's back panel: the logo on a pale sticker-paper edge,
+## a little tilted, muted and half see-through so it decorates without shouting
+const STICKER_AT := Vector2(585, 430)
+func _add_sticker() -> void:
+	var src: Image = (load("res://textures/menus/luckypinch.png") as Texture2D).get_image()
+	if src.is_compressed():
+		src.decompress()
+	src.convert(Image.FORMAT_RGBA8)
+	const EDGE := 4                                   # the paper around the logo (logo px)
+	var w := src.get_width() + EDGE * 2
+	var h := src.get_height() + EDGE * 2
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var paper := Color8(244, 232, 214)
+	for y in src.get_height():
+		for x in src.get_width():
+			if src.get_pixel(x, y).a > 0.5:
+				for dy in range(-EDGE, EDGE + 1):
+					for dx in range(-EDGE, EDGE + 1):
+						if dx * dx + dy * dy <= EDGE * EDGE:
+							img.set_pixel(x + EDGE + dx, y + EDGE + dy, paper)
+	img.blend_rect(src, Rect2i(Vector2i.ZERO, src.get_size()), Vector2i(EDGE, EDGE))
+	var st := Sprite2D.new()
+	st.texture = ImageTexture.create_from_image(img)
+	st.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	st.scale = Vector2(1.4, 1.4)                       # (the logo's 5 px art pixels → an even 7)
+	st.rotation = -0.07
+	st.position = STICKER_AT
+	st.modulate = Color(0.82, 0.7, 0.86, 0.5)          # muted: a bit faded into the purple
+	add_child(st)
+
 func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
 	var l := Label.new()
 	l.position = pos
@@ -730,24 +840,26 @@ func on_main_button_pressed() -> void:
 	if is_game_over:
 		super.on_main_button_pressed()
 		return
-	main_down = true
-	if phase == P.READY and is_running:
-		phase = P.MOVE_X
-		hint.text = ""
-		_motor(true)
-
-func on_main_button_released() -> void:
-	main_down = false
-
-func on_forward_button_down() -> void:
-	fwd_down = true
+	back_held = true
 	if phase == P.WAIT_D and is_running:
 		phase = P.MOVE_D
 		hint.text = ""
 		_motor(true)
 
+func on_main_button_released() -> void:
+	back_held = false
+
+func on_forward_button_down() -> void:
+	if is_game_over:
+		return
+	slide_held = true
+	if phase == P.READY and is_running:
+		phase = P.MOVE_X
+		hint.text = ""
+		_motor(true)
+
 func on_forward_button_up() -> void:
-	fwd_down = false
+	slide_held = false
 
 func on_forward_button_pressed() -> void:
 	pass                                # (the game over screen has only Exit)

@@ -1,6 +1,6 @@
 extends Node2D
-## Power-on sequence: black screen + blank LCD -> developer logo -> welcome text
-## -> screen turns on, LCD populates, music starts. Tap anywhere to skip.
+## Power-on sequence: black screen + blank LCD -> developer logo -> the screen comes on slowly
+## (the gut lights up, the calmest song starts) -> LCD on. It can't be skipped.
 ##
 ## Lives under "Main UI" so the black screen sits above the pet view but below
 ## the console frame (z_index), and uses the same coordinates as PinkBackground.
@@ -8,22 +8,21 @@ extends Node2D
 signal finished
 
 @export var logo_texture: Texture2D = preload("res://textures/boot/kobaya_logo.png")
-@export var welcome_text := "Welcome to HaraTomo!\n\nFeed it, raise it and watch it evolve through its natural cycle.\n\nPlay to unlock items and pals."
 @export var start_delay := 0.8
-@export var logo_fade_in := 0.6      # same plain fade as the welcome text's fade-out
+@export var logo_fade_in := 0.6
 @export var logo_hold := 1.4
 @export var logo_fade_out := 0.6
-@export var text_type_time := 2.4
-@export var text_hold := 3.0
-@export var screen_on_time := 0.8
+@export var screen_on_time := 2.2     # the pet screen fades in from black, slowly
+@export var gut_light_time := 2.8     # ...and the gut lights up a little after it
 @export var bunny_volume_db := -24.0     # the rabbit's sniff-sniff-hop as the logo shows: barely there
 
 const SCREEN_COLOR := Color(0.078, 0.078, 0.078)  # matches the logo's background
 const TEXT_COLOR := Color(0.98, 0.94, 0.86)
+const GUT_DARK := Color(0.28, 0.26, 0.32)        # the gut before it lights up
 
 var screen: ColorRect
 var logo: Sprite2D
-var text: Label
+var music_started := false
 var blocker: CanvasLayer
 var tween: Tween
 var done := false
@@ -63,29 +62,38 @@ func _build() -> void:
 	add_child(logo)
 	_setup_nose()
 
-	text = Label.new()
-	text.text = welcome_text
-	text.add_theme_font_override("font", load("res://fonts/pixChicago.ttf"))
-	text.add_theme_font_size_override("font_size", 40)
-	text.add_theme_color_override("font_color", TEXT_COLOR)
-	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.size = Vector2(sz.x * 0.74, sz.y * 0.8)      # tall enough for all the lines
-	text.position = center - text.size / 2.0 - Vector2(0, sz.y * 0.03)
-	text.visible_ratio = 0.0
-	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(text)
+	# the gut starts dark: it lights up slowly when the screen comes on
+	for gut in _guts():
+		gut.modulate = GUT_DARK
 
-	# Swallow all input during boot; a tap skips it
+	# Swallow all input during boot. It can't be skipped: the logo and the welcome always play
+	# (a tap used to skip them, and the finger that pulls the battery strip skipped them by accident)
 	blocker = CanvasLayer.new()
 	blocker.layer = 100
 	var catcher := Control.new()
 	catcher.set_anchors_preset(Control.PRESET_FULL_RECT)
 	catcher.mouse_filter = Control.MOUSE_FILTER_STOP
-	catcher.gui_input.connect(_on_blocker_input)
+	catcher.gui_input.connect(_on_boot_touch)
 	blocker.add_child(catcher)
 	add_child(blocker)
+
+## While booting the buttons still press like real ones (a click, the pressed face), they just
+## do nothing yet (shared with the unboxing's no-power presses)
+var _held: TextureButton = null
+var _held_face: Texture2D
+
+func _on_boot_touch(event: InputEvent) -> void:
+	var tap := event as InputEventMouseButton
+	if not tap or tap.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if tap.pressed and not _held:
+		var b := Unboxing.console_button_at(get_parent(), tap.global_position)
+		if b:
+			_held = b
+			_held_face = Unboxing.dead_press(b)
+	elif not tap.pressed and _held:
+		Unboxing.dead_release(_held, _held_face)
+		_held = null
 
 func _run() -> void:
 	tween = create_tween()
@@ -96,29 +104,48 @@ func _run() -> void:
 	tween.tween_interval(logo_hold)
 	tween.tween_property(logo, "modulate:a", 0.0, logo_fade_out)
 	tween.tween_interval(0.5)
-	# Welcome text, typed out
-	tween.tween_property(text, "visible_ratio", 1.0, text_type_time)
-	tween.tween_interval(text_hold)
-	tween.tween_property(text, "modulate:a", 0.0, 0.6)
-	# Screen on
-	tween.tween_property(screen, "modulate:a", 0.0, screen_on_time).set_trans(Tween.TRANS_SINE)
+	# Screen on, slowly: the pet screen fades in, the gut lights up, the calmest song starts.
+	# (The guide for a first start comes after it: Onboarding.)
+	tween.tween_callback(_power_on)
+	tween.tween_interval(maxf(screen_on_time, 0.6 + gut_light_time))
 	tween.tween_callback(_finish)
 
-func _on_blocker_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and not done and not Unboxing.waiting():
-		if tween:
-			tween.kill()
-		var t := create_tween()
-		t.tween_property(self, "modulate:a", 0.0, 0.25)
-		t.tween_callback(_finish)
+func _power_on() -> void:
+	var t := create_tween().set_parallel(true)
+	t.tween_property(screen, "modulate:a", 0.0, screen_on_time).set_trans(Tween.TRANS_SINE)
+	for gut in _guts():
+		t.tween_property(gut, "modulate", Color.WHITE, gut_light_time).set_delay(0.6).set_trans(Tween.TRANS_SINE)
+	t.tween_callback(_first_song).set_delay(0.6 + gut_light_time)   # (when the gut is fully lit)
+
+func _first_song() -> void:
+	if music_started:
+		return                              # (once only: the boot's end may land on the same frame)
+	music_started = true
+	var music = get_node_or_null("/root/PoopPal/MusicController")
+	if music and music.has_method("play_first_song"):
+		music.play_first_song()
+
+func _guts() -> Array:
+	var out := []
+	for path in ["../PetView/Intestine-back", "../PetView/Intestine-front"]:
+		var n := get_node_or_null(path)
+		if n:
+			out.append(n)
+	return out
 
 func _finish() -> void:
 	if done:
 		return
 	done = true
-	_music_on()
+	_first_song()                           # (if the gut's light-up hasn't started it already)
+	for gut in _guts():
+		gut.modulate = Color.WHITE
 	_lcd_power_on()
+	if _held:
+		Unboxing.dead_release(_held, _held_face)
+		_held = null
 	blocker.queue_free()
+	get_parent().add_child.call_deferred(Onboarding.new())    # (the guided start; it only stays on a first start)
 	finished.emit()
 	queue_free.call_deferred()
 
@@ -222,8 +249,3 @@ func _music_off() -> void:
 	var music = get_node_or_null("/root/PoopPal/MusicController")
 	if music:
 		music.stop()
-
-func _music_on() -> void:
-	var music = get_node_or_null("/root/PoopPal/MusicController")
-	if music and music.has_method("play_random_song"):
-		music.play_random_song()

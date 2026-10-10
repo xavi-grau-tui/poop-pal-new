@@ -13,13 +13,13 @@ signal opened
 
 const DEV_RECT := Rect2(216, 500, 648, 1152)        # the device in its tray (scale 0.6)
 const BOOK_POS := Vector2(255, 716)
-const SEAL_C := Vector2(540, 1842)                  # a big clear tape over the lid's edge
-const SEAL_SIZE := Vector2(420, 216)
+const SEAL_C := Vector2(540, 1825)                  # a big clear tape over the lid's edge, up to near the window
+const SEAL_SIZE := Vector2(420, 250)                # (= box_art.py SEAL_C / SEAL_W x SEAL_H)
 const SEAL_OFF := 110.0                             # pulled this far it has come off
 
 const PEEL_SOUND := preload("res://sounds/fx/film_peel.wav")
 const LID_SOUND := preload("res://sounds/fx/box_lid.wav")
-const FULL_DEVICE := preload("res://textures/unboxing/box/device.png")
+var FULL_DEVICE: Texture2D = ConsoleLayout.device_picture()   # (matching the bottom buttons' layout)
 
 enum { SEAL, LID, DEVICE, OUT }
 var step := SEAL

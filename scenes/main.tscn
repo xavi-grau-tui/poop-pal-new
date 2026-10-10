@@ -1444,6 +1444,7 @@ offset_right = 40.0
 offset_bottom = 40.0
 
 [node name="Game" type="Node2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1"]
+position = Vector2(0.9983, -2.00085)
 
 [node name="TopFrame" type="TextureRect" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game"]
 z_index = 2
@@ -1473,7 +1474,7 @@ texture = ExtResource("72_c2n8d")
 
 [node name="BottomFrame" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu/VBoxGame1/Game"]
 z_index = 2
-position = Vector2(1023.28, -660.865)
+position = Vector2(1022.28, -658.864)
 scale = Vector2(2.13875, 2.29618)
 texture = ExtResource("70_kkkcx")
 

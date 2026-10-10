@@ -35,11 +35,12 @@ func _ready():
 		food_time_left = food_duration
 		drink_time_left = drink_duration
 	_update_labels()
+	# (blinking in step with the gear button's own blink_hint(6, 0.18), which starts with it)
 	Collection.unlocked.connect(func(_c, _id):
-		show_message("ITEM\nUNLOCKED!")
+		show_message("ITEM\nUNLOCKED!", UNLOCK_BLINKS * UNLOCK_STEP * 2.0, UNLOCK_BLINKS, UNLOCK_STEP)
 		_ding())
 	PetState.pal_discovered.connect(func(_id):
-		show_message("PAL\nUNLOCKED!")
+		show_message("PAL\nUNLOCKED!", UNLOCK_BLINKS * UNLOCK_STEP * 2.0, UNLOCK_BLINKS, UNLOCK_STEP)
 		_ding())
 
 func _ding() -> void:
@@ -63,7 +64,16 @@ func _align_timers_to_score() -> void:
 			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			l.position.x = right - l.size.x
 
-func show_message(text: String, secs := MESSAGE_TIME) -> void:
+## An unlock message blinks with the gear button (menu_buttons: blink_hint(6, 0.18)): same blinks,
+## same start, same end
+const UNLOCK_BLINKS := 6
+const UNLOCK_STEP := 0.18
+## BONUS! blinks with the Games button's bonus blink (menu_buttons start_attention: 0.28 on / off)
+const BONUS_STEP := 0.28
+
+## blinks > 0: that many even on/off blinks of `step` seconds, then lit to the end; otherwise the
+## usual long-on / short-off blink for the whole time
+func show_message(text: String, secs := MESSAGE_TIME, blinks := 0, step := 0.18) -> void:
 	if not _msg_label:
 		_msg_label = Label.new()
 		_msg_label.z_index = 3
@@ -87,8 +97,18 @@ func show_message(text: String, secs := MESSAGE_TIME) -> void:
 	if _msg_tween:
 		_msg_tween.kill()
 	_msg_tween = create_tween()
-	var blinks := int(secs / 0.5)
-	for i in blinks:
+	if blinks > 0:
+		for i in blinks:
+			_msg_tween.tween_callback(func(): _msg_label.modulate.a = 1.0)
+			_msg_tween.tween_interval(step)
+			_msg_tween.tween_callback(func(): _msg_label.modulate.a = 0.25)
+			_msg_tween.tween_interval(step)
+		_msg_tween.tween_callback(func(): _msg_label.modulate.a = 1.0)
+		_msg_tween.tween_interval(maxf(0.0, secs - blinks * step * 2.0))
+		_msg_tween.tween_callback(_end_message)
+		return
+	var n_blinks := int(secs / 0.5)
+	for i in n_blinks:
 		_msg_tween.tween_callback(func(): _msg_label.modulate.a = 1.0)
 		_msg_tween.tween_interval(0.35)
 		_msg_tween.tween_callback(func(): _msg_label.modulate.a = 0.25)

@@ -143,38 +143,49 @@ func _input(event: InputEvent) -> void:
 			_push(b)                     # ...but they still click down like real ones
 
 ## The console's buttons (menu, sound, forward, main)
-func _buttons() -> Array:
+static func console_buttons(console_front: Node) -> Array:
 	var out := []
 	for path in ["MenuButtons", "SoundButtons", "MainButton"]:
-		var n := front.get_node_or_null(path)
+		var n := console_front.get_node_or_null(path)
 		if n is TextureButton:
 			out.append(n)
 		elif n:
 			out.append_array(n.get_children().filter(func(c): return c is TextureButton))
 	return out
 
-func _button_at(screen_pos: Vector2) -> TextureButton:
-	for b in _buttons():
-		if b.is_visible_in_tree() and Rect2(Vector2.ZERO, b.size).has_point(_local_to(b, screen_pos)):
+static func console_button_at(console_front: Node, screen_pos: Vector2) -> TextureButton:
+	for b in console_buttons(console_front):
+		if b.is_visible_in_tree() and Rect2(Vector2.ZERO, b.size).has_point(b.get_global_transform_with_canvas().affine_inverse() * screen_pos):
 			return b
 	return null
 
-## Pushed with no power: clicks (and shows its pressed face), but never gets the tap.
-## The top menu buttons' pressed face is their LED lit, so with no power they only click.
-func _push(b: TextureButton) -> void:
-	held_button = b
-	held_texture = b.texture_normal
+## A button pushed while the device isn't on yet (no power, or still booting): it clicks and
+## shows its pressed face, but never gets the tap. The top menu buttons' pressed face is their
+## LED lit, so those only click. Returns its face, for dead_release.
+static func dead_press(b: TextureButton) -> Texture2D:
+	var face := b.texture_normal
 	if b.texture_pressed and not b.is_in_group("menu_toggle_buttons"):
 		b.texture_normal = b.texture_pressed
 	var click := b.get_node_or_null("ClickSound") as AudioStreamPlayer2D
 	if click:
 		click.play()
+	return face
 
-func _unpush() -> void:
-	held_button.texture_normal = held_texture
-	var rel := held_button.get_node_or_null("ReleaseSound") as AudioStreamPlayer2D
+static func dead_release(b: TextureButton, face: Texture2D) -> void:
+	b.texture_normal = face
+	var rel := b.get_node_or_null("ReleaseSound") as AudioStreamPlayer2D
 	if rel:
 		rel.play()
+
+func _button_at(screen_pos: Vector2) -> TextureButton:
+	return console_button_at(front, screen_pos)
+
+func _push(b: TextureButton) -> void:
+	held_button = b
+	held_texture = dead_press(b)
+
+func _unpush() -> void:
+	dead_release(held_button, held_texture)
 	held_button = null
 
 func _local_to(node: CanvasItem, screen_pos: Vector2) -> Vector2:

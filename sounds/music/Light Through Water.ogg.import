@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://dirdw83x8rcpg"
+path="res://.godot/imported/Light Through Water.ogg-6349b900ed0bb1ba8f3c2463e82466db.oggvorbisstr"
+
+[deps]
+
+source_file="res://sounds/music/Light Through Water.ogg"
+dest_files=["res://.godot/imported/Light Through Water.ogg-6349b900ed0bb1ba8f3c2463e82466db.oggvorbisstr"]
+
+[params]
+
+loop=true
+loop_offset=0
+bpm=82
+beat_count=0
+bar_beats=4

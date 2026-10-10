@@ -58,15 +58,14 @@ func _gui_input(event):
 		accept_event()
 		return
 
-	# No poop yet: games stay closed until the first meal (a pending bonus can still be played)
-	if PetState.needs_first_meal() and not LuckyPinch.pending and not button_pressed and target_menu is GameMenuSwitcher:
+	# No poop yet: games stay closed until the first meal (a pending bonus can still be played);
+	# during the guided start (Onboarding) only the food button works at all
+	if PetState.needs_first_meal() and not LuckyPinch.pending and not button_pressed \
+			and (target_menu is GameMenuSwitcher or (Onboarding.active and not _is_food_button(self))):
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-			# it still clicks like a real button, it just doesn't toggle
-			var sfx := click_sound if event.pressed else release_sound
-			if sfx:
-				sfx.stop()
-				sfx.play()
+			# it clicks like a stuck key and doesn't toggle
 			if event.pressed:
+				_stuck_clack()
 				_refuse_until_first_meal()
 		accept_event()
 		return
@@ -139,8 +138,8 @@ func _is_food_button(b: Node) -> bool:
 	return b.target_menu != null and b.target_menu.has_method("populate_foods")
 
 func _refuse_until_first_meal() -> void:
-	# Silent refusal: a short buzz and the food button blinks
-	Input.vibrate_handheld(40)
+	# a short buzz and the food button blinks (the stuck click comes from the press itself)
+	Input.vibrate_handheld(20)
 	# Point the player to the food button: it blinks bright/dark 3 times, like an LED
 	for b in get_tree().get_nodes_in_group("menu_toggle_buttons"):
 		if _is_food_button(b):
@@ -160,14 +159,22 @@ func _on_bonus_changed(on: bool) -> void:
 ## Refused because a LUCKY PINCH bonus is waiting: a soft error blip (the Games button is
 ## already blinking)
 func _refuse_for_bonus() -> void:
-	Input.vibrate_handheld(40)
+	Input.vibrate_handheld(20)
+	_stuck_clack()
+
+## A press that's refused (no meal yet, the guided start, a bonus waiting): the button's own
+## click, cut short and a touch lower, like a stuck key. No error sound.
+func _stuck_clack() -> void:
+	var src := click_sound if click_sound else clack_sound
+	if not src or not src.stream:
+		return
 	var sfx := AudioStreamPlayer.new()
-	sfx.stream = load("res://sounds/fx/error.mp3")
-	sfx.volume_db = -22.0
-	sfx.pitch_scale = 1.25
+	sfx.stream = src.stream
+	sfx.volume_db = src.volume_db - 3.0
+	sfx.pitch_scale = 0.88
 	add_child(sfx)
 	sfx.play()
-	sfx.finished.connect(sfx.queue_free)
+	get_tree().create_timer(0.07).timeout.connect(sfx.queue_free)
 
 var _attention: Tween
 

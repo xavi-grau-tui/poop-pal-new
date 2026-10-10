@@ -23,6 +23,20 @@ var current_page := 0
 var drinks_populated := false
 
 var current_selection := -1
+var legend: MenuLegend                 # the orange button's controls, left of the bottom band
+
+## While the food (or drink) countdown runs, a shutter rolls down over the options with the LCD's
+## countdown on it, and eating (drinking) is refused; once it has run out, the next time the menu
+## opens the shutter rolls back up. Kept on (2026-10-10) until that menu needs something else
+## there: then switch it off or replace it.
+const BARRIER_ENABLED := true
+const PANEL := Rect2(680.0, -1190.0, 678.0, 660.0)    # the frame's orange options panel, a bit beyond (Main UI coords)
+const BARRIER_PX := 3
+var barrier_clip: Control
+var barrier: Node2D
+var barrier_title: Label
+var barrier_time: Label
+var barrier_down := false
 var active_options := []
 
 func show_page(index: int):
@@ -38,6 +52,7 @@ func show_page(index: int):
 	current_selection = -1
 	reset_selection()
 	update_dots(index)
+	_update_barrier()                              # (it also shows / hides the legend)
 
 func select_next():
 	if active_options.size() == 0:
@@ -62,6 +77,10 @@ func flip_page():
 		drinks_populated = true
 
 func _ready():
+	legend = MenuLegend.attach($Menu, $Menu/Background)
+	_build_barrier()
+	$Menu/ForwardHint.position.x = MenuLegend.forward_center_x()
+	MenuLegend.layout_dots(dots)
 	_build_special_page()
 	show_page(0)
 	populate_foods()
@@ -183,6 +202,9 @@ func reset_active_options():
 ## Asked by the main button before the OK sound: no pal yet = the first thing must be food,
 ## so a drink is refused (soft error + the Food button blinks)
 func can_confirm(sel: Node) -> bool:
+	if barrier_down:
+		Input.vibrate_handheld(20)                   # the shutter is down: not yet
+		return false
 	var special_first: bool = sel != null and sel.has_meta("special") and not PetState.can_start_with(sel.get_meta("food", {}))
 	if sel and (sel.has_meta("drink") or special_first) and PetState.needs_first_meal():
 		Input.vibrate_handheld(40)
@@ -192,6 +214,136 @@ func can_confirm(sel: Node) -> bool:
 				break
 		return false
 	return true
+
+# ------------------------------------------------------------------ THE SHUTTER (on trial)
+
+func _lcd() -> Node:
+	return get_node_or_null("/root/PoopPal/Main UI/LCD Screen")
+
+## Seconds left on the countdown this page waits for (food / special: the meal one; drinks: the
+## drink one); 0 when it isn't running
+func _wait_left() -> int:
+	var lcd := _lcd()
+	if not lcd or not lcd.get("running"):
+		return 0
+	return lcd.drink_time_left if current_page == 1 else lcd.food_time_left
+
+func _update_barrier() -> void:
+	if not barrier:
+		if legend:
+			legend.set_lines([["press", "next"], ["hold", "drink" if current_page == 1 else "eat"]])
+		return
+	var left := _wait_left()
+	barrier_title.text = "NEXT DRINK IN" if current_page == 1 else "NEXT MEAL IN"
+	if BARRIER_ENABLED and left > 0 and not barrier_down:
+		_roll(true)
+	elif (left <= 0 or not BARRIER_ENABLED) and barrier_down:
+		_roll(false)
+	_refresh_barrier_time()
+	# the orange button's legend only while there's something to pick and eat (not behind the shutter)
+	if legend:
+		legend.set_lines([] if barrier_down else [["press", "next"], ["hold", "drink" if current_page == 1 else "eat"]])
+
+func _refresh_barrier_time() -> void:
+	var lcd := _lcd()
+	if lcd and lcd.has_method("format_time"):
+		barrier_time.text = lcd.format_time(_wait_left())
+
+func _process(_delta: float) -> void:
+	if barrier_down and visible:
+		_refresh_barrier_time()               # (it stays down at 00:00 until the menu reopens)
+
+## The shutter rolls down over the options (or back up), with a clack as it lands
+func _roll(down: bool) -> void:
+	barrier_down = down
+	var h := PANEL.size.y
+	var t := create_tween()
+	t.tween_property(barrier, "position:y", 0.0 if down else -h, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN if down else Tween.EASE_OUT)
+	if down:
+		t.tween_callback(func():
+			var sfx := AudioStreamPlayer.new()
+			sfx.stream = load("res://sounds/fx/clack.mp3")
+			sfx.volume_db = -10.0
+			add_child(sfx)
+			sfx.play()
+			sfx.finished.connect(sfx.queue_free)
+			Input.vibrate_handheld(25))
+
+func _build_barrier() -> void:
+	barrier_clip = Control.new()
+	barrier_clip.position = PANEL.position
+	barrier_clip.size = PANEL.size
+	barrier_clip.clip_contents = true
+	barrier_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	barrier_clip.z_index = 4                       # over the food cards (2) and their rings (3)...
+	$Menu.add_child(barrier_clip)
+	barrier = Node2D.new()
+	barrier.position.y = -PANEL.size.y          # rolled up (out of sight)
+	barrier_clip.add_child(barrier)
+	var shutter := Sprite2D.new()
+	shutter.texture = _shutter_texture(int(ceil(PANEL.size.x / BARRIER_PX)), int(ceil(PANEL.size.y / BARRIER_PX)))
+	shutter.centered = false
+	shutter.scale = Vector2(BARRIER_PX, BARRIER_PX)
+	shutter.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	barrier.add_child(shutter)
+	var font = load("res://fonts/pixChicago.ttf")
+	for l in [Label.new(), Label.new()]:
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		l.size = Vector2(PANEL.size.x, 80)
+		if font:
+			l.add_theme_font_override("font", font)
+		l.add_theme_color_override("font_color", Color8(84, 66, 50))
+		l.add_theme_color_override("font_outline_color", Color8(240, 210, 160))
+		l.add_theme_constant_override("outline_size", 12)
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		barrier.add_child(l)
+	barrier_title = barrier.get_child(1)
+	barrier_time = barrier.get_child(2)
+	barrier_title.add_theme_font_size_override("font_size", 40)
+	barrier_time.add_theme_font_size_override("font_size", 96)
+	barrier_title.position = Vector2(0, PANEL.size.y / 2.0 - 110)
+	barrier_time.position = Vector2(0, PANEL.size.y / 2.0 - 30)
+	# ...but under the frame's inner border: that ring of the frame (tools/art/frame_ring.py) is
+	# laid on top, so the shutter slides in behind the frame's border and rounded corners
+	var bg: Sprite2D = $Menu/Background
+	var ring := Sprite2D.new()
+	ring.texture = load("res://textures/menus/diapositive1_ring.png")
+	ring.position = bg.position
+	ring.scale = bg.scale
+	ring.texture_filter = bg.texture_filter
+	ring.z_index = 5
+	ring.visible = BARRIER_ENABLED
+	$Menu.add_child(ring)
+
+## A roll-down shutter in the panel's own orange (pixel art): slats with light top edges, a
+## darker grid over them, a dark bottom bar with a little handle
+static func _shutter_texture(w: int, h: int) -> Texture2D:
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var base := Color8(215, 160, 96)
+	var light := Color8(232, 190, 132)
+	var dark := Color8(186, 132, 76)
+	var ink := Color8(84, 66, 50)
+	for y in h:
+		for x in w:
+			var col := base
+			var slat := y % 12
+			if slat == 0:
+				col = light                     # each slat's lit top edge
+			elif slat == 11:
+				col = dark                      # and its shaded underside
+			if x % 10 == 0 and slat > 0 and slat < 11:
+				col = dark                      # the grid
+			if y >= h - 6:
+				col = ink if y >= h - 2 or y == h - 6 else dark      # the bottom bar
+			if x < 2 or x >= w - 2:
+				col = ink                       # the side rails
+			img.set_pixel(x, y, col)
+	# the handle on the bottom bar
+	for x in range(w / 2 - 8, w / 2 + 8):
+		for y in range(h - 12, h - 7):
+			img.set_pixel(x, y, ink if (y == h - 12 or x == w / 2 - 8 or x == w / 2 + 7) else light)
+	return ImageTexture.create_from_image(img)
 
 func get_selected_option():
 	if current_selection >= 0 and current_selection < active_options.size():

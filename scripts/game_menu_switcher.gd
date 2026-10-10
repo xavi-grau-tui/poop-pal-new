@@ -34,11 +34,23 @@ const CARD_ART := {
 ## Prototype cards not in the scene yet: copies of the last card (and its dot), added at launch
 const EXTRA_PAGES := 2
 
+## The order of the cards (2026-10-10), easy to hard: Splash Hoops, Tilt Maze, Paper Sumo, Pipe
+## Dream (to become the RC car), Top Spin, Tummy Tunes, then the four on hold (Pal Dash, Tile
+## Break, Germ Zap, Flipper Belly). Only the display order: each game keeps its own number
+## (GameScreen.game_scenes, GameData, Collection.REWARDS).
+const ORDER := [2, 1, 9, 0, 8, 6, 3, 4, 5, 7]
+const LOCKED_LOGO := "res://textures/menus/mistery.png"
+var _locked_bg: Texture2D
+
 # LUCKY PINCH bonus pending: the menu shows only its card (2 tries), no paging
 const BONUS_ART := { "logo": "res://textures/menus/luckypinch.png", "background": "res://textures/menus/pattern_claw_gold.png" }
 var bonus_page: Node = null
 
 func _ready():
+	var bg0 = pages[1].get_node_or_null("Game/TopFrame/Control/Background")
+	_locked_bg = bg0.texture if bg0 else null           # (a "?" card's background, from the scene)
+	MenuLegend.attach($Menu, $Menu/Background).set_lines([["hold", "play"]])
+	$Menu/ForwardHint.position.x = MenuLegend.forward_center_x()    # (tapping does nothing here: forward flips)
 	_add_extra_pages()
 	show_page(current_page)
 	LuckyPinch.changed.connect(func(_on): show_page(current_page))
@@ -57,8 +69,7 @@ func _add_extra_pages() -> void:
 		dot.position.x += step
 		$Menu/Dots.add_child(dot)
 		dots.append(dot)
-		for d in dots:
-			d.position.x -= step / 2.0
+	MenuLegend.layout_dots(dots)                       # (two staggered rows when there are many)
 
 func show_page(index: int) -> void:
 	var bonus := LuckyPinch.pending
@@ -86,7 +97,7 @@ func flip_page() -> void:
 	show_page(current_page)
 
 func get_selected_page() -> int:
-	return LuckyPinch.GAME_INDEX if LuckyPinch.pending else current_page
+	return LuckyPinch.GAME_INDEX if LuckyPinch.pending else ORDER[current_page]
 
 # --- Interface expected by main_button / menu_buttons ---
 
@@ -109,19 +120,25 @@ func reset_selection() -> void:
 func reset_active_options() -> void:
 	show_page(current_page)
 
-func _update_game_card_labels(index: int) -> void:
-	var page = pages[index]
+func _update_game_card_labels(page_index: int) -> void:
+	var page = pages[page_index]
+	var index: int = ORDER[page_index]                   # the game on this card
 	var game_node = page.get_node_or_null("Game")
 	if not game_node:
 		return
+	var logo = game_node.get_node_or_null("TopFrame/Control/GameLogo")
+	var bg = game_node.get_node_or_null("TopFrame/Control/Background")
 	if index in CARD_ART and GameData.is_unlocked(index):
 		var art: Dictionary = CARD_ART[index]
-		var logo = game_node.get_node_or_null("TopFrame/Control/GameLogo")
-		var bg = game_node.get_node_or_null("TopFrame/Control/Background")
 		if logo:
 			logo.texture = load(art["logo"])
 		if bg:
 			bg.texture = load(art["background"])
+	else:                                                # locked: a "?" card
+		if logo:
+			logo.texture = load(LOCKED_LOGO)
+		if bg and _locked_bg:
+			bg.texture = _locked_bg
 	var bottom = game_node.get_node_or_null("BottomFrame")
 	if not bottom:
 		return

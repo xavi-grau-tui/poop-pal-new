@@ -263,12 +263,17 @@ func end_game() -> void:
 
 # ================================================================== INPUT
 
+## The lanes follow the bottom buttons from left to right: speaker · orange · forward, or with the
+## new layout on trial (ConsoleLayout) orange · speaker · forward
+const SPEAKER_LANE := 1 if ConsoleLayout.NEW_BUTTONS else 0
+const MAIN_LANE := 0 if ConsoleLayout.NEW_BUTTONS else 1
+
 func on_main_button_pressed() -> void:
 	if is_game_over:
 		super.on_main_button_pressed()
 		return
 	if not _touch_mode:
-		_press(1)
+		_press(MAIN_LANE)
 
 func on_forward_button_down() -> void:
 	if not is_game_over and not _touch_mode:
@@ -281,7 +286,7 @@ func on_forward_button_pressed() -> void:
 ## The speaker button is a lane in this game (sound_button.gd routes it here instead of muting)
 func on_sound_button_pressed() -> void:
 	if not is_game_over and not _touch_mode:
-		_press(0)
+		_press(SPEAKER_LANE)
 
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventScreenTouch):
@@ -294,10 +299,10 @@ func _input(event: InputEvent) -> void:
 		if lane >= 0:
 			_touch_lane[event.index] = lane
 			_press(lane)
-			if lane == 0:
+			if lane == SPEAKER_LANE:
 				_show_speaker_held(true)
 	else:
-		if _touch_lane.get(event.index, -1) == 0:
+		if _touch_lane.get(event.index, -1) == SPEAKER_LANE:
 			_show_speaker_held(false)
 		_touch_lane.erase(event.index)
 
@@ -308,11 +313,11 @@ func _show_speaker_held(held: bool) -> void:
 		b.show_held(held)
 
 func _lane_at(screen_pos: Vector2) -> int:
-	var paths := ["/root/PoopPal/Main UI/SoundButtons/SoundButton", "/root/PoopPal/Main UI/MainButton", "/root/PoopPal/Main UI/SoundButtons/ForwardButton"]
-	for i in paths.size():
-		var b := get_node_or_null(paths[i]) as Control
+	var buttons := {"/root/PoopPal/Main UI/SoundButtons/SoundButton": SPEAKER_LANE, "/root/PoopPal/Main UI/MainButton": MAIN_LANE, "/root/PoopPal/Main UI/SoundButtons/ForwardButton": 2}
+	for path in buttons:
+		var b := get_node_or_null(path) as Control
 		if b and (b.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, b.size)).grow(20).has_point(screen_pos):
-			return i
+			return buttons[path]
 	return -1
 
 func _read_keys() -> void:
@@ -321,7 +326,7 @@ func _read_keys() -> void:
 		var down := Input.is_key_pressed(k)
 		if down and not _keys.get(k, false):
 			_press(map[k])
-		if map[k] == 0 and down != _keys.get(k, false):
+		if map[k] == SPEAKER_LANE and down != _keys.get(k, false):
 			_show_speaker_held(down)
 		_keys[k] = down
 

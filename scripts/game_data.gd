@@ -13,8 +13,11 @@ var games := {}
 
 # Progress thresholds: when a game hits X%, unlock game Y
 var unlock_thresholds := {
-	0: { 50.0: 1 },  # Pipe Dream at 50% unlocks game 2
+	2: { 50.0: 1 },  # Splash Hoops at 50% unlocks Tilt Maze (the progression framework will replace this)
 }
+
+## The game everyone starts with (the Games menu's first card: GameMenuSwitcher.ORDER)
+const FIRST_GAME := 2   # Splash Hoops
 
 # Target score for 100% progress per game
 var progress_target := {
@@ -31,14 +34,14 @@ var progress_target := {
 }
 
 ## Prototype/testing: games unlocked regardless of progress
-const DEBUG_UNLOCKED := [1, 2, 3, 4, 5, 6, 7, 8, 9]
+const DEBUG_UNLOCKED := [0, 1, 3, 4, 5, 6, 7, 8, 9]
 ## Prototype/testing: every launch starts with no best scores and no progress (fresh start)
 const RESET_SCORES_ON_LAUNCH := true
 
 func _ready() -> void:
-	_init_game(0, true)   # Pipe Dream — unlocked by default
+	_init_game(0, false)
 	_init_game(1, false)
-	_init_game(2, false)
+	_init_game(2, true)   # Splash Hoops — unlocked by default (FIRST_GAME)
 	_init_game(3, false)
 	_init_game(4, false)
 	_init_game(5, false)
@@ -51,7 +54,7 @@ func _ready() -> void:
 		for idx in games:
 			games[idx]["max_score"] = 0
 			games[idx]["progress"] = 0.0
-			games[idx]["unlocked"] = idx == 0         # only the first game, as on a new install
+			games[idx]["unlocked"] = idx == FIRST_GAME   # only the first game, as on a new install
 			games[idx]["intro"] = false               # (and the how-to cards show again)
 		save_data()
 	for idx in DEBUG_UNLOCKED:
@@ -151,5 +154,5 @@ func load_data() -> void:
 				games[idx]["progress"] = float(parsed[key].get("progress", 0.0))
 				games[idx]["unlocked"] = bool(parsed[key].get("unlocked", false))
 				games[idx]["intro"] = bool(parsed[key].get("intro", false))
-		# Pipe Dream always unlocked
-		games[0]["unlocked"] = true
+		# the first game is always unlocked
+		games[FIRST_GAME]["unlocked"] = true

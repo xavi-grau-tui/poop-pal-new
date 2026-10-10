@@ -48,6 +48,8 @@ DEV_X, DEV_Y = (W - DEV_W) // 2, 500
 HOLE_M = 34                                          # window margin around the device
 HOLE = (DEV_X - HOLE_M, DEV_Y - HOLE_M, DEV_X + DEV_W + HOLE_M, DEV_Y + DEV_H + HOLE_M)
 HOLE_R = 28
+LOGO_Y = 150                                         # the HaraTomo logo's top (full-size px)
+TAG_Y = (HOLE[1] - 66) // P                          # the Japanese tagline: just above the window
 
 
 def up(img):
@@ -117,8 +119,10 @@ def print_logo():
 
 
 # a big clear tape: from near the top of the bottom band down over the lid's edge
-SEAL_W, SEAL_H = 420, 216
-SEAL_C = (W // 2, H - 186 + SEAL_H // 2)
+SEAL_TOP = HOLE[3] + 14                               # up past the dark band, almost to the window's frame
+SEAL_W, SEAL_H = 420, H - 186 + 216 - SEAL_TOP           # (its bottom stays past the box's edge)
+SEAL_C = (W // 2, SEAL_TOP + SEAL_H // 2)
+SEAL_TEXT_Y = 1876                                     # REMOVE SEAL, under the slogan (full-size px)
 
 
 def seal_layer():
@@ -129,7 +133,7 @@ def seal_layer():
     d = ImageDraw.Draw(im)
     d.rounded_rectangle((0, 0, w - 1, h - 1), radius=r, fill=(255, 255, 255, 44), outline=(255, 255, 255, 150), width=5)
     d.rounded_rectangle((22, 14, 96, 26), radius=6, fill=(255, 255, 255, 140))           # glare
-    d.text((w // 2, 142), "REMOVE SEAL", font=ImageFont.truetype(PIXELLARI, 44), fill=(255, 255, 255, 235), anchor="mm")
+    d.text((w // 2, SEAL_TEXT_Y - SEAL_TOP), "REMOVE SEAL", font=ImageFont.truetype(PIXELLARI, 44), fill=(255, 255, 255, 235), anchor="mm")
     return im
 
 
@@ -196,8 +200,15 @@ def cut_corners():
     Image.fromarray(a.astype(np.uint8), "RGBA").save(path)
 
 
+def device_png():
+    """The device picture matching the bottom buttons' layout in use (scripts/console_layout.gd)."""
+    gd = (ROOT / "scripts" / "console_layout.gd").read_text()
+    new = "const NEW_BUTTONS := true" in gd
+    return BOX_DIR / ("device_newbuttons.png" if new else "device.png")
+
+
 def device_layer():
-    dev = Image.open(BOX_DIR / "device.png").convert("RGBA")
+    dev = Image.open(device_png()).convert("RGBA")
     return dev.resize((DEV_W, DEV_H), Image.LANCZOS)
 
 
@@ -282,9 +293,8 @@ def lid_layer():
     tag = tag.point(lambda v: 255 if v > 110 else 0)
     for dx in (-1, 0, 1):
         for dy in (-1, 0, 1):
-            art.paste(NAVY + (255,), (LW // 2 - 100 + dx, 112 + dy), tag)
-    art.paste(WHITE + (255,), (LW // 2 - 100, 112), tag)
-    text(d, (LW // 2, 140), "YOUR TUMMY FRIEND!", 16, YELLOW, outline=NAVY)
+            art.paste(NAVY + (255,), (LW // 2 - 100 + dx, TAG_Y + dy), tag)
+    art.paste(WHITE + (255,), (LW // 2 - 100, TAG_Y), tag)
     d.rectangle((0, LH - 62, LW, LH), fill=NAVY)                    # bottom band
     text(d, (LW // 2, LH - 46), "FEED  -  PLAY  -  EVOLVE", 16, WHITE)
     text(d, (LW // 2, LH - 28), "120+ PALS TO DISCOVER!", 16, YELLOW)
@@ -297,7 +307,7 @@ def lid_layer():
     logo = print_logo()
     k = 820 / logo.width
     logo = logo.resize((round(logo.width * k), round(logo.height * k * 1.12)), Image.NEAREST)
-    img.alpha_composite(logo, (W // 2 - logo.width // 2, 118))
+    img.alpha_composite(logo, (W // 2 - logo.width // 2, LOGO_Y))
     window(img)
     # the three babies beside the window
     for name, x, y in (("picklet", -14, 640), ("ember", 880, 990), ("sprig", -14, 1320)):

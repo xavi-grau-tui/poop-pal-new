@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://i1245c6xc824"
+path="res://.godot/imported/Pixel Sumo.ogg-23b01e49b87d4039be8953e35a07ba05.oggvorbisstr"
+
+[deps]
+
+source_file="res://sounds/music/Pixel Sumo.ogg"
+dest_files=["res://.godot/imported/Pixel Sumo.ogg-23b01e49b87d4039be8953e35a07ba05.oggvorbisstr"]
+
+[params]
+
+loop=true
+loop_offset=0.28
+bpm=93.75
+beat_count=0
+bar_beats=4

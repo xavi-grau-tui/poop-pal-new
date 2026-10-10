@@ -17,8 +17,8 @@ const GAME_INDEX := 8
 # --- Stadium (play-area coordinates, 950x948) ---
 const C_FULL := Vector2(475, 500)     # bowl centre
 const R_FULL := 370.0                 # bowl radius (inside the rim; room for the controls below)
-const C_TUT := Vector2(475, 615)      # the tutorial's bowl: smaller and lower, so the coach's
-const R_TUT := 268.0                  # card above it never covers the action
+const C_TUT := Vector2(475, 620)      # the tutorial's bowl: smaller and lower, so the coach's
+const R_TUT := 262.0                  # card above it never covers the action
 const PX := 4                         # world px per stadium pixel
 const DETAIL := 3                     # world px per texture px for the tops
 const GAP_HALF := 0.17                # half-width of a rim gap (radians)
@@ -58,10 +58,15 @@ const LIVES := 3
 # --- Palette (a ceramic bowl, slate blue like the card) ---
 const BG := Color8(58, 66, 84)
 const OUTLINE := Color8(36, 40, 54)
-const FLOOR := [Color8(222, 228, 236), Color8(206, 214, 226), Color8(188, 198, 214), Color8(168, 180, 200)]
-const RING_LINE := Color8(150, 162, 184)
-const RIM := Color8(110, 126, 150)
-const RIM_HI := Color8(150, 166, 188)
+# --- the bowl: blue-grey turned wood (wood reads by its grain and lathe rings, not by brown) ---
+const WOOD := Color8(170, 184, 198)          # the floor
+const WOOD_GRAIN := Color8(154, 170, 188)    # grain lines
+const WOOD_LIGHT := Color8(186, 198, 210)    # lighter grain / the lit far side
+const LATHE := Color8(140, 156, 176)         # the turned rings
+const RIM := Color8(92, 110, 136)            # indigo-stained rim
+const RIM_HI := Color8(128, 146, 172)        # its lit bevel (top-left)
+const RIM_DARK := Color8(66, 80, 104)        # its shaded edge / grain streaks
+const RIM_W := 44.0                          # the rim's thickness (world px), outside R
 const GAP := Color8(22, 24, 32)
 const SLIME := Color8(140, 186, 92)
 const SLIME_DARK := Color8(96, 138, 60)
@@ -147,6 +152,7 @@ var wind_jam := 0.0
 var aim := C_FULL
 var drop_left := 0.0
 var dropping := false
+var lift := 1.0                       # 0 → 1: the top rising from the winding spot into the drop pose
 
 var forward_held := false
 var _touch_mode := false              # phone: buttons come from _input, not the emulated mouse
@@ -175,7 +181,7 @@ var ball_texture: Texture2D
 var shadow_tex: Texture2D
 
 func _ready() -> void:
-	game_music_path = "res://sounds/music/Bouncy Toy Groove.mp3"
+	game_music_path = "res://sounds/music/Pixel Battle.ogg"     # (100 BPM, loops on the beat: 0.163 s → 127.363 s)
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	ball_texture = PalBall.texture()
 	shadow_tex = _make_shadow_texture()
@@ -369,7 +375,9 @@ func _begin_drop() -> void:
 	drop_left = 3.5
 	aim = C
 	calibrate_tilt()
-	player.root.scale = Vector2(1.8, 1.8)
+	# it rises smoothly from where it was wound (no jump): lift goes 0 → 1
+	lift = 0.0
+	create_tween().tween_property(self, "lift", 1.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_set_legend("DROP", "")
 	if tut == Tut.WIND:
 		tut = Tut.DROP
@@ -384,7 +392,8 @@ func _drop_step(delta: float) -> void:
 	var off := aim - C
 	if off.length() > R - 80.0:
 		aim = C + off.limit_length(R - 80.0)
-	player.root.position = aim + Vector2(0, -110)
+	player.root.position = aim + Vector2(0, -110.0 * lift)
+	player.root.scale = Vector2.ONE * lerpf(2.2, 1.8, lift)
 	if tut != Tut.DROP:
 		drop_left -= delta
 	if drop_left <= 0.0:
@@ -817,7 +826,7 @@ func _set_legend(main_text: String, fwd_text: String) -> void:
 		(box.get_child(1) as Label).text = pair[1]
 		box.visible = pair[1] != ""
 		box.size = box.get_combined_minimum_size()
-	hint_fwd.position.x = PLAY_WIDTH - 40 - hint_fwd.size.x
+	hint_fwd.position.x = PLAY_WIDTH - 72 - hint_fwd.size.x          # (clear of the rounded corners)
 
 ## DASH dims while it recharges (or you're too low on spin); GUARD lights up while held
 func _update_legend() -> void:
@@ -975,9 +984,9 @@ func _create_static_nodes() -> void:
 	add_child(lives_box)
 	# the control legend along the bottom (what each button does right now)
 	hint_main = make_button_hint(0, "PULL")
-	hint_main.position = Vector2(40, PLAY_HEIGHT - 50)
+	hint_main.position = Vector2(72, PLAY_HEIGHT - 86)             # (clear of the screen's rounded corners)
 	hint_fwd = make_button_hint(1, "DONE")
-	hint_fwd.position = Vector2(PLAY_WIDTH - 220, PLAY_HEIGHT - 50)
+	hint_fwd.position = Vector2(PLAY_WIDTH - 250, PLAY_HEIGHT - 86)
 	banner = _make_label(Vector2(0, C.y - 60), Vector2(PLAY_WIDTH, 120), 54, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
 	banner.add_theme_color_override("font_outline_color", OUTLINE)
 	banner.add_theme_constant_override("outline_size", 14)
@@ -1008,43 +1017,68 @@ func _refresh_lives() -> void:
 		t.modulate = Color(1, 1, 1, 1) if i < lives else Color(0, 0, 0, 0.35)
 		lives_box.add_child(t)
 
-## The bowl seen from above: shaded rings down to the centre, a rim with gaps (ring-outs)
-## and slime puddles (hard pixels, no blending)
+## The bowl seen from above: an even, flat floor of blue-grey turned wood (wavy grain, lathe
+## rings; no shading, it read as dirt), a thick indigo rim with its grain running round and a lit
+## bevel, gaps cut through it (ring-outs), and slime puddles (hard pixels, no blending)
 func _paint_stadium() -> Image:
-	var n := int(ceil((R + 18.0) * 2.0 / PX))
+	var n := int(ceil((R + RIM_W + 4.0) * 2.0 / PX))
 	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
 	var half := n / 2.0
 	for y in n:
 		for x in n:
 			var d := (Vector2(x + 0.5, y + 0.5) - Vector2(half, half)) * PX
 			var r := d.length()
+			var ang := d.angle()
+			var lit := d.x + d.y < -r * 0.25           # the top-left side
 			var col := Color(0, 0, 0, 0)
-			if r > R + 16.0:
+			if r > R + RIM_W:
 				pass
-			elif r > R - 2.0:
-				if _in_gap(d.angle()):
+			elif r > R - 8.0:
+				# --- the rim (its dark outlines two pixels thick) ---
+				if _in_gap(ang):
 					col = GAP
-				elif r > R + 12.0 or r < R + 2.0:
+					var edge := absf(absf(angle_difference(ang, _nearest_gap(ang))) - GAP_HALF) * r
+					if edge < 6.0 and r > R:
+						col = RIM_DARK                   # the gap's cut side walls
+				elif r < R or r > R + RIM_W - 8.0:
 					col = OUTLINE
 				else:
-					col = RIM_HI if d.y < -d.x * 0.3 else RIM
+					var g := sin(r * 0.35 + sin(ang * 9.0 + r * 0.02) * 1.8)
+					col = RIM_DARK if g > 0.75 else RIM
+					if r > R + RIM_W - 16.0:
+						col = RIM_HI if lit else RIM_DARK    # outer bevel: lit top-left, shaded bottom-right
+					elif r < R + 8.0 and not lit:
+						col = RIM_HI                         # inner lip catches the light on the far side
 			else:
-				var band := clampi(int(r / R * 4.0), 0, 3)
-				col = FLOOR[band]
-				if absf(r - R * 0.33) < 2.5 or absf(r - R * 0.66) < 2.5:
-					col = RING_LINE
-				# the far (lower-right) side of the bowl catches the light
-				if r > R * 0.75 and d.x + d.y > r * 0.8:
-					col = col.lightened(0.08)
-				# a dark tongue leading into each gap
-				if r > R - 40.0 and _in_gap(d.angle()):
-					col = col.darkened(0.25)
+				# --- the floor ---
+				var g := sin(d.y * 0.11 + sin(d.x * 0.012 + d.y * 0.004) * 2.6 + sin(d.x * 0.031) * 0.6)
+				col = WOOD
+				if g > 0.72:
+					col = WOOD_GRAIN
+				elif g < -0.9:
+					col = WOOD_LIGHT
+				if r > 40.0 and fposmod(r, 52.0) < float(PX):      # (one whole pixel wide: no broken ticks)
+					col = LATHE                              # the turned rings
+				if r < 16.0 and r > 9.0:
+					col = LATHE                              # the lathe's centre mark
+				if r > R - 40.0 and _in_gap(ang):
+					col = col.darkened(0.12)                 # a faint strip leading into each gap (the way out)
 			for s in slimes:
-				var sd := (C + d).distance_to(s) + sin(d.angle() * 5.0 + s.x) * 6.0
+				var sd := (C + d).distance_to(s) + sin(ang * 5.0 + s.x) * 6.0
 				if sd < 70.0:
 					col = SLIME if sd < 64.0 else SLIME_DARK
 			img.set_pixel(x, y, col)
 	return img
+
+func _nearest_gap(ang: float) -> float:
+	var best := 0.0
+	var bd := 99.0
+	for g in gap_angles:
+		var dd := absf(angle_difference(ang, g))
+		if dd < bd:
+			bd = dd
+			best = g
+	return best
 
 ## A spinning top from above: four blades round a dark hub (so you can see it turn)
 func _make_top_texture(color: Color) -> Texture2D:
@@ -1096,6 +1130,8 @@ func _make_rival_face(color: Color) -> Texture2D:
 		img.set_pixel(p.x, p.y, OUTLINE)                            # mouth
 	return ImageTexture.create_from_image(img)
 
+## A bouncer: a turned wooden peg in the rim's indigo, seen from above (lighter top, a lathe
+## ring, a little brass dot in the middle), so it belongs to the same toy
 func _make_bumper_texture() -> Texture2D:
 	const S := 20
 	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
@@ -1106,13 +1142,17 @@ func _make_bumper_texture() -> Texture2D:
 			var d := off.length()
 			if d > 9.5:
 				continue
-			var col := Color8(236, 120, 140)
+			var col := RIM
 			if d > 8.5:
 				col = OUTLINE
-			elif d < 4.5:
-				col = Color8(255, 220, 228) if off.x + off.y < 0 else Color8(250, 176, 190)
-			elif off.x + off.y > 4.0:
-				col = Color8(196, 84, 108)
+			elif d > 7.0:
+				col = RIM_HI if off.x + off.y < 0 else RIM_DARK      # the peg's edge: lit top-left
+			elif d > 5.6 and d < 6.6:
+				col = RIM_DARK                                       # a lathe ring on its top
+			elif d < 2.2:
+				col = Color8(226, 190, 104) if off.x + off.y < 0 else Color8(176, 136, 64)   # brass dot
+			elif off.x + off.y < -2.0:
+				col = RIM_HI
 			img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
 

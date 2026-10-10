@@ -37,6 +37,15 @@ func _ready():
 	# Connect end-of-song logic
 	finished.connect(_on_song_finished)
 
+## The first song after the boot: the calmest of the rotation (slowest, fewest notes per second,
+## measured 2026-10-09), at its normal volume. Then the random rotation carries on as usual.
+const FIRST_SONG := "res://sounds/music/Sweet Dreams, Pet.mp3"
+
+func play_first_song() -> void:
+	current_stream = FIRST_SONG
+	stream = load(current_stream)
+	play()
+
 func play_random_song():
 	if unlocked_songs.size() <= 1:
 		current_stream = unlocked_songs[0]

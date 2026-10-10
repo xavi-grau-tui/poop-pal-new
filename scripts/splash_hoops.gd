@@ -21,7 +21,8 @@ const S := 3.0                          # world px per art pixel (sprites are dr
 # (the window shows x 18..945, y 9..936 of the 950x948 play area)
 const TANK_L := 18.0
 const TANK_R := 945.0
-const TANK_T := 12.0
+const BAND_Y := 104.0                   # the toy's plastic top band (the HUD sits on it)
+const TANK_T := BAND_Y + 2.0
 
 # Funnel floor (matches tools/art/minigame_art.py): lowest at each nozzle
 const NOZZLES := [237.0, 713.0]
@@ -44,7 +45,9 @@ const MEET_LIFT := 1900.0               # where they meet the water rises: a col
 const MEET_WIDTH := 110.0
 const PUMP_TIME := 0.9                  # held main pump runs dry after this long
 const BOUNCE := 0.45
-
+const TILT_PUSH := 140.0                # tilting the phone nudges everything sideways a little
+const DIVER_R := 38.0                   # the pal (its own sprite, small), with a diving mask and a snorkel:
+                                        # wider than a basket's mouth (64 px between the knobs), it can't go in
 # --- Pieces ---
 const BALL_R := 16.0
 const CUP_W := 90.0
@@ -74,6 +77,7 @@ var jets := [
 	{ "x": NOZZLES[1], "power": 0.0, "held": false, "hold_time": 0.0 },
 ]
 var balls: Array[Dictionary] = []       # { pos, vel, node }
+var diver := {}                         # the pal: { pos, vel, node, r }: floats about, can't score
 var cups: Array[Dictionary] = []        # { pos, home, rim, full, points, net, rim_node, label }
 var bubbles: Array[Dictionary] = []
 
@@ -81,6 +85,7 @@ var tex := {}
 var lcd_font: Font
 var world: Node2D
 var net_layer: Node2D
+var diver_layer: Node2D                 # the diver: over the baskets (it rests on them, never in)
 var bubble_layer: Node2D
 var hud_level: Label
 var hud_time: Label
@@ -93,12 +98,22 @@ var _key_jets := [false, false]
 var _touch_jets := {}
 
 func _ready() -> void:
-	game_music_path = "res://sounds/music/Game Loop Waltz.mp3"
+	game_music_path = "res://sounds/music/Light Through Water.ogg"     # (82 BPM, loops on the beat: 0 → 158.05 s)
 	lcd_font = load("res://fonts/pixChicago.ttf")
-	for n in ["tank", "cup_rim", "cup_net", "nozzle", "bubble_big", "bubble_small"]:
-		tex[n] = load("res://textures/minigames/splash/%s.png" % n)
+	# the look, painted in code (SplashArt): a plastic water toy like the other toy games
+	var old := "res://textures/minigames/splash/"
+	tex["tank"] = SplashArt.tank(317, 316, BAND_Y, TANK_L, TANK_R, floor_at, NOZZLES)
+	tex["cup_rim"] = SplashArt.recolour(old + "cup_rim.png", SplashArt.CORAL_LIGHT, SplashArt.CORAL, SplashArt.CORAL_DARK)
+	tex["cup_net"] = SplashArt.net(old + "cup_net.png")
+	tex["nozzle"] = SplashArt.recolour(old + "nozzle.png", SplashArt.CORAL_LIGHT, SplashArt.CORAL, SplashArt.CORAL_DARK)
+	tex["bubble_big"] = SplashArt.bubble(9)
+	tex["bubble_small"] = SplashArt.bubble(7)
 	for c in BALL_COLORS:
-		tex["ball_" + c] = load("res://textures/minigames/splash/ball_%s.png" % c)
+		tex["ball_" + c] = SplashArt.ball(c)
+	var pal_art := "res://textures/minigames/balls/classic.png"
+	if PetState.has_poop():
+		pal_art = PetState.FORMS[PetState.form_id]["frames"][0]
+	tex["diver"] = SplashArt.diver(pal_art)
 	_create_static_nodes()
 	super._ready()
 
@@ -134,6 +149,14 @@ func _build_level() -> void:
 		var s := _sprite(tex["ball_" + BALL_COLORS[i % BALL_COLORS.size()]], pos)
 		world.add_child(s)
 		balls.append({ "pos": pos, "vel": Vector2.ZERO, "node": s })
+	if diver.is_empty():
+		var d := _sprite(tex["diver"], Vector2(CENTER_X, 640))
+		diver_layer.add_child(d)
+		diver = { "pos": Vector2(CENTER_X, 640), "vel": Vector2.ZERO, "node": d, "r": DIVER_R }
+	else:
+		diver["pos"] = Vector2(CENTER_X, 640)
+		diver["vel"] = Vector2.ZERO
+	calibrate_tilt()                                 # (however the phone is held now = level)
 	hud_level.text = "LV %d" % level
 	state = State.PLAY
 
@@ -154,7 +177,7 @@ func _make_cup(center: Vector2, points: int) -> Dictionary:
 	net_layer.add_child(net)
 	var rim := _sprite(tex["cup_rim"], center)
 	net_layer.add_child(rim)
-	var label := _make_label(center + Vector2(-45, -CUP_H / 2.0 - 34), Vector2(90, 30), 22, HORIZONTAL_ALIGNMENT_CENTER, Color(0.2, 0.3, 0.38))
+	var label := _make_label(center + Vector2(-45, -CUP_H / 2.0 - 34), Vector2(90, 30), 22, HORIZONTAL_ALIGNMENT_CENTER, OUTLINE)
 	label.text = str(points)
 	return { "pos": center, "rim": center.y - CUP_H / 2.0 + 12.0, "full": false, "points": points, "net": net, "rim_node": rim, "label": label }
 
@@ -176,10 +199,16 @@ func _process(delta: float) -> void:
 		const STEPS := 4
 		for i in STEPS:
 			_physics(delta / STEPS)
-	for b in balls:
+	for b in _bodies():
 		b["node"].position = b["pos"]
-		b["node"].rotation += b["vel"].x * delta / BALL_R
+		b["node"].rotation += b["vel"].x * delta / b.get("r", BALL_R)
+	if not diver.is_empty():
+		diver["node"].rotation = lerp_angle(diver["node"].rotation, 0.0, minf(1.0, delta * 3.0))   # (it stays upright-ish)
 	_refresh_hud()
+
+## Everything that floats: the balls, and the diving pal
+func _bodies() -> Array:
+	return balls + ([diver] if not diver.is_empty() else [])
 
 func _move_cups(delta: float) -> void:
 	for c in cups:
@@ -239,9 +268,13 @@ func _jet_force(p: Vector2, v: Vector2) -> Vector2:
 	return f
 
 func _physics(dt: float) -> void:
-	for b in balls:
+	var tilt := device_tilt().x if has_tilt_sensor() else 0.0
+	tilt += (float(Input.is_key_pressed(KEY_E)) - float(Input.is_key_pressed(KEY_Q))) * 0.5   # (desktop: Q / E)
+	var bodies := _bodies()
+	for b in bodies:
 		var v: Vector2 = b["vel"]
 		v.y += GRAVITY * dt
+		v.x += clampf(tilt * 2.0, -1.0, 1.0) * TILT_PUSH * dt
 		v += _jet_force(b["pos"], v) * dt
 		v *= maxf(0.0, 1.0 - DRAG * dt)
 		v = v.limit_length(MAX_SPEED)
@@ -250,13 +283,13 @@ func _physics(dt: float) -> void:
 		b["vel"] = v
 		_collide_tank(b, dt)
 		_collide_cups(b)
-	# balls bump into each other
-	for a in balls.size():
-		for c in range(a + 1, balls.size()):
-			var pa: Dictionary = balls[a]
-			var pb: Dictionary = balls[c]
+	# balls (and the diver) bump into each other
+	for a in bodies.size():
+		for c in range(a + 1, bodies.size()):
+			var pa: Dictionary = bodies[a]
+			var pb: Dictionary = bodies[c]
 			var d: Vector2 = pb["pos"] - pa["pos"]
-			var min_d := BALL_R * 2.0
+			var min_d: float = pa.get("r", BALL_R) + pb.get("r", BALL_R)
 			if d.length_squared() < min_d * min_d and d.length_squared() > 0.01:
 				var n := d.normalized()
 				var push := (min_d - d.length()) / 2.0
@@ -270,16 +303,17 @@ func _physics(dt: float) -> void:
 func _collide_tank(b: Dictionary, dt: float) -> void:
 	var pos: Vector2 = b["pos"]
 	var v: Vector2 = b["vel"]
-	if pos.x < TANK_L + BALL_R:
-		pos.x = TANK_L + BALL_R; v.x = absf(v.x) * BOUNCE
-	elif pos.x > TANK_R - BALL_R:
-		pos.x = TANK_R - BALL_R; v.x = -absf(v.x) * BOUNCE
-	if pos.y < TANK_T + BALL_R:
-		pos.y = TANK_T + BALL_R; v.y = absf(v.y) * 0.3
+	var br: float = b.get("r", BALL_R)              # (the diver is bigger)
+	if pos.x < TANK_L + br:
+		pos.x = TANK_L + br; v.x = absf(v.x) * BOUNCE
+	elif pos.x > TANK_R - br:
+		pos.x = TANK_R - br; v.x = -absf(v.x) * BOUNCE
+	if pos.y < TANK_T + br:
+		pos.y = TANK_T + br; v.y = absf(v.y) * 0.3
 	# sloped floor: everything rolls down to the nearest pump
 	var fy := floor_at(pos.x)
-	if pos.y > fy - BALL_R:
-		pos.y = fy - BALL_R
+	if pos.y > fy - br:
+		pos.y = fy - br
 		var near: float = NOZZLES[0] if absf(pos.x - NOZZLES[0]) < absf(pos.x - NOZZLES[1]) else NOZZLES[1]
 		var side := signf(pos.x - near)
 		# the floor rises away from the pump: dy/dx = -side * slope, so its upward normal is:
@@ -314,9 +348,11 @@ func _collide_cups(b: Dictionary) -> void:
 			continue
 		# scoring: dropped in over the rim, between the knobs
 		var prev_d: Vector2 = b.get("prev", b["pos"]) - cp
-		if not c["full"] and b["vel"].y > 0 and prev_d.y <= RIM_LINE_Y and d.y > RIM_LINE_Y and absf(d.x) < RIM_KNOB_R.x - RIM_KNOB_R_SIZE:
+		if not c["full"] and not b.has("r") and b["vel"].y > 0 and prev_d.y <= RIM_LINE_Y and d.y > RIM_LINE_Y and absf(d.x) < RIM_KNOB_R.x - RIM_KNOB_R_SIZE:
 			_fill_cup(b, c)
-		# rim knobs
+		# rim knobs (for the diver the whole rim is solid: it sits on top of a basket, never in)
+		if b.has("r"):
+			_bounce_off_point(b, Geometry2D.get_closest_point_to_segment(b["pos"], cp + RIM_KNOB_L, cp + RIM_KNOB_R), RIM_KNOB_R_SIZE)
 		for k in [RIM_KNOB_L, RIM_KNOB_R]:
 			_bounce_off_point(b, cp + k, RIM_KNOB_R_SIZE)
 		# net walls
@@ -328,7 +364,7 @@ func _collide_cups(b: Dictionary) -> void:
 
 func _bounce_off_point(b: Dictionary, q: Vector2, r: float) -> void:
 	var d: Vector2 = b["pos"] - q
-	var min_d := BALL_R + r
+	var min_d: float = b.get("r", BALL_R) + r
 	if d.length_squared() >= min_d * min_d:
 		return
 	var n := d.normalized() if d.length_squared() > 0.01 else Vector2.UP
@@ -402,14 +438,6 @@ func _create_static_nodes() -> void:
 	tank.centered = false
 	add_child(tank)
 
-	# the current pal "printed" on the back panel, like the toy's artwork
-	var frames: SpriteFrames = PetState.build_sprite_frames() if PetState.has_poop() else null
-	if frames:
-		var print_art := _sprite(frames.get_frame_texture("idle", 0), Vector2(PLAY_WIDTH / 2.0, 330))
-		print_art.scale = Vector2(3.2, 3.2)
-		print_art.modulate = Color(1, 1, 1, 0.16)
-		add_child(print_art)
-
 	for x in NOZZLES:
 		add_child(_sprite(tex["nozzle"], Vector2(x, FLOOR_Y - 12)))
 
@@ -417,14 +445,16 @@ func _create_static_nodes() -> void:
 	add_child(world)
 	net_layer = Node2D.new()
 	add_child(net_layer)
+	diver_layer = Node2D.new()
+	add_child(diver_layer)
 	bubble_layer = Node2D.new()
 	add_child(bubble_layer)
 
-	hud_level = _make_label(Vector2(40, 34), Vector2(160, 52), 38, HORIZONTAL_ALIGNMENT_LEFT, Color(0.2, 0.3, 0.38))
-	hud_time = _make_label(Vector2(PLAY_WIDTH / 2 - 85, 34), Vector2(170, 52), 38, HORIZONTAL_ALIGNMENT_CENTER, Color(0.2, 0.3, 0.38))
+	hud_level = _make_label(Vector2(40, 26), Vector2(160, 52), 38, HORIZONTAL_ALIGNMENT_LEFT, OUTLINE)
+	hud_time = _make_label(Vector2(PLAY_WIDTH / 2 - 85, 26), Vector2(170, 52), 38, HORIZONTAL_ALIGNMENT_CENTER, OUTLINE)
 	var frame := ColorRect.new()
 	frame.color = Color(0, 0, 0)
-	frame.position = Vector2(PLAY_WIDTH - 245, 30)
+	frame.position = Vector2(PLAY_WIDTH - 245, 18)
 	frame.size = Vector2(205, 70)
 	add_child(frame)
 	var box := ColorRect.new()
@@ -441,7 +471,7 @@ func _create_static_nodes() -> void:
 
 func _refresh_hud() -> void:
 	hud_time.text = "%d" % ceili(time_left)
-	hud_time.add_theme_color_override("font_color", Color(0.75, 0.15, 0.2) if time_left < 10.0 else Color(0.2, 0.3, 0.38))
+	hud_time.add_theme_color_override("font_color", Color(0.75, 0.15, 0.2) if time_left < 10.0 else OUTLINE)
 	score_label.add_theme_font_size_override("font_size", 36 if str(score).length() <= 5 else 30)
 	score_label.text = str(score)
 

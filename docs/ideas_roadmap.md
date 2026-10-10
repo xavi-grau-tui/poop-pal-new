@@ -65,6 +65,15 @@ Big (L)
 20. More toy moments on the device: stains to rub clean (S-M), stickers earned and stuck on the
     back (M), swappable cases (M-L, needs case art). See "More toy moments".
 
+## Bottom buttons layout (ON TRIAL 2026-10-10: scripts/console_layout.gd, NEW_BUTTONS)
+- New: orange MAIN on the left (where the sound button was) · sound in the middle with one 7 x 3
+  speaker grill under it · forward on the right as a square like the orange button (its cream and
+  >> sign). Every button keeps its logic. Mock-ups: docs/mockups/.
+- The first layout stays in the scene: NEW_BUTTONS = false brings it back; then re-run
+  tools/design/box_art.py so the box's device picture matches (it reads the switch). The new art:
+  tools/design/console_buttons_new.py. Tummy Tunes' lanes follow the buttons left to right.
+- To weigh: classic handhelds put the main action button on the right.
+
 ## What makes HaraTomo unique (the pillars; check new ideas against them)
 1. A physical toy in your phone (THE main hook): a handheld you unbox (seal, lid, films to peel,
    the battery strip), switch on, hold, flip over. Much of the dopamine comes purely from these
@@ -122,6 +131,69 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   pass, "the fun part". Better 30-40 great pals at launch, the rest in updates, than 120 samey ones.
 - More expressions and moods (._. sad, angry, evil… started), small animations per pal.
 
+## Onboarding: teach each thing when it becomes relevant (2026-10-09)
+- One short card at a time (one or two sentences), button PICTURES instead of words, shown once,
+  explained at the moment it matters. "Do this next" signal everywhere: the button blinks
+  bip-bip … bip-bip with a short, sharp buzz in sync.
+- DONE (scripts/onboarding.gd, only while no pal has ever existed): after the boot, "Welcome to
+  HaraTomo! Tap [food button] to eat something and meet your new pal." (the food button and the
+  EAT sign blink with the buzz; only the food button works); after the hatch, "Say hi to <name>!
+  What you eat decides how it grows."
+- Boot (2026-10-09): no welcome text any more. After the Kobaya Tech logo the screen comes on
+  slowly: the pet screen fades in from black, the gut lights up from dim, the calmest song
+  ("Sweet Dreams, Pet", measured: slowest, fewest notes per second) fades in; then the LCD, then
+  (after a breath) the welcome card. The boot can't be skipped.
+- DONE (2026-10-09): the first bonus. The claw waits for the guide cards (and a breath); after
+  its visit: "Lucky you! Sometimes a bonus turns up after a meal." then "Tap [games button] to
+  play the bonus game!" with the games button doing the bip-bip (the bonus already locks the rest).
+  Later bonuses come without cards. LCD unlock messages (ITEM / PAL UNLOCKED!) blink in step with
+  the gear button (6 quick blinks), then stay lit.
+  To decide: make the FIRST meal ever always bring the bonus (today only the testing switch
+  LuckyPinch.TEST_FIRST_MEAL does; the real chance is 20%), so every player meets it while the
+  guide is there; otherwise the first-bonus cards need a saved "seen" flag for whenever it comes.
+- Next steps (to build with the progression framework):
+  3. Right after the hatch card, the games button blinks: "Tap [games button] to play games and
+     earn ★ stars. Stars unlock new things!"
+  4. First time in a game: its how-to card / tutorial (exists).
+  5. First star → the first sticker: "Your first sticker! Flip your HaraTomo over to stick it on."
+     (also teaches the device flip).
+  Cards never interrupt: if the moment comes during a minigame or with a menu open, the card WAITS
+  (queued) and shows the next time the player is back on the main pet screen.
+  - First drink (user, 2026-10-09): when the drink countdown first runs out, back on the pet
+    screen: "Drink time! Your pal is thirsty" + a short line on boosts ("A drink gives your pal a
+    boost [boost icon] for the next game it fits"); the drink button blinks with the buzz.
+  6. Each new thing explained only when it opens: the first drink ("Drinks give your pal a boost in
+     the next game"), the shop at its unlock ("The shop is open! Trade your [token] for treats and
+     stickers", with tokens already earned), each new game, each new food type.
+
+## Progression framework (PROPOSED 2026-10-09, to confirm)
+- Goal: a player progresses whatever games they prefer and in whatever order; no game is required.
+- Stars (3 per level, levels tuned to similar lengths in every game) are the ONE progress measure.
+  Unlocks are automatic at star totals (one unlock table = the single source of truth; later a data
+  file the game reads): games, food types, drink types, special foods, features.
+- Pal stage (baby / kid / adult) decides the food and drink TIERS on offer.
+- Drink TYPES unlock with the games (user, 2026-10-09): at first only the types whose boosts work
+  in the games already unlocked are on offer (e.g. watery for Splash Hoops / Tilt Maze); a type
+  arrives together with (or right after) the first game it helps, so every drink is useful.
+- Tokens (separate from the score, earned per level cleared / new star at the same rate in every
+  game) buy from a SHOP: key items (special foods for evolutions, rerolls, maybe higher drink tiers)
+  so nobody is ever stuck, plus cosmetics (stickers, cases, backgrounds) and Lucky Pinch tries.
+  Finding key items in games stays the better / free route (vaults, level drops); the shop is the
+  sure but slower one. No real money in this shop.
+- The score stays as records / bragging only (scores aren't comparable between games).
+- Rules: every main-path item obtainable at least two ways (game-exclusive rewards are cosmetic);
+  "equal value per minute" across games; after the first two games (Splash Hoops teaches the
+  buttons, Tilt Maze tilt), the player CHOOSES which locked game to open next; small nudges towards
+  variety (first star in a new game, daily pal requests), never forced.
+- First hour (draft): start = Splash Hoops, 3 food types, watery drinks · 1st star = a sticker for
+  the device · 3 stars = Tilt Maze · first evolution = kid-tier foods · 6 = fizzy drinks (+ a Tilt
+  Maze low-fence vault right away) · 10 = the shop (tokens already earned) · 12 = choose the next
+  game · ~20 = spicy + sour foods · then every 15-30 min, rarer and bigger later. Something new
+  about every 5 min in the first hour; alternate kinds (a toy item, a game, a drink, a feature).
+  Splash Hoops must give its first star within ~2 min and 3 stars within ~5-10.
+- To decide: stars as the one measure? tokens + shop? the player choosing the next game? "two
+  ways for every main-path item" as a firm rule?
+
 ## Pal design principles (for the art pass)
 - Every pal is its own creature with its own idea, like Pokémon: different body shapes,
   personalities, faces and expressions. Not as wild as Pokémon's variety: all pals share one
@@ -157,9 +229,14 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   Marble run = the 7th, in an update. Germ Zap, Pal Dash, Tile Break and Flipper Belly are out
   (too recognisable as Space Invaders / runner / Breakout / pinball): hide their cards, keep the
   code until the final cut (their ball physics, sounds and art can be reused).
-- Opening order: Splash Hoops (buttons) → Tilt Maze (tilt) → Top Spin (both). Start with one game
-  only, unlock Tilt Maze within the first session (~10-15 min), Top Spin around the first evolution
-  (pal traits matter there). Locked games show as "?" cards with a hint.
+- ORDER (DECIDED 2026-10-10, roughly easy → hard; the Games menu shows the cards in this order,
+  GameMenuSwitcher.ORDER, Splash Hoops is the game unlocked from the start):
+  1. Splash Hoops (two buttons: teaches the buttons)  2. Tilt Maze (teaches tilt)
+  3. Paper Sumo (buttons + tilt, simple rules)  4. Pipe Dream → the RC car (two buttons, precision)
+  5. Top Spin (the most complex controls)  6. Tummy Tunes, the music game (the hardest timing)
+  then the four on hold at the end of the list (Pal Dash, Tile Break, Germ Zap, Flipper Belly).
+  After the first two, the player chooses what to unlock next, so this is the suggested path.
+  Locked games show as "?" cards with a hint.
 - Rule: no generic clones. A game stays only if it has its own twist; otherwise it's replaced.
 - "A toy box in a toy": the ones that work are digital versions of real physical toys, living inside
   the handheld and using its hardware (tilt, the two buttons, touch). But the toy is only the
@@ -174,6 +251,7 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   Top Spin; paper and cardboard: Paper Sumo; plastic: Splash Hoops, Lucky Pinch). What ties them
   together is the shared style: chunky pixel art, outlines, top-left light, warm colours, the
   handheld frame.
+- Menu legend wording (2026-10-10): device language, "press: next" / "hold: eat" (not "tap").
 - Teaching: everything must be visually intuitive and light: icons over numbers, one short line of
   text at a time. The bigger games teach themselves with a first-time tutorial (done for Top Spin
   and Paper Sumo: one step at a time, each waits until you've done it, skippable with FORWARD) and
@@ -189,12 +267,27 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   - Top Spin, Paper Sumo: prototypes in (see their sections).
   - Tummy Tunes: keep. The device's 3 buttons as lanes is its own thing, and it's the only rhythm
     game. Restyle as a toy xylophone (see below).
-  - Pipe Dream: Flappy Bird now. Rework it as a CIRCUIT: a winding course with turns, narrow bits,
-    branches and a finish line, raced against the clock (levels and best times, not endless pipes).
-    Long-term it could instead become the marble run.
+  - Pipe Dream: Flappy Bird now. PLANNED REWORK (user, 2026-10-10): an RC CAR (a real toy) on a
+    circuit, seen from above, in the spirit of Micro Machines. The car drives forward by itself;
+    ORANGE turns it towards the top of the screen, FORWARD towards the bottom, up to 90° each way
+    (180° in all), so every course moves rightwards overall but can climb, drop, wind and zig-zag
+    (and can be generated: a path that always progresses). The pal drives.
+    Depth: racing lines (speed drops in tight turns), surfaces per world (carpet = grippy, bathroom
+    tiles = slippery, garden = bumpy, puddles), shortcuts and risky routes, ramps, boost pads
+    (Fizz = a speed burst), stars by time, a ghost of your best run. Maybe both buttons together =
+    brake / drift (an expert trick, no third button).
+    Open: keep the name (the course could run through toy plumbing pipes) or rename it; whether
+    the car's speed is fixed or both buttons do throttle tricks.
   - Out (twist ideas kept in case): Tile Break (the toilet-paper paddle unrolls; the tiles are a
     mosaic revealing a pal card), Germ Zap (a gut garden: protect the good bacteria), Pal Dash (a
-    ride through the gut timed to its squeezing waves), Flipper Belly (least liked).
+    ride through the gut timed to its squeezing waves).
+  - Flipper Belly: MAYBE BACK (user, 2026-10-10: tabletop pinball is a real toy), but only with
+    a twist that makes it more than pinball. Ideas: the table is your pal's tummy and CHANGES WITH
+    WHAT IT ATE (spicy = hot zones, sweet = sticky candy bumpers, greasy = slippery lanes: the
+    strongest, it ties to the gut-evolution pillar); digestion missions (guide the food through
+    the stomach and intestine lanes) instead of plain points; the cheap plastic toy pinball look
+    with a spring plunger, tilting the phone to nudge (TILT if overdone); one table per organ as
+    worlds. A 7th candidate, judged by the depth test like the rest.
 - Lucky Pinch stays a bonus, not one of the 6.
 - Ideas looked at and why: daruma otoshi and kendama are one trick each (at most a mode inside
   another game); pachinko has no player control, and Lucky Pinch already covers luck.
@@ -306,7 +399,10 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   (pushes harder, falls easier) or back (the pull-down: a rival leaning on you falls when you back off).
 - Out = falls over or steps out of the ring. Best of 3 bouts per rival, 3 lives. Rivals are other
   pals: PEBBLE (light), BRICK (heavy), SLICK (pull-downs), RUMBLER (drums your side), YOKOZUNA.
-  First-time tutorial (hop → on the beat → lean → push out) and a control legend.
+  First-time tutorial (hop → lean → push out; the rhythm step was dropped 2026-10-09: too hard
+  and unclear) and a control legend. Good timing is shown instead: a hop timed right as the
+  wrestler lands (a bit stronger) pops a little burst of sparks at its feet. A spotlight from above
+  lights the ring, the rest is darker (an audience of pals was tried and removed).
 - Open question: does it have the depth (see the depth test)? Rhythm + balance + pull-downs +
   pal traits (weight, height = top-heavy) are the candidates.
 - The FORWARD button may be hard to read: add a cue (the rival flashes while it's mid-hop and
@@ -314,11 +410,20 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   heavier, no hops), like Top Spin's guard.
 - Check on the phone: lean direction (INVERT_TILT), bout length, whether falls happen.
 
-## Tummy Tunes
-- Restyle as a toy xylophone (wooden or coloured metal bars, mallets), three bars under the
-  device's three buttons. Songs played on the pal's tummy (gurgles, toots) as a twist.
+## Tummy Tunes (the music game)
+- Each WORLD a different toy instrument (2026-10-10): a toy xylophone, then a toy piano, then a toy
+  drum kit (percussion)..., each with its own feel and songs, three notes under the device's three
+  buttons. Different paths / levels per instrument. Songs played on the pal's tummy (gurgles,
+  toots) as a twist.
 
 ## Care & daily rhythm (a reason to come back tomorrow)
+- ON TRIAL (2026-10-10, FoodMenu BARRIER_ENABLED): while the food / drink countdown runs, a pixel
+  roll-down shutter (the panel's orange) slides over that menu page with the LCD's countdown
+  ("NEXT MEAL IN 29:59"), and eating / drinking is refused; once it has run out, the next time
+  the menu opens it rolls back up. It slides in behind the frame's inner border (an overlay of
+  that border: textures/menus/diapositive1_ring.png, made by tools/art/frame_ring.py).
+  KEPT ON (user, 2026-10-10): it stays until that menu needs something else there; then switch
+  it off (BARRIER_ENABLED) or replace it. Ties into the future hunger / thirst design.
 - (2026-10-07) The player must feel the NEED to care for the pal. Soft, recoverable consequences
   (harsh ones, like Tamagotchi death, make people quit), e.g.: ~12 h without care = grumpy (boosts
   don't work, fewer points), ~24 h = sick (needs cleaning / medicine), ~48 h = goes back one
@@ -473,6 +578,8 @@ worlds, fewer drink tiers; the rest arrives in updates.
      (WIPO) to Japan (+ US / Korea / EU as wanted), keeping the home filing date. Japan is
      first-to-file, so don't wait long once the game is visible. Check the EU SME Fund (it has
      refunded much of the trademark fees for small businesses).
+  Box text: the lid's bottom band says "120+ PALS TO DISCOVER!" (tools/design/box_art.py):
+  match it to the real number of pals at launch.
   Also before release: a licence check of every sound, song, font and image (e.g. the Epidemic
   Sound effect, the 8-bit classical recordings, pixChicago); a privacy policy; the age rating; the
   kids' app rules if aimed at young children.

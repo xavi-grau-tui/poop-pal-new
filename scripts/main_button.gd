@@ -18,6 +18,8 @@ var _confirming        := false   # a choice was just confirmed: ignore taps unt
 var _press_id          := 0       # each press gets its own id, so a quick tap's timer can't hijack the next press
 
 func _ready() -> void:
+	ConsoleLayout.apply.call_deferred(get_parent())      # (the bottom buttons' layout on trial)
+	ButtonTouchLook.attach_all.call_deferred(get_parent())   # (pressed look under every finger)
 	toggle_mode = false
 	set_process(true)
 

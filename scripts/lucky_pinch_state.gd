@@ -97,6 +97,8 @@ func start() -> void:
 	_play_visit()
 
 func _pal_show_over() -> bool:
+	if Onboarding.showing:
+		return false                     # (a guide card is up: it gets read first)
 	var lcd = get_node_or_null("/root/PoopPal/Main UI/LCD Screen")
 	if lcd and lcd.has_method("is_showing_message") and lcd.is_showing_message():
 		return false

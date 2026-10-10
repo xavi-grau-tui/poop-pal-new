@@ -53,7 +53,9 @@ func play(poop: Node2D) -> void:
 	# and it stays on the LCD until the claw has gone back up
 	var lcd := get_node_or_null("/root/PoopPal/Main UI/LCD Screen")
 	if lcd and lcd.has_method("show_message"):
-		lcd.show_message("BONUS!", 0.9 + DANGLE_TIME + 0.15 + 0.8 + 0.2)
+		# (blinking in step with the Games button, whose bonus blink starts on this same frame)
+		var secs := 0.9 + DANGLE_TIME + 0.15 + 0.8 + 0.2
+		lcd.show_message("BONUS!", secs, int(secs / (lcd.BONUS_STEP * 2.0)), lcd.BONUS_STEP)
 		lcd._ding()
 	_motor(0.9)
 	var t := create_tween()

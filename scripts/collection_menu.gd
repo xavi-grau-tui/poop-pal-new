@@ -44,6 +44,7 @@ const IN_USE := Color8(104, 128, 72)            # moss green: the item in use / 
 const ICON_BOX := Color8(218, 176, 128)
 const TEXT := Color(0.65098, 0.505882, 0.368627)
 const TEXT_DARK := Color8(74, 48, 34)
+const FRAME_DX := 6.24                  # this menu's frame sits 6 px right of the Food / Games ones
 
 var view := View.HUB
 var page := 0
@@ -65,6 +66,7 @@ var title: Label
 var status: Label
 var page_label: Label
 var page_hint: Sprite2D
+var legend: MenuLegend
 var detail_legend: Node2D          # pal card controls, in the golden band: (o) back   next >>
 var font: Font
 
@@ -87,7 +89,7 @@ func _ready() -> void:
 	page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	page_hint = Sprite2D.new()
 	page_hint.texture = load("res://textures/buttons/logoforward.png")
-	page_hint.position = Vector2(1272.61, -459.082)   # same spot as the Games menu's sign
+	page_hint.position = Vector2(MenuLegend.forward_center_x(FRAME_DX), -459.082)   # (the band layout: MenuLegend)
 	page_hint.scale = Vector2(1.16715, 1.00655)
 	page_hint.z_index = 2
 	menu.add_child(page_hint)
@@ -97,6 +99,7 @@ func _ready() -> void:
 	detail_legend.z_index = 2
 	detail_legend.visible = false
 	menu.add_child(detail_legend)
+	legend = MenuLegend.attach(menu, menu.get_node_or_null("Sprite2D"), FRAME_DX)     # the orange button's controls, left of the bottom band
 	var mini := Sprite2D.new()
 	mini.texture = load("res://textures/buttons/mainbuttonnormal.png")
 	mini.scale = Vector2(0.26, 0.26)
@@ -206,6 +209,13 @@ func _open(v: int, select := -1) -> void:
 	view = v
 	_clear()
 	var in_hub := v == View.HUB
+	if legend:
+		if in_hub:
+			legend.set_lines([["hold", "open"]])
+		elif v == View.DETAIL:
+			legend.set_lines([])             # (a pal card has its own back / next legend)
+		else:
+			legend.set_lines([["press", "next"], ["hold", "pick"]])
 	hub_root.visible = in_hub
 	hub_dots.visible = in_hub
 	hub_hint.visible = in_hub
@@ -256,8 +266,8 @@ func _build_hub_cards(menu: Node) -> void:
 	for i in range(dots.size() - 1, HUB_CARDS.size() - 1, -1):
 		dots[i].queue_free()
 	# like the Games and Food menus: the last dot sits right before the forward sign
-	var step: float = dots[1].position.x - dots[0].position.x
-	hub_dots.position.x += step * (dots.size() - HUB_CARDS.size())
+	hub_hint.position.x = MenuLegend.forward_center_x(FRAME_DX)
+	MenuLegend.layout_dots(dots, HUB_CARDS.size(), FRAME_DX)
 	# a second, full set of dots for the list pages (shown only when a list has 2+ pages)
 	list_dots = games.get_node("Dots").duplicate()
 	list_dots.visible = false
@@ -551,8 +561,7 @@ func _refresh_pager() -> void:
 		for i in dots.size():
 			dots[i].visible = i < pages
 			dots[i].modulate = Color(1, 1, 1, 1) if i == page else Color(1, 1, 1, 0.3)
-		var step: float = dots[1].position.x - dots[0].position.x
-		list_dots.position.x = _list_dots_x0 + step * (dots.size() - pages)   # end at the forward sign
+		MenuLegend.layout_dots(dots, pages, FRAME_DX)    # (ending before the forward sign, 2 rows if many)
 	page_label.visible = many and not is_list
 	detail_legend.visible = view == View.DETAIL
 	page_hint.visible = (many or view == View.DETAIL) and view != View.HUB
