@@ -44,6 +44,9 @@ Medium (M)
 6. Tilt Maze: level select + saving the levels reached, then the first Splash vaults (2-3 levels).
 7. Pal traits from data (family = trait, stage = size), used by Tilt Maze, Top Spin, Paper Sumo.
 8. The other drink boosts (Fizz, Focus, Sturdy, Lucky) in the games, per the boost table.
+8b. (S-M, decided 2026-10-10) Water in Splash Hoops (+10 s once per run, wave + "+10" from the
+    badge) + only watery drinks at the start + the first-drink onboarding (steps a-c). Then Fizzy
+    with Tilt Maze: low-fence vaults and their prizes (see Tilt Maze).
 9. Evolution guidance, layer 2: craving bubbles from the pal.
 10. Top Spin restyle: painted wooden koma in a turned wooden bowl.
 11. Boost tiers: 3 drinks per type, tier icons (1-3 droplets etc.), 5 new drink icons.
@@ -130,6 +133,16 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   gameplay, evolution logic, minigames, unlock progression), well tied together; then the design
   pass, "the fun part". Better 30-40 great pals at launch, the rest in updates, than 120 samey ones.
 - More expressions and moods (._. sad, angry, evil… started), small animations per pal.
+- DRAFTS (2026-10-10, brainstorm only, to pick from later): docs/mockups/pal_brainstorm/
+  (1 = the current 120; 2 = new set A "clean shapes"; 3 = new set B "odd creatures", the user's
+  favourite; 4 = Ember face options; v1_rough/ and v2/ = earlier tries). Names and one-liners in
+  sets.py; generator palgen2.py (the current art style: forms_gen's renderer, outline drawn twice).
+  Direction from the user: keep Picklet exactly as it is (Bud is the other strong baby); Ember
+  recovered with a calmer face (no grin); faces not all smiling (Picklet's dot eyes, half-lids,
+  glances); simple but cool, more variety and originality than today's "same body + topping".
+  Family colours: sour yellow-green (Picklet's), spicy red, green green, greasy yellow-orange,
+  sweet the Top Spin blue (chocolate as its first food). Combos may give new colours (chilli +
+  chocolate = purple).
 
 ## Onboarding: teach each thing when it becomes relevant (2026-10-09)
 - One short card at a time (one or two sentences), button PICTURES instead of words, shown once,
@@ -159,9 +172,16 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
      (also teaches the device flip).
   Cards never interrupt: if the moment comes during a minigame or with a menu open, the card WAITS
   (queued) and shows the next time the player is back on the main pet screen.
-  - First drink (user, 2026-10-09): when the drink countdown first runs out, back on the pet
-    screen: "Drink time! Your pal is thirsty" + a short line on boosts ("A drink gives your pal a
-    boost [boost icon] for the next game it fits"); the drink button blinks with the buzz.
+  - First drink (DECIDED 2026-10-10, replaces the 2026-10-09 note): two marked steps.
+    a) When drinks first become available (the first drink countdown runs out, back on the pet
+       screen): "Drinks are here! Tap [drink button] and drink something." The drink button and
+       the DRINK sign blink with the buzz; only the drink button works (like the first meal).
+    b) Once the pal has drunk and shows its boost (aura + badge): "Drinks give your pal a perk
+       [boost icon] in the games it fits. Water: more time in Splash Hoops." Then the games
+       button blinks: "Try it out!"
+    c) In the game, the first time the boost fires (the clock hits 0 and the wave comes): the
+       game pauses a moment on a small card "Your Water saved you! +10 s", pointing at the
+       droplet badge. After that it just plays its effect (see Splash Hoops: the water boost).
   6. Each new thing explained only when it opens: the first drink ("Drinks give your pal a boost in
      the next game"), the shop at its unlock ("The shop is open! Trade your [token] for treats and
      stickers", with tokens already earned), each new game, each new food type.
@@ -350,6 +370,17 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   boost tier (a low fence = Fizz 1, a high fence = Fizz 3).
 - Vault prizes: special foods (microchip, alien goo…) above all, since they open new evolutions;
   then cosmetics.
+- TO IMPLEMENT (decided 2026-10-10): the vault gate the FIZZY drink opens is a LOW FENCE (lower than
+  a wall, striped top so it reads as different): a fizzy pal turns bouncy and hops it. One hop opens
+  one vault (the boost is spent then, never on a level without a fence); a high fence needs the top
+  fizzy drink (Ramune). Fizzy arrives with Tilt Maze (first-hour plan), with a fence vault right away.
+  Walking THROUGH walls is Milky / Sturdy (cracked walls to ram): kept for the third drink.
+  Prizes, better per world: first vaults = a sticker for the device's back, a pal accessory;
+  middle worlds = a food reroll, a stronger drink (e.g. Ramune), a Pal Pedia hint (shows one missing
+  pal's silhouette + the food leading to it); later worlds = the special foods, placed where they
+  make sense (microchip in a factory / sewer world, alien goo in space), rare. A prize already taken
+  shows as an open vault on the world map; replaying doesn't give it again.
+  NO ball skins as prizes: the ball is the pal itself.
 - First version: level select + saving levels reached, Splash vaults on 2-3 levels.
 
 ## Top Spin (prototype: scripts/top_spin.gd)
@@ -410,6 +441,35 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   heavier, no hops), like Top Spin's guard.
 - Check on the phone: lean direction (INVERT_TILT), bout length, whether falls happen.
 
+## Splash Hoops (reworked 2026-10-10: scripts/splash_hoops.gd, art in scripts/splash_art.gd)
+- Look: a plastic water toy painted in code (teal water with light rays, rippled sand floor,
+  coral cups and pumps), like the other toy games. Tilt nudges the balls a little.
+- The pal dives along: its own sprite, small, with a diving mask and a snorkel. It drifts with
+  the water and the tilt, is too wide for the baskets (it rests on top, tilt or pump it off),
+  never scores, and scares the pufferfish.
+- Five stages in a loop: classic · upside-down triangle (6 baskets) · drifting (each basket its
+  own way) · round and round (one in the centre, two circling it, two on the sides going up and
+  down) · the wheel (5 on a turning wheel). Each lap: baskets 35% faster, 8 s less (min 36 s).
+  All checked reachable with a random-press bot, no tilt (tests deleted; easy to redo). Random-bot
+  clear time: classic ~35 s, triangle ~51 s. Right above a pump balls hardly ever come down from
+  high up, so high baskets go out over the side walls instead (the triangle's top corners).
+- Pufferfish from stage 3: swims back and forth, swallows balls near its mouth (3 at most); bump
+  it with the pal and it puffs up, spits them back out and darts off for 8 s.
+- Coins (first version): 1 coin per stage cleared for the first time (GameData.clear_stage);
+  5 coins buy the next locked game in the menu order on their own (LCD: GAME UNLOCKED!). Replaces
+  the old "50% of Splash Hoops unlocks Tilt Maze". Later: a shop to spend them, and the same
+  coins from every game's stages; decide how coins and stars fit together.
+- Water boost (DECIDED 2026-10-10, to implement): water = "Splash", a second chance. The first
+  time the clock hits 0 in a run, a wave washes over the tank and gives +10 s to finish the stage
+  (once per run). Water is the ONLY drink type on offer at the start (Water → Barley tea →
+  Coconut water as tiers later). Making it obvious: the droplet badge sits on the HUD from the
+  start of the run; at 0 the timer turns blue, the wave rolls over from the badge, "+10" pops out
+  of it and the clock refills with a splash sound; the first time ever, a short card says so
+  (onboarding, first drink step c). Rejected alternative: pumps never run dry (bends water's
+  "second chance" meaning). Fizzy here = stronger jets (boost table), so the 2nd drink helps both.
+- Ideas: more stages (a basket riding the pufferfish? a current that pushes sideways), stage
+  select once there are stars.
+
 ## Tummy Tunes (the music game)
 - Each WORLD a different toy instrument (2026-10-10): a toy xylophone, then a toy piano, then a toy
   drum kit (percussion)..., each with its own feel and songs, three notes under the device's three
@@ -441,6 +501,18 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   one at the kid stage, and even more at the adult stage.
   E.g. sour: lemon → (kid: lemon tart?) → (adult: something fancier); spicy: pepper → … → …
   Keep the type readable on fancy foods (the type colour / tag on every food).
+- DRAFT v2 (2026-10-10): 2 foods per type per stage = 30 (docs/mockups/food_drafts/foods_sheet.png;
+  v1 in v1/). Kept as they are: the 8 originals + the glazed donut (*). New ones drawn in the
+  originals' look (32x32, filling the box, warm muted colours, chunky texture, centred). Not in
+  the game yet. Green: Broccoli, Avocado / Rice and Vegs*, Salad Bowl* / Cucumber Sushi*, Veggie
+  Dumplings. Sweet: Chocolate (4 squares), Cookie / Glazed Donut*, Rainbow Jelly* / Choco Cake,
+  Purin (Japanese caramel pudding; replaces Lemon Meringue so sweet stays fully sweet). Greasy: Fried Egg,
+  Fries / Spaghetti*, Hot Dog* / Club Sandwich*, Cheeseburger*. Spicy: Chili Pepper, Jalapeño /
+  Fire Skewer, Hot Drumstick / Fire Ramen, Curry Bowl. Sour: Lemon, Pickle / Kimchi, Umeboshi /
+  Tom Yum, Pickle Jar. Rejected: Pea Pod, Spring Rolls, Lemon Tart, Lemon Meringue, Choco Parfait (too like the cake, not
+  square), Hot Wings (unclear), Curry Rice on a flat plate (too wide).
+  In the menu the icon sits ~3 px below the eat ring's centre and is drawn squashed
+  (scale 3.62 x 3.42): centre it and use one scale when these go in.
 - The menu offers 3 of the 5 types each time, so luck matters for reaching the missing evolutions.
 - An earned item to REFRESH the 3 types on offer (a reroll). It's won in the minigames, so it
   ties farming in the games to completing the Pal Pedia.
@@ -458,7 +530,7 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
 
   | Game         | Splash                  | Fizz                   | Focus                | Sturdy                   | Lucky              |
   |--------------|-------------------------|------------------------|----------------------|--------------------------|--------------------|
-  | Splash Hoops |                         | stronger jets          |                      |                          | more points        |
+  | Splash Hoops | +10 s once (DECIDED)    | stronger jets          |                      |                          | more points        |
   | Tilt Maze    | bounce out of a hole    | hop low fences (vault) |                      | ram cracked walls (vault)| open chests (vault)|
   | Top Spin     | survive one ring-out    | stronger dash / wind   | wider perfect guard  | heavier top              |                    |
   | Paper Sumo   | spring back from a fall |                        | wider beat window    | heavier, harder to push  |                    |
@@ -471,14 +543,32 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   grow up. Tier 1 / 2 / 3 = a stronger version of the same effect (Splash: 1 save / 2 saves /
   a save + a bonus; Focus: timing windows +10% / +20% / +30%; ...). Higher tiers appear as the pal
   grows (baby: tier 1, kid: tier 2, adult: tier 3), and rare top drinks can be prizes (vaults).
+  UPDATE (user, 2026-10-10): drink levels are NOT tied to the pal's age. PROPOSED instead: level 1
+  of a type comes with that type's unlock; level 2 / 3 unlock with progress (star totals), then
+  show up in the menu by rarity (level 1 common, 2 sometimes, 3 rare); level 3 also as vault
+  prizes and in the shop. To confirm.
   Show the tier with icons, not numbers: the type's symbol 1, 2 or 3 times (Watery = 1, 2 or 3
   droplets), on the drink, the pal's boost badge and the game HUD. Light and playful, never heavy.
   Draft line-up (one new drink per type; Japanese favourites):
     Watery:      Water → Barley tea (mugicha) → Coconut water
-    Fizzy:       Cola → Lemonade → Ramune
-    Caffeinated: Green tea → Coffee → Energy drink
-    Milky:       Milk → Calpis → Milkshake
+    Fizzy:       Cola → Lemonade → Soda float
+    Caffeinated: Tea → Coffee → Energy drink
+    Milky:       Milk → Bubble tea → Milkshake
     Fruity:      Orange juice → Peach juice → Smoothie
+  DRAFT v2 (2026-10-10, docs/mockups/drink_drafts/drinks_sheet.png; v1 in v1/): all 15 in the look of
+  the 4 original drinks (Water, Cola, Energy Drink, Orange Juice: kept as they are): simple bottle /
+  can / glass shapes, cylinder shading, muted colours, the originals' heavier outline, nearly full
+  height. Line-up: Watery = Water* → Barley tea (the Water bottle itself, filled with amber tea:
+  in Japan mugicha is the everyday "water") → Coconut water · Fizzy = Cola* → Lemonade (the Orange
+  Juice glass and slice, in lemon) → Soda float (melon soda + ice cream; replaces Ramune, not known
+  outside Japan) · Caffeinated = Tea (cup + saucer + tea bag; replaces Green tea) → Coffee (round
+  mug) → Energy drink* · Milky = Milk (carton seen from the front) → Bubble tea (replaces the
+  Yogurt drink) → Milkshake (straight glass) · Fruity = Orange juice* → Peach juice → Smoothie.
+  The level (DECIDED 2026-10-10): the menu's type tag keeps its word (Watery, Fizzy, Energy, Milky,
+  Fruity) and the level icons sit on the tag's top-right corner, 1-3 of them. The icons are pixel
+  art (hand-placed, outlined): Watery = a blue drop, Fizzy = a bubble, Energy = a lightning bolt,
+  Milky = a white drop, Fruity = a star (docs/mockups/drink_drafts/level_icons/, grids in
+  level_icons.py). The same icons on the pal's boost badge and in the game HUD. Not in the game yet.
 
 ## Instruction booklet (planned; keep this outline updated as mechanics ship)
 The booklet explains the whole game straight away, so nobody needs to study menus or the Pal Pedia.
