@@ -319,6 +319,7 @@ func update_dots(index: int):
 		dots[i].modulate = Color(1, 1, 1, 1) if i == index else Color(1, 1, 1, 0.3)
 
 func reset_active_options():
+	populate_foods()            # (the sizes follow the pal you have now: after a flush, Sho food again)
 	populate_special()          # (the legendary one follows the pal you have now)
 	show_page(current_page)
 
