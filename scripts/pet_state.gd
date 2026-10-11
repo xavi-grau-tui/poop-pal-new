@@ -74,6 +74,11 @@ var boost := ""
 var food_ready_at := 0.0
 var drink_ready_at := 0.0
 
+## What the food menu's shutter last showed on each page ("0" food, "1" drinks, "2" special foods;
+## "" = up, else "upcoming" / "mystery" / "wait"): it rolls only when that changes, never just
+## because you flipped pages (it closes once, then stays closed until it opens). Saved.
+var shutters := {}
+
 func _ready() -> void:
 	_load_tree()
 	_start()
@@ -91,6 +96,7 @@ func _start() -> void:
 	boost = ""
 	food_ready_at = 0.0
 	drink_ready_at = 0.0
+	shutters = {}
 	load_data()
 	if FRESH_START_ON_LAUNCH and not SaveSlot.real():
 		form_id = ""
@@ -101,6 +107,7 @@ func _start() -> void:
 		boost = ""
 		food_ready_at = 0.0
 		drink_ready_at = 0.0
+		shutters = {}
 		save_data()
 
 func has_poop() -> bool:
@@ -239,7 +246,7 @@ func save_data() -> void:
 	var file = FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify({ "form_id": form_id, "meals": meals, "discovered": discovered, "score": score, "boost": boost,
-			"meals_total": meals_total, "food_ready_at": food_ready_at, "drink_ready_at": drink_ready_at }))
+			"meals_total": meals_total, "food_ready_at": food_ready_at, "drink_ready_at": drink_ready_at, "shutters": shutters }))
 
 func load_data() -> void:
 	if not FileAccess.file_exists(SaveSlot.path(SAVE_FILE)):
@@ -259,3 +266,4 @@ func load_data() -> void:
 		boost = str(parsed.get("boost", ""))
 		food_ready_at = float(parsed.get("food_ready_at", 0.0))
 		drink_ready_at = float(parsed.get("drink_ready_at", 0.0))
+		shutters = parsed.get("shutters", {})

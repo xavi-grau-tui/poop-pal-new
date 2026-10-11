@@ -73,6 +73,10 @@ func level_pattern() -> Texture2D:
 func level_backdrop() -> Color:
 	return Color8(214, 196, 160)
 
+## Override: a world's own colour under the pattern (each world looks different); default: the same
+func world_backdrop(_w: int) -> Color:
+	return level_backdrop()
+
 ## Override: build and start level `n` (from score 0)
 func play_level(_n: int) -> void:
 	pass

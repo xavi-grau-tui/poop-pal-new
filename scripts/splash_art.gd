@@ -23,15 +23,69 @@ const BALLS := {
 	"pink": [Color8(222, 118, 96), Color8(176, 82, 68), Color8(250, 186, 160)],      # coral
 	"yellow": [Color8(228, 180, 82), Color8(180, 132, 50), Color8(250, 222, 150)],   # mustard
 	"mint": [Color8(118, 194, 160), Color8(76, 148, 118), Color8(186, 232, 206)],    # mint
+	"violet": [Color8(150, 112, 200), Color8(108, 78, 156), Color8(208, 182, 240)],
+	"teal": [Color8(70, 176, 178), Color8(44, 128, 136), Color8(152, 226, 220)],
+	"white": [Color8(244, 240, 230), Color8(198, 190, 178), Color8(255, 255, 255)],
+	"purple": [Color8(178, 112, 198), Color8(128, 74, 150), Color8(228, 184, 238)],
+	"orange": [Color8(246, 150, 70), Color8(196, 104, 40), Color8(255, 208, 152)],
+	"red": [Color8(222, 72, 64), Color8(168, 46, 44), Color8(250, 152, 138)],
+	# night: they glow (bright, with a halo behind: glow())
+	"glow_pink": [Color8(255, 132, 200), Color8(222, 82, 172), Color8(255, 222, 242)],
+	"glow_lime": [Color8(194, 255, 112), Color8(132, 222, 62), Color8(242, 255, 212)],
+	"glow_cyan": [Color8(112, 240, 255), Color8(62, 192, 232), Color8(222, 255, 255)],
 }
+
+## The five worlds' looks (user, 2026-10-11: every world clearly different from the others): the
+## water (5 bands, top to bottom), what's printed on the tank's back panel (scene), the sand, the
+## baskets' and pumps' plastic, the nets, the balls, the bubbles, the points on the baskets, and
+## the level menu's page colour. glow = balls and baskets light up (night).
+const THEMES := [
+	{ # 1 Morning Lagoon: the toy as it always was
+		"water": WATER, "rays": true, "scene": "",
+		"sand": [CASE, CASE_LIGHT, CASE_SHADE],
+		"rim": [CORAL_LIGHT, CORAL, CORAL_DARK], "net": NET,
+		"balls": ["pink", "yellow", "mint"], "bubble": Color(0.94, 0.98, 0.97), "glow": false,
+		"label": OUTLINE, "menu": Color8(150, 182, 168) },
+	{ # 2 Sunset Drift: an orange evening sky, a low striped sun over the sea
+		"water": [Color8(252, 206, 146), Color8(246, 172, 118), Color8(214, 120, 108), Color8(170, 94, 112), Color8(126, 72, 110)],
+		"rays": false, "scene": "sun",
+		"sand": [Color8(238, 198, 160), Color8(252, 224, 192), Color8(212, 168, 134)],
+		"rim": [Color8(134, 216, 210), Color8(70, 168, 170), Color8(40, 118, 128)], "net": NET,
+		"balls": ["violet", "teal", "white"], "bubble": Color(1.0, 0.95, 0.88), "glow": false,
+		"label": OUTLINE, "menu": Color8(230, 148, 108) },
+	{ # 3 Pufferfish Reef: bright turquoise, corals, seaweed and little fish on the back
+		"water": [Color8(150, 226, 216), Color8(112, 208, 206), Color8(78, 184, 198), Color8(56, 154, 184), Color8(42, 124, 166)],
+		"rays": true, "scene": "reef",
+		"sand": [Color8(246, 236, 210), Color8(255, 250, 234), Color8(220, 206, 176)],
+		"rim": [Color8(255, 228, 122), Color8(240, 184, 60), Color8(186, 128, 34)], "net": NET,
+		"balls": ["pink", "purple", "orange"], "bubble": Color(0.94, 0.99, 1.0), "glow": false,
+		"label": OUTLINE, "menu": Color8(92, 176, 186) },
+	{ # 4 Night Lights: deep blue, a moon and stars, glowing plankton; balls and baskets glow
+		"water": [Color8(54, 66, 118), Color8(44, 54, 102), Color8(36, 44, 88), Color8(28, 36, 74), Color8(22, 28, 60)],
+		"rays": false, "scene": "night",
+		"sand": [Color8(70, 76, 114), Color8(98, 106, 146), Color8(54, 58, 94)],
+		"rim": [Color8(176, 255, 246), Color8(82, 228, 222), Color8(36, 150, 172)], "net": Color8(204, 255, 248),
+		"balls": ["glow_pink", "glow_lime", "glow_cyan"], "bubble": Color(0.72, 1.0, 0.95), "glow": true,
+		"label": Color8(214, 255, 248), "menu": Color8(52, 60, 108) },
+	{ # 5 Storm: grey-green water under dark clouds, rain; the current pushes everything
+		"water": [Color8(128, 144, 146), Color8(108, 126, 130), Color8(90, 108, 116), Color8(72, 92, 102), Color8(58, 76, 88)],
+		"rays": false, "scene": "rain",
+		"sand": [Color8(178, 172, 158), Color8(206, 200, 186), Color8(148, 142, 130)],
+		"rim": [Color8(255, 192, 112), Color8(240, 134, 52), Color8(180, 88, 32)], "net": NET,
+		"balls": ["yellow", "red", "white"], "bubble": Color(0.9, 0.95, 0.96), "glow": false,
+		"label": OUTLINE, "menu": Color8(98, 114, 120) },
+]
 
 ## The tank: top band (the HUD sits on it), water (edge to edge: no side rails, they peeked
 ## out past the console's screen window) with light rays, the funnel floor
 ## shaped by floor_at (world coords), a darker hole at each pump
-static func tank(w_px: int, h_px: int, band_y: float, _wall_l: float, _wall_r: float, floor_at: Callable, _nozzles: Array) -> Texture2D:
+static func tank(w_px: int, h_px: int, band_y: float, _wall_l: float, _wall_r: float, floor_at: Callable, _nozzles: Array, theme: Dictionary = THEMES[0]) -> Texture2D:
 	var img := Image.create(w_px, h_px, false, Image.FORMAT_RGBA8)
 	var water_top := band_y
 	var water_bottom := 880.0
+	var water: Array = theme["water"]
+	var sand: Array = theme["sand"]
+	var scene: String = theme["scene"]
 	for y in h_px:
 		for x in w_px:
 			var wx := (x + 0.5) * P
@@ -47,34 +101,132 @@ static func tank(w_px: int, h_px: int, band_y: float, _wall_l: float, _wall_r: f
 				if wy > band_y - P:
 					col = OUTLINE
 			elif wy > fy:                                        # the funnel floor: sand
-				col = _sand(int(wx / P), int(wy / P), wy - fy)
+				col = _sand(int(wx / P), int(wy / P), wy - fy, sand)
 			else:                                                # the water
 				var t := clampf((wy - water_top) / (water_bottom - water_top), 0.0, 0.999)
-				var band := int(t * WATER.size())
-				col = WATER[band]
-				if band > 0 and wy < 640.0 and _in_ray(wx, wy - water_top):
-					col = WATER[band - 1]                        # light through the water
+				var band := int(t * water.size())
+				col = water[band]
+				if theme["rays"] and band > 0 and wy < 640.0 and _in_ray(wx, wy - water_top):
+					col = water[band - 1]                        # light through the water
+				if scene != "":
+					col = _scene(scene, wx, wy, fy, col, water)
 			img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
 
 ## The sand floor: a 2 px outline along its top, a lit lip, then the sand's own colour with
-## grains (a lighter and a darker one, scattered) and soft ripples that follow the slope
-static func _sand(ax: int, ay: int, depth: float) -> Color:
+## grains (a lighter and a darker one, scattered) and soft ripples that follow the slope.
+## sand = [base, light, shade]
+static func _sand(ax: int, ay: int, depth: float, sand: Array = [CASE, CASE_LIGHT, CASE_SHADE]) -> Color:
 	if depth < P * 2:
 		return OUTLINE
 	if depth < P * 3:
-		return CASE_LIGHT
+		return sand[1]
 	var h := _hash(ax, ay)
 	var ripple := int(depth / P + 1.6 * sin(ax * 0.21)) % 10
 	if ripple == 0 and h < 0.8:
-		return CASE_SHADE.lerp(CASE, 0.35)               # a ripple's shady side
+		return (sand[2] as Color).lerp(sand[0], 0.35)    # a ripple's shady side
 	if ripple == 1 and h < 0.6:
-		return CASE_LIGHT                                # its lit crest
+		return sand[1]                                   # its lit crest
 	if h < 0.04:
-		return CASE_SHADE                                # a few scattered grains
+		return sand[2]                                   # a few scattered grains
 	if h > 0.96:
-		return CASE_LIGHT
-	return CASE
+		return sand[1]
+	return sand[0]
+
+## What's printed on the tank's back panel in each world (world px; the water colour under it)
+static func _scene(kind: String, wx: float, wy: float, fy: float, col: Color, water: Array) -> Color:
+	var ax := int(wx / P)
+	var ay := int(wy / P)
+	match kind:
+		"sun":
+			# the sky above the horizon, a big low sun with a striped bottom, the sea below with
+			# the sun's broken reflection
+			const SUN := Vector2(720, 250)
+			const R := 92.0
+			const HORIZON := 402.0
+			if wy < HORIZON:
+				col = water[0] if wy < 250.0 else water[1]
+				var d := Vector2(wx, wy).distance_to(SUN)
+				if d < R:
+					var below := wy - SUN.y
+					if below > 6.0 and fmod(below, 16.0) < 2.0 + int(below / 16.0) * 1.8:
+						return col                                   # the stripes across its bottom half
+					return Color8(255, 240, 176) if d < R - 9.0 else Color8(255, 218, 138)
+				if d < R + 18.0 and (ax + ay) % 2 == 0:
+					return col.lerp(Color8(255, 228, 160), 0.45)     # a dithered glow round it
+				return col
+			if wy < HORIZON + P:
+				return Color8(255, 222, 150)                         # the horizon, lit
+			var sea := clampf((wy - HORIZON) / 420.0, 0.0, 0.999)
+			col = water[2 + int(sea * 3.0)]
+			var half := 70.0 - (wy - HORIZON) * 0.12
+			if half > 6.0 and absf(wx - SUN.x) < half and ay % 4 == 0 and _hash(int(wx / 18.0), ay) > 0.35:
+				return col.lerp(Color8(255, 210, 150), 0.6)          # the reflection, in streaks
+			return col
+		"reef":
+			# corals, sea fans and seaweed along the bottom, two little fish: printed darker than the
+			# water so they stay behind the toy
+			var back: Color = water[3]
+			for f in [Vector2(150, 300), Vector2(800, 360)]:
+				var dd: Vector2 = Vector2(wx, wy) - f
+				if (dd.x / 22.0) * (dd.x / 22.0) + (dd.y / 11.0) * (dd.y / 11.0) < 1.0 or (dd.x > 18.0 and dd.x < 34.0 and absf(dd.y) < (dd.x - 16.0) * 0.6):
+					return col.lerp(back, 0.55)                     # a fish (and its tail)
+			if wy > fy - 230.0:
+				# seaweed: wavy strands
+				for sx in [60.0, 300.0, 610.0, 900.0]:
+					var x0: float = sx + 9.0 * sin(wy * 0.045 + sx)
+					if absf(wx - x0) < 6.0 and wy > fy - 200.0 + fmod(sx, 60.0):
+						return col.lerp(Color8(60, 150, 110), 0.55)
+				# lumpy corals (pink, orange, purple)
+				var corals := [[Vector2(120, 0), Color8(236, 120, 130)], [Vector2(400, 0), Color8(244, 160, 90)],
+						[Vector2(560, 0), Color8(170, 110, 196)], [Vector2(850, 0), Color8(236, 120, 130)]]
+				for c in corals:
+					var cx: float = c[0].x
+					var base_y := fy
+					for k in 5:
+						var bx: float = cx + [-26.0, -12.0, 0.0, 14.0, 28.0][k]
+						var top: float = base_y - [70.0, 110.0, 140.0, 100.0, 64.0][k]
+						if absf(wx - bx) < 7.0 and wy > top:
+							return col.lerp(c[1], 0.5)
+						if Vector2(wx, wy).distance_to(Vector2(bx, top)) < 11.0:
+							return col.lerp(c[1], 0.62)
+				# a sea fan between them: a half disc with holes
+				var fan := Vector2(wx, wy) - Vector2(250, fy - 20.0)
+				if fan.y < 0.0 and fan.length() < 90.0 and (ax % 4 != 0 and ay % 4 != 0):
+					return col.lerp(Color8(250, 150, 120), 0.4)
+			return col
+		"night":
+			# a moon (craters, a dithered glow), stars up high, glowing plankton down low
+			const MOON := Vector2(190, 232)
+			var dm := Vector2(wx, wy).distance_to(MOON)
+			if dm < 52.0:
+				for cr in [Vector2(172, 220), Vector2(206, 250), Vector2(200, 212)]:
+					if Vector2(wx, wy).distance_to(cr) < 9.0:
+						return Color8(222, 216, 188)
+				return Color8(250, 244, 214)
+			if dm < 74.0 and (ax + ay) % 2 == 0:
+				return col.lerp(Color8(160, 170, 220), 0.35)
+			var h := _hash(ax, ay)
+			if wy < 560.0 and h < 0.006:
+				return Color8(250, 248, 230)                         # a star
+			if wy > 520.0 and h > 0.992:
+				return col.lerp(Color8(120, 244, 230), 0.7)          # plankton
+			return col
+		"rain":
+			# dark clouds along the top, rain slanting down
+			var puff := 0.0
+			for k in 8:
+				var c := Vector2(60.0 + k * 125.0, 120.0 + 18.0 * sin(k * 2.1))
+				puff = maxf(puff, 1.0 - Vector2(wx, wy).distance_to(c) / (70.0 + 12.0 * sin(k * 1.3)))
+			if puff > 0.0:
+				if puff > 0.18 or (ax + ay) % 2 == 0:
+					return col.lerp(Color8(64, 74, 82), 0.75)
+			var u := wx + wy * 0.32
+			var lane := int(u / 46.0)
+			if fmod(u, 46.0) < 3.0 and fmod(wy + lane * 37.0, 70.0) < 24.0 and wy < fy - 40.0:
+				return col.lerp(Color8(186, 200, 204), 0.45)         # a raindrop's streak
+			return col
+	return col
 
 ## A fixed pseudo-random 0..1 per art pixel (the same sand every time)
 static func _hash(x: int, y: int) -> float:
@@ -136,7 +288,7 @@ static func recolour(path: String, light: Color, base: Color, dark: Color, semi 
 	return ImageTexture.create_from_image(img)
 
 ## The net: its lattice in cream (outlined at the sides), the holes faintly tinted
-static func net(path: String) -> Texture2D:
+static func net(path: String, colour: Color = NET) -> Texture2D:
 	var src: Image = (load(path) as Texture2D).get_image()
 	if src.is_compressed():
 		src.decompress()
@@ -154,7 +306,7 @@ static func net(path: String) -> Texture2D:
 			var a := src.get_pixel(x, y).a
 			if a <= 0.0:
 				continue
-			var col := Color(NET, 0.3) if a < 0.8 else NET
+			var col := Color(colour, 0.3) if a < 0.8 else colour
 			if x == first or x == last or y == src.get_height() - 1:
 				col = OUTLINE
 			img.set_pixel(x, y, col)
@@ -182,8 +334,21 @@ static func ball(name: String) -> Texture2D:
 		img.set_pixel(p.x, p.y, cols[2])
 	return ImageTexture.create_from_image(img)
 
+## A soft glow (night): w x h art px, brightest in the middle, fading out; drawn added on
+## (CanvasItemMaterial BLEND_MODE_ADD) behind a ball or a basket rim
+static func glow(w: int, h: int, colour: Color) -> Texture2D:
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var c := Vector2(w / 2.0, h / 2.0)
+	for y in h:
+		for x in w:
+			var d := Vector2((x + 0.5 - c.x) / (w / 2.0), (y + 0.5 - c.y) / (h / 2.0)).length()
+			if d < 1.0:
+				var a := (1.0 - d) * (1.0 - d)
+				img.set_pixel(x, y, Color(colour, a * 0.85))
+	return ImageTexture.create_from_image(img)
+
 ## A bubble: a pale ring, see-through inside, a shine
-static func bubble(n: int) -> Texture2D:
+static func bubble(n: int, tint: Color = Color(0.94, 0.98, 0.97)) -> Texture2D:
 	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
 	var c := Vector2(n / 2.0, n / 2.0)
 	var r := n / 2.0
@@ -192,7 +357,7 @@ static func bubble(n: int) -> Texture2D:
 			var d := Vector2(x + 0.5, y + 0.5).distance_to(c)
 			if d > r:
 				continue
-			img.set_pixel(x, y, Color(0.94, 0.98, 0.97, 0.9) if d > r - 1.2 else Color(0.94, 0.98, 0.97, 0.18))
+			img.set_pixel(x, y, Color(tint, 0.9) if d > r - 1.2 else Color(tint, 0.18))
 	img.set_pixel(int(n * 0.3), int(n * 0.3), Color.WHITE)
 	return ImageTexture.create_from_image(img)
 

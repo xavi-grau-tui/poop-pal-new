@@ -30,6 +30,7 @@ var mode := Mode.HIDDEN
 var game: BaseMinigame
 var game_index := -1
 var world_names: Array = []
+var base: ColorRect                              # the colour under the pattern (each world's own)
 var levels := 0
 var page := 0
 var selection := 0                                # index on the page (0..8)
@@ -85,7 +86,7 @@ func setup(owner_game: BaseMinigame, index: int, names: Array, level_count: int,
 	select_root.size = Vector2(W, H)
 	select_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(select_root)
-	var base := ColorRect.new()
+	base = ColorRect.new()
 	base.color = backdrop
 	base.size = Vector2(W, H)
 	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -189,6 +190,8 @@ func _build_page() -> void:
 	var per := GameData.LEVELS_PER_WORLD
 	title.text = "WORLD %d" % (page + 1)
 	subtitle.text = world_names[page] if page < world_names.size() else ""
+	if game:
+		base.color = game.world_backdrop(page)
 	var origin := Vector2((W - (3 * CELL.x + 2 * GAP.x)) / 2.0, GRID_TOP)
 	for slot in per:
 		var lvl := page * per + slot + 1

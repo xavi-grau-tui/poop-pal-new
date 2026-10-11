@@ -645,6 +645,11 @@ each with the food icon that leads there), not the whole tree.
 Colour language everywhere: one colour per food type (food tag, badge, craving bubble, pal tint).
 
 ## Minigames: 6 deep ones at launch, from easy to hard
+- RULE (user, 2026-10-11): every WORLD of a game (1-x, 2-x, 3-x...) must be clearly different from
+  the others: its own look (background, colours, the pieces themselves: e.g. an orange sunset, a
+  night with glowing balls and baskets) AND, as far as possible, a new mechanic it brings in. The
+  level menu's page takes the world's colour too (BaseMinigame.world_backdrop). Done in Splash
+  Hoops (below); Tilt Maze and the rest to work out later, game by game.
 - DECIDED (2026-10-07): 6 games at launch + Lucky Pinch as the bonus:
   Splash Hoops, Tilt Maze, Top Spin, Paper Sumo, Tummy Tunes (toy xylophone), Pipe Dream (circuit).
   Marble run = the 7th, in an update. Germ Zap, Pal Dash, Tile Break and Flipper Belly are out
@@ -855,10 +860,23 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   a pump balls hardly ever come down from high up, so high baskets go out over the side walls
   instead (the triangle's top corners).
 - LEVELS (rearrange branch, 2026-10-10; Progression v2): 45 levels in 5 worlds of 9, a table in
-  splash_hoops.gd (LEVELS: layout, which baskets, still / sway, speed, seconds, pufferfish):
-  1 Still Water (two 100s only, then the 200s, then the 300 with both pumps, the triangle, a
-  gentle sway at the end) · 2 Drift · 3 Pufferfish · 4 Round and Round · 5 Storm (everything
-  faster). Stars by the time left at the last basket: 2 stars with 20% left, 3 with 45% (STAR_2 /
+  splash_hoops.gd (LEVELS: layout, which baskets, still / sway, speed, seconds, pufferfish).
+- WORLDS (2026-10-11, the world rule): each one its own look (SplashArt.THEMES: the scene printed on
+  the tank's back, the water, the sand, the baskets' and pumps' plastic, the balls, the bubbles, the
+  level menu page's colour) and its own new thing, said under the world's name on its first level:
+  1 Morning Lagoon: teal water, light rays, coral baskets; the pumps one by one (two 100s, the
+     200s, the 300 with both pumps, the triangle, a gentle sway at the end).
+  2 Sunset Drift: an orange sky, a big striped sun over a purple sea with its reflection, teal
+     baskets, violet / teal / white balls; drifting baskets.
+  3 Pufferfish Reef: bright turquoise, corals, seaweed, a sea fan and little fish printed on the
+     back, yellow baskets; the pufferfish.
+  4 Night Lights: deep blue, a moon, stars, glowing plankton; the balls and baskets GLOW (neon
+     colours, soft pulsing halos added on); baskets going round (orbit, wheel).
+  5 Storm: grey-green water under dark clouds, rain, lightning now and then, orange baskets; the
+     STORM CURRENT (new): calm for ~4.5 s, the rain slants the way it will blow (a whoosh), then a
+     gust pushes every ball and the pal sideways for ~2 s (stronger level by level). Its levels got
+     a few more seconds and a slightly gentler speed ramp for it. Sounds: tools/art/splash_sfx.py
+     (storm_gust.wav, thunder.wav). Stars by the time left at the last basket: 2 stars with 20% left, 3 with 45% (STAR_2 /
   STAR_3, to tune on the phone); three stars right of the clock, each dims the moment it's lost.
   First time: straight into 1-1; after that the game opens on its level menu (LevelMenu: 3 x 3,
   press = next, hold = play, forward = next world; locked levels show a padlock). After a level:
@@ -878,7 +896,7 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   of it and the clock refills with a splash sound; the first time ever, a short card says so
   (onboarding, first drink step c). Rejected alternative: pumps never run dry (bends water's
   "second chance" meaning). Fizzy here = stronger jets (boost table), so the 2nd drink helps both.
-- Ideas: more layouts (a basket riding the pufferfish? a current that pushes sideways).
+- Ideas: more layouts (a basket riding the pufferfish?). The sideways current is world 5's storm.
 
 ## Tummy Tunes (the music game)
 - Each WORLD a different toy instrument (2026-10-10): a toy xylophone, then a toy piano, then a toy
@@ -894,6 +912,11 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   that border: textures/menus/diapositive1_ring.png, made by tools/art/frame_ring.py).
   KEPT ON (user, 2026-10-10): it stays until that menu needs something else there; then switch
   it off (BARRIER_ENABLED) or replace it. Ties into the future hunger / thirst design.
+  It ROLLS only when what a page shows changes (user, 2026-10-11): flipping pages or reopening the
+  menu shows each page as you last saw it (PetState.shutters, saved). So DRINKS UPCOMING closes
+  once and then stays closed until drinks come (then it rolls up once), food that was there all
+  along never shows a shutter opening, NEXT MEAL IN closes once after a meal and opens once when
+  the wait is over.
 - (2026-10-07) The player must feel the NEED to care for the pal. Soft, recoverable consequences
   (harsh ones, like Tamagotchi death, make people quit), e.g.: ~12 h without care = grumpy (boosts
   don't work, fewer points), ~24 h = sick (needs cleaning / medicine), ~48 h = goes back one

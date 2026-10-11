@@ -37,6 +37,9 @@ var legend: MenuLegend                 # the orange button's controls, left of t
 ## countdown on it, and eating (drinking) is refused; once it has run out, the next time the menu
 ## opens the shutter rolls back up. Kept on (2026-10-10) until that menu needs something else
 ## there: then switch it off or replace it.
+## It only ROLLS when what a page shows changes since you last looked (PetState.shutters): flipping
+## pages or reopening the menu shows each page as it was, so DRINKS UPCOMING closes once and then
+## stays closed, and food that was there all along never shows a shutter opening.
 const BARRIER_ENABLED := true
 const PANEL := Rect2(680.0, -1190.0, 678.0, 660.0)    # the frame's orange options panel, a bit beyond (Main UI coords)
 const BARRIER_PX := 3
@@ -46,6 +49,7 @@ var barrier_title: Label
 var barrier_time: Label
 var barrier_mystery: Control       # the '?' label on the rolling '?' pattern (special foods not yet)
 var barrier_down := false
+var barrier_tween: Tween
 var active_options := []
 
 func show_page(index: int):
@@ -405,11 +409,14 @@ func _update_barrier() -> void:
 	else:
 		barrier_title.text = "NEXT DRINK IN" if current_page == 1 else "NEXT MEAL IN"
 		barrier_time.add_theme_font_size_override("font_size", 96)
-	var want := BARRIER_ENABLED and mode != ""
-	if want and not barrier_down:
-		_roll(true)
-	elif not want and barrier_down:
-		_roll(false)
+	if not BARRIER_ENABLED:
+		mode = ""
+	var key := str(current_page)
+	var last: String = PetState.shutters.get(key, "")
+	_roll(mode != "", (mode != "") != (last != ""))     # (rolls only if this page changed)
+	if mode != last:
+		PetState.shutters[key] = mode
+		PetState.save_data()
 	_refresh_barrier_time()
 	# the orange button's legend only while there's something to pick and eat (not behind the shutter)
 	if legend:
@@ -426,12 +433,20 @@ func _process(_delta: float) -> void:
 	if barrier_down and visible:
 		_refresh_barrier_time()               # (it stays down at 00:00 until the menu reopens)
 
-## The shutter rolls down over the options (or back up), with a clack as it lands
-func _roll(down: bool) -> void:
+## The shutter down over the options or up out of sight: rolling (with a clack as it lands) when
+## this page's state just changed, else simply there (or not), as the page was last seen
+func _roll(down: bool, animate: bool) -> void:
 	barrier_down = down
 	_update_scroll_marks()
+	if barrier_tween:
+		barrier_tween.kill()
 	var h := PANEL.size.y
+	if not animate:
+		barrier.position.y = 0.0 if down else -h
+		return
+	barrier.position.y = -h if down else 0.0            # (the page as it was: up, or down)
 	var t := create_tween()
+	barrier_tween = t
 	t.tween_property(barrier, "position:y", 0.0 if down else -h, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN if down else Tween.EASE_OUT)
 	if down:
 		t.tween_callback(func():

@@ -7,6 +7,11 @@ extends BaseMinigame
 ## Levels (Progression v2): 45 levels in 5 worlds of 9 (LEVELS), picked in the level menu
 ## (BaseMinigame / LevelMenu). Stars by the time left when the last basket is filled (STAR_2,
 ## STAR_3): the HUD shows them and each one dims the moment it's lost. Each new star = a coin.
+## Every world looks clearly different (SplashArt.THEMES: its own scene on the tank's back, its
+## balls, baskets and bubbles; the level menu's page in its colour) and brings in one new thing:
+## 1 Morning Lagoon (the pumps, one by one) · 2 Sunset Drift (drifting baskets) · 3 Pufferfish
+## Reef (the pufferfish) · 4 Night Lights (baskets going round; balls and baskets glow) · 5 Storm
+## (the storm current: gusts push everything sideways; rain, lightning).
 ##
 ## Main button: LEFT pump. Forward button: RIGHT pump. Both work the same way:
 ## hold to keep pumping (a pump runs dry after a moment), release to stop.
@@ -82,9 +87,12 @@ const STAGE_TITLES := {
 }
 ## The 45 levels: [layout (STAGES), the classic slots used (null = all), basket motion
 ## ("still" / "sway"; drift, orbit and wheel always move), speed, seconds, pufferfish]
-## World 1 Still Water: the pumps, one by one (two 100s, then the 200s, then the 300 with both
-## pumps), then a gentle sway · 2 Drift · 3 Pufferfish · 4 Round and Round · 5 Storm.
-const WORLDS := ["Still Water", "Drift", "Pufferfish", "Round and Round", "Storm"]
+## World 1 Morning Lagoon: the pumps, one by one (two 100s, then the 200s, then the 300 with both
+## pumps), then a gentle sway · 2 Sunset Drift · 3 Pufferfish Reef · 4 Night Lights · 5 Storm.
+const WORLDS := ["Morning Lagoon", "Sunset Drift", "Pufferfish Reef", "Night Lights", "Storm"]
+## What each world brings, said on its first level under its name (the pufferfish says it when it
+## first swims in)
+const WORLD_HINTS := ["", "the baskets drift!", "", "the baskets go round!", "gusts push everything!"]
 const LEVELS := [
 	["classic", [3, 4], "still", 1.0, 30, false], ["classic", [0, 2, 3, 4], "still", 1.0, 45, false],
 	["classic", null, "still", 1.0, 60, false], ["triangle", null, "still", 1.0, 70, false],
@@ -109,12 +117,12 @@ const LEVELS := [
 	["orbit", null, "", 1.0, 60, true], ["wheel", null, "", 1.2, 55, false],
 	["orbit", null, "", 1.3, 55, false], ["wheel", null, "", 1.3, 55, true],
 	["orbit", null, "", 1.5, 55, true],
-	# 5 Storm
-	["classic", null, "sway", 1.6, 50, false], ["drift", null, "", 1.6, 50, false],
-	["triangle", null, "sway", 1.6, 55, false], ["orbit", null, "", 1.6, 50, false],
-	["wheel", null, "", 1.6, 50, false], ["drift", null, "", 1.8, 50, true],
-	["orbit", null, "", 1.8, 50, true], ["wheel", null, "", 1.8, 50, true],
-	["triangle", null, "sway", 2.0, 55, true],
+	# 5 Storm (the current blows in every level: a few seconds more than speed alone would need)
+	["classic", null, "sway", 1.3, 60, false], ["drift", null, "", 1.4, 55, false],
+	["triangle", null, "sway", 1.5, 60, false], ["orbit", null, "", 1.5, 55, false],
+	["wheel", null, "", 1.6, 55, false], ["drift", null, "", 1.7, 55, true],
+	["orbit", null, "", 1.7, 55, true], ["wheel", null, "", 1.8, 55, true],
+	["triangle", null, "sway", 1.9, 60, true],
 ]
 ## Stars: 1 = cleared, 2 = with at least STAR_2 of the time left, 3 = with STAR_3 (tune on the phone)
 const STAR_2 := 0.2
@@ -136,7 +144,13 @@ const PUFFER_OFF := 70.0                # how far past the screen's edge it swim
 const PUFFER_BACK_MIN := 1.2            # seconds off screen before it comes back the other way
 const PUFFER_BACK_MAX := 2.6
 
-const BALL_COLORS := ["pink", "yellow", "mint"]
+## The storm current (world 5): calm, then the rain slants (a warning), then a gust pushes every
+## ball and the pal sideways for a moment, one way or the other; lightning now and then
+const GUST_FORCE := 300.0               # px/s² at full strength (gravity is 380, a pump's jet 2600)
+const GUST_CALM := 4.5                  # seconds of calm between gusts
+const GUST_WARN := 1.1                  # the rain slants this long before it blows
+const GUST_TIME := 2.2
+const RAIN_DROPS := 34
 const OUTLINE := Color8(74, 44, 32)
 
 enum State { PLAY, CLEAR }
@@ -158,6 +172,16 @@ var hud_stars: Array[TextureRect] = []  # the three stars still possible (dim as
 var _stars_left := 3
 
 var tex := {}
+var theme := {}                         # this world's look (SplashArt.THEMES)
+var theme_index := -1
+var tank_sprite: Sprite2D
+var nozzle_sprites: Array[Sprite2D] = []
+var glows: Array[Sprite2D] = []         # night: the halos behind balls and basket rims (they pulse)
+var glow_t := 0.0
+var storm := {}                         # world 5: { phase: calm / warn / gust, t, dir, power }
+var rain_layer: Node2D
+var rain: Array[Dictionary] = []        # { node, x, y, speed }
+var flash: ColorRect                    # lightning
 var lcd_font: Font
 var world: Node2D
 var net_layer: Node2D
@@ -177,15 +201,7 @@ func _ready() -> void:
 	game_music_path = "res://sounds/music/Light Through Water.ogg"     # (82 BPM, loops on the beat: 0 → 158.05 s)
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	# the look, painted in code (SplashArt): a plastic water toy like the other toy games
-	var old := "res://textures/minigames/splash/"
-	tex["tank"] = SplashArt.tank(317, 316, BAND_Y, TANK_L, TANK_R, floor_at, NOZZLES)
-	tex["cup_rim"] = SplashArt.recolour(old + "cup_rim.png", SplashArt.CORAL_LIGHT, SplashArt.CORAL, SplashArt.CORAL_DARK)
-	tex["cup_net"] = SplashArt.net(old + "cup_net.png")
-	tex["nozzle"] = SplashArt.recolour(old + "nozzle.png", SplashArt.CORAL_LIGHT, SplashArt.CORAL, SplashArt.CORAL_DARK)
-	tex["bubble_big"] = SplashArt.bubble(9)
-	tex["bubble_small"] = SplashArt.bubble(7)
-	for c in BALL_COLORS:
-		tex["ball_" + c] = SplashArt.ball(c)
+	_apply_theme(0)
 	var pal_art := "res://textures/minigames/balls/classic.png"
 	if PetState.has_poop():
 		pal_art = PetState.FORMS[PetState.form_id]["frames"][0]
@@ -214,18 +230,61 @@ func level_pattern() -> Texture2D:
 func level_backdrop() -> Color:
 	return Color8(150, 182, 168)              # (sage water, under the drops)
 
+## Each world's page in its own colour (its look's)
+func world_backdrop(w: int) -> Color:
+	return SplashArt.THEMES[clampi(w, 0, SplashArt.THEMES.size() - 1)]["menu"]
+
+## Which world this level is in (0-4)
+func _world() -> int:
+	return clampi((level - 1) / GameData.LEVELS_PER_WORLD, 0, SplashArt.THEMES.size() - 1)
+
+## A world's look: the tank, the pumps, the baskets, the balls, the bubbles (built when the world
+## changes; the baskets and balls are made again for every level anyway)
+func _apply_theme(w: int) -> void:
+	if w == theme_index:
+		return
+	theme_index = w
+	theme = SplashArt.THEMES[w]
+	var old := "res://textures/minigames/splash/"
+	var rim: Array = theme["rim"]
+	tex["tank"] = SplashArt.tank(317, 316, BAND_Y, TANK_L, TANK_R, floor_at, NOZZLES, theme)
+	tex["cup_rim"] = SplashArt.recolour(old + "cup_rim.png", rim[0], rim[1], rim[2])
+	tex["cup_net"] = SplashArt.net(old + "cup_net.png", theme["net"])
+	tex["nozzle"] = SplashArt.recolour(old + "nozzle.png", rim[0], rim[1], rim[2])
+	tex["bubble_big"] = SplashArt.bubble(9, theme["bubble"])
+	tex["bubble_small"] = SplashArt.bubble(7, theme["bubble"])
+	for c in theme["balls"]:
+		tex["ball_" + c] = SplashArt.ball(c)
+	if theme["glow"]:
+		tex["glow_ball"] = SplashArt.glow(25, 25, Color(1, 1, 1))
+		tex["glow_rim"] = SplashArt.glow(44, 26, rim[0])
+	if tank_sprite:
+		tank_sprite.texture = tex["tank"]
+		for n in nozzle_sprites:
+			n.texture = tex["nozzle"]
+
 func start_game() -> void:
 	super.start_game()
 	level = 1
 	_build_level()
-	_show_banner(STAGE_TITLES[_stage()], 1.6)
+	_intro_banner(1.6)
 
 ## Chosen in the level menu (or NEXT / RETRY on the result card)
 func play_level(n: int) -> void:
 	super.start_game()                        # (score from 0, running)
 	level = clampi(n, 1, LEVELS.size())
 	_build_level()
-	_show_banner(STAGE_TITLES[_stage()], 1.4)
+	_intro_banner(1.4)
+
+## A world's first level shows the world's name (and what it brings); the others their layout
+func _intro_banner(hold: float) -> void:
+	if (level - 1) % GameData.LEVELS_PER_WORLD == 0:
+		_show_banner(WORLDS[_world()], hold + 0.4)
+		var hint: String = WORLD_HINTS[_world()]
+		if hint != "":
+			_hint_text(hint)
+	else:
+		_show_banner(STAGE_TITLES[_stage()], hold)
 
 # ================================================================== LEVEL
 
@@ -241,17 +300,24 @@ func _build_level() -> void:
 			c[k].queue_free()
 	balls.clear()
 	cups.clear()
+	glows.clear()
 	rng.seed = 4271 * level + 3
+	_apply_theme(_world())
+	_reset_storm()
 
 	var n_balls := 6                                 # 3 per pump; balls are reused, never used up
 	time_left = _level_time()
 	_place_cups()
 	_reset_puffer()
 
+	var colours: Array = theme["balls"]
 	for i in n_balls:
 		var jx: float = NOZZLES[i % 2]
 		var pos := Vector2(jx + (i / 2 - 1) * 40.0, floor_at(jx) - 120.0 - (i / 2) * 30.0)
-		var s := _sprite(tex["ball_" + BALL_COLORS[i % BALL_COLORS.size()]], pos)
+		var col: String = colours[i % colours.size()]
+		var s := _sprite(tex["ball_" + col], pos)
+		if theme["glow"]:
+			_add_glow(s, tex["glow_ball"], SplashArt.BALLS[col][0])
 		world.add_child(s)
 		balls.append({ "pos": pos, "vel": Vector2.ZERO, "node": s })
 	if diver.is_empty():
@@ -362,8 +428,10 @@ func _make_cup(center: Vector2, points: int) -> Dictionary:
 	var net := _sprite(tex["cup_net"], center)
 	net_layer.add_child(net)
 	var rim := _sprite(tex["cup_rim"], center)
+	if theme["glow"]:
+		_add_glow(rim, tex["glow_rim"], Color.WHITE)
 	net_layer.add_child(rim)
-	var label := _make_label(center + Vector2(-45, -CUP_H / 2.0 - 34), Vector2(90, 30), 22, HORIZONTAL_ALIGNMENT_CENTER, OUTLINE)
+	var label := _make_label(center + Vector2(-45, -CUP_H / 2.0 - 34), Vector2(90, 30), 22, HORIZONTAL_ALIGNMENT_CENTER, theme["label"])
 	label.text = str(points)
 	return { "pos": center, "rim": center.y - CUP_H / 2.0 + 12.0, "full": false, "points": points, "net": net, "rim_node": rim, "label": label }
 
@@ -374,7 +442,10 @@ func _process(delta: float) -> void:
 		return
 	_update_jets(delta)
 	_update_bubbles(delta)
+	_update_glows(delta)
+	_update_rain(delta)
 	if state == State.PLAY:
+		_update_storm(delta)
 		time_left -= delta
 		_update_hud_stars()
 		if time_left <= 0.0:
@@ -459,10 +530,12 @@ func _physics(dt: float) -> void:
 	var tilt := device_tilt().x if has_tilt_sensor() else 0.0
 	tilt += (float(Input.is_key_pressed(KEY_E)) - float(Input.is_key_pressed(KEY_Q))) * 0.5   # (desktop: Q / E)
 	var bodies := _bodies()
+	var gust: float = storm.get("power", 0.0) * storm.get("dir", 0.0) * GUST_FORCE
 	for b in bodies:
 		var v: Vector2 = b["vel"]
 		v.y += GRAVITY * dt
 		v.x += clampf(tilt * 2.0, -1.0, 1.0) * TILT_PUSH * dt
+		v.x += gust * dt                                       # (the storm's current)
 		v += _jet_force(b["pos"], v) * dt
 		v *= maxf(0.0, 1.0 - DRAG * dt)
 		v = v.limit_length(MAX_SPEED)
@@ -743,11 +816,124 @@ func _update_bubbles(delta: float) -> void:
 		b["phase"] += delta * 9.0
 		n.position.y += b["vy"] * delta
 		b["x"] += b["vx"] * delta
+		b["x"] += storm.get("power", 0.0) * storm.get("dir", 0.0) * 150.0 * delta     # (blown by a gust)
 		b["vx"] *= maxf(0.0, 1.0 - 1.5 * delta)
 		n.position.x = b["x"] + sin(b["phase"]) * 6.0
 		if n.position.y < TANK_T + 16:
 			n.queue_free()
 			bubbles.remove_at(i)
+
+# ================================================================== NIGHT GLOW
+
+## A soft halo behind a ball or a basket rim, added on (light), in the thing's own colour
+func _add_glow(parent: Sprite2D, t: Texture2D, colour: Color) -> void:
+	var g := Sprite2D.new()
+	g.texture = t
+	g.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	g.show_behind_parent = true
+	var m := CanvasItemMaterial.new()
+	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	g.material = m
+	g.modulate = Color(colour, 0.6)
+	g.set_meta("phase", glows.size() * 1.7)
+	parent.add_child(g)
+	glows.append(g)
+
+func _update_glows(delta: float) -> void:
+	if glows.is_empty():
+		return
+	glow_t += delta
+	for g in glows:
+		if is_instance_valid(g):
+			g.modulate.a = 0.5 + 0.22 * sin(glow_t * 2.6 + float(g.get_meta("phase", 0.0)))
+
+# ================================================================== THE STORM (world 5)
+
+func _reset_storm() -> void:
+	storm = { "phase": "calm", "t": GUST_CALM * 0.6, "dir": 1.0 if rng.randf() < 0.5 else -1.0, "power": 0.0,
+		"on": _world() == 4, "flash_in": rng.randf_range(6.0, 10.0) }
+	for r in rain:
+		r["node"].queue_free()
+	rain.clear()
+	flash.color.a = 0.0
+	if not storm["on"]:
+		return
+	for i in RAIN_DROPS:
+		var d := ColorRect.new()
+		d.color = Color(0.85, 0.9, 0.92, 0.5)
+		d.size = Vector2(3, 24)
+		d.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		rain_layer.add_child(d)
+		rain.append({ "node": d, "x": rng.randf_range(0, PLAY_WIDTH), "y": rng.randf_range(BAND_Y, FLOOR_Y - 60.0), "speed": rng.randf_range(520, 760) })
+
+## Calm, then the rain slants the way the gust will blow (a warning), then the gust
+func _update_storm(delta: float) -> void:
+	if not storm.get("on", false):
+		return
+	storm["t"] -= delta
+	match storm["phase"]:
+		"calm":
+			storm["power"] = move_toward(storm["power"], 0.0, delta * 1.5)
+			if storm["t"] <= 0.0:
+				storm["phase"] = "warn"
+				storm["t"] = GUST_WARN
+				storm["dir"] = -storm["dir"] if rng.randf() < 0.7 else storm["dir"]
+				_sfx("res://sounds/fx/storm_gust.wav", -10.0)
+		"warn":
+			storm["power"] = move_toward(storm["power"], 0.25, delta * 0.6)
+			if storm["t"] <= 0.0:
+				storm["phase"] = "gust"
+				storm["t"] = GUST_TIME
+		"gust":
+			var strength := 0.75 + 0.05 * float((level - 1) % GameData.LEVELS_PER_WORLD)
+			storm["power"] = move_toward(storm["power"], strength, delta * 2.2)
+			if storm["t"] <= 0.0:
+				storm["phase"] = "calm"
+				storm["t"] = GUST_CALM + rng.randf_range(-0.8, 0.8)
+	storm["flash_in"] -= delta
+	if storm["flash_in"] <= 0.0:
+		storm["flash_in"] = rng.randf_range(9.0, 15.0)
+		var t := create_tween()
+		t.tween_property(flash, "color:a", 0.55, 0.04)
+		t.tween_property(flash, "color:a", 0.0, 0.12)
+		t.tween_property(flash, "color:a", 0.35, 0.05)
+		t.tween_property(flash, "color:a", 0.0, 0.35)
+		get_tree().create_timer(0.35).timeout.connect(func():
+			if is_running:
+				_sfx("res://sounds/fx/thunder.wav", -12.0))
+
+## The rain falls, slanting more as the wind picks up
+func _update_rain(delta: float) -> void:
+	if rain.is_empty():
+		return
+	var wind: float = storm.get("power", 0.0) * storm.get("dir", 0.0)
+	var slant := 0.12 + wind * 0.9
+	for r in rain:
+		r["y"] += r["speed"] * delta
+		r["x"] += r["speed"] * slant * delta
+		if r["y"] > FLOOR_Y - 60.0:
+			r["y"] = BAND_Y + 4.0
+			r["x"] = rng.randf_range(-100, PLAY_WIDTH + 100)
+		if r["x"] < -40.0:
+			r["x"] += PLAY_WIDTH + 80.0
+		elif r["x"] > PLAY_WIDTH + 40.0:
+			r["x"] -= PLAY_WIDTH + 80.0
+		var n: ColorRect = r["node"]
+		n.position = Vector2(r["x"], r["y"])
+		n.rotation = -atan(slant)
+
+## A line that stays a moment under the banner (what a new world brings)
+func _hint_text(text: String) -> void:
+	var l := _make_label(Vector2(0, PLAY_HEIGHT / 2.0 + 70), Vector2(PLAY_WIDTH, 50), 32, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.95, 0.85))
+	l.add_theme_color_override("font_outline_color", OUTLINE)
+	l.add_theme_constant_override("outline_size", 10)
+	l.text = text
+	l.modulate.a = 0.0
+	var t := create_tween()
+	t.tween_property(l, "modulate:a", 1.0, 0.2)
+	t.tween_interval(2.0)
+	t.tween_property(l, "modulate:a", 0.0, 0.4)
+	t.tween_callback(l.queue_free)
 
 # ================================================================== NODES / HUD
 
@@ -759,9 +945,14 @@ func _create_static_nodes() -> void:
 	var tank := _sprite(tex["tank"], Vector2.ZERO)
 	tank.centered = false
 	add_child(tank)
+	tank_sprite = tank
+	rain_layer = Node2D.new()                       # (the storm's moving rain: behind everything else)
+	add_child(rain_layer)
 
 	for x in NOZZLES:
-		add_child(_sprite(tex["nozzle"], Vector2(x, FLOOR_Y - 12)))
+		var nz := _sprite(tex["nozzle"], Vector2(x, FLOOR_Y - 12))
+		add_child(nz)
+		nozzle_sprites.append(nz)
 
 	world = Node2D.new()
 	add_child(world)
@@ -775,6 +966,12 @@ func _create_static_nodes() -> void:
 	diver_layer.add_child(puffer["node"])           # (under the diver, added later)
 	bubble_layer = Node2D.new()
 	add_child(bubble_layer)
+	flash = ColorRect.new()                         # lightning (world 5)
+	flash.color = Color(1, 1, 1, 0)
+	flash.position = Vector2(0, BAND_Y)
+	flash.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT - BAND_Y)
+	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(flash)
 
 	hud_level = _make_label(Vector2(40, 26), Vector2(160, 52), 38, HORIZONTAL_ALIGNMENT_LEFT, OUTLINE)
 	var coin_icon := _sprite(tex["coin"], Vector2(214, 52))
