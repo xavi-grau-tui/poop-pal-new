@@ -44,6 +44,7 @@ var barrier_clip: Control
 var barrier: Node2D
 var barrier_title: Label
 var barrier_time: Label
+var barrier_mystery: Control       # the '?' label on the rolling '?' pattern (special foods not yet)
 var barrier_down := false
 var active_options := []
 
@@ -368,16 +369,46 @@ func _wait_left() -> int:
 		return 0
 	return lcd.drink_time_left if current_page == 1 else lcd.food_time_left
 
+## What the shutter is down for on this page ("" = it's up):
+##   "upcoming"  drinks, before the first meal (drinks come once there is a pal): DRINKS UPCOMING
+##   "mystery"   special foods, before any pal has reached Dai (and none in the pantry): the "?"
+##               label on the rolling "?" pattern, like a locked game card
+##   "wait"      the meal / drink countdown is running: NEXT MEAL IN 12:34
+func _barrier_mode() -> String:
+	if current_page == 1 and PetState.needs_first_meal():
+		return "upcoming"
+	if current_page == 2 and _specials_locked():
+		return "mystery"
+	return "wait" if _wait_left() > 0 else ""
+
+func _specials_locked() -> bool:
+	if Shop.stage_reached() >= 3:
+		return false
+	for f in FoodLibrary.SPECIALS:
+		if Shop.pantry_count(f["name"]) > 0:
+			return false
+	return true
+
 func _update_barrier() -> void:
 	if not barrier:
 		if legend:
 			legend.set_lines([["press", "next"], ["hold", "drink" if current_page == 1 else "eat"]])
 		return
-	var left := _wait_left()
-	barrier_title.text = "NEXT DRINK IN" if current_page == 1 else "NEXT MEAL IN"
-	if BARRIER_ENABLED and left > 0 and not barrier_down:
+	var mode := _barrier_mode()
+	barrier_mystery.visible = mode == "mystery"
+	barrier_title.visible = mode != "mystery"
+	barrier_time.visible = mode != "mystery"
+	if mode == "upcoming":
+		barrier_title.text = "DRINKS"
+		barrier_time.text = "UPCOMING"
+		barrier_time.add_theme_font_size_override("font_size", 64)
+	else:
+		barrier_title.text = "NEXT DRINK IN" if current_page == 1 else "NEXT MEAL IN"
+		barrier_time.add_theme_font_size_override("font_size", 96)
+	var want := BARRIER_ENABLED and mode != ""
+	if want and not barrier_down:
 		_roll(true)
-	elif (left <= 0 or not BARRIER_ENABLED) and barrier_down:
+	elif not want and barrier_down:
 		_roll(false)
 	_refresh_barrier_time()
 	# the orange button's legend only while there's something to pick and eat (not behind the shutter)
@@ -385,6 +416,8 @@ func _update_barrier() -> void:
 		legend.set_lines([] if barrier_down else [["press", "next"], ["hold", "drink" if current_page == 1 else "eat"]])
 
 func _refresh_barrier_time() -> void:
+	if _barrier_mode() != "wait":
+		return
 	var lcd := _lcd()
 	if lcd and lcd.has_method("format_time"):
 		barrier_time.text = lcd.format_time(_wait_left())
@@ -445,6 +478,49 @@ func _build_barrier() -> void:
 	barrier_time.add_theme_font_size_override("font_size", 96)
 	barrier_title.position = Vector2(0, PANEL.size.y / 2.0 - 110)
 	barrier_time.position = Vector2(0, PANEL.size.y / 2.0 - 30)
+	# the locked special page: a small "?" label (a locked game card's), the "?" pattern rolling behind
+	var box_size := Vector2(330, 220)
+	var frame := Panel.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color8(250, 238, 214)
+	sb.border_color = Color8(58, 38, 30)
+	sb.set_border_width_all(8)
+	sb.set_corner_radius_all(14)
+	sb.anti_aliasing = false
+	frame.add_theme_stylebox_override("panel", sb)
+	frame.size = box_size
+	frame.position = (PANEL.size - box_size) / 2.0
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var clip := Control.new()
+	clip.clip_contents = true
+	clip.position = Vector2(8, 8)
+	clip.size = box_size - Vector2(16, 16)
+	clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_child(clip)
+	var pattern := TextureRect.new()
+	pattern.texture = load("res://textures/menus/questionloopbackground.png")
+	pattern.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pattern.size = clip.size
+	pattern.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://scripts/shaders/gamebackgroundloop.gdshader")
+	mat.set_shader_parameter("scroll_speed", Vector2(-20, 20))
+	mat.set_shader_parameter("screen_size", Vector2(128, 128))
+	pattern.material = mat
+	pattern.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	clip.add_child(pattern)
+	var logo := TextureRect.new()
+	logo.texture = load("res://textures/menus/mistery.png")
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	logo.size = clip.size * 0.8
+	logo.position = clip.size * 0.1
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	clip.add_child(logo)
+	frame.visible = false
+	barrier.add_child(frame)
+	barrier_mystery = frame
 	# ...but under the frame's inner border: that ring of the frame (tools/art/frame_ring.py) is
 	# laid on top, so the shutter slides in behind the frame's border and rounded corners
 	var bg: Sprite2D = $Menu/Background
