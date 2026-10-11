@@ -10,6 +10,8 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, '..', '..', 'food_drafts'))
 import palgen3 as G
 from sets3 import SETS
+from sets4 import SHEET4
+SETS = dict(SETS, sheet4=SHEET4)
 import tier_icons as TI
 
 PROJ = G.PROJ
@@ -80,7 +82,12 @@ def render_line(key, idx, line, stage, force=False):
     return n, im, note
 
 
+NEW_NAMES = set()
+
+
 def rendered(key, S):
+    NEW_NAMES.clear()
+    NEW_NAMES.update(S.get('new', []))
     out = {'title': S['title'], 'sub': S.get('sub', 'every kid line is a snack, a yokai or a critter; the other two sheets show the other two for the same line')}
     i = 0
     probs = []
@@ -120,6 +127,10 @@ def cell(sheet, x, y, item, foods=None, tag=None):
     d = ImageDraw.Draw(sheet)
     w = d.textlength(n, font=font)
     d.text((x + (CW - w) / 2, y + 190), n, fill=(60, 50, 50), font=font)
+    if n in NEW_NAMES:                   # a new design (sheet 4)
+        tw = d.textlength('NEW', font=fontt) + 10
+        d.rounded_rectangle([x + CW - tw - 8, y + 168, x + CW - 8, y + 186], radius=5, fill=(110, 170, 90))
+        d.text((x + CW - tw - 3, y + 170), 'NEW', fill=(255, 255, 255), font=fontt)
     if foods:                          # which 3rd foods lead here
         icons = [icon(f, 1 if len(foods) > 2 else 2) for f in foods]
         tw = sum(i.width for i in icons) + 3 * (len(icons) - 1)

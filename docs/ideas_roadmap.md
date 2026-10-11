@@ -164,6 +164,14 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   happy (back to Just fed, the countdown restarts) without changing it; food of the NEXT size
   makes it grow. Fits Progression v2 (foods by size): the food menu would offer both sizes, the
   next size marked as "grows" (its icons one higher). Lets a player keep a pal they like for days.
+- SHEET 4 (2026-10-11): docs/mockups/pal_brainstorm/v3/sheet4.png = the user's PICKS from sheets
+  1-3 (89 pals + the 5 babies Bud, Nib, Inari, Ember, Picklet) arranged into one tree, with 11 NEW
+  pals to fill the gaps (tagged NEW: Yomogi, Sakura Mochi, Pistachio, Bonbon, Ume Onigiri, Granny,
+  Lemon Sweet, Cream Soda, Calamari, Lemon Ant, Yuzu Lord). Some picks moved family where they fit
+  (Komainu -> green; Cocoa Fire, Kuri, Bruin -> sweet; Hermit with a lemon shell, Anemone,
+  Octopepper, Teru Teru, Karakasa -> sour). Tweaks asked: Waffle bigger, Oden with Kebab's face,
+  Axel without the green tail. Mutants and legends: placeholders (the user will change them).
+  Designs in sets4.py. This is the candidate for the final tree.
 - PAL DRAFTS v3 (2026-10-10, the direction the user loved: "the t3 variations... that's the way"):
   docs/mockups/pal_brainstorm/v3/sheet1.png, sheet2.png, sheet3.png = three full, MIXED 120s in the
   current pals' render quality. Every kid line (a baby + its 2nd food, with its 3 adults) has three
@@ -885,6 +893,12 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
 - Luck compounds (the right type 3 meals in a row is ~22%): add a safety net, e.g. the type you
   need is guaranteed after a few meals without it. Balance rerolls: too many and luck stops
   mattering, too few and players feel stuck.
+
+## Foods: 45 (2026-10-11)
+- One more food per type and size (user: more variety): Edamame, Avocado Toast, Veggie Bento;
+  Candy, Ice Cream, Pancakes; Nugget, Pizza Slice, Fish and Chips; Hot Sauce, Spicy Taco,
+  Tteokbokki; Lime, Kiwi, Ceviche (docs/mockups/food_drafts/foods_v3.py, foods3_sheet.png). In the
+  game: 3 foods per type and size, they take turns meal after meal (FoodLibrary).
 
 ## Drinks
 - Types (scripts/DrinkLibrary.gd): Watery (Splash, done), Fizzy (Fizz), Caffeinated (Focus),
