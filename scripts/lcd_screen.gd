@@ -141,16 +141,16 @@ func _now() -> float:
 	return Time.get_unix_time_from_system()
 
 func _on_fed(_food: Dictionary) -> void:
-	PetState.food_ready_at = _now() + food_duration
+	PetState.food_ready_at = _now() + (0.0 if DevLaunch.all_open else food_duration)   # (STRAIGHT TO GAMES: no wait)
 	if not running:
-		PetState.drink_ready_at = _now() + drink_duration      # the first meal starts the drink countdown too
+		PetState.drink_ready_at = _now() + (0.0 if DevLaunch.all_open else drink_duration)      # the first meal starts the drink countdown too
 	running = true
 	PetState.save_data()
 	update_timers()
 	_update_labels()
 
 func _on_drank(_drink: Dictionary) -> void:
-	PetState.drink_ready_at = _now() + drink_duration
+	PetState.drink_ready_at = _now() + (0.0 if DevLaunch.all_open else drink_duration)
 	PetState.save_data()
 	update_timers()
 	_update_labels()

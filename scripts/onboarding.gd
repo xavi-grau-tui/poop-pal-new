@@ -34,6 +34,8 @@ var beat: Tween
 var menu_was_open := false
 var hatched := false
 var food_chosen := false               # a food was picked (it rains in before the pal hatches)
+var card_tween: Tween
+var card_gen := 0                      # bumped by every hide: a show still on its way gives up
 
 func _ready() -> void:
 	if PetState.has_poop() or not PetState.discovered.is_empty():
@@ -48,9 +50,12 @@ func _ready() -> void:
 	await get_tree().create_timer(0.8).timeout     # (a breath after the screen has come on)
 	if _gone() or not PetState.needs_first_meal():
 		return
+	PetState.form_changed.connect(_on_form_changed)
+	if food_button and food_button.button_pressed:
+		menu_was_open = true                     # (opened that fast: the card waits until it closes)
+		return
 	_show_card("Welcome to HaraTomo! Tap [img=66x81]%s[/img] to eat something and meet your new pal." % FOOD_ICON)
 	_start_beat(food_button)
-	PetState.form_changed.connect(_on_form_changed)
 
 func _process(_delta: float) -> void:
 	if hatched or not food_button:
@@ -223,22 +228,32 @@ func _build_card() -> void:
 func _show_card(bbcode: String) -> void:
 	if _gone():
 		return
+	var gen := card_gen
 	card_text.text = "[center]%s[/center]" % bbcode
 	card.visible = true
 	card.modulate.a = 0.0
 	await get_tree().process_frame               # (let the text lay out, then fit the card to it)
+	if _gone() or gen != card_gen:
+		return                                   # (hidden meanwhile: the food menu opened)
 	var h := card_text.get_content_height() + 28 + 40
 	card.size.y = h
 	card.pivot_offset = card.size / 2.0
 	card_bg.size = card.size / 3.0
 	card.scale = Vector2(0.9, 0.9)
+	if card_tween:
+		card_tween.kill()
 	var t := card.create_tween()
+	card_tween = t
 	t.tween_property(card, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	t.parallel().tween_property(card, "modulate:a", 1.0, 0.12)
 
 func _hide_card() -> void:
+	card_gen += 1
 	if not card or not card.visible:
 		return
+	if card_tween:
+		card_tween.kill()
 	var t := card.create_tween()
+	card_tween = t
 	t.tween_property(card, "modulate:a", 0.0, 0.15)
 	t.tween_callback(func(): card.visible = false)

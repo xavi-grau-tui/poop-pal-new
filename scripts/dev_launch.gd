@@ -22,6 +22,9 @@ const QUICK_PAL := "picklet"           # the sour baby
 
 ## Read by Unboxing and BootSequence: true only after STRAIGHT TO GAMES was picked here
 static var skip_boot := false
+## STRAIGHT TO GAMES: every game and every food open, special foods in the pantry, no meal / drink
+## wait, so every evolution can be tried in a row (the testing save only)
+static var all_open := false
 
 func _ready() -> void:
 	var bg := ColorRect.new()
@@ -41,7 +44,7 @@ func _ready() -> void:
 	add_child(title)
 	var last := _last_choice()
 	_button("FULL BOOT", "unboxing + boot", 680, last == "full", _full)
-	_button("STRAIGHT TO GAMES", "every game open, Picklet", 930, last == "games", _games)
+	_button("STRAIGHT TO GAMES", "every game and food open, no waiting", 930, last == "games", _games)
 	_button("GAMES + 999 COINS", "to try the Shop and buying games", 1180, last == "rich", _rich)
 	_button("BOOT + PROGRESSION", _progress_summary(), 1430, last == "progress", _progress)
 	_start_over_button(1690)
@@ -80,11 +83,13 @@ func _button(text: String, sub: String, y: float, highlighted: bool, action: Cal
 func _full() -> void:
 	_save_choice("full")
 	skip_boot = false
+	all_open = false
 	get_tree().change_scene_to_file(MAIN_SCENE)
 
 func _progress() -> void:
 	_save_choice("progress")
 	skip_boot = false
+	all_open = false
 	SaveSlot.use_progress()
 	# the autoloads loaded (and wiped) the testing save at launch: now the progression one
 	for n in [GameData, PetState, Collection, Shop]:
@@ -146,9 +151,18 @@ func _rich() -> void:
 func _games(choice := "games") -> void:
 	_save_choice(choice)
 	skip_boot = true
-	if choice == "games":                # every game open, no coins needed (the testing save only)
+	all_open = choice == "games"
+	if all_open:                         # every game open, no coins needed (the testing save only)
 		for idx in GameData.games:
 			GameData.games[idx]["unlocked"] = true
+		# ...and every food: all types of every size, 9 of each special food
+		for size in ["baby", "kid", "adult"]:
+			Shop.foods[size] = FoodLibrary.FAMILIES.duplicate()
+		for f in FoodLibrary.SPECIALS:
+			Shop.pantry[f["name"]] = 9
+		Shop.save_data()
+		PetState.food_ready_at = 1.0               # (no waiting: see LcdScreen)
+		PetState.drink_ready_at = 1.0
 	# the pal is already there (as if its first meal was a sour one), before the scene loads
 	if not PetState.has_poop():
 		PetState.form_id = QUICK_PAL
