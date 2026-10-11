@@ -3,12 +3,16 @@
 # 3 adults per kid: ROOT/PEAK/CHAOS (mixed kid) or ULTRA/BLOOM/CLASH (pure kid).
 # Moved to another family (where it fits better): Komainu -> green; Cocoa Fire, Kuri, Bruin ->
 # sweet; Hermit (now with a lemon shell), Anemone, Octopepper, Teru Teru, Karakasa -> sour.
-# User tweaks: Waffle bigger, Oden with Kebab's face, Axel without the green tail.
+# User tweaks: Waffle bigger, Oden with Kebab's face, Axel without the green tail, Scarab round.
+# Round 2 (2026-10-11): every line now shares something kid -> adult (the same creature grown up,
+# the same dish bigger, or the same world: Kiwi -> Kiwi Bird, Usagi -> Usagi Manju / Yamabiko,
+# Teru Teru -> Omamori / Kokeshi / Karakasa (charms), Hermit -> Anemone / Calamari / Octopepper
+# (the sea)...); Sakura Mochi and Yuzu Lord replaced (Usagi Manju, Omamori).
 # NEW (11, to fill the gaps): listed in NEW. Mutants and legends: placeholders (user: change later).
 from sets3 import BUD, EMBER, PICKLET
 
-NEW = ['Yomogi', 'Sakura Mochi', 'Pistachio', 'Bonbon', 'Ume Onigiri', 'Granny', 'Lemon Sweet',
-       'Cream Soda', 'Calamari', 'Lemon Ant', 'Yuzu Lord']
+NEW = ['Yomogi', 'Usagi Manju', 'Pistachio', 'Bonbon', 'Ume Onigiri', 'Granny', 'Lemon Sweet',
+       'Cream Soda', 'Calamari', 'Lemon Ant', 'Omamori']
 
 SHEET4 = {
  'title': 'Sheet 4: your picks',
@@ -19,23 +23,23 @@ SHEET4 = {
    'Usagi | mochi | green/sweet | ears_bunny | sleep w | Pounds mochi under the moon.',
    'Kakiage | pebble | crust/green | crust speckle:green | heavy flat | A tempura fritter that walks.',
    'Tengu | egg | green/spicy | face_patch:spicy longnose:spicy feather:wood | stern flat | A forest goblin with a red face.',
-   'Kappa | gum | green/teal | plate:ice beak_f shell:moss | gloss flat | Keep its head plate wet.'],
+   'Kiwi | egg | wood/lime | face_patch:lime | dot flat | Fuzzy outside, sour inside.'],
   'adults': [
-   'Kodama | gum | white/green | leaf | dot o | A tree spirit. Nods slowly.',
+   'Avocado | pear | green/olive | belly:wood | dot flat | A pea that grew up: green, big, proud of its stone.',
    'Melon Pan | bun | lime/crust | checker:lime | dot w | A sweet bun with a melon-skin crust.',
    'Wasabi Pea | ball | lime/spicy | crust:lime | stern flat | Crunchy, green, furious.',
    'Yomogi | dango | moss/green/leaf | | dot flat | Mugwort dumplings on a stick. Earthy, chewy.',
-   'Sakura Mochi | gum | pink/leaf | bigleaf:leaf sugar | sleep w | A pink mochi wrapped in a cherry leaf.',
+   'Usagi Manju | mochi sx=1.1 | white/sweet | ears_bunny:white | dot w | A rabbit-shaped bun, blue bean paste inside.',
    'Yamabiko | ball | cream/green | ears_mouse | wide o | Repeats everything you shout.',
-   'Avocado | pear | green/olive | belly:wood | dot flat | Healthy fats. Very proud of its stone.',
-   'Mujina | bean | stone/cream | mask:char | glance flat | A badger that is mostly rumours.',
    'Kinoko | mush | cream/spicy | cap:spicy capspots | glance flat | A mushroom yokai. Do not eat.',
+   'Mujina | bean | stone/cream | mask:char | glance flat | A badger that is mostly rumours.',
+   'Kodama | gum | white/green | leaf | dot o | A tree spirit. Nods slowly.',
    'Karasu Tengu | bird | green/spicy | beak_f wings:green | stern flat | A crow tengu. Guards the mountain path.',
    'Horseradish | onion | cream/spicy | leaf2 | cross fang | Clears your nose from a mile away.',
    'Komainu | gum | stone/green | curl:stone ears_bear:stone | stern flat | A stone lion-dog that guards the gate.',
-   'Kiwi | egg | wood/lime | face_patch:lime | dot flat | Fuzzy outside, sour inside.',
+   'Kappa | gum | green/teal | plate:ice beak_f shell:moss | gloss flat | Keep its head plate wet.',
    'Gherk | worm | sour/green | warts leaf | dot flat | A gherkin that learned to crawl.',
-   'Kiwi Bird | bird | wood | longbeak | dot flat | The bird and the fruit, finally friends.']},
+   'Kiwi Bird | bird | wood | longbeak | dot flat | The fruit grew a beak. Finally friends.']},
  'sweet': {'baby': 'Nib | bean sy=.85 | sweet | half:navy | dot flat | A cocoa bean with something to say.', 'kids': [
    'Leafwing | bean | green/sweet | wings:green antennae | glance flat | Looks exactly like a leaf. On purpose.',
    'Fudge | cube | choc/sweet | glaze:sweet | lid flat | Fudge. Dense. Dependable.',
@@ -45,7 +49,7 @@ SHEET4 = {
   'adults': [
    'Owlet | ball | sweet/cream | ears belly:cream beak_f | wide none | Up all night, every night.',
    'Pistachio | icecream | crust/lime | | dot w | A pistachio scoop on a waffle cone.',
-   'Scarab | egg | navy/gold | half:gold legs | gloss flat | Rolls cocoa beans home.',
+   'Scarab | ball | navy/gold | half:gold antennae | gloss flat | Rolls cocoa beans home.',
    'Bonbon | ball sx=1.1 | sweet/navy | wrapper:pink sparkles | lid flat | A blue chocolate bonbon, wrapped like a gift.',
    'Kuri | kiss | wood/cream | base:cream | dot flat | A chestnut sweet. Shiny on top.',
    'Gremlin | squat | sweet/purple | ears_fox:purple | glance grin | Do not feed it after midnight.',
@@ -60,7 +64,7 @@ SHEET4 = {
    'Bruin | ball | greasy/sweet | ears_bear:greasy drip:sweet | dot flat | A bear cub sticky with blue honey.']},
  'greasy': {'baby': 'Inari | gum sy=.85 | crust | nubs:crust | lid flat | A fried tofu pouch that foxes adore.', 'kids': [
    'Kitsune | egg | greasy/white | ears_fox tail_fluff belly:white | lid flat | A fox who loves fried tofu.',
-   'Waffle | cube s=1.25 sx=1.1 | gold/sweet | checker:crust drip:sweet | gloss flat | A waffle with blue syrup.',
+   'Waffle | cube s=1.12 sx=1.1 | gold/sweet | checker:crust drip:sweet | gloss flat | A waffle with blue syrup.',
    'Fried Egg | fried | white/greasy | | dot flat | Sunny side up, every day.',
    'Drumstick | pear | crust | crust bone | stern flat | All drumstick, no fear.',
    'Oden | dango | crust/rice/wood | | dot flat | Everything simmered, on one stick.'],
@@ -114,16 +118,16 @@ SHEET4 = {
    'Hoot | egg | sour/cream | ears:p beak_f | wide none | Turns its head all the way round.',
    'Lemon Sweet | ball | lemon | wrapper:cream sugar | squint pout | A sour candy, still in its wrapper.',
    'Cream Soda | cube sx=.85 sy=1.2 | lime/white | cap:white cherry bubbles | gloss v | Melon soda with a scoop on top.',
-   'Kokeshi | doll | cream/sour | bangs:char band:spicy | dot flat | A wooden doll. Watches over the room.',
+   'Lime | ball | lime | leaf | gloss flat | Juicy, friendly, a bit sharp.',
    'Anemone | gum | sour/coral | tentacles:coral | sleep none | Waves at fish all day.',
    'Calamari | ring | crust/cream | crust | glance flat | A squid ring. Crunchy, a bit chewy.',
    'Octopepper | mound | spicy | tentacles | sleep none | Eight spicy legs, one calm mind.',
    'Lemon Ant | bean | lemon/char | antennae legs:char | dot flat | A lemon ant. It really tastes of citrus.',
    'Shichimi | bottle | spicy/wood | hat:wood speckle:lemon | glance flat | Seven spices in one little bottle.',
-   'Karakasa | kiss sy=1.25 | spicy/wood | leg | one tongue | An old umbrella that came alive.',
-   'Yuzu Lord | lemon sx=1.15 | lemon/gold | leaf speckle:gold | squint pout stache | The sourest of them all.',
-   'Lime | ball | lime | leaf | gloss flat | Juicy, friendly, a bit sharp.',
-   'Axel | bean | pink | frills:pink | gloss v | Smiles on the inside.']},
+   'Axel | bean | pink | frills:pink | gloss v | Smiles on the inside.',
+   'Omamori | cube sx=.85 sy=1.15 | lime/gold | topknot:gold band:gold kanji | stern flat | A lucky charm pouch. Keeps the gut safe.',
+   'Kokeshi | doll | cream/sour | bangs:char band:spicy | dot flat | A wooden doll. Watches over the room.',
+   'Karakasa | kiss sy=1.25 | spicy/wood | leg | one tongue | An old umbrella that came alive.']},
  # placeholders (user: most specials to change later)
  'mutants': [
    'Karakuri | tall | wood/metal | bolts chip | visor flat | A clockwork doll that serves tea.',

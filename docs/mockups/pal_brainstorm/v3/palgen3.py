@@ -18,8 +18,8 @@ PROJ = '/Users/xaviergrau/Documents/PoopPal Godot/poop-pal-main-kiro'
 F, W, H, K = 0.5, 55, 50, 20          # = forms_gen: native 55x50 px, 2 design units per px, x20 hi-res
 GROUND = 93
 INK = (18, 8, 14)
-STAGE = {'baby': 1.3, 'kid': 1.62, 'adult': 1.9, 'mutant': 1.9, 'legend': 2.05}
-EYE = {'baby': (5.4, 10.5), 'kid': (5.2, 11.5), 'adult': (5.0, 12.5), 'mutant': (5.0, 12.5), 'legend': (5.2, 13.5)}
+STAGE = {'baby': 1.3, 'kid': 1.45, 'adult': 1.9, 'mutant': 1.9, 'legend': 2.05}   # kids clearly between Sho and Dai
+EYE = {'baby': (5.4, 10.5), 'kid': (5.3, 11.0), 'adult': (5.0, 12.5), 'mutant': (5.0, 12.5), 'legend': (5.2, 13.5)}
 
 # ------------------------------------------------------------------ palettes (6-step ramps, dark -> light)
 P = {
@@ -444,14 +444,15 @@ OVER = {'sprinkles', 'sesame', 'sparkles', 'steam', 'bubbles', 'drop', 'stars', 
         'hachimaki', 'kanji', 'capspots', 'pleats', 'swirltop'}
 
 
-def render(spec, stage, seed_name=''):
+def render(spec, stage, seed_name='', _lift=0.0, _fit=1.0, _pass=0):
     """spec: dict(plan, mods, pal, acc, acc2, parts[(name, colour)], eyes, mouth, extras)"""
     if 'special' in spec:
         return special(spec['special'])
-    c = Canvas(W, H, K, F, anchor=(55, GROUND))
+    ground = GROUND - _lift                    # (lifted when something hangs below the canvas)
+    c = Canvas(W, H, K, F, anchor=(55, ground))
     plan = PLANS[spec['plan']]
     mods = spec.get('mods', {})
-    s = STAGE[stage] * mods.get('s', 1.0)
+    s = STAGE[stage] * mods.get('s', 1.0) * _fit
     sx = mods.get('sx', 1.0)
     sy = mods.get('sy', 1.0)
     lean = mods.get('lean', 0.0)
@@ -472,26 +473,26 @@ def render(spec, stage, seed_name=''):
         for b in plan['b']:
             x, y, rx, ry = b[:4]
             x = x + lean * (-y)
-            out.append((55 + x * s * sx_, GROUND + (y - lift) * s * sy, rx * s * sx_, ry * s * sy, *b[4:]))
+            out.append((55 + x * s * sx_, ground + (y - lift) * s * sy, rx * s * sx_, ry * s * sy, *b[4:]))
         return out
 
     wide_parts = {'wings', 'wings_bug', 'wings_bat', 'tail_fish', 'claws', 'wrapper', 'fins', 'tentacles', 'tail', 'tail_fluff',
                   'tail_lizard', 'tail_curl', 'tail_devil', 'frills', 'mane', 'petals', 'tails'}
     has_wide = any(n in wide_parts for n, _ in spec.get('parts', []))
     lim = (62 if has_wide else 76) if stage != 'legend' else (60 if has_wide else 72)
-    hlim = {'baby': 48, 'kid': 58, 'adult': 66, 'mutant': 66, 'legend': 70}[stage]
+    hlim = {'baby': 48, 'kid': 52, 'adult': 66, 'mutant': 66, 'legend': 70}[stage]
     if any(n in ('leaf3', 'bigleaf', 'flames', 'horns', 'ears_bunny', 'crown', 'halo', 'antennae', 'stalk', 'ramhorns', 'ears_fox') for n, _ in spec.get('parts', [])):
         hlim -= 8
     for _ in range(3):
         bf = sfield(c, prims(sx))
         if plan.get('cut'):
             cx_, cy_, rx_, ry_ = plan['cut']
-            bf = bf - 1.4 * sfield(c, [(55 + cx_ * s * sx, GROUND + cy_ * s * sy, rx_ * s * sx, ry_ * s * sy)])
+            bf = bf - 1.4 * sfield(c, [(55 + cx_ * s * sx, ground + cy_ * s * sy, rx_ * s * sx, ry_ * s * sy)])
         if plan.get('cutbottom'):
-            bf = np.where(c.y > GROUND - 1, 0, bf)
+            bf = np.where(c.y > ground - 1, 0, bf)
         if plan.get('rim'):                    # a bowl: the lower half of an ellipse (round bottom, flat top)
             rx_, ry_ = plan['b'][0][2] * s * sx, plan['b'][0][3] * s * sy
-            cy0 = GROUND - ry_
+            cy0 = ground - ry_
             bf = sfield(c, [(55, cy0, rx_, ry_)])
             bf = np.where(c.y < cy0, 0, bf)
         bm = bf > 1
@@ -505,7 +506,7 @@ def render(spec, stage, seed_name=''):
             continue
         break
     if plan.get('ring'):                       # a donut: the hole through it, torus shading
-        cx0, cy0 = 55, GROUND + plan['b'][0][1] * s * sy
+        cx0, cy0 = 55, ground + plan['b'][0][1] * s * sy
         rx0, ry0 = plan['b'][0][2] * s * sx, plan['b'][0][3] * s * sy
         dd = np.hypot((c.x - cx0) / rx0, (c.y - cy0) / ry0)
         tor = 1 - ((dd - .62) / .38) ** 2
@@ -515,7 +516,7 @@ def render(spec, stage, seed_name=''):
     u = g.w / 44
     fx0, fy0 = plan['face']
     fx = 55 + (fx0 + lean * (-fy0)) * s * sx + mods.get('fx', 0) * g.w
-    fy = GROUND + (fy0 - lift) * s * sy if 'fy' not in mods else g.top + g.h * mods['fy']
+    fy = ground + (fy0 - lift) * s * sy if 'fy' not in mods else g.top + g.h * mods['fy']
     cxp = 55 + (lean * g.h * .5)               # where the head top is (leaning bodies)
     tt = g.top_at(cxp)
     gl = GLOSS.get(spec['pal'], (.4, 22))
@@ -904,7 +905,7 @@ def render(spec, stage, seed_name=''):
             for i in range(len(fs_) - 1):
                 seam(c, bm & (idx == i + 1), bm & (idx == i), .35)
     if plan.get('yolk'):                      # a fried egg's yolk, a glossy dome
-        yf = sfield(c, [(55 + 2 * s, GROUND - 7.5 * s * sy, 8.5 * s, 7 * s)])
+        yf = sfield(c, [(55 + 2 * s, ground - 7.5 * s * sy, 8.5 * s, 7 * s)])
         material(c, height(yf, .5), yf > 1, colr(spec.get('acc'), P['greasy']) if spec.get('acc') else P['greasy'], bump=4, spec_amt=.85, spec_pow=12, grain=.03)
         seam(c, yf > 1, bm & ~(yf > 1), .35)
         bm = bm | (yf > 1)
@@ -1286,6 +1287,22 @@ def render(spec, stage, seed_name=''):
     face(c, g, fx, fy, spec.get('eyes', 'gloss'), spec.get('mouth', 'flat'), spec.get('extras', []), stage,
          pal if not plan.get('tiers') else pal, fs=mods.get('fs', plan.get('fs', 1.0)),
          fhw=plan['fhw'] * s if plan.get('fhw') else None)
+    # mind the screen: nothing may leave the canvas (the game shows exactly this 110 x 100 box).
+    # Hanging below -> lift it; too tall or too wide -> shrink it; then draw again.
+    ys, xs = np.nonzero(c.a > .5)
+    kk = c.k * c.f
+    top, bot = ys.min() / kk, (ys.max() + 1) / kk
+    left, right = xs.min() / kk, (xs.max() + 1) / kk
+    if _pass < 4:
+        lift = max(0.0, bot - 98.0)
+        top_after = top - lift
+        shrinkf = 1.0
+        if top_after < 2.0:
+            shrinkf = min(shrinkf, (98.0 - 2.5) / max(bot - top, 1))
+        if left < 1.5 or right > 108.5:
+            shrinkf = min(shrinkf, 105.0 / max(right - left, 1))
+        if lift > .25 or shrinkf < .995:
+            return render(spec, stage, seed_name, _lift + lift, _fit * min(1.0, shrinkf * .985), _pass + 1)
     _, small = shrink(c)
     return small.resize((W * 2, H * 2), Image.NEAREST)
 

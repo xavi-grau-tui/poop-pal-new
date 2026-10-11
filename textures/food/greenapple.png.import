@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c5d68rkotqex"
-path="res://.godot/imported/taco.png-c9c5f778682643f7ce68d1cbc783fee0.ctex"
+uid="uid://bieoh6hk5q13p"
+path="res://.godot/imported/greenapple.png-c639452bb94949b2c8f34d3bb3547663.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/food/taco.png"
-dest_files=["res://.godot/imported/taco.png-c9c5f778682643f7ce68d1cbc783fee0.ctex"]
+source_file="res://textures/food/greenapple.png"
+dest_files=["res://.godot/imported/greenapple.png-c639452bb94949b2c8f34d3bb3547663.ctex"]
 
 [params]
 

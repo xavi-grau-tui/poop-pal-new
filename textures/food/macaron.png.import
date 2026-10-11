@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://80h6dn3b1bt"
-path="res://.godot/imported/icecream.png-852e8d6211130fff8339298aac0fbd58.ctex"
+uid="uid://cfvvytnxlpwkq"
+path="res://.godot/imported/macaron.png-d067bd62a0046c0fe3be9cd8280b18c1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/food/icecream.png"
-dest_files=["res://.godot/imported/icecream.png-852e8d6211130fff8339298aac0fbd58.ctex"]
+source_file="res://textures/food/macaron.png"
+dest_files=["res://.godot/imported/macaron.png-d067bd62a0046c0fe3be9cd8280b18c1.ctex"]
 
 [params]
 

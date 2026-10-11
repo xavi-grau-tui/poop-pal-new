@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://w60vjwhv8t7"
-path="res://.godot/imported/lime.png-3f5ec0875f37b8581e0c3ce8e660788b.ctex"
+uid="uid://dlikq08vg2ho1"
+path="res://.godot/imported/chorizo.png-9d789d1ec8460374006d3ebd55ddcc7b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/food/lime.png"
-dest_files=["res://.godot/imported/lime.png-3f5ec0875f37b8581e0c3ce8e660788b.ctex"]
+source_file="res://textures/food/chorizo.png"
+dest_files=["res://.godot/imported/chorizo.png-9d789d1ec8460374006d3ebd55ddcc7b.ctex"]
 
 [params]
 

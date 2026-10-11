@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bujw54awx456d"
-path="res://.godot/imported/nugget.png-93faea80848f702a4ee3aa0a9640a351.ctex"
+uid="uid://b0yu4plubvut5"
+path="res://.godot/imported/friedchicken.png-3624fca96f65a1b7ed6ca0f753fe75b6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/food/nugget.png"
-dest_files=["res://.godot/imported/nugget.png-93faea80848f702a4ee3aa0a9640a351.ctex"]
+source_file="res://textures/food/friedchicken.png"
+dest_files=["res://.godot/imported/friedchicken.png-3624fca96f65a1b7ed6ca0f753fe75b6.ctex"]
 
 [params]
 

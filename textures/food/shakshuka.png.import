@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dy5wu642hqxup"
-path="res://.godot/imported/hotsauce.png-84779076cb25c6c49f7a0a2dd81f9cc1.ctex"
+uid="uid://n7q4k05wpco7"
+path="res://.godot/imported/shakshuka.png-de2ef4a4b04241650cd7eb7d286ec790.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/food/hotsauce.png"
-dest_files=["res://.godot/imported/hotsauce.png-84779076cb25c6c49f7a0a2dd81f9cc1.ctex"]
+source_file="res://textures/food/shakshuka.png"
+dest_files=["res://.godot/imported/shakshuka.png-de2ef4a4b04241650cd7eb7d286ec790.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://djou5fnmp3mgc"
-path="res://.godot/imported/candy.png-5142ac5544645a3f25c8a94427f606fc.ctex"
+uid="uid://dpkrlfaahc3om"
+path="res://.godot/imported/onionrings.png-c529d6ac4357ec9af0ba9649c755fe24.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/food/candy.png"
-dest_files=["res://.godot/imported/candy.png-5142ac5544645a3f25c8a94427f606fc.ctex"]
+source_file="res://textures/food/onionrings.png"
+dest_files=["res://.godot/imported/onionrings.png-c529d6ac4357ec9af0ba9649c755fe24.ctex"]
 
 [params]
 

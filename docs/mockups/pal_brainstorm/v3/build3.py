@@ -119,18 +119,18 @@ def icon(fam, scale=2):
     return im.resize((im.width * scale, im.height * scale), Image.NEAREST)
 
 
-CW, CH = 200, 222
+CW, CH = 220, 228
 def cell(sheet, x, y, item, foods=None, tag=None):
     n, im, _ = item
-    big = im.resize((110 * 2, 100 * 2), Image.NEAREST).crop((10, 10, 210, 200))
+    big = im.resize((110 * 2, 100 * 2), Image.NEAREST)        # the whole canvas: what the game shows
     sheet.alpha_composite(big, (x, y))
     d = ImageDraw.Draw(sheet)
     w = d.textlength(n, font=font)
-    d.text((x + (CW - w) / 2, y + 190), n, fill=(60, 50, 50), font=font)
+    d.text((x + (CW - w) / 2, y + 204), n, fill=(60, 50, 50), font=font)
     if n in NEW_NAMES:                   # a new design (sheet 4)
         tw = d.textlength('NEW', font=fontt) + 10
-        d.rounded_rectangle([x + CW - tw - 8, y + 168, x + CW - 8, y + 186], radius=5, fill=(110, 170, 90))
-        d.text((x + CW - tw - 3, y + 170), 'NEW', fill=(255, 255, 255), font=fontt)
+        d.rounded_rectangle([x + CW - tw - 8, y + 182, x + CW - 8, y + 200], radius=5, fill=(110, 170, 90))
+        d.text((x + CW - tw - 3, y + 184), 'NEW', fill=(255, 255, 255), font=fontt)
     if foods:                          # which 3rd foods lead here
         icons = [icon(f, 1 if len(foods) > 2 else 2) for f in foods]
         tw = sum(i.width for i in icons) + 3 * (len(icons) - 1)

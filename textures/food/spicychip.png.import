@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cp4hvyn5mypxy"
-path="res://.godot/imported/tteokbokki.png-c64a62be25344b32a2be04b6a97a3431.ctex"
+uid="uid://c7pddw3s2i4cg"
+path="res://.godot/imported/spicychip.png-b7fe3c5ad6722cd177bf95bd7dce185b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/food/tteokbokki.png"
-dest_files=["res://.godot/imported/tteokbokki.png-c64a62be25344b32a2be04b6a97a3431.ctex"]
+source_file="res://textures/food/spicychip.png"
+dest_files=["res://.godot/imported/spicychip.png-b7fe3c5ad6722cd177bf95bd7dce185b.ctex"]
 
 [params]
 

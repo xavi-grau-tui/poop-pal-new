@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b66fmsfbtpiwr"
-path="res://.godot/imported/fishchips.png-cf5678e4d9cc59fda857ef013102d2e1.ctex"
+uid="uid://k4cdkvvo7k07"
+path="res://.godot/imported/grapefruit.png-d243ad5d93eadf0d1ccf2e12120fcf38.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/food/fishchips.png"
-dest_files=["res://.godot/imported/fishchips.png-cf5678e4d9cc59fda857ef013102d2e1.ctex"]
+source_file="res://textures/food/grapefruit.png"
+dest_files=["res://.godot/imported/grapefruit.png-d243ad5d93eadf0d1ccf2e12120fcf38.ctex"]
 
 [params]
 

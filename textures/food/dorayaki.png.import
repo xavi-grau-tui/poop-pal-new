@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://0atbsbq5jld6"
-path="res://.godot/imported/kiwi.png-dcc68d497045ee1f50d2648c39c436ae.ctex"
+uid="uid://bpuh7ug8us17f"
+path="res://.godot/imported/dorayaki.png-87f05bf7a32158f8b18764dd42c4ed13.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/food/kiwi.png"
-dest_files=["res://.godot/imported/kiwi.png-dcc68d497045ee1f50d2648c39c436ae.ctex"]
+source_file="res://textures/food/dorayaki.png"
+dest_files=["res://.godot/imported/dorayaki.png-87f05bf7a32158f8b18764dd42c4ed13.ctex"]
 
 [params]
 

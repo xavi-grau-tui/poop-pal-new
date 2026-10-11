@@ -172,6 +172,10 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   Octopepper, Teru Teru, Karakasa -> sour). Tweaks asked: Waffle bigger, Oden with Kebab's face,
   Axel without the green tail. Mutants and legends: placeholders (the user will change them).
   Designs in sets4.py. This is the candidate for the final tree.
+  Round 2 (2026-10-11): every pal fits the 110 x 100 canvas the game shows (the renderer lifts or
+  shrinks anything that would be cut), Chu pals are a clear in-between size (scale 1.45 vs Sho 1.3
+  and Dai 1.9), each line shares something kid -> adult, Scarab round, Sakura Mochi -> Usagi Manju,
+  Yuzu Lord -> Omamori.
 - PAL DRAFTS v3 (2026-10-10, the direction the user loved: "the t3 variations... that's the way"):
   docs/mockups/pal_brainstorm/v3/sheet1.png, sheet2.png, sheet3.png = three full, MIXED 120s in the
   current pals' render quality. Every kid line (a baby + its 2nd food, with its 3 adults) has three
@@ -895,10 +899,10 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   mattering, too few and players feel stuck.
 
 ## Foods: 45 (2026-10-11)
-- One more food per type and size (user: more variety): Edamame, Avocado Toast, Veggie Bento;
-  Candy, Ice Cream, Pancakes; Nugget, Pizza Slice, Fish and Chips; Hot Sauce, Spicy Taco,
-  Tteokbokki; Lime, Kiwi, Ceviche (docs/mockups/food_drafts/foods_v3.py, foods3_sheet.png). In the
-  game: 3 foods per type and size, they take turns meal after meal (FoodLibrary).
+- One more food per type and size (user: more variety; round 4 after feedback, foods_v4.py,
+  foods4_sheet.png): Edamame, Avocado Toast, Veggie Bento; Macaron, Dorayaki, Pancakes; Onion
+  Rings, Pizza Slice, Fried Chicken; Spicy Chip, Chorizo, Shakshuka; Green Apple, Grapefruit,
+  Ceviche. In the game: 3 foods per type and size, they take turns meal after meal (FoodLibrary).
 
 ## Drinks
 - Types (scripts/DrinkLibrary.gd): Watery (Splash, done), Fizzy (Fizz), Caffeinated (Focus),

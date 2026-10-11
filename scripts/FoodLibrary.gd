@@ -2,7 +2,7 @@
 extends Node
 ## Every food: 5 types x 3 sizes (Sho / Chu / Dai = baby / kid / adult in the code) x 3 = 45
 ## (Progression v2, the art from docs/mockups/food_drafts/: the first 30, then one more per type
-## and size for variety (foods_v3.py, 2026-10-11); the 8 original foods and the glazed donut kept).
+## and size for variety (foods_v3.py / foods_v4.py, 2026-10-11); the 8 original foods and the glazed donut kept).
 ##
 ## Foods grow up with the pal: a pal grows only by eating food of its NEXT size. No pal = baby
 ## foods (they hatch it), a baby = kid foods, a kid = adult foods, an adult (or more) = any food
@@ -25,40 +25,40 @@ const FOODS := [
 	# --- sweet (chocolate first)
 	{ "name": "Chocolate", "family": "sweet", "tier": "baby", "icon": "res://textures/food/chocolate.png", "kcal": 230 },
 	{ "name": "Cookie", "family": "sweet", "tier": "baby", "icon": "res://textures/food/cookie.png", "kcal": 160 },
-	{ "name": "Candy", "family": "sweet", "tier": "baby", "icon": "res://textures/food/candy.png", "kcal": 60 },
+	{ "name": "Macaron", "family": "sweet", "tier": "baby", "icon": "res://textures/food/macaron.png", "kcal": 90 },
 	{ "name": "Glazed Donut", "family": "sweet", "tier": "kid", "icon": "res://textures/food/donut.png", "kcal": 290 },
 	{ "name": "Rainbow Jelly", "family": "sweet", "tier": "kid", "icon": "res://textures/food/rainbowjelly.png", "kcal": 180 },
-	{ "name": "Ice Cream", "family": "sweet", "tier": "kid", "icon": "res://textures/food/icecream.png", "kcal": 210 },
+	{ "name": "Dorayaki", "family": "sweet", "tier": "kid", "icon": "res://textures/food/dorayaki.png", "kcal": 230 },
 	{ "name": "Choco Cake", "family": "sweet", "tier": "adult", "icon": "res://textures/food/chococake.png", "kcal": 420 },
 	{ "name": "Purin", "family": "sweet", "tier": "adult", "icon": "res://textures/food/purin.png", "kcal": 260 },
 	{ "name": "Pancakes", "family": "sweet", "tier": "adult", "icon": "res://textures/food/pancakes.png", "kcal": 520 },
 	# --- greasy
 	{ "name": "Fried Egg", "family": "greasy", "tier": "baby", "icon": "res://textures/food/friedegg.png", "kcal": 90 },
 	{ "name": "Fries", "family": "greasy", "tier": "baby", "icon": "res://textures/food/fries.png", "kcal": 320 },
-	{ "name": "Nugget", "family": "greasy", "tier": "baby", "icon": "res://textures/food/nugget.png", "kcal": 180 },
+	{ "name": "Onion Rings", "family": "greasy", "tier": "baby", "icon": "res://textures/food/onionrings.png", "kcal": 280 },
 	{ "name": "Spaghetti", "family": "greasy", "tier": "kid", "icon": "res://textures/food/spaghetthi.png", "kcal": 500 },
 	{ "name": "Hot Dog", "family": "greasy", "tier": "kid", "icon": "res://textures/food/hotdog.png", "kcal": 450 },
 	{ "name": "Pizza Slice", "family": "greasy", "tier": "kid", "icon": "res://textures/food/pizzaslice.png", "kcal": 300 },
 	{ "name": "Club Sandwich", "family": "greasy", "tier": "adult", "icon": "res://textures/food/clubsandwich.png", "kcal": 430 },
 	{ "name": "Cheeseburger", "family": "greasy", "tier": "adult", "icon": "res://textures/food/cheeseburger.png", "kcal": 580 },
-	{ "name": "Fish and Chips", "family": "greasy", "tier": "adult", "icon": "res://textures/food/fishchips.png", "kcal": 640 },
+	{ "name": "Fried Chicken", "family": "greasy", "tier": "adult", "icon": "res://textures/food/friedchicken.png", "kcal": 620 },
 	# --- spicy
 	{ "name": "Chili Pepper", "family": "spicy", "tier": "baby", "icon": "res://textures/food/chili.png", "kcal": 40 },
 	{ "name": "Jalapeño", "family": "spicy", "tier": "baby", "icon": "res://textures/food/jalapeno.png", "kcal": 30 },
-	{ "name": "Hot Sauce", "family": "spicy", "tier": "baby", "icon": "res://textures/food/hotsauce.png", "kcal": 15 },
+	{ "name": "Spicy Chip", "family": "spicy", "tier": "baby", "icon": "res://textures/food/spicychip.png", "kcal": 140 },
 	{ "name": "Fire Skewer", "family": "spicy", "tier": "kid", "icon": "res://textures/food/skewer.png", "kcal": 310 },
 	{ "name": "Drumstick", "family": "spicy", "tier": "kid", "icon": "res://textures/food/drumstick.png", "kcal": 380 },
-	{ "name": "Spicy Taco", "family": "spicy", "tier": "kid", "icon": "res://textures/food/taco.png", "kcal": 260 },
+	{ "name": "Chorizo", "family": "spicy", "tier": "kid", "icon": "res://textures/food/chorizo.png", "kcal": 300 },
 	{ "name": "Fire Ramen", "family": "spicy", "tier": "adult", "icon": "res://textures/food/ramen.png", "kcal": 520 },
 	{ "name": "Curry Bowl", "family": "spicy", "tier": "adult", "icon": "res://textures/food/currybowl.png", "kcal": 540 },
-	{ "name": "Tteokbokki", "family": "spicy", "tier": "adult", "icon": "res://textures/food/tteokbokki.png", "kcal": 480 },
+	{ "name": "Shakshuka", "family": "spicy", "tier": "adult", "icon": "res://textures/food/shakshuka.png", "kcal": 420 },
 	# --- sour
 	{ "name": "Lemon", "family": "sour", "tier": "baby", "icon": "res://textures/food/lemon.png", "kcal": 30 },
 	{ "name": "Pickle", "family": "sour", "tier": "baby", "icon": "res://textures/food/pickle.png", "kcal": 20 },
-	{ "name": "Lime", "family": "sour", "tier": "baby", "icon": "res://textures/food/lime.png", "kcal": 20 },
+	{ "name": "Green Apple", "family": "sour", "tier": "baby", "icon": "res://textures/food/greenapple.png", "kcal": 80 },
 	{ "name": "Kimchi", "family": "sour", "tier": "kid", "icon": "res://textures/food/kimchi.png", "kcal": 90 },
 	{ "name": "Umeboshi", "family": "sour", "tier": "kid", "icon": "res://textures/food/umeboshi.png", "kcal": 60 },
-	{ "name": "Kiwi", "family": "sour", "tier": "kid", "icon": "res://textures/food/kiwi.png", "kcal": 45 },
+	{ "name": "Grapefruit", "family": "sour", "tier": "kid", "icon": "res://textures/food/grapefruit.png", "kcal": 60 },
 	{ "name": "Tom Yum", "family": "sour", "tier": "adult", "icon": "res://textures/food/tomyum.png", "kcal": 220 },
 	{ "name": "Pickle Jar", "family": "sour", "tier": "adult", "icon": "res://textures/food/picklejar.png", "kcal": 120 },
 	{ "name": "Ceviche", "family": "sour", "tier": "adult", "icon": "res://textures/food/ceviche.png", "kcal": 200 },
