@@ -2,9 +2,9 @@
 
 Each output has the same canvas as the form sprites (232x196, same anchor), one file per
 animation frame, so in game the accessory is just a child sprite at offset 0 that follows
-the pal's frame. Face positions are read by running forms.py with face() patched.
+the pal's frame. Face positions: tools/art/pal_faces.json (pals_export.py).
 """
-import os
+import json, os
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -15,19 +15,10 @@ FRAMES = [(1.0, 1.0), (1.03, 0.95)]      # same squash as forms.py
 
 
 def faces():
-    """{form: (cx, cy, spread, eye_r)} straight from the form definitions."""
-    found = {}
-    real = forms.face
-    for name, fn in forms.FORMS.items():
-        def spy(c, cx, cy, spread=10, style='happy', eye_r=3.4, _n=name):
-            found[_n] = (cx, cy, spread, eye_r)
-        forms.face = spy
-        fn(Canvas(forms.W, forms.H, forms.K, forms.F))   # full run (forms.py assumes K), only to catch the face call
-    forms.face = real
-    # ...and every pal made by forms_gen.py (the evolution tree)
-    import forms_gen
-    found.update(forms_gen.faces())
-    return found
+    """{form: (cx, cy, spread, eye_r)} for every pal of the tree: written by pals_export.py
+    (tools/art/pal_faces.json), straight from each face the renderer drew."""
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pal_faces.json')) as f:
+        return {k: tuple(v) for k, v in json.load(f).items()}
 
 
 def _lens_centres(cx, spread, half_w, u):

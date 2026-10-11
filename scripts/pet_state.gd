@@ -18,9 +18,10 @@ const SAVE_FILE := "pet_state.json"      # (in SaveSlot.path)
 const FRESH_START_ON_LAUNCH := true
 
 ## Every pal and every evolution come from data/evolution_tree.json (made by
-## tools/design/evolution_data.py, drawn in docs/evolution_tree_draft.png).
-## FORMS[id] = { no, name, stage (1 baby .. 5 legend), stage_name, family, from, variant,
-## face, desc, hint, frames }
+## tools/design/evolution_data.py from the user's sheet 4: docs/mockups/pal_brainstorm/v3/sheet4.png;
+## art: tools/art/pals_export.py, pal_balls.py; the rules' picture: docs/evolution_tree_draft.png).
+## FORMS[id] = { no, name, stage (1 Sho / baby .. 5 legend), stage_name, family, from, variant,
+## foods (the food types that lead here), desc, hint, line (its look, for the art tools), frames }
 const TREE_PATH := "res://data/evolution_tree.json"
 const BASIC_FAMILIES := ["green", "sweet", "greasy", "spicy", "sour"]
 var FORMS := {}
@@ -252,7 +253,7 @@ func load_data() -> void:
 		if form_id not in FORMS:
 			form_id = ""
 		meals = parsed.get("meals", [])
-		discovered = parsed.get("discovered", [])
+		discovered = (parsed.get("discovered", []) as Array).filter(func(i): return i in FORMS)   # (pals of an older tree dropped)
 		score = int(parsed.get("score", 0))
 		meals_total = int(parsed.get("meals_total", 0))
 		boost = str(parsed.get("boost", ""))

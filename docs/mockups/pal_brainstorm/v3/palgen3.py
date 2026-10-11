@@ -240,6 +240,8 @@ def face(c, g, fx, fy, eyes, mouth, extras, stage, body_pal, fs=1.0, fhw=None):
     er = er0 * min(1.2, max(.8, k))
     sp = min(sp0 * k, hw * .5)
     u = er / 3.4
+    global LAST_FACE
+    LAST_FACE = (fx, fy, sp, er)               # (the game's accessories sit on it: tools/art/pals_export.py)
     ink = INK
     lw = wd(c, 1.3)
     P_ = c.P
@@ -444,12 +446,19 @@ OVER = {'sprinkles', 'sesame', 'sparkles', 'steam', 'bubbles', 'drop', 'stars', 
         'hachimaki', 'kanji', 'capspots', 'pleats', 'swirltop'}
 
 
-def render(spec, stage, seed_name='', _lift=0.0, _fit=1.0, _pass=0):
-    """spec: dict(plan, mods, pal, acc, acc2, parts[(name, colour)], eyes, mouth, extras)"""
+LAST_FACE = None      # the last face drawn: (x, y, eye spread, eye radius), design units
+LAST_FIT = (0.0, 1.0)  # the last render's (lift, fit): the game's 2nd frame is drawn with the same
+LAST_CANVAS = None     # the last render's full-size canvas
+
+
+def render(spec, stage, seed_name='', _lift=0.0, _fit=1.0, _pass=0, squash=(1.0, 1.0)):
+    """spec: dict(plan, mods, pal, acc, acc2, parts[(name, colour)], eyes, mouth, extras)
+    squash: the game's breathing frame (1.03, 0.95), around the feet; _pass=4 = no auto-fit"""
+    global LAST_FIT
     if 'special' in spec:
-        return special(spec['special'])
+        return special(spec['special'], squash)
     ground = GROUND - _lift                    # (lifted when something hangs below the canvas)
-    c = Canvas(W, H, K, F, anchor=(55, ground))
+    c = Canvas(W, H, K, F, squash=squash, anchor=(55, ground))
     plan = PLANS[spec['plan']]
     mods = spec.get('mods', {})
     s = STAGE[stage] * mods.get('s', 1.0) * _fit
@@ -513,7 +522,7 @@ def render(spec, stage, seed_name='', _lift=0.0, _fit=1.0, _pass=0):
         bm = tor > 0
         bf = 1 / np.maximum(1 - np.clip(tor, 0, 1) * .75, 1e-3)
         g = Geo(c, bm)
-    u = g.w / 44
+    u = g.w / 44 * mods.get('pu', 1.0)         # (pu: smaller parts, for the game's pal balls)
     fx0, fy0 = plan['face']
     fx = 55 + (fx0 + lean * (-fy0)) * s * sx + mods.get('fx', 0) * g.w
     fy = ground + (fy0 - lift) * s * sy if 'fy' not in mods else g.top + g.h * mods['fy']
@@ -1112,7 +1121,8 @@ def render(spec, stage, seed_name='', _lift=0.0, _fit=1.0, _pass=0):
             d.line([c.P(*p0), c.P((p0[0] + p1[0]) / 2 + .6, (p0[1] + p1[1]) / 2), c.P(*p1)], fill=colr_, width=max(2, int(w_ * K * F)), joint='curve')
     draw_on(c, ln)
     outline(c, c.a > .5, 1.0)
-    outline(c, c.a > .5, 1.0)                 # twice: the solid 2 px line of Picklet
+    if not mods.get('thin'):
+        outline(c, c.a > .5, 1.0)             # twice: the solid 2 px line of Picklet (balls: once)
 
     # ---------------------------------------------------------- painted over (after the outline)
     def deco(d):
@@ -1302,18 +1312,22 @@ def render(spec, stage, seed_name='', _lift=0.0, _fit=1.0, _pass=0):
         if left < 1.5 or right > 108.5:
             shrinkf = min(shrinkf, 105.0 / max(right - left, 1))
         if lift > .25 or shrinkf < .995:
-            return render(spec, stage, seed_name, _lift + lift, _fit * min(1.0, shrinkf * .985), _pass + 1)
+            return render(spec, stage, seed_name, _lift + lift, _fit * min(1.0, shrinkf * .985), _pass + 1, squash)
+    LAST_FIT = (_lift, _fit)
+    global LAST_CANVAS
+    LAST_CANVAS = c                            # (the pal balls crop it at full size)
     _, small = shrink(c)
     return small.resize((W * 2, H * 2), Image.NEAREST)
 
 
 # ------------------------------------------------------------------ the three babies we keep
-def special(name):
+def special(name, squash=(1.0, 1.0)):
     import forms_gen as fg
     if name == 'picklet':                       # kept exactly as it is in the game
-        return Image.open(PROJ + '/textures/pet/forms/picklet-1.png').convert('RGBA').crop((60, 60, 170, 160))
+        n = 2 if squash != (1.0, 1.0) else 1
+        return Image.open(PROJ + '/textures/pet/forms/picklet-%d.png' % n).convert('RGBA').crop((60, 60, 170, 160))
     if name.startswith('ember'):                # Ember's own body + stem, calmer face (option A: glossy, no grin)
-        c = Canvas(W, H, K, F, anchor=(55, GROUND))
+        c = Canvas(W, H, K, F, squash=squash, anchor=(55, GROUND))
         f, m, top, fy = fg.body(c, 'H', 1.3)
         fg.stem(c, 57.5, top + .5, 1.3)
         outline(c, c.a > .5, 1.0)

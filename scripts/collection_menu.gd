@@ -3,8 +3,11 @@ extends Node2D
 ##
 ##   HUB          one big card per menu, exactly like the Games menu (forward = next card,
 ##                page dots, hold = open). Cards are clones of the Games menu card.
-##   PEDIA        grid of pals, 9 per page, many pages; hold a pal to open its card
-##   DETAIL       one pal's card: number, name, description / hint, evolution link
+##   PEDIA        the evolution map, one part per Sho (family), 7 pages each: the Sho + its 5 Chu,
+##                then each Chu + its 3 Dai, then the specials (2 mutants, the legend). Each card shows
+##                the food that leads there. FORWARD = next family, tap = next pal (on to the next
+##                page), hold = the pal's card. Two rows of dots: families, then pages.
+##   DETAIL       one pal's card: number, name, stage, where it comes from, description / hint
 ##   SHOP         what coins buy besides games (Shop autoload): food types, adult foods, special
 ##                foods; the same food-menu cards, 3 a page; hold = buy. The coins you have on the
 ##                top-right corner, like the Games menu.
@@ -36,7 +39,9 @@ const KIND_TAGS := {
 	"complement": ["Add-on", Color8(180, 208, 226)],
 	"color": ["Color", Color8(232, 182, 196)],
 }
-const PEDIA_PER_PAGE := 9
+const PEDIA_FAMILIES := ["green", "sweet", "greasy", "spicy", "sour"]
+const PEDIA_PAGES := 7                 # the Sho + 5 Chu, one per Chu (+ its 3 Dai), the specials
+const STAGE_WORD := { 1: "Sho", 2: "Chu", 3: "Dai", 4: "mutant", 5: "legend" }
 const LIST_PER_PAGE := 3              # cosmetics lists: forward flips pages, like the Games menu
 
 # Inner (brown) area of the golden frame, in Menu-local coordinates
@@ -56,6 +61,8 @@ var selection := -1
 var items: Array[Control] = []     # selectable things in the current view, in tap order
 var detail_id := ""
 var return_selection := -1         # where to land when coming back from a pal card
+var pedia_family := 0              # which Sho's part of the Pal-Pedia is showing
+var pedia_marks: Node2D            # the Pedia's second row of dots: the pages of a family
 var hub_index := 0                 # which hub card is showing
 
 var hub_root: Node2D
@@ -148,6 +155,10 @@ func select_next() -> void:
 		return
 	if items.is_empty():
 		return
+	if view == View.PEDIA and selection == items.size() - 1:
+		page = (page + 1) % PEDIA_PAGES      # on through the family's pages
+		_open(View.PEDIA, 0)
+		return
 	selection = (selection + 1) % items.size()
 	_refresh_selection()
 
@@ -157,7 +168,8 @@ func flip_page() -> void:
 			hub_index = (hub_index + 1) % hub_cards.size()
 			_open(View.HUB)
 		View.PEDIA:
-			page = (page + 1) % _pedia_pages()
+			pedia_family = (pedia_family + 1) % PEDIA_FAMILIES.size()
+			page = 0
 			_open(View.PEDIA)
 		View.BACKGROUNDS, View.ACCESSORIES, View.DECOR:
 			page = (page + 1) % _list_pages(view)
@@ -167,10 +179,9 @@ func flip_page() -> void:
 			_open(View.SHOP)
 		View.DETAIL:
 			var order := PetState.pedia_order()
-			var i := (order.find(detail_id) + 1) % order.size()
-			return_selection = i % PEDIA_PER_PAGE
-			page = i / PEDIA_PER_PAGE
-			_show_detail(order[i])
+			var next: String = order[(order.find(detail_id) + 1) % order.size()]
+			_pedia_go_to(next)
+			_show_detail(next)
 
 func get_selected_option() -> Node:
 	if view == View.HUB:
@@ -205,6 +216,10 @@ func confirm_selected(sel: Node) -> bool:
 			page = 0              # (the card's own ConfirmSound already played)
 			if action["view"] == View.SHOP:
 				shop_items = Shop.shop_order()     # (fixed while it's open: a bought card stays put)
+			if action["view"] == View.PEDIA and PetState.has_poop():
+				_pedia_go_to(PetState.form_id)       # opens where your pal is, on its card
+				_open(View.PEDIA, return_selection)
+				return false
 			_open(action["view"])
 		"back":
 			_click()
@@ -241,7 +256,7 @@ func _open(v: int, select := -1) -> void:
 		elif v == View.DETAIL:
 			legend.set_lines([])             # (a pal card has its own back / next legend)
 		else:
-			legend.set_lines([["press", "next"], ["hold", "buy" if v == View.SHOP else "pick"]])
+			legend.set_lines([["press", "next"], ["hold", { View.SHOP: "buy", View.PEDIA: "open" }.get(v, "pick")]])
 	hub_root.visible = in_hub
 	hub_dots.visible = in_hub
 	hub_hint.visible = in_hub
@@ -361,31 +376,29 @@ func _update_hub_card_info() -> void:
 				_fit_one_line(l, 25, 12)
 
 func _build_pedia() -> void:
-	title.text = "PAL-PEDIA"
-	var order := PetState.pedia_order()
-	page = clampi(page, 0, _pedia_pages() - 1)
+	var fam: String = PEDIA_FAMILIES[pedia_family]
+	title.text = "%s PALS" % String(UiArt.TYPE_TAGS[fam][0]).to_upper()
+	var all := _pedia_family_ids(fam)
 	var found := 0
-	for id in order:
+	for id in all:
 		if id in PetState.discovered:
 			found += 1
-	status.text = "Found %d / %d" % [found, order.size()]
+	status.text = "Found %d / %d" % [found, all.size()]
+	page = clampi(page, 0, PEDIA_PAGES - 1)
 
 	var cell := Vector2(196, 150)
 	var gap := Vector2(10, 12)
 	var origin := Vector2(INNER.position.x + (INNER.size.x - (3 * cell.x + 2 * gap.x)) / 2.0, INNER.position.y + 86)
-	for slot in PEDIA_PER_PAGE:
-		var i := page * PEDIA_PER_PAGE + slot
-		if i >= order.size():
-			break
-		var id: String = order[i]
+	for slot in _pedia_page(fam, page):
+		var id: String = slot[0]
 		var known: bool = id in PetState.discovered
-		var pos := origin + Vector2(slot % 3, slot / 3) * (cell + gap)
-		var c := _card(pos, cell)
+		var c := _card(origin + (slot[1] as Vector2) * (cell + gap), cell)
 		var box := _icon_box(c, Vector2((cell.x - 104) / 2.0, 10), Vector2(104, 92))
 		var icon := _icon(box, _form_icon(id), Vector2(92, 82))
 		if not known:
 			icon.modulate = Color(0.1, 0.06, 0.05, 0.85)   # silhouette
 		_add_doughnut(c, box)
+		_path_icons(c, id)
 		var n := _label(Vector2(6, 104), Vector2(cell.x - 12, 36), 26, TEXT, c)
 		n.text = "%03d %s" % [PetState.FORMS[id]["no"], PetState.FORMS[id]["name"] if known else "???"]
 		_fit_one_line(n, 26)
@@ -397,6 +410,90 @@ func _build_pedia() -> void:
 			Collection.mark_seen_item("pedia", id)     # seen now
 		_add_item(c)
 
+## A family's 24 pals in tree order: the Sho, its Chu (by 2nd food), their Dai, mutants, legend
+func _pedia_family_ids(fam: String) -> Array:
+	var ids := PetState.pedia_order().filter(func(i): return PetState.FORMS[i]["family"] == fam)
+	return ids
+
+## The children of a pal, in Pedia order
+func _pedia_children(id: String) -> Array:
+	return PetState.pedia_order().filter(func(i): return PetState.FORMS[i]["from"] == id)
+
+## One page of a family: [[id, grid cell (col, row)], ...] (3 x 3 grid)
+func _pedia_page(fam: String, p: int) -> Array:
+	var sho: String = PetState.STARTERS.get(fam, "")
+	if sho == "":
+		return []
+	var chu := _pedia_children(sho)
+	var out := []
+	if p == 0:
+		out.append([sho, Vector2(1, 0)])
+		var at := [Vector2(0, 1), Vector2(1, 1), Vector2(2, 1), Vector2(0.5, 2), Vector2(1.5, 2)]
+		for i in mini(chu.size(), at.size()):
+			out.append([chu[i], at[i]])
+	elif p <= chu.size():
+		out.append([chu[p - 1], Vector2(1, 0.5)])          # (the two rows in the middle)
+		var dai := _pedia_children(chu[p - 1])
+		for i in mini(dai.size(), 3):
+			out.append([dai[i], Vector2(i, 1.5)])
+	else:
+		var specials := _pedia_family_ids(fam).filter(func(i): return int(PetState.FORMS[i]["stage"]) >= 4)
+		specials.sort_custom(func(a, b): return _special_rank(a) < _special_rank(b))
+		for i in mini(specials.size(), 3):
+			out.append([specials[i], Vector2(i, 1)])
+	return out
+
+## The specials page: tech mutant, legend (in the middle), cosmic mutant
+func _special_rank(id: String) -> int:
+	return { "TECH": 0, "LEGEND": 1, "COSMIC": 2 }.get(String(PetState.FORMS[id].get("variant", "")), 3)
+
+## Shows the page a pal is on (its first place: a Chu on its family's first page) and selects it
+func _pedia_go_to(id: String) -> void:
+	var f: Dictionary = PetState.FORMS.get(id, {})
+	if f.is_empty():
+		return
+	pedia_family = maxi(0, PEDIA_FAMILIES.find(f["family"]))
+	for p in PEDIA_PAGES:
+		var slots := _pedia_page(f["family"], p)
+		for i in slots.size():
+			if slots[i][0] == id:
+				page = p
+				return_selection = i
+				return
+
+## The food that leads to a pal, on its card's left: the type icon of each food that does it
+## (a special food's own icon for mutants and legends). Missing pals show it too: it's the map.
+func _path_icons(card: Control, id: String) -> void:
+	var f: Dictionary = PetState.FORMS[id]
+	var texs: Array[Texture2D] = []
+	for fam in f.get("foods", []):
+		match String(fam):
+			"tech":
+				texs.append(load("res://textures/food/microchip.png"))
+			"cosmic":
+				texs.append(load("res://textures/food/aliengoo.png"))
+			"legend":
+				for sp in FoodLibrary.SPECIALS:
+					if sp.get("legend_of", "") == f["family"]:
+						texs.append(load(sp["icon"]))
+			_:
+				var t := UiArt.tier_row(String(fam), 1)
+				if t:
+					texs.append(t)
+	var y := 12.0
+	for t in texs:
+		var big := t.get_height() >= 24                # a food icon (32 px) or a type icon (~10 px)
+		var k := 1.0 if big else 3.0
+		var r := TextureRect.new()
+		r.texture = t
+		r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		r.size = Vector2(t.get_width(), t.get_height()) * k
+		r.position = Vector2((46.0 - r.size.x) / 2.0, y)
+		r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.add_child(r)
+		y += r.size.y + 4.0
+
 func _show_detail(id: String) -> void:
 	view = View.DETAIL
 	detail_id = id
@@ -406,6 +503,8 @@ func _show_detail(id: String) -> void:
 	var known: bool = id in PetState.discovered
 	title.text = "#%03d" % f["no"]
 	status.text = ""                   # the controls are shown in the band below
+	if legend:
+		legend.set_lines([])           # (a pal card has its own back / next legend)
 
 	var card := _card(Vector2(INNER.position.x + 24, INNER.position.y + 86), Vector2(INNER.size.x - 48, 470))
 	content.add_child(card)
@@ -418,10 +517,24 @@ func _show_detail(id: String) -> void:
 	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	name_l.text = f["name"] if known else "???"
 	_fit_one_line(name_l, 52)
+	# its stage: "Green Chu" + the 1-3 level icons (Sho 1, Chu 2, Dai 3), a Dai's kind
+	var stage := int(f.get("stage", 1))
 	var stage_l := _label(Vector2(262, 100), Vector2(330, 44), 30, TEXT_DARK, card)
 	stage_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	stage_l.text = (str(f.get("stage_name", "pal")).capitalize() + " - " + str(f["family"]).capitalize()) if known else "Not found yet"
+	var words := "%s %s" % [String(f["family"]).capitalize(), STAGE_WORD.get(stage, "pal")]
+	if stage == 3:
+		words += " " + String(f.get("variant", ""))
+	stage_l.text = words
 	_fit_one_line(stage_l, 30)
+	var level := UiArt.tier_row(f["family"], stage) if stage <= 3 else null
+	if level:
+		var lv := TextureRect.new()
+		lv.texture = level
+		lv.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		lv.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		lv.size = Vector2(level.get_width(), level.get_height()) * 2.4
+		lv.position = Vector2(262 + minf(font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1, stage_l.get_theme_font_size("font_size")).x, 330) + 10, 122 - lv.size.y / 2.0)
+		card.add_child(lv)
 	var link := _label(Vector2(262, 150), Vector2(330, 74), 28, TEXT_DARK, card)
 	link.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	link.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -431,7 +544,7 @@ func _show_detail(id: String) -> void:
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	desc.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.text = f["desc"] if known else f["hint"]
+	desc.text = f["desc"] if known else _pal_hint(id)
 	_refresh_pager()
 
 func _build_list(v: int) -> void:
@@ -588,8 +701,16 @@ func _refresh_selection() -> void:
 
 func _refresh_pager() -> void:
 	var pages := 1
-	if view in [View.PEDIA, View.DETAIL]:
-		pages = _pedia_pages()
+	if view == View.PEDIA:
+		_pedia_dots()
+		detail_legend.visible = false
+		page_label.visible = false
+		page_hint.visible = true
+		return
+	if pedia_marks:
+		pedia_marks.visible = false
+	if view == View.DETAIL:
+		pages = 1
 	elif view in LISTS:
 		pages = _list_pages(view)
 	elif view == View.SHOP:
@@ -777,19 +898,80 @@ func _refresh_coin_tag() -> void:
 func open_shop() -> void:
 	pass
 
-func _pedia_pages() -> int:
-	return maxi(1, ceili(PetState.FORMS.size() / float(PEDIA_PER_PAGE)))
+## The Pedia's dots, two rows in the band: the 5 families (FORWARD flips them), then the family's pages
+func _pedia_dots() -> void:
+	var dots := list_dots.get_children()
+	var n := PEDIA_FAMILIES.size()
+	var parent_pos: Vector2 = list_dots.position
+	var right := FRAME_DX + MenuLegend.FORWARD_LEFT - MenuLegend.DOT_GAP
+	var top_y := MenuLegend.BAND.get_center().y - MenuLegend.ROW_OFFSET
+	list_dots.visible = true
+	for i in dots.size():
+		dots[i].visible = i < n
+		if i < n:
+			dots[i].modulate = Color(1, 1, 1, 1) if i == pedia_family else Color(1, 1, 1, 0.3)
+			var left := right - MenuLegend.DOT_SIZE - (n - 1 - i) * MenuLegend.DOT_STEP
+			dots[i].position = Vector2(left, top_y - MenuLegend.DOT_SIZE / 2.0) - parent_pos
+	if not pedia_marks:
+		pedia_marks = Node2D.new()
+		pedia_marks.z_index = 2
+		list_dots.get_parent().add_child(pedia_marks)
+	for ch in pedia_marks.get_children():
+		ch.queue_free()
+	const STEP := 26.0
+	const PX := 3.0                      # scroll marks: 5 x 5 art pixels, x3 like the band's icons
+	var y := MenuLegend.BAND.get_center().y + MenuLegend.ROW_OFFSET
+	var x0 := right - 5 * PX - (PEDIA_PAGES - 1) * STEP
+	for p in PEDIA_PAGES:
+		var m := Sprite2D.new()
+		m.texture = UiArt.scroll_mark(p == page)
+		m.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		m.centered = false
+		m.scale = Vector2(PX, PX)
+		m.position = Vector2(x0 + p * STEP, y - 5 * PX / 2.0)
+		pedia_marks.add_child(m)
+	pedia_marks.visible = true
 
+## Where a found pal comes from: its parent + the food (a Sho: how many of its Chu you've found)
 func _evolution_link(id: String) -> String:
-	var from: String = PetState.FORMS[id]["from"]
-	if from in PetState.FORMS:
-		return "Evolves from " + (PetState.FORMS[from]["name"] if from in PetState.discovered else "???")
-	if from != "":
-		return "Evolves from " + from                # mutants: "any adult"
-	# a baby: how many of its kids you've found
-	var kids := PetState.FORMS.keys().filter(func(o): return PetState.FORMS[o]["from"] == id)
-	var found := kids.filter(func(o): return o in PetState.discovered).size()
-	return "Evolves into %d pals (%d found)" % [kids.size(), found]
+	var f: Dictionary = PetState.FORMS[id]
+	var from: String = f["from"]
+	var stage := int(f.get("stage", 1))
+	if stage == 1:
+		var kids := _pedia_children(id)
+		var found := kids.filter(func(o): return o in PetState.discovered).size()
+		return "Evolves into %d pals (%d found)" % [kids.size(), found]
+	if stage == 4:
+		return "From any %s Dai + %s food" % [f["family"], f.get("foods", ["special"])[0]]
+	var who: String = PetState.FORMS[from]["name"] if from in PetState.discovered else "???"
+	if stage == 5:
+		return "From %s + %s" % [who, PetState.LEGENDS.get(from, {}).get("food", "its legendary food")]
+	return "From %s + %s" % [who, _food_words(f.get("foods", []), STAGE_WORD.get(stage, ""))]
+
+## How to find a missing pal (named after its parent once you've found that one)
+func _pal_hint(id: String) -> String:
+	var f: Dictionary = PetState.FORMS[id]
+	var from: String = f["from"]
+	var stage := int(f.get("stage", 1))
+	var fam: String = f["family"]
+	match stage:
+		1:
+			return "Start a pal with a %s Sho food." % fam
+		4:
+			return "Feed any grown-up (Dai) %s pal some %s food." % [fam, f.get("foods", ["special"])[0]]
+	if from not in PetState.discovered:
+		return "Evolves from a pal you haven't found yet."
+	var who: String = PetState.FORMS[from]["name"]
+	if stage == 5:
+		return "Feed %s its legendary food: the %s." % [who, PetState.LEGENDS.get(from, {}).get("food", "?")]
+	return "Feed %s %s." % [who, _food_words(f.get("foods", []), STAGE_WORD.get(stage, ""))]
+
+## ["greasy", "spicy", "sour"], "Dai" -> "a greasy, spicy or sour Dai food"
+func _food_words(foods: Array, size: String) -> String:
+	var w := ""
+	for i in foods.size():
+		w += ("" if i == 0 else (" or " if i == foods.size() - 1 else ", ")) + String(foods[i])
+	return "a %s %s food" % [w, size]
 
 # ================================================================== BACKGROUND APPLY
 

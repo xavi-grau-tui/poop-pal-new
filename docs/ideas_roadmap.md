@@ -1,6 +1,6 @@
 # HaraTomo (Poop Pal): roadmap and design notes
 
-Living document (started 2026-10-01, last big update 2026-10-07). It holds the aim, the decisions
+Living document (started 2026-10-01, last big update 2026-10-11). It holds the aim, the decisions
 made, and what's still missing, so any new conversation can pick the work up from here.
 When asked "what could we implement next?", answer from **What to implement next** below.
 
@@ -18,6 +18,12 @@ light, playful and visually intuitive: icons over text, learn by doing. Asia fir
   first-launch box unboxing, and the minigames: Pipe Dream, Tilt Maze, Splash Hoops, Pal Dash,
   Tile Break, Germ Zap, Tummy Tunes, Flipper Belly, plus the prototypes Top Spin (9th card) and
   Paper Sumo (10th card).
+- PALS (2026-10-11): the user's sheet 4 IS the game's tree now: all 120 pals in the game with the
+  evolution logic (Sho -> Chu by the 2nd food, Chu -> Dai by the 3rd: ROOT / PEAK / CHAOS or ULTRA /
+  BLOOM / CLASH, tech / cosmic mutants, legends from ULTRA + its legendary food), their 2 idle
+  frames, the 4 accessories fitted to each, a ball per pal for the games, and the Pal Pedia by
+  family (5 parts, 7 pages each). Mutants and legends are still placeholders (user to redesign).
+  How it's made and how to change a pal: see SHEET 4 below.
 - Top Spin and Paper Sumo have first-time tutorials and control legends (shared helpers in
   scripts/base_minigame.gd: show_coach / hide_coach, make_button_hint, device_button_at for
   multi-touch). Prototypes were on branch `top-spin` (check git for whether it's merged).
@@ -77,7 +83,8 @@ Big (L)
     safety net.
 16. Evolution guidance, layer 3: track a pal from the Pal Pedia. Needs: 1.
 17. Tummy Tunes as a toy xylophone; Pipe Dream reworked as a circuit race.
-18. Pal art pass (own silhouettes and personalities per stage and branch).
+18. Pal art pass: DONE for Sho / Chu / Dai (sheet 4 in the game, 2026-10-11). Left: the 10 mutants
+    and 5 legends (placeholders, user to pick), the 3 hunger faces per pal (moods), idle animations.
 19. The instruction booklet (see its outline below), opened from the back sticker. Needs: the
     mechanics it explains to be final, so it comes late; the device and feeding chapters could
     start earlier.
@@ -176,6 +183,24 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   shrinks anything that would be cut), Chu pals are a clear in-between size (scale 1.45 vs Sho 1.3
   and Dai 1.9), each line shares something kid -> adult, Scarab round, Sakura Mochi -> Usagi Manju,
   Yuzu Lord -> Omamori.
+  IN THE GAME (2026-10-11, user: "include ALL the new pals with the evolution logic implemented,
+  update the pal pedia, balls for maze and other games for every single one"):
+  - data/evolution_tree.json <- tools/design/evolution_data.py (reads sets4.py; same rules as
+    before; Pedia numbers family by family: green 1-24, sweet 25-48...: Sho, its 5 Chu, their 15
+    Dai Chu by Chu, the tech and cosmic mutants, the legend; each pal's "foods" = the food types
+    that lead to it, "line" = its look). The ULTRA pals (legend gates): Avocado, Bonbon, Burger,
+    Firebug, Omamori. The old tree (Sprig, Swirlet, Nugget...) and its art are gone.
+  - Sprites: tools/art/pals_export.py (palgen3, the 2nd frame breathes like the old ones) ->
+    textures/pet/forms/<id>-1/-2.png + tools/art/pal_faces.json (each face, for the accessories).
+    Picklet keeps its original art. Then accessories.py, scarf.py, headphones.py redraw the 4
+    accessories for every pal.
+  - Balls: tools/art/pal_balls.py -> textures/minigames/balls/<id>.png (24 x 24: the games' 16 px
+    ball + room for ears, leaves, wrappers): the pal's colours and surface painted on a sphere, its
+    small top bits, its face stamped pixel by pixel in its own style. PalBall loads it (Tilt Maze,
+    Tile Break, Top Spin, Paper Sumo, Flipper Belly); the HUD ball icons grew 1.2x to match.
+  - To change a pal: edit its line in sets4.py, then run evolution_data.py, pals_export.py <id>,
+    the 3 accessory scripts and pal_balls.py <id> (the venv in the scratchpad: numpy, Pillow).
+    forms_gen.py is the old tree's generator: it refuses to run without --legacy.
 - PAL DRAFTS v3 (2026-10-10, the direction the user loved: "the t3 variations... that's the way"):
   docs/mockups/pal_brainstorm/v3/sheet1.png, sheet2.png, sheet3.png = three full, MIXED 120s in the
   current pals' render quality. Every kid line (a baby + its 2nd food, with its 3 adults) has three
@@ -581,7 +606,14 @@ The Pal Pedia is the map: for a discovered pal it shows its food path (icons), i
 Status: the table is the plan; only the welcome / hatch / bonus cards and the locked-food blink
 exist. To build with the guide cards (G1-G9) and the Pal Pedia pass.
 
-## Pal Pedia by family (user idea, 2026-10-10, to build later)
+## Pal Pedia by family (user idea, 2026-10-10; BUILT 2026-10-11)
+- Built as decided: GREEN / SWEET / GREASY / SPICY / SOUR PALS, 7 pages each: the Sho + its 5 Chu,
+  one page per Chu (the Chu + its 3 Dai), the specials (tech mutant, legend, cosmic mutant). Every
+  card shows the food that leads there on its left (the type icons; a special food's own icon).
+  FORWARD = next family, tap = next pal (on to the next page), hold = the pal's card; the band
+  shows two rows of dots (families, pages). Opens on your pal's card. A pal's card: its stage with
+  the 1-3 level icons ("Green Dai ROOT"), "From Usagi + a green Dai food", and for a missing pal
+  the hint (naming its parent once you've found it).
 - The Pal Pedia gets 5 parts, one per Sho (Bud, the sweet Sho, the greasy Sho, Ember, Picklet),
   each showing that family's whole tree instead of a flat list of 120 in number order: less messy,
   and it IS the evolution map (where the food path, the kinds and the "?" silhouettes live).
@@ -903,6 +935,10 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   foods4_sheet.png): Edamame, Avocado Toast, Veggie Bento; Macaron, Dorayaki, Pancakes; Onion
   Rings, Pizza Slice, Fried Chicken; Spicy Chip, Chorizo, Shakshuka; Green Apple, Grapefruit,
   Ceviche. In the game: 3 foods per type and size, they take turns meal after meal (FoodLibrary).
+- Round 4b (user: "mind sizes and make the ceviche inside of the plate"): every new food fills the
+  32 px box like the originals (about 30 x 26-30, seen a little from above, not flat from the
+  side: Dorayaki, a pile of 3 Onion Rings, Grapefruit, Shakshuka, a wider Fried Chicken bucket, a
+  taller Spicy Chip); the Ceviche sits inside a clay bowl seen from above, like the Tom Yum.
 
 ## Drinks
 - Types (scripts/DrinkLibrary.gd): Watery (Splash, done), Fizzy (Fizz), Caffeinated (Focus),

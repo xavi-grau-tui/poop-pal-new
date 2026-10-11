@@ -1,4 +1,8 @@
-"""All the pals of the evolution tree (data/evolution_tree.json), built from parts in the same
+"""LEGACY (the first tree, 2026-09): the pals are now the user's sheet 4, drawn by
+tools/art/pals_export.py. Running this would overwrite their sprites, so it needs --legacy.
+Its bodies are still used: Ember's (palgen3's '=ember') and Picklet's face position.
+
+All the pals of the evolution tree (data/evolution_tree.json), built from parts in the same
 paint-big-then-shrink style as forms.py (the 6 hand-made ones there are kept as they are).
 
 A pal = the BODY of its family (the baby's food) at the size of its stage
@@ -535,7 +539,9 @@ def sheet(path, ids=None, cols=10):
 
 
 if __name__ == '__main__':
-    ids = sys.argv[1:] or None
+    if '--legacy' not in sys.argv:
+        sys.exit('forms_gen.py is the old tree: the pals come from tools/art/pals_export.py now (add --legacy to run it anyway)')
+    ids = [a for a in sys.argv[1:] if a != '--legacy'] or None
     render_all(ids)
     sheet(os.path.join(SCR, 'forms_sheet.png'))
     print('ok')

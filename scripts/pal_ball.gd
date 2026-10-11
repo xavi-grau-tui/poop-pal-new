@@ -1,8 +1,10 @@
 class_name PalBall
 ## The current pal as a little round ball (Tilt Maze, Tile Break, Flipper Belly...):
-## a 20 px canvas holding a 16 px ball, shown at x3 by the games. Cached per pal.
+## a 24 px canvas holding a 16 px ball (the 4 px around it: room for ears, leaves, wrappers),
+## shown at x3 by the games. Every pal has its own ball art (textures/minigames/balls/<id>.png,
+## made by tools/art/pal_balls.py); one wrapped from the sprite is the fallback. Cached per pal.
 
-const ART := 20                  # canvas size; the ball itself is 16 px across
+const ART := 24                  # canvas size; the ball itself is 16 px across
 const SIZE := 16
 
 static var _cache := {}
@@ -11,7 +13,8 @@ static var _cache := {}
 static func texture() -> Texture2D:
 	var key: String = PetState.form_id if PetState.has_poop() else ""
 	if not _cache.has(key):
-		_cache[key] = _build()
+		var path := "res://textures/minigames/balls/%s.png" % key
+		_cache[key] = load(path) if key != "" and ResourceLoader.exists(path) else _build()
 	return _cache[key]
 
 ## Your pal as a ball: its own sprite (colours, face, topping) wrapped round onto a ball,

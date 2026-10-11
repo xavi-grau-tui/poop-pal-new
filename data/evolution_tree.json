@@ -1,1990 +1,2400 @@
 {
  "forms": {
-  "sprig": {
+  "bud": {
    "no": 1,
-   "name": "Sprig",
+   "name": "Bud",
    "stage": 1,
    "stage_name": "baby",
    "family": "green",
    "from": "",
    "variant": "BABY",
-   "face": "happy",
-   "desc": "Hatched from a salad. Photosynthesises when nobody is looking.",
-   "hint": "Start a pal with something green."
+   "foods": [
+    "green"
+   ],
+   "desc": "A seed that stood up.",
+   "hint": "Start a pal with a green Sho food.",
+   "line": "Bud | bean | green | leaf2 | gloss flat | A seed that stood up."
   },
-  "swirlet": {
+  "peapod": {
    "no": 2,
-   "name": "Swirlet",
+   "name": "Peapod",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "green",
+   "from": "bud",
+   "variant": "KID",
+   "foods": [
+    "green"
+   ],
+   "desc": "Three peas, one opinion.",
+   "hint": "Feed Bud a green Chu food.",
+   "line": "Peapod | pod | green/lime | | dot flat | Three peas, one opinion."
+  },
+  "usagi": {
+   "no": 3,
+   "name": "Usagi",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "green",
+   "from": "bud",
+   "variant": "KID",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "Pounds mochi under the moon.",
+   "hint": "Feed Bud a sweet Chu food.",
+   "line": "Usagi | mochi | green/sweet | ears_bunny | sleep w | Pounds mochi under the moon."
+  },
+  "kakiage": {
+   "no": 4,
+   "name": "Kakiage",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "green",
+   "from": "bud",
+   "variant": "KID",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "A tempura fritter that walks.",
+   "hint": "Feed Bud a greasy Chu food.",
+   "line": "Kakiage | pebble | crust/green | crust speckle:green | heavy flat | A tempura fritter that walks."
+  },
+  "tengu": {
+   "no": 5,
+   "name": "Tengu",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "green",
+   "from": "bud",
+   "variant": "KID",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "A forest goblin with a red face.",
+   "hint": "Feed Bud a spicy Chu food.",
+   "line": "Tengu | egg | green/spicy | face_patch:spicy longnose:spicy feather:wood | stern flat | A forest goblin with a red face."
+  },
+  "kiwi": {
+   "no": 6,
+   "name": "Kiwi",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "green",
+   "from": "bud",
+   "variant": "KID",
+   "foods": [
+    "sour"
+   ],
+   "desc": "Fuzzy outside, sour inside.",
+   "hint": "Feed Bud a sour Chu food.",
+   "line": "Kiwi | egg | wood/lime | face_patch:lime | dot flat | Fuzzy outside, sour inside."
+  },
+  "avocado": {
+   "no": 7,
+   "name": "Avocado",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "peapod",
+   "variant": "ULTRA",
+   "foods": [
+    "green"
+   ],
+   "desc": "A pea that grew up: green, big, proud of its stone.",
+   "hint": "Feed Peapod a green Dai food: green all the way.",
+   "line": "Avocado | pear | green/olive | belly:wood | dot flat | A pea that grew up: green, big, proud of its stone."
+  },
+  "melon_pan": {
+   "no": 8,
+   "name": "Melon Pan",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "peapod",
+   "variant": "BLOOM",
+   "foods": [
+    "sour",
+    "sweet"
+   ],
+   "desc": "A sweet bun with a melon-skin crust.",
+   "hint": "Feed Peapod a friend food: a sour or sweet Dai food.",
+   "line": "Melon Pan | bun | lime/crust | checker:lime | dot w | A sweet bun with a melon-skin crust."
+  },
+  "wasabi_pea": {
+   "no": 9,
+   "name": "Wasabi Pea",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "peapod",
+   "variant": "CLASH",
+   "foods": [
+    "greasy",
+    "spicy"
+   ],
+   "desc": "Crunchy, green, furious.",
+   "hint": "Feed Peapod a rival food: a greasy or spicy Dai food.",
+   "line": "Wasabi Pea | ball | lime/spicy | crust:lime | stern flat | Crunchy, green, furious."
+  },
+  "yomogi": {
+   "no": 10,
+   "name": "Yomogi",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "usagi",
+   "variant": "ROOT",
+   "foods": [
+    "green"
+   ],
+   "desc": "Mugwort dumplings on a stick. Earthy, chewy.",
+   "hint": "Feed Usagi a green Dai food, back to its roots.",
+   "line": "Yomogi | dango | moss/green/leaf | | dot flat | Mugwort dumplings on a stick. Earthy, chewy."
+  },
+  "usagi_manju": {
+   "no": 11,
+   "name": "Usagi Manju",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "usagi",
+   "variant": "PEAK",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "A rabbit-shaped bun, blue bean paste inside.",
+   "hint": "Feed Usagi a sweet Dai food, even more sweet.",
+   "line": "Usagi Manju | mochi sx=1.1 | white/sweet | ears_bunny:white | dot w | A rabbit-shaped bun, blue bean paste inside."
+  },
+  "yamabiko": {
+   "no": 12,
+   "name": "Yamabiko",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "usagi",
+   "variant": "CHAOS",
+   "foods": [
+    "greasy",
+    "spicy",
+    "sour"
+   ],
+   "desc": "Repeats everything you shout.",
+   "hint": "Feed Usagi any other Dai food: greasy, spicy or sour.",
+   "line": "Yamabiko | ball | cream/green | ears_mouse | wide o | Repeats everything you shout."
+  },
+  "kinoko": {
+   "no": 13,
+   "name": "Kinoko",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "kakiage",
+   "variant": "ROOT",
+   "foods": [
+    "green"
+   ],
+   "desc": "A mushroom yokai. Do not eat.",
+   "hint": "Feed Kakiage a green Dai food, back to its roots.",
+   "line": "Kinoko | mush | cream/spicy | cap:spicy capspots | glance flat | A mushroom yokai. Do not eat."
+  },
+  "mujina": {
+   "no": 14,
+   "name": "Mujina",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "kakiage",
+   "variant": "PEAK",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "A badger that is mostly rumours.",
+   "hint": "Feed Kakiage a greasy Dai food, even more greasy.",
+   "line": "Mujina | bean | stone/cream | mask:char | glance flat | A badger that is mostly rumours."
+  },
+  "kodama": {
+   "no": 15,
+   "name": "Kodama",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "kakiage",
+   "variant": "CHAOS",
+   "foods": [
+    "sweet",
+    "spicy",
+    "sour"
+   ],
+   "desc": "A tree spirit. Nods slowly.",
+   "hint": "Feed Kakiage any other Dai food: sweet, spicy or sour.",
+   "line": "Kodama | gum | white/green | leaf | dot o | A tree spirit. Nods slowly."
+  },
+  "karasu_tengu": {
+   "no": 16,
+   "name": "Karasu Tengu",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "tengu",
+   "variant": "ROOT",
+   "foods": [
+    "green"
+   ],
+   "desc": "A crow tengu. Guards the mountain path.",
+   "hint": "Feed Tengu a green Dai food, back to its roots.",
+   "line": "Karasu Tengu | bird | green/spicy | beak_f wings:green | stern flat | A crow tengu. Guards the mountain path."
+  },
+  "horseradish": {
+   "no": 17,
+   "name": "Horseradish",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "tengu",
+   "variant": "PEAK",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "Clears your nose from a mile away.",
+   "hint": "Feed Tengu a spicy Dai food, even more spicy.",
+   "line": "Horseradish | onion | cream/spicy | leaf2 | cross fang | Clears your nose from a mile away."
+  },
+  "komainu": {
+   "no": 18,
+   "name": "Komainu",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "tengu",
+   "variant": "CHAOS",
+   "foods": [
+    "sweet",
+    "greasy",
+    "sour"
+   ],
+   "desc": "A stone lion-dog that guards the gate.",
+   "hint": "Feed Tengu any other Dai food: sweet, greasy or sour.",
+   "line": "Komainu | gum | stone/green | curl:stone ears_bear:stone | stern flat | A stone lion-dog that guards the gate."
+  },
+  "kappa": {
+   "no": 19,
+   "name": "Kappa",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "kiwi",
+   "variant": "ROOT",
+   "foods": [
+    "green"
+   ],
+   "desc": "Keep its head plate wet.",
+   "hint": "Feed Kiwi a green Dai food, back to its roots.",
+   "line": "Kappa | gum | green/teal | plate:ice beak_f shell:moss | gloss flat | Keep its head plate wet."
+  },
+  "gherk": {
+   "no": 20,
+   "name": "Gherk",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "kiwi",
+   "variant": "PEAK",
+   "foods": [
+    "sour"
+   ],
+   "desc": "A gherkin that learned to crawl.",
+   "hint": "Feed Kiwi a sour Dai food, even more sour.",
+   "line": "Gherk | worm | sour/green | warts leaf | dot flat | A gherkin that learned to crawl."
+  },
+  "kiwi_bird": {
+   "no": 21,
+   "name": "Kiwi Bird",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "green",
+   "from": "kiwi",
+   "variant": "CHAOS",
+   "foods": [
+    "sweet",
+    "greasy",
+    "spicy"
+   ],
+   "desc": "The fruit grew a beak. Finally friends.",
+   "hint": "Feed Kiwi any other Dai food: sweet, greasy or spicy.",
+   "line": "Kiwi Bird | bird | wood | longbeak | dot flat | The fruit grew a beak. Finally friends."
+  },
+  "karakuri": {
+   "no": 22,
+   "name": "Karakuri",
+   "stage": 4,
+   "stage_name": "mutant",
+   "family": "green",
+   "from": "any adult",
+   "variant": "TECH",
+   "foods": [
+    "tech"
+   ],
+   "desc": "A clockwork doll that serves tea.",
+   "hint": "Feed any grown-up (Dai) green pal some tech food.",
+   "line": "Karakuri | tall | wood/metal | bolts chip | visor flat | A clockwork doll that serves tea."
+  },
+  "zorb": {
+   "no": 23,
+   "name": "Zorb",
+   "stage": 4,
+   "stage_name": "mutant",
+   "family": "green",
+   "from": "any adult",
+   "variant": "COSMIC",
+   "foods": [
+    "cosmic"
+   ],
+   "desc": "Ate alien goo. Three eyes, no worries.",
+   "hint": "Feed any grown-up (Dai) green pal some cosmic food.",
+   "line": "Zorb | ball | slime | antennae | three flat | Ate alien goo. Three eyes, no worries."
+  },
+  "world_tree": {
+   "no": 24,
+   "name": "World Tree",
+   "stage": 5,
+   "stage_name": "legend",
+   "family": "green",
+   "from": "avocado",
+   "variant": "LEGEND",
+   "foods": [
+    "legend"
+   ],
+   "desc": "A forest spirit that keeps the gut green.",
+   "hint": "Feed Avocado (the ULTRA green pal) the Golden Seed.",
+   "line": "World Tree | tree sy=1.2 | green/wood | base:wood spots:spicy sparkles halo | sleep none | A forest spirit that keeps the gut green."
+  },
+  "nib": {
+   "no": 25,
+   "name": "Nib",
    "stage": 1,
    "stage_name": "baby",
    "family": "sweet",
    "from": "",
    "variant": "BABY",
-   "face": "sparkle",
-   "desc": "Born from sugar. Hums when it is happy, which is always.",
-   "hint": "Start a pal with something sweet."
+   "foods": [
+    "sweet"
+   ],
+   "desc": "A cocoa bean with something to say.",
+   "hint": "Start a pal with a sweet Sho food.",
+   "line": "Nib | bean sy=.85 | sweet | half:navy | dot flat | A cocoa bean with something to say."
   },
-  "nugget": {
-   "no": 3,
-   "name": "Nugget",
+  "leafwing": {
+   "no": 26,
+   "name": "Leafwing",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "sweet",
+   "from": "nib",
+   "variant": "KID",
+   "foods": [
+    "green"
+   ],
+   "desc": "Looks exactly like a leaf. On purpose.",
+   "hint": "Feed Nib a green Chu food.",
+   "line": "Leafwing | bean | green/sweet | wings:green antennae | glance flat | Looks exactly like a leaf. On purpose."
+  },
+  "fudge": {
+   "no": 27,
+   "name": "Fudge",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "sweet",
+   "from": "nib",
+   "variant": "KID",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "Fudge. Dense. Dependable.",
+   "hint": "Feed Nib a sweet Chu food.",
+   "line": "Fudge | cube | choc/sweet | glaze:sweet | lid flat | Fudge. Dense. Dependable."
+  },
+  "glazy": {
+   "no": 28,
+   "name": "Glazy",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "sweet",
+   "from": "nib",
+   "variant": "KID",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "A donut with a blue glaze.",
+   "hint": "Feed Nib a greasy Chu food.",
+   "line": "Glazy | ring | crust/sweet | glaze:sweet sprinkles | gloss smirk | A donut with a blue glaze."
+  },
+  "choco_taco": {
+   "no": 29,
+   "name": "Choco Taco",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "sweet",
+   "from": "nib",
+   "variant": "KID",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "Ice cream in a crunchy shell.",
+   "hint": "Feed Nib a spicy Chu food.",
+   "line": "Choco Taco | half | crust/sweet | cap:sweet | glance smirk | Ice cream in a crunchy shell."
+  },
+  "bumble": {
+   "no": 30,
+   "name": "Bumble",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "sweet",
+   "from": "nib",
+   "variant": "KID",
+   "foods": [
+    "sour"
+   ],
+   "desc": "A bumblebee in blue stripes.",
+   "hint": "Feed Nib a sour Chu food.",
+   "line": "Bumble | ball | greasy/sweet | hstripes:sweet wings_bug antennae | gloss flat | A bumblebee in blue stripes."
+  },
+  "owlet": {
+   "no": 31,
+   "name": "Owlet",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "leafwing",
+   "variant": "ROOT",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "Up all night, every night.",
+   "hint": "Feed Leafwing a sweet Dai food, back to its roots.",
+   "line": "Owlet | ball | sweet/cream | ears belly:cream beak_f | wide none | Up all night, every night."
+  },
+  "pistachio": {
+   "no": 32,
+   "name": "Pistachio",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "leafwing",
+   "variant": "PEAK",
+   "foods": [
+    "green"
+   ],
+   "desc": "A pistachio scoop on a waffle cone.",
+   "hint": "Feed Leafwing a green Dai food, even more green.",
+   "line": "Pistachio | icecream | crust/lime | | dot w | A pistachio scoop on a waffle cone."
+  },
+  "scarab": {
+   "no": 33,
+   "name": "Scarab",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "leafwing",
+   "variant": "CHAOS",
+   "foods": [
+    "greasy",
+    "spicy",
+    "sour"
+   ],
+   "desc": "Rolls cocoa beans home.",
+   "hint": "Feed Leafwing any other Dai food: greasy, spicy or sour.",
+   "line": "Scarab | ball | navy/gold | half:gold antennae | gloss flat | Rolls cocoa beans home."
+  },
+  "bonbon": {
+   "no": 34,
+   "name": "Bonbon",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "fudge",
+   "variant": "ULTRA",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "A blue chocolate bonbon, wrapped like a gift.",
+   "hint": "Feed Fudge a sweet Dai food: sweet all the way.",
+   "line": "Bonbon | ball sx=1.1 | sweet/navy | wrapper:pink sparkles | lid flat | A blue chocolate bonbon, wrapped like a gift."
+  },
+  "kuri": {
+   "no": 35,
+   "name": "Kuri",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "fudge",
+   "variant": "BLOOM",
+   "foods": [
+    "green",
+    "greasy"
+   ],
+   "desc": "A chestnut sweet. Shiny on top.",
+   "hint": "Feed Fudge a friend food: a green or greasy Dai food.",
+   "line": "Kuri | kiss | wood/cream | base:cream | dot flat | A chestnut sweet. Shiny on top."
+  },
+  "gremlin": {
+   "no": 36,
+   "name": "Gremlin",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "fudge",
+   "variant": "CLASH",
+   "foods": [
+    "spicy",
+    "sour"
+   ],
+   "desc": "Do not feed it after midnight.",
+   "hint": "Feed Fudge a rival food: a spicy or sour Dai food.",
+   "line": "Gremlin | squat | sweet/purple | ears_fox:purple | glance grin | Do not feed it after midnight."
+  },
+  "eclair": {
+   "no": 37,
+   "name": "Eclair",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "glazy",
+   "variant": "ROOT",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "Long, glazed, full of blue cream.",
+   "hint": "Feed Glazy a sweet Dai food, back to its roots.",
+   "line": "Eclair | sausage | crust/sweet | glaze:sweet | lid flat | Long, glazed, full of blue cream."
+  },
+  "churro": {
+   "no": 38,
+   "name": "Churro",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "glazy",
+   "variant": "PEAK",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "Long, ridged, dusted in sugar.",
+   "hint": "Feed Glazy a greasy Dai food, even more greasy.",
+   "line": "Churro | tall | crust | ridges:crust sugar | heavy smirk | Long, ridged, dusted in sugar."
+  },
+  "candy_corn": {
+   "no": 39,
+   "name": "Candy Corn",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "glazy",
+   "variant": "CHAOS",
+   "foods": [
+    "green",
+    "spicy",
+    "sour"
+   ],
+   "desc": "Half of everyone hates it. It knows.",
+   "hint": "Feed Glazy any other Dai food: green, spicy or sour.",
+   "line": "Candy Corn | corn | lemon/orange/white | | dot flat | Half of everyone hates it. It knows."
+  },
+  "hot_cocoa": {
+   "no": 40,
+   "name": "Hot Cocoa",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "choco_taco",
+   "variant": "ROOT",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "Cocoa with a pinch of chilli.",
+   "hint": "Feed Choco Taco a sweet Dai food, back to its roots.",
+   "line": "Hot Cocoa | pot | sweet/cream | cap:cream steam | sleep w | Cocoa with a pinch of chilli."
+  },
+  "cocoa_fire": {
+   "no": 41,
+   "name": "Cocoa Fire",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "choco_taco",
+   "variant": "PEAK",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "Hot chocolate with a fire inside.",
+   "hint": "Feed Choco Taco a spicy Dai food, even more spicy.",
+   "line": "Cocoa Fire | pot | choc/spicy | cap:cream flame | lid flat | Hot chocolate with a fire inside."
+  },
+  "taiyaki": {
+   "no": 42,
+   "name": "Taiyaki",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "choco_taco",
+   "variant": "CHAOS",
+   "foods": [
+    "green",
+    "greasy",
+    "sour"
+   ],
+   "desc": "A fish-shaped cake, blue inside.",
+   "hint": "Feed Choco Taco any other Dai food: green, greasy or sour.",
+   "line": "Taiyaki | fish | crust/sweet | tail_fish:crust scales:crust | gloss flat | A fish-shaped cake, blue inside."
+  },
+  "honeybear": {
+   "no": 43,
+   "name": "Honeybear",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "bumble",
+   "variant": "ROOT",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "Fell asleep in the honey pot.",
+   "hint": "Feed Bumble a sweet Dai food, back to its roots.",
+   "line": "Honeybear | bun | greasy/sweet | ears_bear:greasy belly:cream drip:sweet | dot w | Fell asleep in the honey pot."
+  },
+  "ramune": {
+   "no": 44,
+   "name": "Ramune",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "bumble",
+   "variant": "PEAK",
+   "foods": [
+    "sour"
+   ],
+   "desc": "A marble soda. Fizzy and blue.",
+   "hint": "Feed Bumble a sour Dai food, even more sour.",
+   "line": "Ramune | bottle | sky | bubbles | gloss o | A marble soda. Fizzy and blue."
+  },
+  "bruin": {
+   "no": 45,
+   "name": "Bruin",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sweet",
+   "from": "bumble",
+   "variant": "CHAOS",
+   "foods": [
+    "green",
+    "greasy",
+    "spicy"
+   ],
+   "desc": "A bear cub sticky with blue honey.",
+   "hint": "Feed Bumble any other Dai food: green, greasy or spicy.",
+   "line": "Bruin | ball | greasy/sweet | ears_bear:greasy drip:sweet | dot flat | A bear cub sticky with blue honey."
+  },
+  "cocoa_9": {
+   "no": 46,
+   "name": "Cocoa-9",
+   "stage": 4,
+   "stage_name": "mutant",
+   "family": "sweet",
+   "from": "any adult",
+   "variant": "TECH",
+   "foods": [
+    "tech"
+   ],
+   "desc": "A chocolate robot, model 9.",
+   "hint": "Feed any grown-up (Dai) sweet pal some tech food.",
+   "line": "Cocoa-9 | kiss | metal/sweet | bolts | visor flat | A chocolate robot, model 9."
+  },
+  "kaguya": {
+   "no": 47,
+   "name": "Kaguya",
+   "stage": 4,
+   "stage_name": "mutant",
+   "family": "sweet",
+   "from": "any adult",
+   "variant": "COSMIC",
+   "foods": [
+    "cosmic"
+   ],
+   "desc": "A princess from the moon, inside a mochi.",
+   "hint": "Feed any grown-up (Dai) sweet pal some cosmic food.",
+   "line": "Kaguya | ball | goo/white | stars halo | sleep none | A princess from the moon, inside a mochi."
+  },
+  "tsukuyomi": {
+   "no": 48,
+   "name": "Tsukuyomi",
+   "stage": 5,
+   "stage_name": "legend",
+   "family": "sweet",
+   "from": "bonbon",
+   "variant": "LEGEND",
+   "foods": [
+    "legend"
+   ],
+   "desc": "The moon rabbit god.",
+   "hint": "Feed Bonbon (the ULTRA sweet pal) the Stardust Sugar.",
+   "line": "Tsukuyomi | ball sx=1.1 | sweet/white | ears_bunny:white stars halo sparkles | sleep none | The moon rabbit god."
+  },
+  "inari": {
+   "no": 49,
+   "name": "Inari",
    "stage": 1,
    "stage_name": "baby",
    "family": "greasy",
    "from": "",
    "variant": "BABY",
-   "face": "happy",
-   "desc": "Deep-fried at birth. Squeaks when poked.",
-   "hint": "Start a pal with something greasy."
+   "foods": [
+    "greasy"
+   ],
+   "desc": "A fried tofu pouch that foxes adore.",
+   "hint": "Start a pal with a greasy Sho food.",
+   "line": "Inari | gum sy=.85 | crust | nubs:crust | lid flat | A fried tofu pouch that foxes adore."
+  },
+  "kitsune": {
+   "no": 50,
+   "name": "Kitsune",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "greasy",
+   "from": "inari",
+   "variant": "KID",
+   "foods": [
+    "green"
+   ],
+   "desc": "A fox who loves fried tofu.",
+   "hint": "Feed Inari a green Chu food.",
+   "line": "Kitsune | egg | greasy/white | ears_fox tail_fluff belly:white | lid flat | A fox who loves fried tofu."
+  },
+  "waffle": {
+   "no": 51,
+   "name": "Waffle",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "greasy",
+   "from": "inari",
+   "variant": "KID",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "A waffle with blue syrup.",
+   "hint": "Feed Inari a sweet Chu food.",
+   "line": "Waffle | cube s=1.12 sx=1.1 | gold/sweet | checker:crust drip:sweet | gloss flat | A waffle with blue syrup."
+  },
+  "fried_egg": {
+   "no": 52,
+   "name": "Fried Egg",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "greasy",
+   "from": "inari",
+   "variant": "KID",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "Sunny side up, every day.",
+   "hint": "Feed Inari a greasy Chu food.",
+   "line": "Fried Egg | fried | white/greasy | | dot flat | Sunny side up, every day."
+  },
+  "drumstick": {
+   "no": 53,
+   "name": "Drumstick",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "greasy",
+   "from": "inari",
+   "variant": "KID",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "All drumstick, no fear.",
+   "hint": "Feed Inari a spicy Chu food.",
+   "line": "Drumstick | pear | crust | crust bone | stern flat | All drumstick, no fear."
+  },
+  "oden": {
+   "no": 54,
+   "name": "Oden",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "greasy",
+   "from": "inari",
+   "variant": "KID",
+   "foods": [
+    "sour"
+   ],
+   "desc": "Everything simmered, on one stick.",
+   "hint": "Feed Inari a sour Chu food.",
+   "line": "Oden | dango | crust/rice/wood | | dot flat | Everything simmered, on one stick."
+  },
+  "kyubi": {
+   "no": 55,
+   "name": "Kyubi",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "kitsune",
+   "variant": "ROOT",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "A fox with nine tails. Only shows one.",
+   "hint": "Feed Kitsune a greasy Dai food, back to its roots.",
+   "line": "Kyubi | gum | gold/white | ears_fox tails:gold belly:white mark:spicy | lid flat | A fox with nine tails. Only shows one."
+  },
+  "konoha": {
+   "no": 56,
+   "name": "Konoha",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "kitsune",
+   "variant": "PEAK",
+   "foods": [
+    "green"
+   ],
+   "desc": "A fox with a leaf disguise.",
+   "hint": "Feed Kitsune a green Dai food, even more green.",
+   "line": "Konoha | egg | crust/green | ears_fox leafpin | lid flat | A fox with a leaf disguise."
+  },
+  "okonomi": {
+   "no": 57,
+   "name": "Okonomi",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "kitsune",
+   "variant": "CHAOS",
+   "foods": [
+    "sweet",
+    "spicy",
+    "sour"
+   ],
+   "desc": "Everything in the fridge, fried flat.",
+   "hint": "Feed Kitsune any other Dai food: sweet, spicy or sour.",
+   "line": "Okonomi | flat | crust/green | speckle:green drip:choc | lid flat | Everything in the fridge, fried flat."
+  },
+  "popcorn": {
+   "no": 58,
+   "name": "Popcorn",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "waffle",
+   "variant": "ROOT",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "Pops when it is surprised.",
+   "hint": "Feed Waffle a greasy Dai food, back to its roots.",
+   "line": "Popcorn | cloud | cream/lemon | dapple:lemon | dot o | Pops when it is surprised."
+  },
+  "daigaku_imo": {
+   "no": 59,
+   "name": "Daigaku Imo",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "waffle",
+   "variant": "PEAK",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "Candied sweet potato. A student favourite.",
+   "hint": "Feed Waffle a sweet Dai food, even more sweet.",
+   "line": "Daigaku Imo | pear | crust/plum | glaze:gold sesame | lid flat | Candied sweet potato. A student favourite."
+  },
+  "stroopwafel": {
+   "no": 60,
+   "name": "Stroopwafel",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "waffle",
+   "variant": "CHAOS",
+   "foods": [
+    "green",
+    "spicy",
+    "sour"
+   ],
+   "desc": "Two waffles holding a secret.",
+   "hint": "Feed Waffle any other Dai food: green, spicy or sour.",
+   "line": "Stroopwafel | flat | crust/choc | grill:crust drip:choc | dot flat | Two waffles holding a secret."
+  },
+  "burger": {
+   "no": 61,
+   "name": "Burger",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "fried_egg",
+   "variant": "ULTRA",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "Bun, lettuce, patty, bun. Classic.",
+   "hint": "Feed Fried Egg a greasy Dai food: greasy all the way.",
+   "line": "Burger | burger | gold/green/choc | sesame | dot flat | Bun, lettuce, patty, bun. Classic."
+  },
+  "hot_dog": {
+   "no": 62,
+   "name": "Hot Dog",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "fried_egg",
+   "variant": "BLOOM",
+   "foods": [
+    "sweet",
+    "spicy"
+   ],
+   "desc": "A sausage in a bun. Mustard optional.",
+   "hint": "Feed Fried Egg a friend food: a sweet or spicy Dai food.",
+   "line": "Hot Dog | sausage | spicy/gold | base:gold drip:lemon | lid flat | A sausage in a bun. Mustard optional."
+  },
+  "fish_taco": {
+   "no": 63,
+   "name": "Fish Taco",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "fried_egg",
+   "variant": "CLASH",
+   "foods": [
+    "green",
+    "sour"
+   ],
+   "desc": "A taco that swims.",
+   "hint": "Feed Fried Egg a rival food: a green or sour Dai food.",
+   "line": "Fish Taco | half | crust/green | cap:green | gloss o | A taco that swims."
+  },
+  "kushikatsu": {
+   "no": 64,
+   "name": "Kushikatsu",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "drumstick",
+   "variant": "ROOT",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "Dip it in the sauce only once.",
+   "hint": "Feed Drumstick a greasy Dai food, back to its roots.",
+   "line": "Kushikatsu | popsicle | crust | crust | lid flat | Dip it in the sauce only once."
+  },
+  "kitsu": {
+   "no": 65,
+   "name": "Kitsu",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "drumstick",
+   "variant": "PEAK",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "A fire fox with a white chest.",
+   "hint": "Feed Drumstick a spicy Dai food, even more spicy.",
+   "line": "Kitsu | egg | spicy/white | ears_fox tail_fluff:spicy belly:white | lid flat | A fire fox with a white chest."
+  },
+  "hothog": {
+   "no": 66,
+   "name": "Hothog",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "drumstick",
+   "variant": "CHAOS",
+   "foods": [
+    "green",
+    "sweet",
+    "sour"
+   ],
+   "desc": "A hedgehog with hot quills.",
+   "hint": "Feed Drumstick any other Dai food: green, sweet or sour.",
+   "line": "Hothog | squat | rust/greasy | quills:spicy | lid flat | A hedgehog with hot quills."
+  },
+  "ebi_fry": {
+   "no": 67,
+   "name": "Ebi Fry",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "oden",
+   "variant": "ROOT",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "A fried prawn, tail and all.",
+   "hint": "Feed Oden a greasy Dai food, back to its roots.",
+   "line": "Ebi Fry | chili lean=.2 | crust/coral | crust tail_fish:coral | lid flat | A fried prawn, tail and all."
+  },
+  "shiso_tempura": {
+   "no": 68,
+   "name": "Shiso Tempura",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "oden",
+   "variant": "PEAK",
+   "foods": [
+    "sour"
+   ],
+   "desc": "A shiso leaf in a light batter.",
+   "hint": "Feed Oden a sour Dai food, even more sour.",
+   "line": "Shiso Tempura | lemon sy=1.2 | green/crust | crust:green leafveins:leaf | sleep none | A shiso leaf in a light batter."
+  },
+  "walrusk": {
+   "no": 69,
+   "name": "Walrusk",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "greasy",
+   "from": "oden",
+   "variant": "CHAOS",
+   "foods": [
+    "green",
+    "sweet",
+    "spicy"
+   ],
+   "desc": "A walrus with a fine moustache.",
+   "hint": "Feed Oden any other Dai food: green, sweet or spicy.",
+   "line": "Walrusk | mochi | cream/greasy | tusks whiskers | lid flat stache | A walrus with a fine moustache."
+  },
+  "robobear": {
+   "no": 70,
+   "name": "Robobear",
+   "stage": 4,
+   "stage_name": "mutant",
+   "family": "greasy",
+   "from": "any adult",
+   "variant": "TECH",
+   "foods": [
+    "tech"
+   ],
+   "desc": "Hugs at exactly 12 newtons.",
+   "hint": "Feed any grown-up (Dai) greasy pal some tech food.",
+   "line": "Robobear | ball | metal/greasy | ears_bear bolts | visor flat | Hugs at exactly 12 newtons."
+  },
+  "nebula_nug": {
+   "no": 71,
+   "name": "Nebula Nug",
+   "stage": 4,
+   "stage_name": "mutant",
+   "family": "greasy",
+   "from": "any adult",
+   "variant": "COSMIC",
+   "foods": [
+    "cosmic"
+   ],
+   "desc": "A nugget from the Milky Way.",
+   "hint": "Feed any grown-up (Dai) greasy pal some cosmic food.",
+   "line": "Nebula Nug | pebble | goo | crust:goo stars | three flat | A nugget from the Milky Way."
+  },
+  "sunbear": {
+   "no": 72,
+   "name": "Sunbear",
+   "stage": 5,
+   "stage_name": "legend",
+   "family": "greasy",
+   "from": "burger",
+   "variant": "LEGEND",
+   "foods": [
+    "legend"
+   ],
+   "desc": "The king of fried things.",
+   "hint": "Feed Burger (the ULTRA greasy pal) the Dragon Oil.",
+   "line": "Sunbear | mound sx=1.1 | gold/cream | ears_bear:gold belly:cream crown sparkles | lid flat | The king of fried things."
   },
   "ember": {
-   "no": 4,
+   "no": 73,
    "name": "Ember",
    "stage": 1,
    "stage_name": "baby",
    "family": "spicy",
    "from": "",
    "variant": "BABY",
-   "face": "happy",
+   "foods": [
+    "spicy"
+   ],
    "desc": "Hatched from something spicy. Always slightly warm to the touch.",
-   "hint": "Start a pal with something spicy."
+   "hint": "Start a pal with a spicy Sho food.",
+   "line": "Ember | =ember:gloss | spicy | | | The original Ember, calmer, no grin."
+  },
+  "paprika": {
+   "no": 74,
+   "name": "Paprika",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "spicy",
+   "from": "ember",
+   "variant": "KID",
+   "foods": [
+    "green"
+   ],
+   "desc": "A sweet pepper that is secretly hot.",
+   "hint": "Feed Ember a green Chu food.",
+   "line": "Paprika | pear | spicy | stem:green leaf | gloss flat | A sweet pepper that is secretly hot."
+  },
+  "daruma": {
+   "no": 75,
+   "name": "Daruma",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "spicy",
+   "from": "ember",
+   "variant": "KID",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "Falls down seven times, stands up eight.",
+   "hint": "Feed Ember a sweet Chu food.",
+   "line": "Daruma | daruma | spicy | darumaface:white | dot flat | Falls down seven times, stands up eight."
+  },
+  "nacho": {
+   "no": 76,
+   "name": "Nacho",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "spicy",
+   "from": "ember",
+   "variant": "KID",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "A nacho with a cheese cape.",
+   "hint": "Feed Ember a greasy Chu food.",
+   "line": "Nacho | tri | gold/spicy | drip:greasy speckle:spicy | glance smirk | A nacho with a cheese cape."
+  },
+  "dotty": {
+   "no": 77,
+   "name": "Dotty",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "spicy",
+   "from": "ember",
+   "variant": "KID",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "A ladybird with blue spots.",
+   "hint": "Feed Ember a spicy Chu food.",
+   "line": "Dotty | mound | spicy/sweet | spots:sweet antennae | dot flat | A ladybird with blue spots."
+  },
+  "kimchi": {
+   "no": 78,
+   "name": "Kimchi",
+   "stage": 2,
+   "stage_name": "kid",
+   "family": "spicy",
+   "from": "ember",
+   "variant": "KID",
+   "foods": [
+    "sour"
+   ],
+   "desc": "Fermented with patience.",
+   "hint": "Feed Ember a sour Chu food.",
+   "line": "Kimchi | cloud | spicy/cream | stripes:cream | lid flat | Fermented with patience."
+  },
+  "hoozuki": {
+   "no": 79,
+   "name": "Hoozuki",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "paprika",
+   "variant": "ROOT",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "A lantern plant. Lights the way for spirits.",
+   "hint": "Feed Paprika a spicy Dai food, back to its roots.",
+   "line": "Hoozuki | gourd | orange/spicy | leafveins | sleep none | A lantern plant. Lights the way for spirits."
+  },
+  "pepper_plant": {
+   "no": 80,
+   "name": "Pepper Plant",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "paprika",
+   "variant": "PEAK",
+   "foods": [
+    "green"
+   ],
+   "desc": "Grows its own snacks.",
+   "hint": "Feed Paprika a green Dai food, even more green.",
+   "line": "Pepper Plant | cloud | green/spicy | leaf2 spots:spicy | sleep none | Grows its own snacks."
+  },
+  "chameleon": {
+   "no": 81,
+   "name": "Chameleon",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "paprika",
+   "variant": "CHAOS",
+   "foods": [
+    "sweet",
+    "greasy",
+    "sour"
+   ],
+   "desc": "Cannot decide on a colour.",
+   "hint": "Feed Paprika any other Dai food: sweet, greasy or sour.",
+   "line": "Chameleon | egg | spicy/green | tail_curl:green half:green | glance flat | Cannot decide on a colour."
+  },
+  "oo_daruma": {
+   "no": 82,
+   "name": "Oo Daruma",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "daruma",
+   "variant": "ROOT",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "A big daruma. Wishes granted: one.",
+   "hint": "Feed Daruma a spicy Dai food, back to its roots.",
+   "line": "Oo Daruma | daruma sx=1.15 | spicy/gold | darumaface:white | stern flat stache | A big daruma. Wishes granted: one."
+  },
+  "maneki": {
+   "no": 83,
+   "name": "Maneki",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "daruma",
+   "variant": "PEAK",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "Waves you in. Business is good.",
+   "hint": "Feed Daruma a sweet Dai food, even more sweet.",
+   "line": "Maneki | gum | white/sweet | ears_cat pawup collar:sweet | sleep w | Waves you in. Business is good."
+  },
+  "spicecake": {
+   "no": 84,
+   "name": "Spicecake",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "daruma",
+   "variant": "CHAOS",
+   "foods": [
+    "green",
+    "greasy",
+    "sour"
+   ],
+   "desc": "A chocolate cupcake with a chilli on top.",
+   "hint": "Feed Daruma any other Dai food: green, greasy or sour.",
+   "line": "Spicecake | bell | choc/spicy | cap:spicy stem:green | dot flat | A chocolate cupcake with a chilli on top."
+  },
+  "popper": {
+   "no": 85,
+   "name": "Popper",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "nacho",
+   "variant": "ROOT",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "Hot inside, crunchy outside.",
+   "hint": "Feed Nacho a spicy Dai food, back to its roots.",
+   "line": "Popper | chili | spicy/greasy | crust:spicy drip:greasy | lid flat | Hot inside, crunchy outside."
+  },
+  "quesadilla": {
+   "no": 86,
+   "name": "Quesadilla",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "nacho",
+   "variant": "PEAK",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "Folded, toasted, oozing.",
+   "hint": "Feed Nacho a greasy Dai food, even more greasy.",
+   "line": "Quesadilla | half | gold/greasy | drip:greasy grill:crust | heavy flat | Folded, toasted, oozing."
+  },
+  "burrito": {
+   "no": 87,
+   "name": "Burrito",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "nacho",
+   "variant": "CHAOS",
+   "foods": [
+    "green",
+    "sweet",
+    "sour"
+   ],
+   "desc": "Wrapped up tight like a sleeping bag.",
+   "hint": "Feed Nacho any other Dai food: green, sweet or sour.",
+   "line": "Burrito | sausage | cream/spicy | base:spicy | sleep none | Wrapped up tight like a sleeping bag."
+  },
+  "firebug": {
+   "no": 88,
+   "name": "Firebug",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "dotty",
+   "variant": "ULTRA",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "Warm to the touch, like a radiator.",
+   "hint": "Feed Dotty a spicy Dai food: spicy all the way.",
+   "line": "Firebug | egg | spicy/char | half:char antennae | line flat | Warm to the touch, like a radiator."
+  },
+  "salamander": {
+   "no": 89,
+   "name": "Salamander",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "dotty",
+   "variant": "BLOOM",
+   "foods": [
+    "greasy",
+    "sour"
+   ],
+   "desc": "Lives in the fire, naps in the fire.",
+   "hint": "Feed Dotty a friend food: a greasy or sour Dai food.",
+   "line": "Salamander | bean | orange/spicy | tail_lizard spots:greasy feet:p | lid flat | Lives in the fire, naps in the fire."
+  },
+  "ladyluck": {
+   "no": 90,
+   "name": "Ladyluck",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "dotty",
+   "variant": "CLASH",
+   "foods": [
+    "green",
+    "sweet"
+   ],
+   "desc": "A lucky ladybird. Blue for luck.",
+   "hint": "Feed Dotty a rival food: a green or sweet Dai food.",
+   "line": "Ladyluck | squat | sweet/spicy | spots:spicy wings_bug | gloss flat | A lucky ladybird. Blue for luck."
+  },
+  "gochujang": {
+   "no": 91,
+   "name": "Gochujang",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "kimchi",
+   "variant": "ROOT",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "Thick red paste. Sweet, then hot.",
+   "hint": "Feed Kimchi a spicy Dai food, back to its roots.",
+   "line": "Gochujang | cube | spicy/rust | glaze:spicy | lid flat | Thick red paste. Sweet, then hot."
+  },
+  "ceviche": {
+   "no": 92,
+   "name": "Ceviche",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "kimchi",
+   "variant": "PEAK",
+   "foods": [
+    "sour"
+   ],
+   "desc": "Cooked in lime, not fire.",
+   "hint": "Feed Kimchi a sour Dai food, even more sour.",
+   "line": "Ceviche | bowl | cream/lime | broth:lime | dot o | Cooked in lime, not fire."
+  },
+  "takoyaki": {
+   "no": 93,
+   "name": "Takoyaki",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "spicy",
+   "from": "kimchi",
+   "variant": "CHAOS",
+   "foods": [
+    "green",
+    "sweet",
+    "greasy"
+   ],
+   "desc": "Ball outside, octopus inside.",
+   "hint": "Feed Kimchi any other Dai food: green, sweet or greasy.",
+   "line": "Takoyaki | ball | crust/choc | drip:choc | gloss o | Ball outside, octopus inside."
+  },
+  "mecha_oni": {
+   "no": 94,
+   "name": "Mecha Oni",
+   "stage": 4,
+   "stage_name": "mutant",
+   "family": "spicy",
+   "from": "any adult",
+   "variant": "TECH",
+   "foods": [
+    "tech"
+   ],
+   "desc": "An ogre robot. Still loud.",
+   "hint": "Feed any grown-up (Dai) spicy pal some tech food.",
+   "line": "Mecha Oni | tear | metal/spicy | horns:spicy bolts | visor fang | An ogre robot. Still loud."
+  },
+  "comet_chili": {
+   "no": 95,
+   "name": "Comet Chili",
+   "stage": 4,
+   "stage_name": "mutant",
+   "family": "spicy",
+   "from": "any adult",
+   "variant": "COSMIC",
+   "foods": [
+    "cosmic"
+   ],
+   "desc": "Hot, from very far away.",
+   "hint": "Feed any grown-up (Dai) spicy pal some cosmic food.",
+   "line": "Comet Chili | chili | goo/spicy | flames | three fang | Hot, from very far away."
+  },
+  "hou_ou": {
+   "no": 96,
+   "name": "Hou-ou",
+   "stage": 5,
+   "stage_name": "legend",
+   "family": "spicy",
+   "from": "firebug",
+   "variant": "LEGEND",
+   "foods": [
+    "legend"
+   ],
+   "desc": "The phoenix. Rises from hot sauce.",
+   "hint": "Feed Firebug (the ULTRA spicy pal) the Phoenix Pepper.",
+   "line": "Hou-ou | bird | gold/spicy | wings:spicy tail_fluff:flame crest:spicy crown sparkles | star flat | The phoenix. Rises from hot sauce."
   },
   "picklet": {
-   "no": 5,
+   "no": 97,
    "name": "Picklet",
    "stage": 1,
    "stage_name": "baby",
    "family": "sour",
    "from": "",
    "variant": "BABY",
-   "face": "neutral",
+   "foods": [
+    "sour"
+   ],
    "desc": "Hatched from something sour. Permanently unimpressed.",
-   "hint": "Start a pal with something sour."
+   "hint": "Start a pal with a sour Sho food.",
+   "line": "Picklet | =picklet | sour | | | Kept exactly as it is."
   },
-  "broccolump": {
-   "no": 6,
-   "name": "Broccolump",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "green",
-   "from": "sprig",
-   "variant": "KID",
-   "face": "happy",
-   "desc": "Grown on greens. Proudly fibrous, faintly smug.",
-   "hint": "A Sprig that keeps eating its greens..."
-  },
-  "sproutberry": {
-   "no": 7,
-   "name": "Sproutberry",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "green",
-   "from": "sprig",
-   "variant": "KID",
-   "face": "sparkle",
-   "desc": "A Sprig that tried something sweet. Sticky, and proud of it.",
-   "hint": "A Sprig that eats something sweet..."
-  },
-  "fritterleaf": {
-   "no": 8,
-   "name": "Fritterleaf",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "green",
-   "from": "sprig",
-   "variant": "KID",
-   "face": "sleepy",
-   "desc": "A Sprig that tried something greasy. Glistens under the lights.",
-   "hint": "A Sprig that eats something greasy..."
-  },
-  "jalapling": {
-   "no": 9,
-   "name": "Jalapling",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "green",
-   "from": "sprig",
-   "variant": "KID",
-   "face": "angry",
-   "desc": "A Sprig that tried something spicy. Smoulders when it gets excited.",
-   "hint": "A Sprig that eats something spicy..."
-  },
-  "gherkid": {
-   "no": 10,
-   "name": "Gherkid",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "green",
-   "from": "sprig",
-   "variant": "KID",
-   "face": "neutral",
-   "desc": "A Sprig that tried something sour. Puckers at absolutely everything.",
-   "hint": "A Sprig that eats something sour..."
-  },
-  "matcharoo": {
-   "no": 11,
-   "name": "Matcharoo",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "sweet",
-   "from": "swirlet",
-   "variant": "KID",
-   "face": "happy",
-   "desc": "A Swirlet that tried something green. Now it photosynthesises a little.",
-   "hint": "A Swirlet that eats something green..."
-  },
-  "neapoolitan": {
-   "no": 12,
-   "name": "Neapoolitan",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "sweet",
-   "from": "swirlet",
-   "variant": "KID",
-   "face": "sparkle",
-   "desc": "Three flavours, one cherry, zero regrets.",
-   "hint": "Something sweet, then something sweeter..."
-  },
-  "donutto": {
-   "no": 13,
-   "name": "Donutto",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "sweet",
-   "from": "swirlet",
-   "variant": "KID",
-   "face": "sleepy",
-   "desc": "A Swirlet that tried something greasy. Glistens under the lights.",
-   "hint": "A Swirlet that eats something greasy..."
-  },
-  "spicecake": {
-   "no": 14,
-   "name": "Spicecake",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "sweet",
-   "from": "swirlet",
-   "variant": "KID",
-   "face": "angry",
-   "desc": "A Swirlet that tried something spicy. Smoulders when it gets excited.",
-   "hint": "A Swirlet that eats something spicy..."
-  },
-  "lemoncurdle": {
-   "no": 15,
-   "name": "Lemoncurdle",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "sweet",
-   "from": "swirlet",
-   "variant": "KID",
-   "face": "neutral",
-   "desc": "A Swirlet that tried something sour. Puckers at absolutely everything.",
-   "hint": "A Swirlet that eats something sour..."
-  },
-  "wrapster": {
-   "no": 16,
-   "name": "Wrapster",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "greasy",
-   "from": "nugget",
-   "variant": "KID",
-   "face": "happy",
-   "desc": "A Nugget that tried something green. Now it photosynthesises a little.",
-   "hint": "A Nugget that eats something green..."
-  },
-  "churrolo": {
-   "no": 17,
-   "name": "Churrolo",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "greasy",
-   "from": "nugget",
-   "variant": "KID",
-   "face": "sparkle",
-   "desc": "A Nugget that tried something sweet. Sticky, and proud of it.",
-   "hint": "A Nugget that eats something sweet..."
-  },
-  "greasy_chonk": {
-   "no": 18,
-   "name": "Greasy Chonk",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "greasy",
-   "from": "nugget",
-   "variant": "KID",
-   "face": "sleepy",
-   "desc": "Glistening. Content. Do not squeeze.",
-   "hint": "What happens if a Nugget never stops eating junk?"
-  },
-  "wingding": {
-   "no": 19,
-   "name": "Wingding",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "greasy",
-   "from": "nugget",
-   "variant": "KID",
-   "face": "angry",
-   "desc": "A Nugget that tried something spicy. Smoulders when it gets excited.",
-   "hint": "A Nugget that eats something spicy..."
-  },
-  "vinegrub": {
-   "no": 20,
-   "name": "Vinegrub",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "greasy",
-   "from": "nugget",
-   "variant": "KID",
-   "face": "neutral",
-   "desc": "A Nugget that tried something sour. Puckers at absolutely everything.",
-   "hint": "A Nugget that eats something sour..."
-  },
-  "pepperpod": {
-   "no": 21,
-   "name": "Pepperpod",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "spicy",
-   "from": "ember",
-   "variant": "KID",
-   "face": "happy",
-   "desc": "A Ember that tried something green. Now it photosynthesises a little.",
-   "hint": "A Ember that eats something green..."
-  },
-  "chilimango": {
-   "no": 22,
-   "name": "Chilimango",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "spicy",
-   "from": "ember",
-   "variant": "KID",
-   "face": "sparkle",
-   "desc": "A Ember that tried something sweet. Sticky, and proud of it.",
-   "hint": "A Ember that eats something sweet..."
-  },
-  "nachunk": {
-   "no": 23,
-   "name": "Nachunk",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "spicy",
-   "from": "ember",
-   "variant": "KID",
-   "face": "sleepy",
-   "desc": "A Ember that tried something greasy. Glistens under the lights.",
-   "hint": "A Ember that eats something greasy..."
-  },
-  "scorchling": {
-   "no": 24,
-   "name": "Scorchling",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "spicy",
-   "from": "ember",
-   "variant": "KID",
-   "face": "angry",
-   "desc": "A Ember that tried something spicy. Smoulders when it gets excited.",
-   "hint": "A Ember that eats something spicy..."
-  },
-  "salsette": {
-   "no": 25,
-   "name": "Salsette",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "spicy",
-   "from": "ember",
-   "variant": "KID",
-   "face": "neutral",
-   "desc": "A Ember that tried something sour. Puckers at absolutely everything.",
-   "hint": "A Ember that eats something sour..."
-  },
-  "kimchling": {
-   "no": 26,
-   "name": "Kimchling",
+  "kappa_maki": {
+   "no": 98,
+   "name": "Kappa Maki",
    "stage": 2,
    "stage_name": "kid",
    "family": "sour",
    "from": "picklet",
    "variant": "KID",
-   "face": "happy",
-   "desc": "A Picklet that tried something green. Now it photosynthesises a little.",
-   "hint": "A Picklet that eats something green..."
+   "foods": [
+    "green"
+   ],
+   "desc": "A cucumber roll with a calm mind.",
+   "hint": "Feed Picklet a green Chu food.",
+   "line": "Kappa Maki | cube sy=.9 | nori/rice | cap:rice face_patch:rice | dot w | A cucumber roll with a calm mind."
   },
   "sourpatch": {
-   "no": 27,
+   "no": 99,
    "name": "Sourpatch",
    "stage": 2,
    "stage_name": "kid",
    "family": "sour",
    "from": "picklet",
    "variant": "KID",
-   "face": "sparkle",
-   "desc": "A Picklet that tried something sweet. Sticky, and proud of it.",
-   "hint": "A Picklet that eats something sweet..."
-  },
-  "dillfry": {
-   "no": 28,
-   "name": "Dillfry",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "sour",
-   "from": "picklet",
-   "variant": "KID",
-   "face": "sleepy",
-   "desc": "A Picklet that tried something greasy. Glistens under the lights.",
-   "hint": "A Picklet that eats something greasy..."
-  },
-  "fermento": {
-   "no": 29,
-   "name": "Fermento",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "sour",
-   "from": "picklet",
-   "variant": "KID",
-   "face": "angry",
-   "desc": "A Picklet that tried something spicy. Smoulders when it gets excited.",
-   "hint": "A Picklet that eats something spicy..."
-  },
-  "puckerpus": {
-   "no": 30,
-   "name": "Puckerpus",
-   "stage": 2,
-   "stage_name": "kid",
-   "family": "sour",
-   "from": "picklet",
-   "variant": "KID",
-   "face": "neutral",
-   "desc": "A Picklet that tried something sour. Puckers at absolutely everything.",
-   "hint": "A Picklet that eats something sour..."
-  },
-  "treefolk": {
-   "no": 31,
-   "name": "Treefolk",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "broccolump",
-   "variant": "ULTRA",
-   "face": "sleepy",
-   "desc": "The purest green pal there is. Ate nothing else, regrets nothing.",
-   "hint": "A Broccolump that only ever eats green..."
-  },
-  "blossomoss": {
-   "no": 32,
-   "name": "Blossomoss",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "broccolump",
-   "variant": "BLOOM",
-   "face": "sparkle",
-   "desc": "A Broccolump that made a friend: sour or sweet food.",
-   "hint": "A Broccolump that eats something friendly..."
-  },
-  "thornbrute": {
-   "no": 33,
-   "name": "Thornbrute",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "broccolump",
-   "variant": "CLASH",
-   "face": "angry",
-   "desc": "A Broccolump that ate its rival food. It has not forgiven anyone.",
-   "hint": "A Broccolump that eats its rival..."
-  },
-  "orchardon": {
-   "no": 34,
-   "name": "Orchardon",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "sproutberry",
-   "variant": "ROOT",
-   "face": "neutral",
-   "desc": "A Sproutberry that went back to its green roots.",
-   "hint": "A Sproutberry that remembers where it came from..."
-  },
-  "jamboree": {
-   "no": 35,
-   "name": "Jamboree",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "sproutberry",
-   "variant": "PEAK",
-   "face": "sparkle",
-   "desc": "A Sproutberry that doubled down on sweet.",
-   "hint": "A Sproutberry that wants more sweet..."
-  },
-  "fruitcakey": {
-   "no": 36,
-   "name": "Fruitcakey",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "sproutberry",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Sproutberry that ate whatever was around. This happened.",
-   "hint": "A Sproutberry that eats something else entirely..."
-  },
-  "tempura_sage": {
-   "no": 37,
-   "name": "Tempura Sage",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "fritterleaf",
-   "variant": "ROOT",
-   "face": "sleepy",
-   "desc": "A Fritterleaf that went back to its green roots.",
-   "hint": "A Fritterleaf that remembers where it came from..."
-  },
-  "onion_ringo": {
-   "no": 38,
-   "name": "Onion Ringo",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "fritterleaf",
-   "variant": "PEAK",
-   "face": "sleepy",
-   "desc": "A Fritterleaf that doubled down on greasy.",
-   "hint": "A Fritterleaf that wants more greasy..."
-  },
-  "kebabble": {
-   "no": 39,
-   "name": "Kebabble",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "fritterleaf",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Fritterleaf that ate whatever was around. This happened.",
-   "hint": "A Fritterleaf that eats something else entirely..."
-  },
-  "pepper_hedge": {
-   "no": 40,
-   "name": "Pepper Hedge",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "jalapling",
-   "variant": "ROOT",
-   "face": "neutral",
-   "desc": "A Jalapling that went back to its green roots.",
-   "hint": "A Jalapling that remembers where it came from..."
-  },
-  "habanerd": {
-   "no": 41,
-   "name": "Habanerd",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "jalapling",
-   "variant": "PEAK",
-   "face": "neutral",
-   "desc": "A Jalapling that doubled down on spicy.",
-   "hint": "A Jalapling that wants more spicy..."
-  },
-  "currycane": {
-   "no": 42,
-   "name": "Currycane",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "jalapling",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Jalapling that ate whatever was around. This happened.",
-   "hint": "A Jalapling that eats something else entirely..."
-  },
-  "cucumbersome": {
-   "no": 43,
-   "name": "Cucumbersome",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "gherkid",
-   "variant": "ROOT",
-   "face": "neutral",
-   "desc": "A Gherkid that went back to its green roots.",
-   "hint": "A Gherkid that remembers where it came from..."
-  },
-  "dill_pickler": {
-   "no": 44,
-   "name": "Dill Pickler",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "gherkid",
-   "variant": "PEAK",
-   "face": "neutral",
-   "desc": "A Gherkid that doubled down on sour.",
-   "hint": "A Gherkid that wants more sour..."
-  },
-  "kombuchoo": {
-   "no": 45,
-   "name": "Kombuchoo",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "green",
-   "from": "gherkid",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Gherkid that ate whatever was around. This happened.",
-   "hint": "A Gherkid that eats something else entirely..."
-  },
-  "matcha_monk": {
-   "no": 46,
-   "name": "Matcha Monk",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "matcharoo",
-   "variant": "ROOT",
-   "face": "sleepy",
-   "desc": "A Matcharoo that went back to its sweet roots.",
-   "hint": "A Matcharoo that remembers where it came from..."
-  },
-  "mint_mochi": {
-   "no": 47,
-   "name": "Mint Mochi",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "matcharoo",
-   "variant": "PEAK",
-   "face": "happy",
-   "desc": "A Matcharoo that doubled down on green.",
-   "hint": "A Matcharoo that wants more green..."
-  },
-  "rhubarb_rascal": {
-   "no": 48,
-   "name": "Rhubarb Rascal",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "matcharoo",
-   "variant": "CHAOS",
-   "face": "evil",
-   "desc": "A Matcharoo that ate whatever was around. This happened.",
-   "hint": "A Matcharoo that eats something else entirely..."
-  },
-  "sundae_supreme": {
-   "no": 49,
-   "name": "Sundae Supreme",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "neapoolitan",
-   "variant": "ULTRA",
-   "face": "stars",
-   "desc": "The purest sweet pal there is. Ate nothing else, regrets nothing.",
-   "hint": "A Neapoolitan that only ever eats sweet..."
-  },
-  "caramelord": {
-   "no": 50,
-   "name": "Caramelord",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "neapoolitan",
-   "variant": "BLOOM",
-   "face": "sparkle",
-   "desc": "A Neapoolitan that made a friend: green or greasy food.",
-   "hint": "A Neapoolitan that eats something friendly..."
-  },
-  "sour_gummy": {
-   "no": 51,
-   "name": "Sour Gummy",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "neapoolitan",
-   "variant": "CLASH",
-   "face": "angry",
-   "desc": "A Neapoolitan that ate its rival food. It has not forgiven anyone.",
-   "hint": "A Neapoolitan that eats its rival..."
-  },
-  "glazed_duke": {
-   "no": 52,
-   "name": "Glazed Duke",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "donutto",
-   "variant": "ROOT",
-   "face": "sparkle",
-   "desc": "A Donutto that went back to its sweet roots.",
-   "hint": "A Donutto that remembers where it came from..."
-  },
-  "deep_fried_bar": {
-   "no": 53,
-   "name": "Deep-Fried Bar",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "donutto",
-   "variant": "PEAK",
-   "face": "sleepy",
-   "desc": "A Donutto that doubled down on greasy.",
-   "hint": "A Donutto that wants more greasy..."
-  },
-  "funnelcake": {
-   "no": 54,
-   "name": "Funnelcake",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "donutto",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Donutto that ate whatever was around. This happened.",
-   "hint": "A Donutto that eats something else entirely..."
-  },
-  "cinnabun": {
-   "no": 55,
-   "name": "Cinnabun",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "spicecake",
-   "variant": "ROOT",
-   "face": "neutral",
-   "desc": "A Spicecake that went back to its sweet roots.",
-   "hint": "A Spicecake that remembers where it came from..."
-  },
-  "chili_choco": {
-   "no": 56,
-   "name": "Chili Choco",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "spicecake",
-   "variant": "PEAK",
-   "face": "angry",
-   "desc": "A Spicecake that doubled down on spicy.",
-   "hint": "A Spicecake that wants more spicy..."
-  },
-  "ginger_snap": {
-   "no": 57,
-   "name": "Ginger Snap",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "spicecake",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Spicecake that ate whatever was around. This happened.",
-   "hint": "A Spicecake that eats something else entirely..."
-  },
-  "lemon_tart": {
-   "no": 58,
-   "name": "Lemon Tart",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "lemoncurdle",
-   "variant": "ROOT",
-   "face": "neutral",
-   "desc": "A Lemoncurdle that went back to its sweet roots.",
-   "hint": "A Lemoncurdle that remembers where it came from..."
-  },
-  "sherbet_shock": {
-   "no": 59,
-   "name": "Sherbet Shock",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "lemoncurdle",
-   "variant": "PEAK",
-   "face": "dizzy",
-   "desc": "A Lemoncurdle that doubled down on sour.",
-   "hint": "A Lemoncurdle that wants more sour..."
-  },
-  "yuzu_fizz": {
-   "no": 60,
-   "name": "Yuzu Fizz",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sweet",
-   "from": "lemoncurdle",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Lemoncurdle that ate whatever was around. This happened.",
-   "hint": "A Lemoncurdle that eats something else entirely..."
-  },
-  "loaded_wrap": {
-   "no": 61,
-   "name": "Loaded Wrap",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "wrapster",
-   "variant": "ROOT",
-   "face": "neutral",
-   "desc": "A Wrapster that went back to its greasy roots.",
-   "hint": "A Wrapster that remembers where it came from..."
-  },
-  "garden_burger": {
-   "no": 62,
-   "name": "Garden Burger",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "wrapster",
-   "variant": "PEAK",
-   "face": "happy",
-   "desc": "A Wrapster that doubled down on green.",
-   "hint": "A Wrapster that wants more green..."
-  },
-  "pizza_verde": {
-   "no": 63,
-   "name": "Pizza Verde",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "wrapster",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Wrapster that ate whatever was around. This happened.",
-   "hint": "A Wrapster that eats something else entirely..."
-  },
-  "fair_fritter": {
-   "no": 64,
-   "name": "Fair Fritter",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "churrolo",
-   "variant": "ROOT",
-   "face": "neutral",
-   "desc": "A Churrolo that went back to its greasy roots.",
-   "hint": "A Churrolo that remembers where it came from..."
-  },
-  "churro_king": {
-   "no": 65,
-   "name": "Churro King",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "churrolo",
-   "variant": "PEAK",
-   "face": "sparkle",
-   "desc": "A Churrolo that doubled down on sweet.",
-   "hint": "A Churrolo that wants more sweet..."
-  },
-  "dulce_diablo": {
-   "no": 66,
-   "name": "Dulce Diablo",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "churrolo",
-   "variant": "CHAOS",
-   "face": "evil",
-   "desc": "A Churrolo that ate whatever was around. This happened.",
-   "hint": "A Churrolo that eats something else entirely..."
-  },
-  "lard_lord": {
-   "no": 67,
-   "name": "Lard Lord",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "greasy_chonk",
-   "variant": "ULTRA",
-   "face": "sleepy",
-   "desc": "The purest greasy pal there is. Ate nothing else, regrets nothing.",
-   "hint": "A Greasy Chonk that only ever eats greasy..."
-  },
-  "maple_baconeer": {
-   "no": 68,
-   "name": "Maple Baconeer",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "greasy_chonk",
-   "variant": "BLOOM",
-   "face": "sparkle",
-   "desc": "A Greasy Chonk that made a friend: sweet or spicy food.",
-   "hint": "A Greasy Chonk that eats something friendly..."
-  },
-  "salad_shame": {
-   "no": 69,
-   "name": "Salad Shame",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "greasy_chonk",
-   "variant": "CLASH",
-   "face": "sad",
-   "desc": "A Greasy Chonk that ate its rival food. It has not forgiven anyone.",
-   "hint": "A Greasy Chonk that eats its rival..."
-  },
-  "bucket_boss": {
-   "no": 70,
-   "name": "Bucket Boss",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "wingding",
-   "variant": "ROOT",
-   "face": "neutral",
-   "desc": "A Wingding that went back to its greasy roots.",
-   "hint": "A Wingding that remembers where it came from..."
-  },
-  "buffalo_blaze": {
-   "no": 71,
-   "name": "Buffalo Blaze",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "wingding",
-   "variant": "PEAK",
-   "face": "angry",
-   "desc": "A Wingding that doubled down on spicy.",
-   "hint": "A Wingding that wants more spicy..."
-  },
-  "hot_pocketeer": {
-   "no": 72,
-   "name": "Hot Pocketeer",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "wingding",
-   "variant": "CHAOS",
-   "face": "evil",
-   "desc": "A Wingding that ate whatever was around. This happened.",
-   "hint": "A Wingding that eats something else entirely..."
-  },
-  "chippy": {
-   "no": 73,
-   "name": "Chippy",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "vinegrub",
-   "variant": "ROOT",
-   "face": "happy",
-   "desc": "A Vinegrub that went back to its greasy roots.",
-   "hint": "A Vinegrub that remembers where it came from..."
-  },
-  "malt_marauder": {
-   "no": 74,
-   "name": "Malt Marauder",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "vinegrub",
-   "variant": "PEAK",
-   "face": "evil",
-   "desc": "A Vinegrub that doubled down on sour.",
-   "hint": "A Vinegrub that wants more sour..."
-  },
-  "fish_taco": {
-   "no": 75,
-   "name": "Fish Taco",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "greasy",
-   "from": "vinegrub",
-   "variant": "CHAOS",
-   "face": "neutral",
-   "desc": "A Vinegrub that ate whatever was around. This happened.",
-   "hint": "A Vinegrub that eats something else entirely..."
-  },
-  "ghost_pepper": {
-   "no": 76,
-   "name": "Ghost Pepper",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "pepperpod",
-   "variant": "ROOT",
-   "face": "evil",
-   "desc": "A Pepperpod that went back to its spicy roots.",
-   "hint": "A Pepperpod that remembers where it came from..."
-  },
-  "wasabeast": {
-   "no": 77,
-   "name": "Wasabeast",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "pepperpod",
-   "variant": "PEAK",
-   "face": "angry",
-   "desc": "A Pepperpod that doubled down on green.",
-   "hint": "A Pepperpod that wants more green..."
-  },
-  "pad_thai_tiger": {
-   "no": 78,
-   "name": "Pad Thai Tiger",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "pepperpod",
-   "variant": "CHAOS",
-   "face": "angry",
-   "desc": "A Pepperpod that ate whatever was around. This happened.",
-   "hint": "A Pepperpod that eats something else entirely..."
-  },
-  "mole_mole": {
-   "no": 79,
-   "name": "Mole Mole",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "chilimango",
-   "variant": "ROOT",
-   "face": "neutral",
-   "desc": "A Chilimango that went back to its spicy roots.",
-   "hint": "A Chilimango that remembers where it came from..."
-  },
-  "mango_tango": {
-   "no": 80,
-   "name": "Mango Tango",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "chilimango",
-   "variant": "PEAK",
-   "face": "sparkle",
-   "desc": "A Chilimango that doubled down on sweet.",
-   "hint": "A Chilimango that wants more sweet..."
-  },
-  "hot_honey": {
-   "no": 81,
-   "name": "Hot Honey",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "chilimango",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Chilimango that ate whatever was around. This happened.",
-   "hint": "A Chilimango that eats something else entirely..."
-  },
-  "inferno_taco": {
-   "no": 82,
-   "name": "Inferno Taco",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "nachunk",
-   "variant": "ROOT",
-   "face": "angry",
-   "desc": "A Nachunk that went back to its spicy roots.",
-   "hint": "A Nachunk that remembers where it came from..."
-  },
-  "nacho_grande": {
-   "no": 83,
-   "name": "Nacho Grande",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "nachunk",
-   "variant": "PEAK",
-   "face": "sleepy",
-   "desc": "A Nachunk that doubled down on greasy.",
-   "hint": "A Nachunk that wants more greasy..."
-  },
-  "chimichunga": {
-   "no": 84,
-   "name": "Chimichunga",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "nachunk",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Nachunk that ate whatever was around. This happened.",
-   "hint": "A Nachunk that eats something else entirely..."
-  },
-  "magma_mound": {
-   "no": 85,
-   "name": "Magma Mound",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "scorchling",
-   "variant": "ULTRA",
-   "face": "angry",
-   "desc": "The purest spicy pal there is. Ate nothing else, regrets nothing.",
-   "hint": "A Scorchling that only ever eats spicy..."
-  },
-  "firecracker": {
-   "no": 86,
-   "name": "Firecracker",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "scorchling",
-   "variant": "BLOOM",
-   "face": "sparkle",
-   "desc": "A Scorchling that made a friend: greasy or sour food.",
-   "hint": "A Scorchling that eats something friendly..."
-  },
-  "cold_sweat": {
-   "no": 87,
-   "name": "Cold Sweat",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "scorchling",
-   "variant": "CLASH",
-   "face": "sad",
-   "desc": "A Scorchling that ate its rival food. It has not forgiven anyone.",
-   "hint": "A Scorchling that eats its rival..."
-  },
-  "salsa_diablo": {
-   "no": 88,
-   "name": "Salsa Diablo",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "salsette",
-   "variant": "ROOT",
-   "face": "evil",
-   "desc": "A Salsette that went back to its spicy roots.",
-   "hint": "A Salsette that remembers where it came from..."
-  },
-  "tom_yum": {
-   "no": 89,
-   "name": "Tom Yum",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "salsette",
-   "variant": "PEAK",
-   "face": "neutral",
-   "desc": "A Salsette that doubled down on sour.",
-   "hint": "A Salsette that wants more sour..."
-  },
-  "ceviche": {
-   "no": 90,
-   "name": "Ceviche",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "spicy",
-   "from": "salsette",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Salsette that ate whatever was around. This happened.",
-   "hint": "A Salsette that eats something else entirely..."
-  },
-  "sauerkraut": {
-   "no": 91,
-   "name": "Sauerkraut",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sour",
-   "from": "kimchling",
-   "variant": "ROOT",
-   "face": "sad",
-   "desc": "A Kimchling that went back to its sour roots.",
-   "hint": "A Kimchling that remembers where it came from..."
-  },
-  "kimchi_kaiju": {
-   "no": 92,
-   "name": "Kimchi Kaiju",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sour",
-   "from": "kimchling",
-   "variant": "PEAK",
-   "face": "angry",
-   "desc": "A Kimchling that doubled down on green.",
-   "hint": "A Kimchling that wants more green..."
-  },
-  "pickled_garden": {
-   "no": 93,
-   "name": "Pickled Garden",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sour",
-   "from": "kimchling",
-   "variant": "CHAOS",
-   "face": "neutral",
-   "desc": "A Kimchling that ate whatever was around. This happened.",
-   "hint": "A Kimchling that eats something else entirely..."
-  },
-  "warhead": {
-   "no": 94,
-   "name": "Warhead",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sour",
-   "from": "sourpatch",
-   "variant": "ROOT",
-   "face": "angry",
-   "desc": "A Sourpatch that went back to its sour roots.",
-   "hint": "A Sourpatch that remembers where it came from..."
-  },
-  "sweet_tart": {
-   "no": 95,
-   "name": "Sweet Tart",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sour",
-   "from": "sourpatch",
-   "variant": "PEAK",
-   "face": "sparkle",
-   "desc": "A Sourpatch that doubled down on sweet.",
-   "hint": "A Sourpatch that wants more sweet..."
-  },
-  "candy_kraut": {
-   "no": 96,
-   "name": "Candy Kraut",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sour",
-   "from": "sourpatch",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Sourpatch that ate whatever was around. This happened.",
-   "hint": "A Sourpatch that eats something else entirely..."
-  },
-  "pickle_spear": {
-   "no": 97,
-   "name": "Pickle Spear",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sour",
-   "from": "dillfry",
-   "variant": "ROOT",
-   "face": "neutral",
-   "desc": "A Dillfry that went back to its sour roots.",
-   "hint": "A Dillfry that remembers where it came from..."
-  },
-  "fried_pickle": {
-   "no": 98,
-   "name": "Fried Pickle",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sour",
-   "from": "dillfry",
-   "variant": "PEAK",
-   "face": "sleepy",
-   "desc": "A Dillfry that doubled down on greasy.",
-   "hint": "A Dillfry that wants more greasy..."
-  },
-  "reuben": {
-   "no": 99,
-   "name": "Reuben",
-   "stage": 3,
-   "stage_name": "adult",
-   "family": "sour",
-   "from": "dillfry",
-   "variant": "CHAOS",
-   "face": "dizzy",
-   "desc": "A Dillfry that ate whatever was around. This happened.",
-   "hint": "A Dillfry that eats something else entirely..."
-  },
-  "vindaloo": {
+   "foods": [
+    "sweet"
+   ],
+   "desc": "Sour, then sweet, then gone.",
+   "hint": "Feed Picklet a sweet Chu food.",
+   "line": "Sourpatch | gum | lime/sweet | sugar half:sweet | lid flat | Sour, then sweet, then gone."
+  },
+  "hermit": {
    "no": 100,
-   "name": "Vindaloo",
-   "stage": 3,
-   "stage_name": "adult",
+   "name": "Hermit",
+   "stage": 2,
+   "stage_name": "kid",
    "family": "sour",
-   "from": "fermento",
-   "variant": "ROOT",
-   "face": "angry",
-   "desc": "A Fermento that went back to its sour roots.",
-   "hint": "A Fermento that remembers where it came from..."
+   "from": "picklet",
+   "variant": "KID",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "A hermit crab living in half a lemon.",
+   "hint": "Feed Picklet a greasy Chu food.",
+   "line": "Hermit | mound | coral/lemon | cap:lemon claws:coral | glance flat | A hermit crab living in half a lemon."
   },
-  "hot_sauce": {
+  "buzz": {
    "no": 101,
-   "name": "Hot Sauce",
-   "stage": 3,
-   "stage_name": "adult",
+   "name": "Buzz",
+   "stage": 2,
+   "stage_name": "kid",
    "family": "sour",
-   "from": "fermento",
-   "variant": "PEAK",
-   "face": "angry",
-   "desc": "A Fermento that doubled down on spicy.",
-   "hint": "A Fermento that wants more spicy..."
+   "from": "picklet",
+   "variant": "KID",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "A sour wasp that never stings.",
+   "hint": "Feed Picklet a spicy Chu food.",
+   "line": "Buzz | egg | sour/char | hstripes:char wings_bug antennae | gloss flat | A sour wasp that never stings."
   },
-  "gochujang": {
+  "teru_teru": {
    "no": 102,
-   "name": "Gochujang",
-   "stage": 3,
-   "stage_name": "adult",
+   "name": "Teru Teru",
+   "stage": 2,
+   "stage_name": "kid",
    "family": "sour",
-   "from": "fermento",
-   "variant": "CHAOS",
-   "face": "evil",
-   "desc": "A Fermento that ate whatever was around. This happened.",
-   "hint": "A Fermento that eats something else entirely..."
+   "from": "picklet",
+   "variant": "KID",
+   "foods": [
+    "sour"
+   ],
+   "desc": "Hang it up to stop the rain.",
+   "hint": "Feed Picklet a sour Chu food.",
+   "line": "Teru Teru | ghost | white/lime | skirt:white collar:lime | dot flat | Hang it up to stop the rain."
   },
-  "vinegaroon": {
+  "ume_onigiri": {
    "no": 103,
-   "name": "Vinegaroon",
+   "name": "Ume Onigiri",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
-   "from": "puckerpus",
-   "variant": "ULTRA",
-   "face": "evil",
-   "desc": "The purest sour pal there is. Ate nothing else, regrets nothing.",
-   "hint": "A Puckerpus that only ever eats sour..."
+   "from": "kappa_maki",
+   "variant": "ROOT",
+   "foods": [
+    "sour"
+   ],
+   "desc": "A rice ball with a sour plum on top.",
+   "hint": "Feed Kappa Maki a sour Dai food, back to its roots.",
+   "line": "Ume Onigiri | tri | rice/nori | nori topknot:berry | dot w | A rice ball with a sour plum on top."
   },
-  "citrus_sage": {
+  "granny": {
    "no": 104,
-   "name": "Citrus Sage",
+   "name": "Granny",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
-   "from": "puckerpus",
-   "variant": "BLOOM",
-   "face": "sleepy",
-   "desc": "A Puckerpus that made a friend: spicy or green food.",
-   "hint": "A Puckerpus that eats something friendly..."
+   "from": "kappa_maki",
+   "variant": "PEAK",
+   "foods": [
+    "green"
+   ],
+   "desc": "A green apple. Crunchy and sour.",
+   "hint": "Feed Kappa Maki a green Dai food, even more green.",
+   "line": "Granny | ball | lime/green | stem leaf | glance smirk | A green apple. Crunchy and sour."
   },
-  "curdle_brute": {
+  "hoot": {
    "no": 105,
-   "name": "Curdle Brute",
+   "name": "Hoot",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
-   "from": "puckerpus",
-   "variant": "CLASH",
-   "face": "angry",
-   "desc": "A Puckerpus that ate its rival food. It has not forgiven anyone.",
-   "hint": "A Puckerpus that eats its rival..."
+   "from": "kappa_maki",
+   "variant": "CHAOS",
+   "foods": [
+    "sweet",
+    "greasy",
+    "spicy"
+   ],
+   "desc": "Turns its head all the way round.",
+   "hint": "Feed Kappa Maki any other Dai food: sweet, greasy or spicy.",
+   "line": "Hoot | egg | sour/cream | ears:p beak_f | wide none | Turns its head all the way round."
   },
-  "cyborg_sprout": {
+  "lemon_sweet": {
    "no": 106,
-   "name": "Cyborg Sprout",
-   "stage": 4,
-   "stage_name": "mutant",
-   "family": "green",
-   "from": "any adult",
-   "variant": "TECH",
-   "face": "visor",
-   "desc": "A green pal upgraded with a microchip. Beeps when it's hungry.",
-   "hint": "Feed a grown-up green pal some tech..."
+   "name": "Lemon Sweet",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sour",
+   "from": "sourpatch",
+   "variant": "ROOT",
+   "foods": [
+    "sour"
+   ],
+   "desc": "A sour candy, still in its wrapper.",
+   "hint": "Feed Sourpatch a sour Dai food, back to its roots.",
+   "line": "Lemon Sweet | ball | lemon | wrapper:cream sugar | squint pout | A sour candy, still in its wrapper."
   },
-  "moss_martian": {
+  "cream_soda": {
    "no": 107,
-   "name": "Moss Martian",
-   "stage": 4,
-   "stage_name": "mutant",
-   "family": "green",
-   "from": "any adult",
-   "variant": "COSMIC",
-   "face": "three",
-   "desc": "Something from space got into this green pal. It knows things.",
-   "hint": "Feed a grown-up green pal something from space..."
+   "name": "Cream Soda",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sour",
+   "from": "sourpatch",
+   "variant": "PEAK",
+   "foods": [
+    "sweet"
+   ],
+   "desc": "Melon soda with a scoop on top.",
+   "hint": "Feed Sourpatch a sweet Dai food, even more sweet.",
+   "line": "Cream Soda | cube sx=.85 sy=1.2 | lime/white | cap:white cherry bubbles | gloss v | Melon soda with a scoop on top."
   },
-  "robo_sundae": {
+  "lime": {
    "no": 108,
-   "name": "Robo Sundae",
-   "stage": 4,
-   "stage_name": "mutant",
-   "family": "sweet",
-   "from": "any adult",
-   "variant": "TECH",
-   "face": "visor",
-   "desc": "A sweet pal upgraded with a microchip. Beeps when it's hungry.",
-   "hint": "Feed a grown-up sweet pal some tech..."
+   "name": "Lime",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sour",
+   "from": "sourpatch",
+   "variant": "CHAOS",
+   "foods": [
+    "green",
+    "greasy",
+    "spicy"
+   ],
+   "desc": "Juicy, friendly, a bit sharp.",
+   "hint": "Feed Sourpatch any other Dai food: green, greasy or spicy.",
+   "line": "Lime | ball | lime | leaf | gloss flat | Juicy, friendly, a bit sharp."
   },
-  "nebula_swirl": {
+  "anemone": {
    "no": 109,
-   "name": "Nebula Swirl",
-   "stage": 4,
-   "stage_name": "mutant",
-   "family": "sweet",
-   "from": "any adult",
-   "variant": "COSMIC",
-   "face": "three",
-   "desc": "Something from space got into this sweet pal. It knows things.",
-   "hint": "Feed a grown-up sweet pal something from space..."
+   "name": "Anemone",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sour",
+   "from": "hermit",
+   "variant": "ROOT",
+   "foods": [
+    "sour"
+   ],
+   "desc": "Waves at fish all day.",
+   "hint": "Feed Hermit a sour Dai food, back to its roots.",
+   "line": "Anemone | gum | sour/coral | tentacles:coral | sleep none | Waves at fish all day."
   },
-  "mecha_nugget": {
+  "calamari": {
    "no": 110,
-   "name": "Mecha Nugget",
-   "stage": 4,
-   "stage_name": "mutant",
-   "family": "greasy",
-   "from": "any adult",
-   "variant": "TECH",
-   "face": "visor",
-   "desc": "A greasy pal upgraded with a microchip. Beeps when it's hungry.",
-   "hint": "Feed a grown-up greasy pal some tech..."
+   "name": "Calamari",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sour",
+   "from": "hermit",
+   "variant": "PEAK",
+   "foods": [
+    "greasy"
+   ],
+   "desc": "A squid ring. Crunchy, a bit chewy.",
+   "hint": "Feed Hermit a greasy Dai food, even more greasy.",
+   "line": "Calamari | ring | crust/cream | crust | glance flat | A squid ring. Crunchy, a bit chewy."
   },
-  "blob_beyond": {
+  "octopepper": {
    "no": 111,
-   "name": "Blob Beyond",
-   "stage": 4,
-   "stage_name": "mutant",
-   "family": "greasy",
-   "from": "any adult",
-   "variant": "COSMIC",
-   "face": "three",
-   "desc": "Something from space got into this greasy pal. It knows things.",
-   "hint": "Feed a grown-up greasy pal something from space..."
+   "name": "Octopepper",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sour",
+   "from": "hermit",
+   "variant": "CHAOS",
+   "foods": [
+    "green",
+    "sweet",
+    "spicy"
+   ],
+   "desc": "Eight spicy legs, one calm mind.",
+   "hint": "Feed Hermit any other Dai food: green, sweet or spicy.",
+   "line": "Octopepper | mound | spicy | tentacles | sleep none | Eight spicy legs, one calm mind."
   },
-  "overclock": {
+  "lemon_ant": {
    "no": 112,
-   "name": "Overclock",
-   "stage": 4,
-   "stage_name": "mutant",
-   "family": "spicy",
-   "from": "any adult",
-   "variant": "TECH",
-   "face": "visor",
-   "desc": "A spicy pal upgraded with a microchip. Beeps when it's hungry.",
-   "hint": "Feed a grown-up spicy pal some tech..."
+   "name": "Lemon Ant",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sour",
+   "from": "buzz",
+   "variant": "ROOT",
+   "foods": [
+    "sour"
+   ],
+   "desc": "A lemon ant. It really tastes of citrus.",
+   "hint": "Feed Buzz a sour Dai food, back to its roots.",
+   "line": "Lemon Ant | bean | lemon/char | antennae legs:char | dot flat | A lemon ant. It really tastes of citrus."
   },
-  "solar_flare": {
+  "shichimi": {
    "no": 113,
-   "name": "Solar Flare",
-   "stage": 4,
-   "stage_name": "mutant",
-   "family": "spicy",
-   "from": "any adult",
-   "variant": "COSMIC",
-   "face": "three",
-   "desc": "Something from space got into this spicy pal. It knows things.",
-   "hint": "Feed a grown-up spicy pal something from space..."
+   "name": "Shichimi",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sour",
+   "from": "buzz",
+   "variant": "PEAK",
+   "foods": [
+    "spicy"
+   ],
+   "desc": "Seven spices in one little bottle.",
+   "hint": "Feed Buzz a spicy Dai food, even more spicy.",
+   "line": "Shichimi | bottle | spicy/wood | hat:wood speckle:lemon | glance flat | Seven spices in one little bottle."
   },
-  "acid_battery": {
+  "axel": {
    "no": 114,
-   "name": "Acid Battery",
+   "name": "Axel",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sour",
+   "from": "buzz",
+   "variant": "CHAOS",
+   "foods": [
+    "green",
+    "sweet",
+    "greasy"
+   ],
+   "desc": "Smiles on the inside.",
+   "hint": "Feed Buzz any other Dai food: green, sweet or greasy.",
+   "line": "Axel | bean | pink | frills:pink | gloss v | Smiles on the inside."
+  },
+  "omamori": {
+   "no": 115,
+   "name": "Omamori",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sour",
+   "from": "teru_teru",
+   "variant": "ULTRA",
+   "foods": [
+    "sour"
+   ],
+   "desc": "A lucky charm pouch. Keeps the gut safe.",
+   "hint": "Feed Teru Teru a sour Dai food: sour all the way.",
+   "line": "Omamori | cube sx=.85 sy=1.15 | lime/gold | topknot:gold band:gold kanji | stern flat | A lucky charm pouch. Keeps the gut safe."
+  },
+  "kokeshi": {
+   "no": 116,
+   "name": "Kokeshi",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sour",
+   "from": "teru_teru",
+   "variant": "BLOOM",
+   "foods": [
+    "spicy",
+    "green"
+   ],
+   "desc": "A wooden doll. Watches over the room.",
+   "hint": "Feed Teru Teru a friend food: a spicy or green Dai food.",
+   "line": "Kokeshi | doll | cream/sour | bangs:char band:spicy | dot flat | A wooden doll. Watches over the room."
+  },
+  "karakasa": {
+   "no": 117,
+   "name": "Karakasa",
+   "stage": 3,
+   "stage_name": "adult",
+   "family": "sour",
+   "from": "teru_teru",
+   "variant": "CLASH",
+   "foods": [
+    "sweet",
+    "greasy"
+   ],
+   "desc": "An old umbrella that came alive.",
+   "hint": "Feed Teru Teru a rival food: a sweet or greasy Dai food.",
+   "line": "Karakasa | kiss sy=1.25 | spicy/wood | leg | one tongue | An old umbrella that came alive."
+  },
+  "robofrog": {
+   "no": 118,
+   "name": "Robofrog",
    "stage": 4,
    "stage_name": "mutant",
    "family": "sour",
    "from": "any adult",
    "variant": "TECH",
-   "face": "visor",
-   "desc": "A sour pal upgraded with a microchip. Beeps when it's hungry.",
-   "hint": "Feed a grown-up sour pal some tech..."
+   "foods": [
+    "tech"
+   ],
+   "desc": "Croaks in binary.",
+   "hint": "Feed any grown-up (Dai) sour pal some tech food.",
+   "line": "Robofrog | squat | metal/sour | feet chip | visor flat | Croaks in binary."
   },
-  "void_pickle": {
-   "no": 115,
-   "name": "Void Pickle",
+  "ningyo": {
+   "no": 119,
+   "name": "Ningyo",
    "stage": 4,
    "stage_name": "mutant",
    "family": "sour",
    "from": "any adult",
    "variant": "COSMIC",
-   "face": "three",
-   "desc": "Something from space got into this sour pal. It knows things.",
-   "hint": "Feed a grown-up sour pal something from space..."
+   "foods": [
+    "cosmic"
+   ],
+   "desc": "A mermaid from outer space.",
+   "hint": "Feed any grown-up (Dai) sour pal some cosmic food.",
+   "line": "Ningyo | fish | slime | tail_fish | one o | A mermaid from outer space."
   },
-  "world_tree": {
-   "no": 116,
-   "name": "World Tree",
-   "stage": 5,
-   "stage_name": "legend",
-   "family": "green",
-   "from": "treefolk",
-   "variant": "LEGEND",
-   "face": "stars",
-   "desc": "The first pal ever to grow a whole forest. Birds nest in it, politely.",
-   "hint": "The purest green pal + Golden Seed..."
-  },
-  "celestial_sundae": {
-   "no": 117,
-   "name": "Celestial Sundae",
-   "stage": 5,
-   "stage_name": "legend",
-   "family": "sweet",
-   "from": "sundae_supreme",
-   "variant": "LEGEND",
-   "face": "stars",
-   "desc": "Made of stardust and soft serve. Tastes like a wish.",
-   "hint": "The purest sweet pal + Stardust Sugar..."
-  },
-  "deep_fried_dragon": {
-   "no": 118,
-   "name": "Deep-Fried Dragon",
-   "stage": 5,
-   "stage_name": "legend",
-   "family": "greasy",
-   "from": "lard_lord",
-   "variant": "LEGEND",
-   "face": "stars",
-   "desc": "Fried in dragon oil until it became one. Breathes warm butter.",
-   "hint": "The purest greasy pal + Dragon Oil..."
-  },
-  "phoenix": {
-   "no": 119,
-   "name": "Phoenix",
-   "stage": 5,
-   "stage_name": "legend",
-   "family": "spicy",
-   "from": "magma_mound",
-   "variant": "LEGEND",
-   "face": "stars",
-   "desc": "Burns, flushes, and hatches again from its own hot sauce.",
-   "hint": "The purest spicy pal + Phoenix Pepper..."
-  },
-  "kraken": {
+  "frog_king": {
    "no": 120,
-   "name": "Kraken",
+   "name": "Frog King",
    "stage": 5,
    "stage_name": "legend",
    "family": "sour",
-   "from": "vinegaroon",
+   "from": "omamori",
    "variant": "LEGEND",
-   "face": "stars",
-   "desc": "Eight pickled tentacles, one ancient grudge. Lives in the brine of time.",
-   "hint": "The purest sour pal + Kraken Brine..."
+   "foods": [
+    "legend"
+   ],
+   "desc": "The sour king of every pond.",
+   "hint": "Feed Omamori (the ULTRA sour pal) the Kraken Brine.",
+   "line": "Frog King | mochi sx=1.2 | lime/gold | feet:lime crown sparkles | heavy flat stache | The sour king of every pond."
   }
  },
  "starters": {
-  "green": "sprig",
-  "sweet": "swirlet",
-  "greasy": "nugget",
+  "green": "bud",
+  "sweet": "nib",
+  "greasy": "inari",
   "spicy": "ember",
   "sour": "picklet"
  },
  "next": {
-  "sprig": {
-   "green": "broccolump",
-   "sweet": "sproutberry",
-   "greasy": "fritterleaf",
-   "spicy": "jalapling",
-   "sour": "gherkid"
+  "bud": {
+   "green": "peapod",
+   "sweet": "usagi",
+   "greasy": "kakiage",
+   "spicy": "tengu",
+   "sour": "kiwi"
   },
-  "swirlet": {
-   "green": "matcharoo",
-   "sweet": "neapoolitan",
-   "greasy": "donutto",
-   "spicy": "spicecake",
-   "sour": "lemoncurdle"
+  "peapod": {
+   "green": "avocado",
+   "sour": "melon_pan",
+   "sweet": "melon_pan",
+   "greasy": "wasabi_pea",
+   "spicy": "wasabi_pea"
   },
-  "nugget": {
-   "green": "wrapster",
-   "sweet": "churrolo",
-   "greasy": "greasy_chonk",
-   "spicy": "wingding",
-   "sour": "vinegrub"
+  "usagi": {
+   "green": "yomogi",
+   "sweet": "usagi_manju",
+   "greasy": "yamabiko",
+   "spicy": "yamabiko",
+   "sour": "yamabiko"
   },
-  "ember": {
-   "green": "pepperpod",
-   "sweet": "chilimango",
-   "greasy": "nachunk",
-   "spicy": "scorchling",
-   "sour": "salsette"
+  "kakiage": {
+   "green": "kinoko",
+   "sweet": "kodama",
+   "greasy": "mujina",
+   "spicy": "kodama",
+   "sour": "kodama"
   },
-  "picklet": {
-   "green": "kimchling",
-   "sweet": "sourpatch",
-   "greasy": "dillfry",
-   "spicy": "fermento",
-   "sour": "puckerpus"
+  "tengu": {
+   "green": "karasu_tengu",
+   "sweet": "komainu",
+   "greasy": "komainu",
+   "spicy": "horseradish",
+   "sour": "komainu"
   },
-  "broccolump": {
-   "green": "treefolk",
-   "sour": "blossomoss",
-   "sweet": "blossomoss",
-   "greasy": "thornbrute",
-   "spicy": "thornbrute"
+  "kiwi": {
+   "green": "kappa",
+   "sweet": "kiwi_bird",
+   "greasy": "kiwi_bird",
+   "spicy": "kiwi_bird",
+   "sour": "gherk"
   },
-  "sproutberry": {
-   "green": "orchardon",
-   "sweet": "jamboree",
-   "greasy": "fruitcakey",
-   "spicy": "fruitcakey",
-   "sour": "fruitcakey"
+  "avocado": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "fritterleaf": {
-   "green": "tempura_sage",
-   "sweet": "kebabble",
-   "greasy": "onion_ringo",
-   "spicy": "kebabble",
-   "sour": "kebabble"
+  "melon_pan": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "jalapling": {
-   "green": "pepper_hedge",
-   "sweet": "currycane",
-   "greasy": "currycane",
-   "spicy": "habanerd",
-   "sour": "currycane"
+  "wasabi_pea": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "gherkid": {
-   "green": "cucumbersome",
-   "sweet": "kombuchoo",
-   "greasy": "kombuchoo",
-   "spicy": "kombuchoo",
-   "sour": "dill_pickler"
+  "yomogi": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "matcharoo": {
-   "green": "mint_mochi",
-   "sweet": "matcha_monk",
-   "greasy": "rhubarb_rascal",
-   "spicy": "rhubarb_rascal",
-   "sour": "rhubarb_rascal"
+  "usagi_manju": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "neapoolitan": {
-   "sweet": "sundae_supreme",
-   "green": "caramelord",
-   "greasy": "caramelord",
-   "spicy": "sour_gummy",
-   "sour": "sour_gummy"
+  "yamabiko": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "donutto": {
-   "green": "funnelcake",
-   "sweet": "glazed_duke",
-   "greasy": "deep_fried_bar",
-   "spicy": "funnelcake",
-   "sour": "funnelcake"
+  "kinoko": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "spicecake": {
-   "green": "ginger_snap",
-   "sweet": "cinnabun",
-   "greasy": "ginger_snap",
-   "spicy": "chili_choco",
-   "sour": "ginger_snap"
+  "mujina": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "lemoncurdle": {
-   "green": "yuzu_fizz",
-   "sweet": "lemon_tart",
-   "greasy": "yuzu_fizz",
-   "spicy": "yuzu_fizz",
-   "sour": "sherbet_shock"
+  "kodama": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "wrapster": {
-   "green": "garden_burger",
-   "sweet": "pizza_verde",
-   "greasy": "loaded_wrap",
-   "spicy": "pizza_verde",
-   "sour": "pizza_verde"
+  "karasu_tengu": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "churrolo": {
-   "green": "dulce_diablo",
-   "sweet": "churro_king",
-   "greasy": "fair_fritter",
-   "spicy": "dulce_diablo",
-   "sour": "dulce_diablo"
+  "horseradish": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "greasy_chonk": {
-   "greasy": "lard_lord",
-   "sweet": "maple_baconeer",
-   "spicy": "maple_baconeer",
-   "green": "salad_shame",
-   "sour": "salad_shame"
+  "komainu": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "wingding": {
-   "green": "hot_pocketeer",
-   "sweet": "hot_pocketeer",
-   "greasy": "bucket_boss",
-   "spicy": "buffalo_blaze",
-   "sour": "hot_pocketeer"
+  "kappa": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
   },
-  "vinegrub": {
+  "gherk": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
+  },
+  "kiwi_bird": {
+   "tech": "karakuri",
+   "cosmic": "zorb"
+  },
+  "nib": {
+   "green": "leafwing",
+   "sweet": "fudge",
+   "greasy": "glazy",
+   "spicy": "choco_taco",
+   "sour": "bumble"
+  },
+  "leafwing": {
+   "green": "pistachio",
+   "sweet": "owlet",
+   "greasy": "scarab",
+   "spicy": "scarab",
+   "sour": "scarab"
+  },
+  "fudge": {
+   "sweet": "bonbon",
+   "green": "kuri",
+   "greasy": "kuri",
+   "spicy": "gremlin",
+   "sour": "gremlin"
+  },
+  "glazy": {
+   "green": "candy_corn",
+   "sweet": "eclair",
+   "greasy": "churro",
+   "spicy": "candy_corn",
+   "sour": "candy_corn"
+  },
+  "choco_taco": {
+   "green": "taiyaki",
+   "sweet": "hot_cocoa",
+   "greasy": "taiyaki",
+   "spicy": "cocoa_fire",
+   "sour": "taiyaki"
+  },
+  "bumble": {
+   "green": "bruin",
+   "sweet": "honeybear",
+   "greasy": "bruin",
+   "spicy": "bruin",
+   "sour": "ramune"
+  },
+  "owlet": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "pistachio": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "scarab": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "bonbon": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "kuri": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "gremlin": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "eclair": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "churro": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "candy_corn": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "hot_cocoa": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "cocoa_fire": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "taiyaki": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "honeybear": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "ramune": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "bruin": {
+   "tech": "cocoa_9",
+   "cosmic": "kaguya"
+  },
+  "inari": {
+   "green": "kitsune",
+   "sweet": "waffle",
+   "greasy": "fried_egg",
+   "spicy": "drumstick",
+   "sour": "oden"
+  },
+  "kitsune": {
+   "green": "konoha",
+   "sweet": "okonomi",
+   "greasy": "kyubi",
+   "spicy": "okonomi",
+   "sour": "okonomi"
+  },
+  "waffle": {
+   "green": "stroopwafel",
+   "sweet": "daigaku_imo",
+   "greasy": "popcorn",
+   "spicy": "stroopwafel",
+   "sour": "stroopwafel"
+  },
+  "fried_egg": {
+   "greasy": "burger",
+   "sweet": "hot_dog",
+   "spicy": "hot_dog",
    "green": "fish_taco",
-   "sweet": "fish_taco",
-   "greasy": "chippy",
-   "spicy": "fish_taco",
-   "sour": "malt_marauder"
+   "sour": "fish_taco"
   },
-  "pepperpod": {
-   "green": "wasabeast",
-   "sweet": "pad_thai_tiger",
-   "greasy": "pad_thai_tiger",
-   "spicy": "ghost_pepper",
-   "sour": "pad_thai_tiger"
+  "drumstick": {
+   "green": "hothog",
+   "sweet": "hothog",
+   "greasy": "kushikatsu",
+   "spicy": "kitsu",
+   "sour": "hothog"
   },
-  "chilimango": {
-   "green": "hot_honey",
-   "sweet": "mango_tango",
-   "greasy": "hot_honey",
-   "spicy": "mole_mole",
-   "sour": "hot_honey"
+  "oden": {
+   "green": "walrusk",
+   "sweet": "walrusk",
+   "greasy": "ebi_fry",
+   "spicy": "walrusk",
+   "sour": "shiso_tempura"
   },
-  "nachunk": {
-   "green": "chimichunga",
-   "sweet": "chimichunga",
-   "greasy": "nacho_grande",
-   "spicy": "inferno_taco",
-   "sour": "chimichunga"
+  "kyubi": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "scorchling": {
-   "spicy": "magma_mound",
-   "greasy": "firecracker",
-   "sour": "firecracker",
-   "green": "cold_sweat",
-   "sweet": "cold_sweat"
+  "konoha": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "salsette": {
-   "green": "ceviche",
-   "sweet": "ceviche",
-   "greasy": "ceviche",
-   "spicy": "salsa_diablo",
-   "sour": "tom_yum"
+  "okonomi": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "kimchling": {
-   "green": "kimchi_kaiju",
-   "sweet": "pickled_garden",
-   "greasy": "pickled_garden",
-   "spicy": "pickled_garden",
-   "sour": "sauerkraut"
+  "popcorn": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "sourpatch": {
-   "green": "candy_kraut",
-   "sweet": "sweet_tart",
-   "greasy": "candy_kraut",
-   "spicy": "candy_kraut",
-   "sour": "warhead"
+  "daigaku_imo": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "dillfry": {
-   "green": "reuben",
-   "sweet": "reuben",
-   "greasy": "fried_pickle",
-   "spicy": "reuben",
-   "sour": "pickle_spear"
+  "stroopwafel": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "fermento": {
-   "green": "gochujang",
-   "sweet": "gochujang",
-   "greasy": "gochujang",
-   "spicy": "hot_sauce",
-   "sour": "vindaloo"
+  "burger": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "puckerpus": {
-   "sour": "vinegaroon",
-   "spicy": "citrus_sage",
-   "green": "citrus_sage",
-   "sweet": "curdle_brute",
-   "greasy": "curdle_brute"
-  },
-  "treefolk": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "blossomoss": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "thornbrute": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "orchardon": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "jamboree": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "fruitcakey": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "tempura_sage": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "onion_ringo": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "kebabble": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "pepper_hedge": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "habanerd": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "currycane": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "cucumbersome": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "dill_pickler": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "kombuchoo": {
-   "tech": "cyborg_sprout",
-   "cosmic": "moss_martian"
-  },
-  "matcha_monk": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "mint_mochi": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "rhubarb_rascal": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "sundae_supreme": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "caramelord": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "sour_gummy": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "glazed_duke": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "deep_fried_bar": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "funnelcake": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "cinnabun": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "chili_choco": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "ginger_snap": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "lemon_tart": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "sherbet_shock": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "yuzu_fizz": {
-   "tech": "robo_sundae",
-   "cosmic": "nebula_swirl"
-  },
-  "loaded_wrap": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "garden_burger": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "pizza_verde": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "fair_fritter": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "churro_king": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "dulce_diablo": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "lard_lord": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "maple_baconeer": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "salad_shame": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "bucket_boss": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "buffalo_blaze": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "hot_pocketeer": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "chippy": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
-  },
-  "malt_marauder": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
+  "hot_dog": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
   "fish_taco": {
-   "tech": "mecha_nugget",
-   "cosmic": "blob_beyond"
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "ghost_pepper": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "kushikatsu": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "wasabeast": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "kitsu": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "pad_thai_tiger": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "hothog": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "mole_mole": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "ebi_fry": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "mango_tango": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "shiso_tempura": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "hot_honey": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "walrusk": {
+   "tech": "robobear",
+   "cosmic": "nebula_nug"
   },
-  "inferno_taco": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "ember": {
+   "green": "paprika",
+   "sweet": "daruma",
+   "greasy": "nacho",
+   "spicy": "dotty",
+   "sour": "kimchi"
   },
-  "nacho_grande": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "paprika": {
+   "green": "pepper_plant",
+   "sweet": "chameleon",
+   "greasy": "chameleon",
+   "spicy": "hoozuki",
+   "sour": "chameleon"
   },
-  "chimichunga": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "daruma": {
+   "green": "spicecake",
+   "sweet": "maneki",
+   "greasy": "spicecake",
+   "spicy": "oo_daruma",
+   "sour": "spicecake"
   },
-  "magma_mound": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "nacho": {
+   "green": "burrito",
+   "sweet": "burrito",
+   "greasy": "quesadilla",
+   "spicy": "popper",
+   "sour": "burrito"
   },
-  "firecracker": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "dotty": {
+   "spicy": "firebug",
+   "greasy": "salamander",
+   "sour": "salamander",
+   "green": "ladyluck",
+   "sweet": "ladyluck"
   },
-  "cold_sweat": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "kimchi": {
+   "green": "takoyaki",
+   "sweet": "takoyaki",
+   "greasy": "takoyaki",
+   "spicy": "gochujang",
+   "sour": "ceviche"
   },
-  "salsa_diablo": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "hoozuki": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "tom_yum": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "pepper_plant": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "ceviche": {
-   "tech": "overclock",
-   "cosmic": "solar_flare"
+  "chameleon": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "sauerkraut": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+  "oo_daruma": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "kimchi_kaiju": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+  "maneki": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "pickled_garden": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+  "spicecake": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "warhead": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+  "popper": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "sweet_tart": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+  "quesadilla": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "candy_kraut": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+  "burrito": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "pickle_spear": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+  "firebug": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "fried_pickle": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+  "salamander": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "reuben": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
-  },
-  "vindaloo": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
-  },
-  "hot_sauce": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+  "ladyluck": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
   "gochujang": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "vinegaroon": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+  "ceviche": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "citrus_sage": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+  "takoyaki": {
+   "tech": "mecha_oni",
+   "cosmic": "comet_chili"
   },
-  "curdle_brute": {
-   "tech": "acid_battery",
-   "cosmic": "void_pickle"
+  "picklet": {
+   "green": "kappa_maki",
+   "sweet": "sourpatch",
+   "greasy": "hermit",
+   "spicy": "buzz",
+   "sour": "teru_teru"
+  },
+  "kappa_maki": {
+   "green": "granny",
+   "sweet": "hoot",
+   "greasy": "hoot",
+   "spicy": "hoot",
+   "sour": "ume_onigiri"
+  },
+  "sourpatch": {
+   "green": "lime",
+   "sweet": "cream_soda",
+   "greasy": "lime",
+   "spicy": "lime",
+   "sour": "lemon_sweet"
+  },
+  "hermit": {
+   "green": "octopepper",
+   "sweet": "octopepper",
+   "greasy": "calamari",
+   "spicy": "octopepper",
+   "sour": "anemone"
+  },
+  "buzz": {
+   "green": "axel",
+   "sweet": "axel",
+   "greasy": "axel",
+   "spicy": "shichimi",
+   "sour": "lemon_ant"
+  },
+  "teru_teru": {
+   "sour": "omamori",
+   "spicy": "kokeshi",
+   "green": "kokeshi",
+   "sweet": "karakasa",
+   "greasy": "karakasa"
+  },
+  "ume_onigiri": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "granny": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "hoot": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "lemon_sweet": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "cream_soda": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "lime": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "anemone": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "calamari": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "octopepper": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "lemon_ant": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "shichimi": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "axel": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "omamori": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "kokeshi": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
+  },
+  "karakasa": {
+   "tech": "robofrog",
+   "cosmic": "ningyo"
   }
  },
  "legend": {
-  "treefolk": {
+  "avocado": {
    "food": "Golden Seed",
    "family": "green",
    "to": "world_tree"
   },
-  "sundae_supreme": {
+  "bonbon": {
    "food": "Stardust Sugar",
    "family": "sweet",
-   "to": "celestial_sundae"
+   "to": "tsukuyomi"
   },
-  "lard_lord": {
+  "burger": {
    "food": "Dragon Oil",
    "family": "greasy",
-   "to": "deep_fried_dragon"
+   "to": "sunbear"
   },
-  "magma_mound": {
+  "firebug": {
    "food": "Phoenix Pepper",
    "family": "spicy",
-   "to": "phoenix"
+   "to": "hou_ou"
   },
-  "vinegaroon": {
+  "omamori": {
    "food": "Kraken Brine",
    "family": "sour",
-   "to": "kraken"
+   "to": "frog_king"
   }
  }
 }

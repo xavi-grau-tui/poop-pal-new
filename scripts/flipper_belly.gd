@@ -565,7 +565,7 @@ func _refresh_hud() -> void:
 		var r := TextureRect.new()
 		r.texture = pal_ball.texture
 		r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		r.custom_minimum_size = Vector2(40, 40)
+		r.custom_minimum_size = Vector2(48, 48)          # (the 16 px ball inside a 24 px texture)
 		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		r.modulate = Color(1, 1, 1, 1) if i < balls_left else Color(0, 0, 0, 0.35)
 		balls_box.add_child(r)
