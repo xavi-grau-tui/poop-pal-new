@@ -145,7 +145,7 @@ func _apply(p: float) -> void:
 	progress = p
 	back.visible = p > 0.5
 	if front_case:
-		front_case.visible = case_on and p <= 0.5     # (the front's case: only while the front faces you)
+		_show_front_case(case_on and p <= 0.5)      # (the front's case: only while the front faces you)
 	overlay.case_tones = case_on
 	_set_muffle(p)
 	if not settled and absf(p - turn_target) <= SETTLE_AT:
@@ -258,7 +258,9 @@ const CASE_HALF := Vector2(540, 960)
 var case_on := false
 var case_sprite: Sprite2D           # on the back: over the shell, under the battery lid
 var corner: Sprite2D
-var front_case: Sprite2D
+var front_case: Sprite2D           # (under the buttons)
+var front_case_top: Sprite2D       # (over the logo and the screws)
+var case_buttons := []             # [button, its normal, pressed, the case's normal, pressed]
 var case_drag := ""                 # "" / "corner" / "case"
 var drag_from := Vector2.ZERO
 var corner_rest := Vector2.ZERO
@@ -275,13 +277,19 @@ func _setup_case() -> void:
 	corner_rest = CORNER_TIP - (-CASE_HALF).rotated(deg_to_rad(CORNER_TURN))
 	corner.position = corner_rest
 	back.add_child(corner)
-	front_case = Sprite2D.new()
-	front_case.texture = CASE_FRONT
-	front_case.centered = false
-	front_case.position = Vector2(0, -1920)
-	front_case.z_index = 30
-	front_case.visible = false
-	front.add_child(front_case)
+	# the front: a base layer over the console body and under every button (solid where they sit,
+	# so a button pressed or not always lands on the case), a top layer for the carved logo and
+	# the screws, and Melon Soda images for the menu buttons (their frame in the case's colours)
+	var console := front.get_node("Console")
+	front_case = _case_layer(CASE_FRONT, 3)            # (over the screen's frame art, z 3; under every button)
+	console.add_child(front_case)
+	front_case_top = _case_layer(load("res://textures/cases/melon_front_top.png"), 4)
+	console.add_child(front_case_top)
+	for b in [["MenuButtons/FoodButton", "buttonfood"], ["MenuButtons/GameButton", "padbutton"], ["MenuButtons/SettingsButton", "settingsbutton"]]:
+		var btn := front.get_node_or_null(b[0]) as TextureButton
+		if btn:
+			case_buttons.append([btn, btn.texture_normal, btn.texture_pressed,
+				load("res://textures/cases/melon_%snormal.png" % b[1]), load("res://textures/cases/melon_%spressed.png" % b[1])])
 	# (CASE starts on the back, so the corner is the first thing you see)
 	get_tree().create_timer(1.2).timeout.connect(func():
 		if progress == 0.0 and not turning:
@@ -370,3 +378,26 @@ func _case_click() -> void:
 	add_child(a)
 	a.play()
 	a.finished.connect(a.queue_free)
+
+func _case_layer(t: Texture2D, z: int) -> Sprite2D:
+	var sp := Sprite2D.new()
+	sp.texture = t
+	sp.centered = false
+	sp.position = Vector2(0, -1920)
+	sp.z_index = z
+	sp.visible = false
+	return sp
+
+func _show_front_case(on: bool) -> void:
+	if front_case.visible == on:
+		return
+	front_case.visible = on
+	front_case_top.visible = on
+	for c in case_buttons:
+		var btn: TextureButton = c[0]
+		var normal: Texture2D = c[3] if on else c[1]
+		var pressed: Texture2D = c[4] if on else c[2]
+		btn.texture_normal = pressed if btn.button_pressed else normal     # (menu_buttons.gd swaps these on toggle)
+		btn.texture_pressed = pressed
+		btn.set("normal_texture", normal)
+		btn.set("pressed_texture", pressed)

@@ -40,3 +40,38 @@ B = make('textures/console/back.png', [], cover=[(90, 360, 1000, 855), (290, 100
          logo_box=(243, 83, 860, 321), logo_tones=[(234, 219, 194), (200, 166, 130), (255, 249, 238)])
 B.save('textures/cases/melon_back.png')
 print('ok')
+
+# ---------------------------------------------------------------- the game's layers (2026-10-13)
+# The front case is drawn in two layers so the buttons always sit on it, whatever their state:
+#   base: everything the case covers, and solid case under every button (drawn under them)
+#   top:  the carved HaraTomo and the screws' spots (drawn over the logo and the screws)
+# and the menu buttons get Melon Soda images of their own (their frame in the case's colours).
+from scipy.ndimage import binary_dilation, label as lab2
+base = out.copy()
+for (x0, y0, x1, y1) in [(52, 290, 358, 572), (382, 290, 688, 572), (712, 290, 1018, 572),
+                         (140, 1608, 342, 1800), (442, 1612, 640, 1752), (740, 1608, 942, 1800)]:
+    base[y0:y1, x0:x1, :3] = BODY
+    base[y0:y1, x0:x1, 3] = 255
+top = np.zeros_like(out)
+for (x0, y0, x1, y1) in [(575, 105, 1000, 265), (20, 1835, 80, 1895), (1000, 1835, 1060, 1895), (20, 20, 80, 80), (1000, 20, 1060, 80)]:
+    top[y0:y1, x0:x1] = out[y0:y1, x0:x1]
+Image.fromarray(base.astype(np.uint8)).save('textures/cases/melon_front.png')
+Image.fromarray(top.astype(np.uint8)).save('textures/cases/melon_front_top.png')
+EDGE = ns['EDGE']
+for name in ['buttonfoodnormal', 'buttonfoodpressed', 'padbuttonnormal', 'padbuttonpressed', 'settingsbuttonnormal', 'settingsbuttonpressed']:
+    a = np.asarray(Image.open(f'textures/buttons/{name}.png').convert('RGBA')).astype(int)
+    rgb, al = a[..., :3], a[..., 3] > 0
+    dark = al & (rgb.sum(-1) < 330)
+    outside = ~al
+    Ld, nd = lab2(dark)
+    outer_ids = set(np.unique(Ld[binary_dilation(outside, iterations=2) & dark])) - {0}
+    outer = np.isin(Ld, list(outer_ids))                           # the frame's outer outline (whole)
+    openp = al & ~dark
+    L, n = lab2(openp)
+    touch = set(np.unique(L[binary_dilation(outside | outer, iterations=1) & openp])) - {0}
+    frame = np.isin(L, list(touch))                                # the cream frame, its shadow
+    rgb[frame] = BODY
+    rgb[outer] = EDGE
+    a[..., :3] = rgb
+    Image.fromarray(a.astype(np.uint8)).save(f'textures/cases/melon_{name}.png')
+print('layers ok')
