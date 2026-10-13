@@ -261,7 +261,7 @@ func _open(v: int, select := -1) -> void:
 	hub_dots.visible = in_hub
 	hub_hint.visible = in_hub
 	if coin_tag:
-		coin_tag.visible = v == View.SHOP or (in_hub and HUB_CARDS[hub_index]["view"] == View.SHOP)
+		coin_tag.visible = v == View.SHOP          # (only in the Shop: its hub card shows the coins below)
 	# (the lists are just cards, like the food menu: no title, no hint line)
 	title.visible = v in [View.PEDIA, View.DETAIL]
 	status.visible = v in [View.PEDIA, View.DETAIL]
@@ -374,6 +374,8 @@ func _update_hub_card_info() -> void:
 					l.position.x = right - l.size.x
 					l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 				_fit_one_line(l, 25, 12)
+				if v == View.SHOP and k == 1 and j == 1:
+					_coin_before(l)              # the coins you have: with the coin, like the Games cards
 
 func _build_pedia() -> void:
 	var fam: String = PEDIA_FAMILIES[pedia_family]
@@ -1086,6 +1088,22 @@ func _label(pos: Vector2, sz: Vector2, font_size: int, color: Color, parent: Nod
 func _outline(l: Label, px: int) -> void:
 	l.add_theme_color_override("font_outline_color", CARD_BORDER)
 	l.add_theme_constant_override("outline_size", px)
+
+## A coin just left of a right-aligned value (the hub's Shop card: the coins you have)
+func _coin_before(label: Label) -> void:
+	var icon: TextureRect = label.get_node_or_null("Coin")
+	if not icon:
+		icon = TextureRect.new()
+		icon.name = "Coin"
+		icon.texture = UiArt.coin()
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.size = Vector2(16, 16)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.add_child(icon)
+	var fs := label.get_theme_font_size("font_size")
+	var w := font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	icon.position = Vector2(label.size.x - w - icon.size.x - 4, (font.get_height(fs) - icon.size.y) / 2.0)
 
 ## Keeps a label on one line: if the text is too wide, shrink the font until it fits.
 func _fit_one_line(l: Label, max_size: int, min_size := 16) -> void:

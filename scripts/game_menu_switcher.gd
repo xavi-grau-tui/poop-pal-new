@@ -194,7 +194,7 @@ func _update_game_card_labels(page_index: int) -> void:
 	_value_coin(score_label, false)
 	_value_coin(progress_label, false)
 	if coin_tag:
-		coin_tag.visible = not unlocked and GameData.can_buy_game(index)     # coins only where they matter
+		coin_tag.visible = false            # (the card's own panel shows the coins you have: no tag on top)
 	if not unlocked:
 		if GameData.can_buy_game(index):
 			# the price, and what you have
