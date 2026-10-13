@@ -134,52 +134,9 @@ static func shutter(w: int, h: int) -> Texture2D:
 
 ## A "?" the size of a food icon (32 x 32): a special food you don't have yet
 static func question() -> Texture2D:
-	if "question" in _cache:
-		return _cache["question"]
-	var rows := [
-		"....######....",
-		"...########...",
-		"..###....###..",
-		"..##......##..",
-		"..........##..",
-		".........###..",
-		"........###...",
-		".......###....",
-		"......###.....",
-		"......##......",
-		"......##......",
-		"..............",
-		"......##......",
-		"......##......",
-	]
-	const PX := 2
-	var img := Image.create(32, 32, false, Image.FORMAT_RGBA8)
-	var ox: int = (32 - String(rows[0]).length() * PX) / 2
-	var oy: int = (32 - rows.size() * PX) / 2
-	var fill := Color8(150, 154, 96)
-	var light := Color8(186, 190, 126)
-	var inside := {}
-	for y in rows.size():
-		var row: String = rows[y]
-		for x in row.length():
-			if row[x] == "#":
-				for by in PX:
-					for bx in PX:
-						inside[Vector2i(ox + x * PX + bx, oy + y * PX + by)] = true
-	for p in inside:
-		img.set_pixel(p.x, p.y, light if p.y < 16 and p.x < 16 else fill)
-	# the dark outline round it
-	for p in inside:
-		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1)]:
-			var q: Vector2i = p + d
-			if q.x >= 0 and q.y >= 0 and q.x < 32 and q.y < 32 and not inside.has(q):
-				img.set_pixel(q.x, q.y, OUTLINE)
-	var tex := ImageTexture.create_from_image(img)
-	_cache["question"] = tex
-	return tex
+	# the locked games' "?" (textures/menus/mistery.png) at food-icon size, with a margin
+	return load("res://textures/menus/question_icon.png")
 
-## A list's scroll mark (the food menu's right edge): a small round pip, filled in for the items
-## on screen, hollow for the rest
 static func scroll_mark(on: bool) -> Texture2D:
 	var key := "scroll_%s" % on
 	if key in _cache:
