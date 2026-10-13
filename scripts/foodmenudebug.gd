@@ -602,6 +602,12 @@ func _game_style_mystery() -> void:
 	var locked_bg = games.get("_locked_bg") if games else null
 	if locked_bg:
 		bg.texture = locked_bg              # (the locked games' own "?" pattern)
+	var plain := ColorRect.new()            # (under the pattern: the food menu frame's cream, not the games' yellow)
+	plain.color = Color8(250, 244, 214)
+	plain.size = inner.size
+	plain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inner.add_child(plain)
+	inner.move_child(plain, 0)
 	bg.scale = Vector2.ONE / K
 	mini.add_child(inner)
 	for c in barrier_mystery.get_children():
