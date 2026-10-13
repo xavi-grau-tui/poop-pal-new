@@ -614,7 +614,8 @@ then pages); the section's name is the page title. Coins on the frame's top band
    the types you're missing, each card "Spicy Dai" + its 1-3 icons), then the special foods
    (tech / cosmic once a pal has reached Dai, each legendary food once its ULTRA is found), then
    drink levels (Drinks v2). Progressive as now (Shop.on_sale): only what you can use soon.
-2. STICKERS (opens mid-game, e.g. after the 3rd game is bought or 15 stars): the "?" sign on the
+2. STICKERS (opens mid-game, e.g. after the 3rd game is bought or 15 stars; maybe after CASES:
+   see the case notes): the "?" sign on the
    shutter until then, like the special foods page. A sticker is a pretend QR coupon: bought here,
    then stuck on the device's back (flip it: place / move / peel).
 3. CASES (late game, e.g. 40 stars or every launch game bought): the "?" sign until then. A case
@@ -627,7 +628,13 @@ then pages); the section's name is the page title. Coins on the frame's top band
    bottom; the buttons and the screen keep their own colours; HaraTomo (front) and Kobaya Tech
    (back, nothing else carved there) are CARVED into it, in
    the case's own colour (pressed in: a shade on the top-left inner edge, light on the bottom
-   right); the battery lid stays reachable. Some cases could come only
+   right). The case covers the battery compartment too (user, 2026-10-13): to change the
+   batteries you take the case off.
+   TO DECIDE (user, 2026-10-13): how a case is put on / taken off (on the device's back, flipped:
+   e.g. hold to slide it off, like the films and the battery strip of the unboxing), and how
+   stickers are added, moved and peeled. Order idea: cases BEFORE stickers in the Shop, so
+   stickers go on the back of the case (each case keeps its own stickers; take it off and the
+   bare device is clean again). Without a case, stickers would go on the device itself. Some cases could come only
    from games' gift tracks or Lucky Pinch (not for sale), to make them collectable.
 Each section's cards look like the food ones (frame, icon box, type tag, price on the left), so
 the whole Shop reads the same. Undecided: the exact unlock moments and prices (pacing.py).
