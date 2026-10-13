@@ -612,7 +612,7 @@ func _build_upcoming_sign(top: TextureRect) -> void:
 	var bg: Sprite2D = inner.get_node("Background")
 	bg.visible = false                  # (no pattern: just the sign, on the "?" card's plain cream)
 	var plain := ColorRect.new()
-	plain.color = Color8(250, 232, 186)
+	plain.color = Color8(250, 244, 214)         # (the food menu frame's cream: all one family)
 	plain.size = inner.size
 	plain.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner.add_child(plain)
@@ -638,13 +638,16 @@ func _build_upcoming_sign(top: TextureRect) -> void:
 	barrier_wait_sign.remove_child(barrier_wait_sign.get_child(barrier_wait_sign.get_child_count() - 1))
 	barrier.add_child(barrier_wait_sign)
 	barrier.move_child(barrier_wait_sign, 1)            # (under the title and the time)
-	var cy := PANEL.size.y / 2.0
+	# centred on the sign (its frame's own rectangle), dark brown like before
+	var sign_rect := Rect2(mini.position, top.size * s)
 	for lb in [barrier_title, barrier_time]:
-		lb.add_theme_color_override("font_color", Color8(162, 152, 98))          # (the "?" sign's green)
-		lb.add_theme_color_override("font_outline_color", Color8(88, 82, 46))
+		lb.add_theme_color_override("font_color", Color8(84, 66, 50))
+		lb.add_theme_constant_override("outline_size", 0)
+		lb.size = Vector2(sign_rect.size.x, 80)
 	barrier_title.add_theme_font_size_override("font_size", 30)
-	barrier_title.position = Vector2(0, cy - 40 - 40)
-	barrier_time.position = Vector2(0, cy - 40 + 12)
+	var cy := sign_rect.get_center().y
+	barrier_title.position = Vector2(sign_rect.position.x, cy - 40 - 34)
+	barrier_time.position = Vector2(sign_rect.position.x, cy - 40 + 14)
 	_update_barrier()
 
 ## A roll-down shutter in the panel's own orange (pixel art): slats with light top edges, a
