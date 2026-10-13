@@ -851,17 +851,7 @@ func _bought_pop(sel: Node) -> void:
 ## The coins you have, on the top-right corner (like the Games menu)
 func _build_coin_tag(menu: Node) -> void:
 	coin_tag = PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = CREAM
-	sb.border_color = CARD_BORDER
-	sb.set_border_width_all(4)
-	sb.set_corner_radius_all(8)
-	sb.content_margin_left = 12
-	sb.content_margin_right = 16
-	sb.content_margin_top = 2
-	sb.content_margin_bottom = 2
-	sb.anti_aliasing = false
-	coin_tag.add_theme_stylebox_override("panel", sb)
+	coin_tag.add_theme_stylebox_override("panel", StyleBoxEmpty.new())     # (no label: the coin and the number on the band)
 	coin_tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
@@ -872,14 +862,14 @@ func _build_coin_tag(menu: Node) -> void:
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.custom_minimum_size = Vector2(30, 30)
+	icon.custom_minimum_size = Vector2(40, 46)          # (a 40 px coin; the row a bit taller...)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
 	coin_tag_label = Label.new()
 	coin_tag_label.add_theme_font_override("font", font)
-	coin_tag_label.add_theme_font_size_override("font_size", 30)
+	coin_tag_label.add_theme_font_size_override("font_size", 40)
 	coin_tag_label.add_theme_color_override("font_color", TEXT_DARK)
-	coin_tag_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	coin_tag_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM    # (...so the number sits level with the coin)
 	coin_tag_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(coin_tag_label)
 	coin_tag.z_index = 6
