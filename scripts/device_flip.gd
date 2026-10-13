@@ -76,6 +76,8 @@ func _ready() -> void:
 	AudioServer.add_bus_effect(0, muffle)
 	muffle_idx = AudioServer.get_bus_effect_count(0) - 1
 	AudioServer.set_bus_effect_enabled(0, muffle_idx, false)
+	if DevLaunch.case_demo:
+		_setup_case()
 
 func _exit_tree() -> void:
 	if muffle_idx >= 0:
@@ -83,6 +85,9 @@ func _exit_tree() -> void:
 		AudioServer.set_bus_volume_db(0, 0.0)
 
 func _input(event: InputEvent) -> void:
+	if DevLaunch.case_demo and progress == 1.0 and not turning and _case_input(event):
+		get_viewport().set_input_as_handled()
+		return
 	var showing_back := progress > 0.5
 	var pointer := event is InputEventMouse or event is InputEventScreenTouch or event is InputEventScreenDrag
 	if pointer and (turning or showing_back):
@@ -139,6 +144,9 @@ func _device_on_screen() -> Rect2:
 func _apply(p: float) -> void:
 	progress = p
 	back.visible = p > 0.5
+	if front_case:
+		front_case.visible = case_on and p <= 0.5     # (the front's case: only while the front faces you)
+	overlay.case_tones = case_on
 	_set_muffle(p)
 	if not settled and absf(p - turn_target) <= SETTLE_AT:
 		settled = true
@@ -194,6 +202,13 @@ class Overlay extends Node2D:
 	const SEAM := Color8(120, 88, 62)
 	const LIT := Color8(250, 237, 217)
 	const OUTLINE := Color8(72, 49, 37)
+	# ...and with the case on (its colours: Melon Soda)
+	const CASE_NEAR := Color8(158, 206, 180)
+	const CASE_FAR := Color8(126, 174, 150)
+	const CASE_SEAM := Color8(96, 140, 118)
+	const CASE_LIT := Color8(206, 240, 220)
+	const CASE_OUTLINE := Color8(70, 104, 88)
+	var case_tones := false
 	const FAR := 100000.0
 
 	var face := Rect2()
@@ -215,12 +230,143 @@ class Overlay extends Node2D:
 			var half := side.size.x * 0.5
 			var near_x := side.position.x if face_left else side.position.x + half
 			var far_x := side.position.x + half if face_left else side.position.x
-			draw_rect(Rect2(near_x, side.position.y, half, side.size.y), NEAR)
-			draw_rect(Rect2(far_x, side.position.y, half, side.size.y), FAR_HALF)
+			draw_rect(Rect2(near_x, side.position.y, half, side.size.y), CASE_NEAR if case_tones else NEAR)
+			draw_rect(Rect2(far_x, side.position.y, half, side.size.y), CASE_FAR if case_tones else FAR_HALF)
 			var seam_x := side.position.x + half
 			var w := maxf(side.size.x * 0.06, 1.0)
-			draw_line(Vector2(seam_x, side.position.y), Vector2(seam_x, side.end.y), SEAM, w)
+			draw_line(Vector2(seam_x, side.position.y), Vector2(seam_x, side.end.y), CASE_SEAM if case_tones else SEAM, w)
 			# a thin highlight where the side meets the face, then the dark outline
 			var lit_x := side.position.x + w if face_left else side.end.x - w
-			draw_line(Vector2(lit_x, side.position.y), Vector2(lit_x, side.end.y), LIT, w)
-			draw_rect(side, OUTLINE, false, minf(4.0, side.size.x * 0.5))
+			draw_line(Vector2(lit_x, side.position.y), Vector2(lit_x, side.end.y), CASE_LIT if case_tones else LIT, w)
+			draw_rect(side, CASE_OUTLINE if case_tones else OUTLINE, false, minf(4.0, side.size.x * 0.5))
+
+
+# ================================================================== CASE (dev launcher: CASE)
+## A case to try on (docs/ideas_roadmap.md, Coin Shop: cases). On the back its corner pokes in
+## from the right like an arrow; drag it in: past the middle of the screen the case slides on
+## from above (released before, the corner goes back). Swipe the case UP to take it off: far
+## enough and it slides away and comes back as the corner, else it settles back on. With the
+## case on, the battery compartment is covered (take the case off to reach it), and the front wears it too (an overlay of the case's own pixels: the screen, the LCD
+## and the buttons stay live). Art: textures/cases/melon_*.png (from the mockup's rules).
+const CASE_BACK := preload("res://textures/cases/melon_back.png")   # (covers the battery compartment)
+const CASE_FRONT := preload("res://textures/cases/melon_front.png")
+const CASE_CENTRE := Vector2(540, -960)          # the back's sprites (back coordinates)
+const CORNER_TIP := Vector2(910, -615)           # where the corner's tip pokes in
+const CORNER_TURN := -45.0                       # degrees: its corner points left, like an arrow
+const CASE_HALF := Vector2(540, 960)
+
+var case_on := false
+var case_sprite: Sprite2D           # on the back: over the shell, under the battery lid
+var corner: Sprite2D
+var front_case: Sprite2D
+var case_drag := ""                 # "" / "corner" / "case"
+var drag_from := Vector2.ZERO
+var corner_rest := Vector2.ZERO
+
+func _setup_case() -> void:
+	case_sprite = Sprite2D.new()
+	case_sprite.texture = CASE_BACK
+	case_sprite.position = CASE_CENTRE
+	case_sprite.visible = false
+	back.add_child(case_sprite)                     # (over the battery lid too: the case covers it)
+	corner = Sprite2D.new()
+	corner.texture = CASE_BACK
+	corner.rotation_degrees = CORNER_TURN
+	corner_rest = CORNER_TIP - (-CASE_HALF).rotated(deg_to_rad(CORNER_TURN))
+	corner.position = corner_rest
+	back.add_child(corner)
+	front_case = Sprite2D.new()
+	front_case.texture = CASE_FRONT
+	front_case.centered = false
+	front_case.position = Vector2(0, -1920)
+	front_case.z_index = 30
+	front_case.visible = false
+	front.add_child(front_case)
+	# (CASE starts on the back, so the corner is the first thing you see)
+	get_tree().create_timer(1.2).timeout.connect(func():
+		if progress == 0.0 and not turning:
+			_turn(1.0))
+
+func _back_pos(screen_pos: Vector2) -> Vector2:
+	return back.get_global_transform_with_canvas().affine_inverse() * screen_pos
+
+func _case_input(event: InputEvent) -> bool:
+	var mb := event as InputEventMouseButton
+	var mm := event as InputEventMouseMotion
+	if mb and mb.button_index == MOUSE_BUTTON_LEFT:
+		var p := _back_pos(mb.position)
+		if mb.pressed:
+			drag_from = p
+			if not case_on and corner.visible:
+				var c := corner.get_global_transform_with_canvas().affine_inverse() * mb.position
+				if Rect2(-CASE_HALF, CASE_HALF * 2.0).has_point(c) and p.x < 1080.0:
+					case_drag = "corner"
+					return true
+			return false                            # (a tap / swipe for the turn: not ours yet)
+		# released
+		if case_drag == "corner":
+			case_drag = ""
+			create_tween().tween_property(corner, "position", corner_rest, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			return true
+		if case_drag == "case":
+			case_drag = ""
+			if case_sprite.position.y < CASE_CENTRE.y - 960.0 * 0.5:
+				_take_case_off()
+			else:
+				create_tween().tween_property(case_sprite, "position", CASE_CENTRE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			return true
+		return false
+	if mm and mm.button_mask & MOUSE_BUTTON_MASK_LEFT:
+		var p := _back_pos(mm.position)
+		var d := p - drag_from
+		if case_drag == "corner":
+			corner.position = corner_rest + Vector2(minf(0.0, d.x), 0.0)      # the case shows more as it comes in
+			if p.x < 540.0:
+				case_drag = ""
+				_put_case_on()
+			return true
+		if case_on and case_drag == "" and d.y < -24.0 and absf(d.y) > absf(d.x):
+			case_drag = "case"                      # a swipe up: the case comes off with the finger
+		if case_drag == "case":
+			case_sprite.position = CASE_CENTRE + Vector2(0.0, minf(0.0, d.y))
+			return true
+	return false
+
+## The case slides on from above and clicks into place; the front wears it too
+func _put_case_on() -> void:
+	# the whole case lifts up and out of the screen (straightening as it goes)...
+	var t := create_tween().set_parallel(true)
+	t.tween_property(corner, "position", corner.position + Vector2(-300, -2600), 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	t.tween_property(corner, "rotation_degrees", 0.0, 0.45)
+	var s := create_tween()
+	s.tween_interval(0.45)
+	s.tween_callback(func():
+		corner.visible = false
+		corner.rotation_degrees = CORNER_TURN
+		case_sprite.position = CASE_CENTRE + Vector2(0, -1920)
+		case_sprite.visible = true)
+	# ...then slides down onto the device and clicks
+	s.tween_property(case_sprite, "position", CASE_CENTRE, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	s.tween_callback(func():
+		case_on = true
+		Input.vibrate_handheld(30)
+		_case_click())
+
+## Up and away; its corner comes back in from the right
+func _take_case_off() -> void:
+	case_on = false
+	var t := create_tween()
+	t.tween_property(case_sprite, "position", CASE_CENTRE + Vector2(0, -1920), 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	t.tween_callback(func():
+		case_sprite.visible = false
+		corner.position = corner_rest + Vector2(500, 0)      # (then its corner slides back in from the side)
+		corner.visible = true)
+	t.tween_property(corner, "position", corner_rest, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _case_click() -> void:
+	var a := AudioStreamPlayer.new()
+	a.stream = load("res://sounds/fx/clack.mp3")
+	a.volume_db = -8.0
+	add_child(a)
+	a.play()
+	a.finished.connect(a.queue_free)

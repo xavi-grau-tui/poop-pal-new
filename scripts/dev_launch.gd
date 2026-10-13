@@ -25,6 +25,8 @@ static var skip_boot := false
 ## STRAIGHT TO GAMES: every game and every food open, special foods in the pantry, no meal / drink
 ## wait, so every evolution can be tried in a row (the testing save only)
 static var all_open := false
+## CASE: STRAIGHT TO GAMES + the Melon Soda case to try on the device's back (DeviceFlip)
+static var case_demo := false
 
 func _ready() -> void:
 	var bg := ColorRect.new()
@@ -36,15 +38,16 @@ func _ready() -> void:
 	var title := Label.new()
 	title.text = "DEV LAUNCH"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.position = Vector2(0, 560)
+	title.position = Vector2(0, 310)
 	title.size = Vector2(1080, 80)
 	title.add_theme_font_override("font", font)
 	title.add_theme_font_size_override("font_size", 52)
 	title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
 	add_child(title)
 	var last := _last_choice()
-	_button("FULL BOOT", "unboxing + boot", 680, last == "full", _full)
-	_button("STRAIGHT TO GAMES", "every game and food open, no waiting", 930, last == "games", _games)
+	_button("FULL BOOT", "unboxing + boot", 430, last == "full", _full)
+	_button("STRAIGHT TO GAMES", "every game and food open, no waiting", 680, last == "games", _games)
+	_button("CASE", "games mode + a case to put on (flip it)", 930, last == "case", _case)
 	_button("GAMES + 999 COINS", "to try the Shop and buying games", 1180, last == "rich", _rich)
 	_button("BOOT + PROGRESSION", _progress_summary(), 1430, last == "progress", _progress)
 	_start_over_button(1690)
@@ -84,12 +87,14 @@ func _full() -> void:
 	_save_choice("full")
 	skip_boot = false
 	all_open = false
+	case_demo = false
 	get_tree().change_scene_to_file(MAIN_SCENE)
 
 func _progress() -> void:
 	_save_choice("progress")
 	skip_boot = false
 	all_open = false
+	case_demo = false
 	SaveSlot.use_progress()
 	# the autoloads loaded (and wiped) the testing save at launch: now the progression one
 	for n in [GameData, PetState, Collection, Shop]:
@@ -144,12 +149,18 @@ func _start_over_button(y: float) -> void:
 		get_tree().reload_current_scene())
 	add_child(b)
 
+func _case() -> void:
+	_games("games")
+	case_demo = true
+	_save_choice("case")
+
 func _rich() -> void:
 	GameData.add_coins(999 - GameData.coins)
 	_games("rich")
 
 func _games(choice := "games") -> void:
 	_save_choice(choice)
+	case_demo = false
 	skip_boot = true
 	all_open = choice == "games"
 	if all_open:                         # every game open, no coins needed (the testing save only)
