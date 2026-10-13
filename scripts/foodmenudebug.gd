@@ -48,6 +48,7 @@ var barrier: Node2D
 var barrier_title: Label
 var barrier_time: Label
 var barrier_mystery: Control       # the '?' label on the rolling '?' pattern (special foods not yet)
+var barrier_upcoming: Control      # DRINKS UPCOMING: the same label, on the rolling drops pattern
 var barrier_down := false
 var barrier_tween: Tween
 var active_options := []
@@ -401,8 +402,11 @@ func _update_barrier() -> void:
 		return
 	var mode := _barrier_mode()
 	barrier_mystery.visible = mode == "mystery"
-	barrier_title.visible = mode != "mystery"
-	barrier_time.visible = mode != "mystery"
+	var sign_up: bool = mode == "upcoming" and barrier_upcoming != null
+	if barrier_upcoming:
+		barrier_upcoming.visible = sign_up
+	barrier_title.visible = mode != "mystery" and not sign_up
+	barrier_time.visible = mode != "mystery" and not sign_up
 	if mode == "upcoming":
 		barrier_title.text = "DRINKS"
 		barrier_time.text = "UPCOMING"
@@ -556,6 +560,7 @@ func _game_style_mystery() -> void:
 	var top := get_node_or_null("/root/PoopPal/Main UI/Menus/GameMenu/Menu/VBoxGame1/Game/TopFrame") as TextureRect
 	if not top:
 		return
+	_build_upcoming_sign(top)
 	const K := 0.66
 	var mini := TextureRect.new()
 	mini.texture = top.texture
@@ -582,6 +587,46 @@ func _game_style_mystery() -> void:
 	barrier_mystery.position = Vector2.ZERO
 	barrier_mystery.size = PANEL.size
 	barrier_mystery.add_child(mini)
+
+## DRINKS UPCOMING as a sign like the locked "?" one: the game card's frame at 2/3 on the shutter,
+## the drops pattern inside (still), the words on it
+func _build_upcoming_sign(top: TextureRect) -> void:
+	const K := 0.66
+	barrier_upcoming = Control.new()
+	barrier_upcoming.size = PANEL.size
+	barrier_upcoming.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	barrier_upcoming.visible = false
+	var mini := TextureRect.new()
+	mini.texture = top.texture
+	mini.size = top.size
+	var s := K * top.get_global_transform().get_scale().x / barrier.get_global_transform().get_scale().x
+	mini.scale = Vector2(s, s)
+	mini.position = (PANEL.size - top.size * s) / 2.0
+	mini.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var inner: Control = top.get_node("Control").duplicate()
+	inner.clip_contents = true
+	inner.get_node("GameLogo").visible = false
+	var bg: Sprite2D = inner.get_node("Background")
+	bg.texture = load("res://textures/menus/pattern_drop_sage.png")
+	bg.scale = Vector2.ONE / K
+	bg.material = null                  # (the drops stay still: no scrolling)
+	mini.add_child(inner)
+	barrier_upcoming.add_child(mini)
+	var l := Label.new()
+	l.text = "DRINKS\nUPCOMING"
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.size = top.size * s
+	l.position = mini.position
+	l.add_theme_font_override("font", barrier_title.get_theme_font("font"))
+	l.add_theme_font_size_override("font_size", 44)
+	l.add_theme_color_override("font_color", Color8(250, 244, 214))
+	l.add_theme_color_override("font_outline_color", Color8(58, 38, 30))
+	l.add_theme_constant_override("outline_size", 14)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	barrier_upcoming.add_child(l)
+	barrier.add_child(barrier_upcoming)
+	_update_barrier()
 
 ## A roll-down shutter in the panel's own orange (pixel art): slats with light top edges, a
 ## darker grid over them, a dark bottom bar with a little handle
