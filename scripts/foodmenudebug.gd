@@ -589,7 +589,7 @@ func _game_style_mystery() -> void:
 	barrier_mystery.add_child(mini)
 
 ## DRINKS UPCOMING as a sign like the locked "?" one: the game card's frame at 2/3 on the shutter,
-## the drops pattern inside (still), the words on it
+## plain inside, the words on it
 func _build_upcoming_sign(top: TextureRect) -> void:
 	const K := 0.66
 	barrier_upcoming = Control.new()
@@ -607,9 +607,13 @@ func _build_upcoming_sign(top: TextureRect) -> void:
 	inner.clip_contents = true
 	inner.get_node("GameLogo").visible = false
 	var bg: Sprite2D = inner.get_node("Background")
-	bg.texture = load("res://textures/menus/pattern_drop_sage.png")
-	bg.scale = Vector2.ONE / K
-	bg.material = null                  # (the drops stay still: no scrolling)
+	bg.visible = false                  # (no pattern: just the sign, on the "?" card's plain cream)
+	var plain := ColorRect.new()
+	plain.color = Color8(250, 232, 186)
+	plain.size = inner.size
+	plain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inner.add_child(plain)
+	inner.move_child(plain, 0)
 	mini.add_child(inner)
 	barrier_upcoming.add_child(mini)
 	var l := Label.new()
