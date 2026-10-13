@@ -428,8 +428,8 @@ func _update_barrier() -> void:
 	var key := str(current_page)
 	var last: String = PetState.shutters.get(key, "")
 	var roll := (mode != "") != (last != "")              # (rolls only if this page changed)
-	if mode == "mystery" and last == "":
-		roll = false                     # (a mystery was never open: it's simply shut from the start)
+	if mode in ["mystery", "upcoming"] and last == "":
+		roll = false                     # (never open yet: simply shut from the start; it rolls up the first time it opens)
 	_roll(mode != "", roll)
 	if mode != last:
 		PetState.shutters[key] = mode
