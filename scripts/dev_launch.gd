@@ -47,7 +47,7 @@ func _ready() -> void:
 	var last := _last_choice()
 	_button("FULL BOOT", "unboxing + boot", 430, last == "full", _full)
 	_button("STRAIGHT TO GAMES", "every game and food open, no waiting", 680, last == "games", _games)
-	_button("CASE", "games mode + a case to put on (flip it)", 930, last == "case", _case)
+	_button("CASE", "games mode, Kitsune, a case to put on (flip it)", 930, last == "case", _case)
 	_button("GAMES + 999 COINS", "to try the Shop and buying games", 1180, last == "rich", _rich)
 	_button("BOOT + PROGRESSION", _progress_summary(), 1430, last == "progress", _progress)
 	_start_over_button(1690)
@@ -150,6 +150,13 @@ func _start_over_button(y: float) -> void:
 	add_child(b)
 
 func _case() -> void:
+	# the yellow fox, Kitsune (an Inari + a greasy Chu food), wears the case
+	PetState.form_id = "kitsune"
+	PetState.meals = ["greasy", "greasy"]
+	for id in ["inari", "kitsune"]:
+		if id not in PetState.discovered:
+			PetState.discovered.append(id)
+	PetState.save_data()
 	_games("games")
 	case_demo = true
 	_save_choice("case")
