@@ -44,7 +44,7 @@ def make(path, keep_boxes, cover=(), logo_box=None, logo_tones=None, front_logo=
     rgb[side] = np.clip(np.array(SIDE) + (rgb[side] - TAN) * 1.1, 0, 255)
     dark = alpha & (rgb.sum(-1) < 300) & ~keep
     outside = ~alpha.copy(); outside[0, :] = outside[-1, :] = True; outside[:, 0] = outside[:, -1] = True
-    rim = dark & binary_dilation(outside, iterations=14)
+    rim = dark & binary_dilation(outside, iterations=28)        # (deep enough for the rounded corners)
     rgb[rim & (rgb.sum(-1) > 60)] = (70, 104, 88)    # the device's dark brown outline: the case's colour, darker (black corners stay)
     lab, n = label(alpha & (rgb.sum(-1) < 520) & ~keep & ~rim)
     for i in range(1, n + 1):
@@ -104,7 +104,7 @@ def make(path, keep_boxes, cover=(), logo_box=None, logo_tones=None, front_logo=
             outside = np.isin(lab_, list(ids)) & (np.abs(sub - BODY).sum(-1) > 30) & (np.abs(sub - np.array(DOT)).sum(-1) > 30)
             sub[outside] = BODY
         # the screen's bezel: the case reaches the screen's dark border; its shaded band stays shaded
-        bz = np.zeros_like(alpha); bz[556:1600, 18:1062] = True; bz[608:1565, 65:1016] = False
+        bz = np.zeros_like(alpha); bz[556:1600, 30:1050] = True; bz[608:1565, 65:1016] = False   # (the bezel only: not the sides)
         bz &= alpha & (rgb.sum(-1) > 500) & (np.abs(rgb - BODY).sum(-1) > 30)
         off2 = (rgb - REF).mean(-1, keepdims=True)
         rgb[bz] = np.clip(BODY + off2[bz] * 1.4, 0, 255)

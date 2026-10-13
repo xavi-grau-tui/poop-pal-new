@@ -290,10 +290,7 @@ func _setup_case() -> void:
 		if btn:
 			case_buttons.append([btn, btn.texture_normal, btn.texture_pressed,
 				load("res://textures/cases/melon_%snormal.png" % b[1]), load("res://textures/cases/melon_%spressed.png" % b[1])])
-	# (CASE starts on the back, so the corner is the first thing you see)
-	get_tree().create_timer(1.2).timeout.connect(func():
-		if progress == 0.0 and not turning:
-			_turn(1.0))
+	# (no automatic turn: you flip the device yourself, double-tap the logo, to find the corner)
 
 func _back_pos(screen_pos: Vector2) -> Vector2:
 	return back.get_global_transform_with_canvas().affine_inverse() * screen_pos
