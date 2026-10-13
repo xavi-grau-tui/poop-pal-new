@@ -32,6 +32,7 @@ func _ready() -> void:
 	_music_off()
 	_set_lcd_visible(false)
 	_hide_boost(true)                   # (the boost badge would float over the logo)
+	_hide_boost.call_deferred(true)     # (again once the pal has set itself up)
 	_build()
 	if DevLaunch.skip_boot:                # (development only: STRAIGHT TO GAMES)
 		_finish()

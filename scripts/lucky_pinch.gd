@@ -95,8 +95,8 @@ func _ready() -> void:
 
 ## Your pal peeking into the machine: a big, faint reflection on the glass, leaning in from the
 ## left (cut by the screen's edge), paler and bluer than the pal and fading towards the bottom
-const PEEK_WIDTH := 372.0               # (world px)
-const PEEK_AT := Vector2(48, 333)
+const PEEK_WIDTH := 248.0               # (world px)
+const PEEK_AT := Vector2(40, 400)          # below the claw's start, above the prize panel
 func _add_peek() -> void:
 	if not PetState.has_poop():
 		return
@@ -123,7 +123,16 @@ func _add_peek() -> void:
 	peek.scale = Vector2(k, k)
 	peek.position = PEEK_AT
 	peek.rotation_degrees = 16.0         # bent over, looking in
-	add_child(peek)                       # (last: on the glass, over everything)
+	# on the glass, but not on the prize panel (the panel is outside the glass, you reach into it):
+	# clipped by a box that stops at the panel's top
+	var clip := Control.new()
+	clip.clip_contents = true
+	clip.position = Vector2.ZERO
+	clip.size = Vector2(PLAY_WIDTH, CHUTE.position.y)
+	clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	peek.position = PEEK_AT
+	clip.add_child(peek)
+	add_child(clip)                       # (last: on the glass, over everything)
 
 func start_game() -> void:
 	super.start_game()
