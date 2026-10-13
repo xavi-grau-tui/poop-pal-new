@@ -606,6 +606,25 @@ The Pal Pedia is the map: for a discovered pal it shows its food path (icons), i
 Status: the table is the plan; only the welcome / hatch / bonus cards and the locked-food blink
 exist. To build with the guide cards (G1-G9) and the Pal Pedia pass.
 
+## Coin Shop: sections (plan, 2026-10-13, to build)
+Same shape as the Pal Pedia (one rule for every menu with parts): FORWARD = next section, press =
+next item (on to the section's next page), hold = buy; the band shows two rows of dots (sections,
+then pages); the section's name is the page title. Coins on the frame's top band (built).
+1. FOOD & DRINKS (from the start): the food packs in size order (Sho, then Chu, then Dai: only
+   the types you're missing, each card "Spicy Dai" + its 1-3 icons), then the special foods
+   (tech / cosmic once a pal has reached Dai, each legendary food once its ULTRA is found), then
+   drink levels (Drinks v2). Progressive as now (Shop.on_sale): only what you can use soon.
+2. STICKERS (opens mid-game, e.g. after the 3rd game is bought or 15 stars): the "?" sign on the
+   shutter until then, like the special foods page. A sticker is a pretend QR coupon: bought here,
+   then stuck on the device's back (flip it: place / move / peel).
+3. CASES (late game, e.g. 40 stars or every launch game bought): the "?" sign until then. A case
+   re-skins the device's shell, front and back (the screen, buttons and labels stay): its colour
+   plus a printed pattern; swapped on the back too. Example: docs/mockups/case_examples.png
+   (Melon Soda: mint with white dots; Sakura: pink with pale dots). Some cases could come only
+   from games' gift tracks or Lucky Pinch (not for sale), to make them collectable.
+Each section's cards look like the food ones (frame, icon box, type tag, price on the left), so
+the whole Shop reads the same. Undecided: the exact unlock moments and prices (pacing.py).
+
 ## Pal Pedia by family (user idea, 2026-10-10; BUILT 2026-10-11)
 - Built as decided: GREEN / SWEET / GREASY / SPICY / SOUR PALS, 7 pages each: the Sho + its 5 Chu,
   one page per Chu (the Chu + its 3 Dai), the specials (tech mutant, legend, cosmic mutant). Every
