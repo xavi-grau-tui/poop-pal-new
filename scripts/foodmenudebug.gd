@@ -52,6 +52,7 @@ var barrier_upcoming: Control      # DRINKS UPCOMING: the same sign
 var barrier_wait_sign: Control     # NEXT MEAL / DRINK IN: the same sign, the countdown on it
 var barrier_down := false
 var barrier_tween: Tween
+var _rolling_down := false         # where the last roll went (down or up)
 var active_options := []
 
 func show_page(index: int):
@@ -118,6 +119,9 @@ func _ready():
 	populate_foods()
 	populate_special()
 	# bought in the Shop: locked cards open up right away (and the pantry's special foods show)
+	visibility_changed.connect(func():
+		if is_visible_in_tree():
+			_update_barrier())             # (the page as it is now: a roll if it changed since)
 	Shop.changed.connect(func():
 		populate_foods()
 		populate_special())
@@ -397,6 +401,8 @@ func _specials_locked() -> bool:
 	return true
 
 func _update_barrier() -> void:
+	if barrier and (not is_visible_in_tree() or _leaving()):
+		return                     # (hidden or sliding away: the change is shown, and remembered, when it comes up)
 	if not barrier:
 		if legend:
 			legend.set_lines([["press", "next"], ["hold", "drink" if current_page == 1 else "eat"]])
@@ -437,18 +443,30 @@ func _refresh_barrier_time() -> void:
 	if lcd and lcd.has_method("format_time"):
 		barrier_time.text = lcd.format_time(_wait_left())
 
+## The menu is sliding away (back to the pet, or to another menu)
+func _leaving() -> bool:
+	var mgr := get_node_or_null("/root/PoopPal/Main UI/MenuManager")
+	if not mgr:
+		return false
+	return mgr.returning or (mgr.pending_menu != null and mgr.pending_menu != self)
+
 func _process(_delta: float) -> void:
 	if barrier_down and visible:
-		_refresh_barrier_time()               # (it stays down at 00:00 until the menu reopens)
+		_refresh_barrier_time()
+		if _barrier_mode() == "":
+			_update_barrier()                 # (the countdown reached 00:00: the shutter rolls up, once)
 
 ## The shutter down over the options or up out of sight: rolling (with a clack as it lands) when
 ## this page's state just changed, else simply there (or not), as the page was last seen
 func _roll(down: bool, animate: bool) -> void:
 	barrier_down = down
 	_update_scroll_marks()
+	var h := PANEL.size.y
+	if not animate and barrier_tween and barrier_tween.is_running() and _rolling_down == down:
+		return                     # (a roll to there is under way: let it finish)
 	if barrier_tween:
 		barrier_tween.kill()
-	var h := PANEL.size.y
+	_rolling_down = down
 	if not animate:
 		barrier.position.y = 0.0 if down else -h
 		return
