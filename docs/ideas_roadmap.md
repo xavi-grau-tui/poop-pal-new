@@ -628,7 +628,9 @@ then pages); the section's name is the page title. Coins on the frame's top band
    bottom; the buttons and the screen keep their own colours; HaraTomo (front) and Kobaya Tech
    (back, nothing else carved there) are CARVED into it, in
    the case's own colour (pressed in: a shade on the top-left inner edge, light on the bottom
-   right). The case covers the battery compartment too (user, 2026-10-13): to change the
+   right). The buttons' outer borders are part of the case (user, 2026-10-13): raised bumps in
+   the case's colours, each with a hole that shows only the pressable part and its own frame.
+   The case covers the battery compartment too (user, 2026-10-13): to change the
    batteries you take the case off.
    TO DECIDE (user, 2026-10-13): how a case is put on / taken off (on the device's back, flipped:
    e.g. hold to slide it off, like the films and the battery strip of the unboxing), and how
