@@ -44,7 +44,8 @@ def make(path, keep_boxes, cover=(), logo_box=None, logo_tones=None, front_logo=
     rgb[side] = np.clip(np.array(SIDE) + (rgb[side] - TAN) * 1.1, 0, 255)
     dark = alpha & (rgb.sum(-1) < 300) & ~keep
     outside = ~alpha.copy(); outside[0, :] = outside[-1, :] = True; outside[:, 0] = outside[:, -1] = True
-    rim = dark & binary_dilation(outside, iterations=14)     # (left dark: the device's own outline)
+    rim = dark & binary_dilation(outside, iterations=14)
+    rgb[rim & (rgb.sum(-1) > 60)] = (70, 104, 88)    # the device's dark brown outline: the case's colour, darker (black corners stay)
     lab, n = label(alpha & (rgb.sum(-1) < 520) & ~keep & ~rim)
     for i in range(1, n + 1):
         ys, xs = np.nonzero(lab == i)
@@ -115,7 +116,7 @@ BUMPS = [((58, 293, 352, 568), (102, 338, 312, 512)), ((388, 293, 682, 568), (43
 # the buttons' surroundings (menu buttons, then the bottom three), and the speaker (no dots there)
 AROUND = [(50, 285, 360, 578), (380, 285, 690, 578), (710, 285, 1020, 578),
           (130, 1595, 352, 1812), (428, 1600, 652, 1768), (728, 1595, 952, 1812)]
-SPEAKER = (405, 1760, 675, 1870)
+SPEAKER = (395, 1735, 685, 1885)
 front_keep = [(102, 338, 312, 512), (432, 338, 642, 512), (762, 338, 972, 512),
               (148, 1616, 333, 1791), (450, 1620, 630, 1742), (748, 1616, 933, 1791),   # (the bottom buttons, whole: outline and all)
               (65, 608, 1016, 1565), (96, 86, 530, 274)]

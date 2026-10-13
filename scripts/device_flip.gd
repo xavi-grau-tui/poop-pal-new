@@ -342,19 +342,19 @@ func _case_input(event: InputEvent) -> bool:
 
 ## The case slides on from above and clicks into place; the front wears it too
 func _put_case_on() -> void:
-	# the whole case lifts up and out of the screen (straightening as it goes)...
+	# the whole case rises from the side and up out of the screen, straightening as it goes...
 	var t := create_tween().set_parallel(true)
-	t.tween_property(corner, "position", corner.position + Vector2(-300, -2600), 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	t.tween_property(corner, "rotation_degrees", 0.0, 0.45)
+	t.tween_property(corner, "position", Vector2(CASE_CENTRE.x, CASE_CENTRE.y - 2200), 0.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	t.tween_property(corner, "rotation_degrees", 0.0, 0.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	var s := create_tween()
-	s.tween_interval(0.45)
+	s.tween_interval(0.8)
 	s.tween_callback(func():
 		corner.visible = false
 		corner.rotation_degrees = CORNER_TURN
 		case_sprite.position = CASE_CENTRE + Vector2(0, -1920)
 		case_sprite.visible = true)
-	# ...then slides down onto the device and clicks
-	s.tween_property(case_sprite, "position", CASE_CENTRE, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	# ...then comes down onto the device, gently, and clicks
+	s.tween_property(case_sprite, "position", CASE_CENTRE, 0.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	s.tween_callback(func():
 		case_on = true
 		Input.vibrate_handheld(30)
@@ -393,6 +393,13 @@ func _show_front_case(on: bool) -> void:
 		return
 	front_case.visible = on
 	front_case_top.visible = on
+	var mirror := front.get_node_or_null("Console/LeftEdgeMirror") as CanvasItem
+	if mirror:
+		mirror.visible = not on                     # (the case's art has its own left side)
+	for n in ["Console/Speaker1", "Console/Speaker2"]:
+		var spk := front.get_node_or_null(n) as CanvasItem
+		if spk:
+			spk.visible = not on                    # (the case's art has the grille: holes on the case)
 	for c in case_buttons:
 		var btn: TextureButton = c[0]
 		var normal: Texture2D = c[3] if on else c[1]

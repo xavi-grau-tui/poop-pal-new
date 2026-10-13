@@ -52,6 +52,13 @@ for (x0, y0, x1, y1) in [(52, 290, 358, 572), (382, 290, 688, 572), (712, 290, 1
                          (140, 1608, 342, 1800), (442, 1612, 640, 1752), (740, 1608, 942, 1800)]:
     base[y0:y1, x0:x1, :3] = BODY
     base[y0:y1, x0:x1, 3] = 255
+# the speaker grille, painted on the case: its holes dark, round them the case (the speaker's own
+# images, with a light rim on each hole, are hidden while the case is on)
+sx0, sy0, sx1, sy1 = ns['SPEAKER']
+grille = src[sy0:sy1, sx0:sx1, :3]
+holes = grille.sum(-1) < 520          # (the holes with their soft edge; only the light rim goes)
+base[sy0:sy1, sx0:sx1, :3] = np.where(holes[..., None], grille, BODY)
+base[sy0:sy1, sx0:sx1, 3] = 255
 top = np.zeros_like(out)
 for (x0, y0, x1, y1) in [(575, 105, 1000, 265), (20, 1835, 80, 1895), (1000, 1835, 1060, 1895), (20, 20, 80, 80), (1000, 20, 1060, 80)]:
     top[y0:y1, x0:x1] = out[y0:y1, x0:x1]
