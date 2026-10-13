@@ -93,12 +93,34 @@ func _ready() -> void:
 	_fill_pit()
 	super._ready()
 
+## The machine's front glass: a few faint diagonal shines over the cabinet, but not over the prize
+## panel (it's outside the glass: you reach into it)
+const GLASS_TOP := 90.0
+const GLASS_BOTTOM := 940.0
+const SHINES := [[17.0, 41.0, 0.12], [90.0, 17.0, 0.09], [576.0, 52.0, 0.06]]   # [x at the bottom, width, alpha]
+func _add_glass() -> void:
+	var g := Control.new()
+	g.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT)
+	g.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	g.draw.connect(func():
+		var panel := PackedVector2Array([CHUTE.position, Vector2(CHUTE.end.x, CHUTE.position.y), CHUTE.end, Vector2(CHUTE.position.x, CHUTE.end.y)])
+		var rise := 0.5 * (GLASS_BOTTOM - GLASS_TOP)          # (slanting up to the right)
+		for sh in SHINES:
+			var x0: float = sh[0]
+			var w: float = sh[1]
+			var poly := PackedVector2Array([Vector2(x0, GLASS_BOTTOM), Vector2(x0 + w, GLASS_BOTTOM), Vector2(x0 + w + rise, GLASS_TOP), Vector2(x0 + rise, GLASS_TOP)])
+			for part in Geometry2D.clip_polygons(poly, panel):
+				if not Geometry2D.is_polygon_clockwise(part):
+					g.draw_colored_polygon(part, Color(1, 1, 1, sh[2])))
+	add_child(g)
+
 ## Your pal peeking into the machine: a big, faint reflection on the glass, leaning in from the
 ## left (cut by the screen's edge), paler and bluer than the pal and fading towards the bottom
 const PEEK_WIDTH := 248.0               # (world px)
 const PEEK_AT := Vector2(40, 400)          # below the claw's start, above the prize panel
 func _add_peek() -> void:
 	if not PetState.has_poop():
+		_add_glass()
 		return
 	var src: Image = (load(PetState.FORMS[PetState.form_id]["frames"][0]) as Texture2D).get_image()
 	if src.is_compressed():
@@ -133,6 +155,7 @@ func _add_peek() -> void:
 	peek.position = PEEK_AT
 	clip.add_child(peek)
 	add_child(clip)                       # (last: on the glass, over everything)
+	_add_glass()
 
 func start_game() -> void:
 	super.start_game()
