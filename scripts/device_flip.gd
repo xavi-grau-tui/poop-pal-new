@@ -403,10 +403,10 @@ func _show_front_case(on: bool) -> void:
 		if not screen.has_meta("plain"):
 			screen.set_meta("plain", screen.texture)
 		screen.texture = load("res://textures/cases/melon_frame3.png") if on else screen.get_meta("plain")
-	for n in ["Console/Speaker1", "Console/Speaker2"]:
-		var spk := front.get_node_or_null(n) as CanvasItem
-		if spk:
-			spk.visible = not on                    # (the case's art has the grille: holes on the case)
+	var spk := front.get_node_or_null("Console/SpeakerCentre") as CanvasItem
+	if spk:
+		spk.visible = not on                        # (the case's art has the grille: holes on the case;
+		                                            # Speaker1/2 are the old side ones, always hidden)
 	for c in case_buttons:
 		var btn: TextureButton = c[0]
 		var normal: Texture2D = c[3] if on else c[1]
