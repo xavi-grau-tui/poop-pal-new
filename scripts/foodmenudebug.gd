@@ -537,6 +537,7 @@ func _build_barrier() -> void:
 	frame.visible = false
 	barrier.add_child(frame)
 	barrier_mystery = frame
+	_game_style_mystery.call_deferred()
 	# ...but under the frame's inner border: that ring of the frame (tools/art/frame_ring.py) is
 	# laid on top, so the shutter slides in behind the frame's border and rounded corners
 	var bg: Sprite2D = $Menu/Background
@@ -548,6 +549,39 @@ func _build_barrier() -> void:
 	ring.z_index = 5
 	ring.visible = BARRIER_ENABLED
 	$Menu.add_child(ring)
+
+## The locked special page's label exactly like a locked game card's (the Games menu's card frame
+## at 2/3, its "?" logo, the "?" pattern at full size), the same size on screen
+func _game_style_mystery() -> void:
+	var top := get_node_or_null("/root/PoopPal/Main UI/Menus/GameMenu/Menu/VBoxGame1/Game/TopFrame") as TextureRect
+	if not top:
+		return
+	const K := 0.66
+	var mini := TextureRect.new()
+	mini.texture = top.texture
+	mini.size = top.size
+	var s := K * top.get_global_transform().get_scale().x / barrier.get_global_transform().get_scale().x
+	mini.scale = Vector2(s, s)
+	mini.position = (PANEL.size - top.size * s) / 2.0
+	mini.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var inner: Control = top.get_node("Control").duplicate()
+	inner.clip_contents = true
+	var q: Sprite2D = inner.get_node("GameLogo")
+	q.texture = load("res://textures/menus/mistery.png")
+	var bg: Sprite2D = inner.get_node("Background")
+	var games = get_node_or_null("/root/PoopPal/Main UI/Menus/GameMenu")
+	var locked_bg = games.get("_locked_bg") if games else null
+	if locked_bg:
+		bg.texture = locked_bg              # (the locked games' own "?" pattern)
+	bg.scale = Vector2.ONE / K
+	mini.add_child(inner)
+	for c in barrier_mystery.get_children():
+		c.queue_free()
+	barrier_mystery.remove_theme_stylebox_override("panel")
+	barrier_mystery.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	barrier_mystery.position = Vector2.ZERO
+	barrier_mystery.size = PANEL.size
+	barrier_mystery.add_child(mini)
 
 ## A roll-down shutter in the panel's own orange (pixel art): slats with light top edges, a
 ## darker grid over them, a dark bottom bar with a little handle
