@@ -271,7 +271,7 @@ func _start_match() -> void:
 	_set_legend("PULL", "DONE")
 	_refresh_lives()
 	if tut == Tut.WIND:
-		show_coach("Tap when the needle is on GOLD", 0, "FORWARD: skip tutorial")
+		show_coach("Press when the needle is on GOLD", 0, "FORWARD: skip tutorial")
 
 func _make_top(is_player: bool, style: String, color: Color) -> Top:
 	var t := Top.new()
@@ -357,7 +357,7 @@ func _wind_pull() -> void:
 		if tut == Tut.WIND:
 			tut_good += 1
 			if tut_good == 1:
-				show_coach("Yes! Every gold tap = more spin", 0)
+				show_coach("Yes! Every gold press = more spin", 0)
 			elif tut_good == 3:
 				show_coach("Spin is your life. Ready!")
 				_after(1.3, func():
@@ -381,7 +381,7 @@ func _begin_drop() -> void:
 	_set_legend("DROP", "")
 	if tut == Tut.WIND:
 		tut = Tut.DROP
-		show_coach("Tilt to aim, then tap to DROP", 0)
+		show_coach("Tilt to aim, then press to DROP", 0)
 	if wind_spin > 100.0:
 		_show_banner("OVER-WOUND!", 0.8)
 
@@ -445,7 +445,7 @@ func _battle_step(delta: float) -> void:
 		tut_dist += player.vel.length() * delta
 		if tut_dist > 700.0:
 			tut = Tut.DASH
-			show_coach("Tap to DASH into it!", 0)
+			show_coach("Press to DASH into it!", 0)
 	for t in tops:
 		if not t.alive:
 			continue

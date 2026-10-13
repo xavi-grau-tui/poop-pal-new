@@ -2,7 +2,7 @@ extends Node2D
 class_name Onboarding
 ## The guided start, on the main screen, for a player who has never had a pal (the very first
 ## launch; with the testing switches on, every launch). Added by BootSequence when it finishes.
-##   1. A card: "Welcome to HaraTomo! Tap [food button] to eat something and meet your new pal."
+##   1. A card: "Welcome to HaraTomo! Press [food button] to eat something and meet your new pal."
 ##      The food button and the EAT sign blink bip-bip … bip-bip, with a short sharp buzz on each
 ##      bip, and only the food button works (MenuButtons checks Onboarding.active).
 ##   2. Once the first meal has hatched the pal: "Say hi to <name>! It's a <Type [icon]> pal. What you eat decides how it
@@ -54,7 +54,7 @@ func _ready() -> void:
 	if food_button and food_button.button_pressed:
 		menu_was_open = true                     # (opened that fast: the card waits until it closes)
 		return
-	_show_card("Welcome to HaraTomo! Tap [img=66x81]%s[/img] to eat something and meet your new pal." % FOOD_ICON)
+	_show_card("Welcome to HaraTomo! Press [img=66x81]%s[/img] to eat something and meet your new pal." % FOOD_ICON)
 	_start_beat(food_button)
 
 func _process(_delta: float) -> void:
@@ -80,7 +80,7 @@ func _process(_delta: float) -> void:
 		await get_tree().create_timer(0.5).timeout
 		if _gone() or food_chosen or hatched or menu_was_open or not PetState.needs_first_meal():
 			return
-		_show_card("Welcome to HaraTomo! Tap [img=66x81]%s[/img] to eat something and meet your new pal." % FOOD_ICON)
+		_show_card("Welcome to HaraTomo! Press [img=66x81]%s[/img] to eat something and meet your new pal." % FOOD_ICON)
 		_start_beat(food_button)
 
 func _on_form_changed(id: String, reason: String) -> void:
@@ -125,7 +125,7 @@ func _bonus_steps() -> void:
 	await get_tree().create_timer(3.5).timeout
 	if _gone():
 		return
-	_show_card("Tap [img=99x72]%s[/img] to play the bonus game!" % GAMES_ICON)
+	_show_card("Press [img=99x72]%s[/img] to play the bonus game!" % GAMES_ICON)
 	if game_button and game_button.has_method("stop_attention"):
 		game_button.stop_attention()     # (its usual bonus blink makes way for the bip-bip)
 	_start_beat(game_button)

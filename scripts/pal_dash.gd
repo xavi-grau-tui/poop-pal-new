@@ -102,7 +102,7 @@ func start_game() -> void:
 	next_x = -60.0
 	_add_ground(1700.0)   # a calm run-up
 	_generate()
-	_show_banner("Tap to jump!", 1.4)
+	_show_banner("Press to jump!", 1.4)
 
 # ================================================================== LEVEL GENERATION
 

@@ -194,7 +194,7 @@ func _start_bout() -> void:
 	_after(0.9, func():
 		phase = Phase.FIGHT
 		if tut == Tut.HOP:
-			show_coach("Tap to make your pal HOP", 0, "FORWARD: skip tutorial")
+			show_coach("Press to make your pal HOP", 0, "FORWARD: skip tutorial")
 		elif shake_tip_due:
 			shake_tip_due = false
 			show_coach("FORWARD drums ITS side: shake it mid-hop!", 1)
