@@ -623,7 +623,9 @@ then pages); the section's name is the page title. Coins on the frame's top band
    (Melon Soda: mint with white dots; Sakura: pink with pale dots). With a case on (user,
    2026-10-13; docs/mockups/case_melon_soda.png, the favourite: "this might be the way to go"):
    the screws, the device's dark edges and the back sticker are hidden under it; the case has
-   its own darker rim; HaraTomo (front and back) and Kobaya Tech (back) are CARVED into it, in
+   its own darker rim, and the device's tan sides become one even darker-mint stripe top to
+   bottom; the buttons and the screen keep their own colours; HaraTomo (front) and Kobaya Tech
+   (back, nothing else carved there) are CARVED into it, in
    the case's own colour (pressed in: a shade on the top-left inner edge, light on the bottom
    right); the battery lid stays reachable. Some cases could come only
    from games' gift tracks or Lucky Pinch (not for sale), to make them collectable.
