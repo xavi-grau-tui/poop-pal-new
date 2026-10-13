@@ -61,7 +61,7 @@ def make(path, keep_boxes, cover=(), logo_box=None, logo_tones=None, front_logo=
         ring &= ~shell                                 # (only the button's own frame: not the case round it)
         lum = rgb.sum(-1)
         hi = ring & (lum >= 600); mid = ring & (lum >= 330) & (lum < 600); lo = ring & (lum < 330)
-        rgb[hi] = BODY; rgb[mid] = (150, 200, 174)    # the bump: case colour (its dark brown outlines left as they are)
+        rgb[hi] = BODY; rgb[mid] = (150, 200, 174); rgb[lo] = EDGE   # the bump: case colour, its edge a darker tone
         # in the hole: whatever is OUTSIDE the button's dark outline (cream corners, a brown spot) is
         # case; inside the outline the button keeps every colour of its own
         sub = rgb[iy0 - 4:iy1 + 4, ix0 - 4:ix1 + 4]
@@ -81,9 +81,15 @@ def make(path, keep_boxes, cover=(), logo_box=None, logo_tones=None, front_logo=
     if path.endswith('w0_play.png'):
         # round every button: whatever light lies outside its dark outline (a cream stripe under it,
         # its lower corners) is case; the button and its outline stay exactly as they are
-        for (ox0, oy0, ox1, oy1) in AROUND:
+        from scipy.ndimage import binary_fill_holes
+        for (ox0, oy0, ox1, oy1) in AROUND[3:]:            # (the bottom buttons: the menu ones are done above)
             sub = rgb[oy0:oy1, ox0:ox1]
-            openp = sub.sum(-1) >= 330
+            # the button itself: its dark outline and everything inside it, never touched
+            dk = sub.sum(-1) < 330
+            lb, nb = label(dk)
+            sizes = [(lb == i).sum() for i in range(1, nb + 1)]
+            btn = binary_fill_holes(lb == (int(np.argmax(sizes)) + 1)) if nb else np.zeros_like(dk)
+            openp = (sub.sum(-1) >= 330) & ~btn
             lab_, n_ = label(openp)
             ids = set(np.unique(np.concatenate([lab_[0], lab_[-1], lab_[:, 0], lab_[:, -1]]))) - {0}
             outside = np.isin(lab_, list(ids)) & (np.abs(sub - BODY).sum(-1) > 30) & (np.abs(sub - np.array(DOT)).sum(-1) > 30)
@@ -106,6 +112,8 @@ front_keep = [(102, 338, 312, 512), (432, 338, 642, 512), (762, 338, 972, 512),
               (160, 1627, 320, 1778), (460, 1630, 620, 1736), (760, 1627, 920, 1778),
               (65, 608, 1016, 1565), (96, 86, 530, 274)]
 NODOTS.append(SPEAKER)
+for (x0, y0, x1, y1) in AROUND[3:]:
+    NODOTS.append((x0 - 10, y0 - 10, x1 + 10, y1 + 10))      # (no half dots touching the bottom buttons)
 F = make(SP + 'shots9/w0_play.png', front_keep, front_logo=(575, 105, 1000, 265))
 NODOTS.clear()                 # (the front's button frames: not on the back)
 B = make('textures/console/back.png', [], cover=[(90, 360, 1000, 855), (305, 1295, 750, 1695), (290, 1005, 770, 1155), (110, 1770, 970, 1865)],
