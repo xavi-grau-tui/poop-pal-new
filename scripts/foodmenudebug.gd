@@ -48,7 +48,8 @@ var barrier: Node2D
 var barrier_title: Label
 var barrier_time: Label
 var barrier_mystery: Control       # the '?' label on the rolling '?' pattern (special foods not yet)
-var barrier_upcoming: Control      # DRINKS UPCOMING: the same label, on the rolling drops pattern
+var barrier_upcoming: Control      # DRINKS UPCOMING: the same sign
+var barrier_wait_sign: Control     # NEXT MEAL / DRINK IN: the same sign, the countdown on it
 var barrier_down := false
 var barrier_tween: Tween
 var active_options := []
@@ -405,6 +406,8 @@ func _update_barrier() -> void:
 	var sign_up: bool = mode == "upcoming" and barrier_upcoming != null
 	if barrier_upcoming:
 		barrier_upcoming.visible = sign_up
+	if barrier_wait_sign:
+		barrier_wait_sign.visible = mode == "wait"
 	barrier_title.visible = mode != "mystery" and not sign_up
 	barrier_time.visible = mode != "mystery" and not sign_up
 	if mode == "upcoming":
@@ -413,7 +416,7 @@ func _update_barrier() -> void:
 		barrier_time.add_theme_font_size_override("font_size", 64)
 	else:
 		barrier_title.text = "NEXT DRINK IN" if current_page == 1 else "NEXT MEAL IN"
-		barrier_time.add_theme_font_size_override("font_size", 96)
+		barrier_time.add_theme_font_size_override("font_size", 72 if barrier_wait_sign else 96)
 	if not BARRIER_ENABLED:
 		mode = ""
 	var key := str(current_page)
@@ -630,6 +633,18 @@ func _build_upcoming_sign(top: TextureRect) -> void:
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	barrier_upcoming.add_child(l)
 	barrier.add_child(barrier_upcoming)
+	# the countdown's sign: the same, without words (the title and the time labels go on it)
+	barrier_wait_sign = barrier_upcoming.duplicate()
+	barrier_wait_sign.remove_child(barrier_wait_sign.get_child(barrier_wait_sign.get_child_count() - 1))
+	barrier.add_child(barrier_wait_sign)
+	barrier.move_child(barrier_wait_sign, 1)            # (under the title and the time)
+	var cy := PANEL.size.y / 2.0
+	for lb in [barrier_title, barrier_time]:
+		lb.add_theme_color_override("font_color", Color8(162, 152, 98))          # (the "?" sign's green)
+		lb.add_theme_color_override("font_outline_color", Color8(88, 82, 46))
+	barrier_title.add_theme_font_size_override("font_size", 30)
+	barrier_title.position = Vector2(0, cy - 40 - 40)
+	barrier_time.position = Vector2(0, cy - 40 + 12)
 	_update_barrier()
 
 ## A roll-down shutter in the panel's own orange (pixel art): slats with light top edges, a
