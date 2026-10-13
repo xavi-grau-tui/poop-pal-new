@@ -657,7 +657,11 @@ then pages); the section's name is the page title. Coins on the frame's top band
    - In the menus: a "Cases & Stickers" card (or in Dress-up) lists them; hold = put on / stick
      (the device turns round, as above).
    - The first case: a free gift (e.g. Splash Hoops' gift track), so the system is shown by a
-     present; stickers open after it. Some cases could come only
+     present; stickers open after it.
+   - IDEA (user, 2026-10-13) for swapping cases: on the back, your cases peek in from a side as
+     corners / tabs (a bit of each one's colour and pattern, stacked). Drag a corner into the
+     device = that case slides on (a click) and the corners tuck away; swipe UP on the case = it
+     slides off and goes back to the side as a corner. Its stickers go with it. Some cases could come only
    from games' gift tracks or Lucky Pinch (not for sale), to make them collectable.
 Each section's cards look like the food ones (frame, icon box, type tag, price on the left), so
 the whole Shop reads the same. Undecided: the exact unlock moments and prices (pacing.py).
