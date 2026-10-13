@@ -89,8 +89,41 @@ func _ready() -> void:
 	for n in ["claw_open", "claw_closed", "carriage"] + CAPSULE_COLORS.map(func(c): return "capsule_" + c):
 		tex[n] = load("res://textures/minigames/pinch/%s.png" % n)
 	_create_nodes()
+	_add_peek()
 	_fill_pit()
 	super._ready()
+
+## Your pal peeking into the machine: a big, faint reflection on the glass, leaning in from the
+## left (cut by the screen's edge), paler and bluer than the pal and fading towards the bottom
+const PEEK_WIDTH := 372.0               # (world px)
+const PEEK_AT := Vector2(48, 333)
+func _add_peek() -> void:
+	if not PetState.has_poop():
+		return
+	var src: Image = (load(PetState.FORMS[PetState.form_id]["frames"][0]) as Texture2D).get_image()
+	if src.is_compressed():
+		src.decompress()
+	src.convert(Image.FORMAT_RGBA8)
+	src = src.get_region(src.get_used_rect())
+	var img := Image.create(src.get_width(), src.get_height(), false, Image.FORMAT_RGBA8)
+	var tint := Color8(150, 160, 205)
+	for y in src.get_height():
+		var fade := lerpf(0.42, 0.14, float(y) / maxf(1.0, src.get_height() - 1))
+		for x in src.get_width():
+			var c := src.get_pixel(x, y)
+			if c.a <= 0.0:
+				continue
+			var lum := (c.r + c.g + c.b) / 3.0
+			var o := Color(c.r * 0.55 + lum * 0.15 + tint.r * 0.3, c.g * 0.55 + lum * 0.15 + tint.g * 0.3, c.b * 0.55 + lum * 0.15 + tint.b * 0.3, c.a * fade)
+			img.set_pixel(x, y, o)
+	var peek := Sprite2D.new()
+	peek.texture = ImageTexture.create_from_image(img)
+	peek.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var k := PEEK_WIDTH / src.get_width()
+	peek.scale = Vector2(k, k)
+	peek.position = PEEK_AT
+	peek.rotation_degrees = 16.0         # bent over, looking in
+	add_child(peek)                       # (last: on the glass, over everything)
 
 func start_game() -> void:
 	super.start_game()

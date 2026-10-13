@@ -31,6 +31,7 @@ func _ready() -> void:
 	z_index = 1  # above pet view / mystery, below console frame & LCD
 	_music_off()
 	_set_lcd_visible(false)
+	_hide_boost(true)                   # (the boost badge would float over the logo)
 	_build()
 	if DevLaunch.skip_boot:                # (development only: STRAIGHT TO GAMES)
 		_finish()
@@ -137,6 +138,7 @@ func _finish() -> void:
 	if done:
 		return
 	done = true
+	_hide_boost(false)
 	_first_song()                           # (if the gut's light-up hasn't started it already)
 	for gut in _guts():
 		gut.modulate = Color.WHITE
@@ -249,3 +251,16 @@ func _music_off() -> void:
 	var music = get_node_or_null("/root/PoopPal/MusicController")
 	if music:
 		music.stop()
+
+
+## The pal's boost badge and glow stay hidden while the boot screen is on
+func _hide_boost(hide: bool) -> void:
+	var poop := get_node_or_null("../PetView/Poop")
+	if not poop or not poop.get("boost_badge"):
+		return
+	if hide:
+		poop.boost_badge.hide()
+		if poop.aura:
+			poop.aura.hide()
+	else:
+		poop._on_boost_changed(PetState.boost, false)
