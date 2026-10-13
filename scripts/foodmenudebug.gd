@@ -620,8 +620,8 @@ func _build_upcoming_sign(top: TextureRect) -> void:
 	l.position = mini.position
 	l.add_theme_font_override("font", barrier_title.get_theme_font("font"))
 	l.add_theme_font_size_override("font_size", 44)
-	l.add_theme_color_override("font_color", Color8(250, 244, 214))
-	l.add_theme_color_override("font_outline_color", Color8(58, 38, 30))
+	l.add_theme_color_override("font_color", Color8(162, 152, 98))          # (the "?" sign's green)
+	l.add_theme_color_override("font_outline_color", Color8(88, 82, 46))     # (a darker green border)
 	l.add_theme_constant_override("outline_size", 14)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	barrier_upcoming.add_child(l)
