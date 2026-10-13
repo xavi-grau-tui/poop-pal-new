@@ -633,6 +633,8 @@ then pages); the section's name is the page title. Coins on the frame's top band
    no pattern) that hide the device's cream
    there, each with a hole showing only the pressable face and its dark outline. The bottom
    buttons stay as they are.
+   Round the main screen the case reaches the screen's dark border (left visible) and keeps the
+   bezel's shaded band shaded, in its own colours (user, 2026-10-13).
    The case covers the battery compartment too (user, 2026-10-13): to change the
    batteries you take the case off.
    TO DECIDE (user, 2026-10-13): how a case is put on / taken off (on the device's back, flipped:
