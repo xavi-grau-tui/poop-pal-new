@@ -16,7 +16,11 @@ def dots(rgb, m):
     h, w = m.shape; yy, xx = np.mgrid[0:h, 0:w]; cell = 72
     cx = (xx + (yy // cell % 2) * cell // 2) % cell - cell // 2; cy = yy % cell - cell // 2
     px, py = xx - cx, yy - cy                       # each dot's centre
-    ok = np.ones_like(m)
+    # a dot only where it fits whole on the case (never cut by a button, the screen, an edge...)
+    from scipy.ndimage import binary_erosion
+    yd, xd = np.mgrid[-10:11, -10:11]
+    whole = binary_erosion(m, structure=(xd * xd + yd * yd) <= 100)
+    ok = whole[np.clip(py, 0, h - 1), np.clip(px, 0, w - 1)]
     for (x0, y0, x1, y1) in NODOTS:
         ok &= ~((xx >= x0) & (xx < x1) & (yy >= y0) & (yy < y1))
     rgb[m & ok & ((cx * cx + cy * cy) < 81)] = DOT
@@ -61,7 +65,7 @@ def make(path, keep_boxes, cover=(), logo_box=None, logo_tones=None, front_logo=
         ring &= ~shell                                 # (only the button's own frame: not the case round it)
         lum = rgb.sum(-1)
         hi = ring & (lum >= 600); mid = ring & (lum >= 330) & (lum < 600); lo = ring & (lum < 330)
-        rgb[hi] = BODY; rgb[mid] = (150, 200, 174); rgb[lo] = EDGE   # the bump: case colour, its edge a darker tone
+        rgb[hi] = BODY; rgb[mid] = BODY; rgb[lo] = EDGE   # the bump: case colour, only its edge a darker tone
         # in the hole: whatever is OUTSIDE the button's dark outline (cream corners, a brown spot) is
         # case; inside the outline the button keeps every colour of its own
         sub = rgb[iy0 - 4:iy1 + 4, ix0 - 4:ix1 + 4]
@@ -88,7 +92,11 @@ def make(path, keep_boxes, cover=(), logo_box=None, logo_tones=None, front_logo=
             dk = sub.sum(-1) < 330
             lb, nb = label(dk)
             sizes = [(lb == i).sum() for i in range(1, nb + 1)]
-            btn = binary_fill_holes(lb == (int(np.argmax(sizes)) + 1)) if nb else np.zeros_like(dk)
+            # (the whole box round the button's dark outline: nothing in it changes)
+            ys_, xs_ = np.nonzero(dk)
+            btn = np.zeros_like(dk)
+            if len(ys_):
+                btn[ys_.min():ys_.max() + 1, xs_.min():xs_.max() + 1] = True
             openp = (sub.sum(-1) >= 330) & ~btn
             lab_, n_ = label(openp)
             ids = set(np.unique(np.concatenate([lab_[0], lab_[-1], lab_[:, 0], lab_[:, -1]]))) - {0}
@@ -99,7 +107,7 @@ def make(path, keep_boxes, cover=(), logo_box=None, logo_tones=None, front_logo=
         bz &= alpha & (rgb.sum(-1) > 500) & (np.abs(rgb - BODY).sum(-1) > 30)
         off2 = (rgb - REF).mean(-1, keepdims=True)
         rgb[bz] = np.clip(BODY + off2[bz] * 1.4, 0, 255)
-    dots(rgb, shell)
+    dots(rgb, shell & ~keep)
     return Image.fromarray(np.dstack([rgb, a[..., 3]]).astype(np.uint8))
 # the case's bumps: the button's frame (outer box) in the case's colours, a hole for the face (inner box)
 BUMPS = [((58, 293, 352, 568), (102, 338, 312, 512)), ((388, 293, 682, 568), (432, 338, 642, 512)),
@@ -109,7 +117,7 @@ AROUND = [(50, 285, 360, 578), (380, 285, 690, 578), (710, 285, 1020, 578),
           (130, 1595, 352, 1812), (428, 1600, 652, 1768), (728, 1595, 952, 1812)]
 SPEAKER = (405, 1760, 675, 1870)
 front_keep = [(102, 338, 312, 512), (432, 338, 642, 512), (762, 338, 972, 512),
-              (160, 1627, 320, 1778), (460, 1630, 620, 1736), (760, 1627, 920, 1778),
+              (148, 1616, 333, 1791), (450, 1620, 630, 1742), (748, 1616, 933, 1791),   # (the bottom buttons, whole: outline and all)
               (65, 608, 1016, 1565), (96, 86, 530, 274)]
 NODOTS.append(SPEAKER)
 for (x0, y0, x1, y1) in AROUND[3:]:
