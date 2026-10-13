@@ -82,6 +82,7 @@ var detail_legend: Node2D          # pal card controls, in the golden band: (o) 
 var font: Font
 ## the frame's top band: its middle (Main UI coords), where the coins show
 const COIN_BAND_MID := -1227.0
+const COIN_LIFT := 0.0              # (the coin and the number centred between the band's two edges)
 const COIN_RIGHT := 1292.0          # its right edge: where it always ended (the panel's right margin)
 var coin_tag: PanelContainer       # the coins you have (Shop view and its hub card)
 var coin_tag_label: Label
@@ -862,16 +863,20 @@ func _build_coin_tag(menu: Node) -> void:
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.custom_minimum_size = Vector2(40, 46)          # (a 40 px coin; the row a bit taller...)
+	icon.custom_minimum_size = Vector2(40, 40)          # (a 40 px coin; the row a bit taller...)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
 	coin_tag_label = Label.new()
 	coin_tag_label.add_theme_font_override("font", font)
 	coin_tag_label.add_theme_font_size_override("font_size", 40)
 	coin_tag_label.add_theme_color_override("font_color", TEXT_DARK)
-	coin_tag_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM    # (...so the number sits level with the coin)
+	coin_tag_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	coin_tag_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(coin_tag_label)
+	var nudge := MarginContainer.new()                     # (only the number a little lower: level with the coin)
+	nudge.add_theme_constant_override("margin_top", 6)
+	nudge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	nudge.add_child(coin_tag_label)
+	row.add_child(nudge)
 	coin_tag.z_index = 6
 	coin_tag.visible = false
 	menu.add_child(coin_tag)
@@ -882,7 +887,7 @@ func _refresh_coin_tag() -> void:
 		coin_tag_label.text = str(GameData.coins)
 		coin_tag.reset_size()
 		# in the frame's top band (the bottom band's mirror), ending where the page dots end
-		coin_tag.position = Vector2(round(COIN_RIGHT + FRAME_DX - coin_tag.size.x), round(COIN_BAND_MID - coin_tag.size.y / 2.0))
+		coin_tag.position = Vector2(round(COIN_RIGHT + FRAME_DX - coin_tag.size.x), round(COIN_BAND_MID - coin_tag.size.y / 2.0 - COIN_LIFT))
 	if view == View.HUB:
 		_update_hub_card_info()
 
