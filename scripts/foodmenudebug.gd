@@ -245,7 +245,7 @@ func _fill_drink(option_node: Node, drink_data: Dictionary) -> void:
 
 ## Where the page's window is in its list: a small mark per item on the panel's right edge (the
 ## ones on screen filled in), only when the list is longer than the 3 cards
-const SCROLL_X := 1384.0           # the middle of the frame's right side (Menu coords)
+const SCROLL_X := 1390.0           # the middle of the frame's right side (Menu coords)
 func _build_scroll_marks() -> void:
 	scroll_marks = Node2D.new()
 	scroll_marks.name = "ScrollMarks"
