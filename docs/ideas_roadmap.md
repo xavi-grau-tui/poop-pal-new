@@ -634,7 +634,25 @@ then pages); the section's name is the page title. Coins on the frame's top band
    e.g. hold to slide it off, like the films and the battery strip of the unboxing), and how
    stickers are added, moved and peeled. Order idea: cases BEFORE stickers in the Shop, so
    stickers go on the back of the case (each case keeps its own stickers; take it off and the
-   bare device is clean again). Without a case, stickers would go on the device itself. Some cases could come only
+   bare device is clean again). Without a case, stickers would go on the device itself.
+   PROPOSAL (2026-10-13, to confirm), the whole flow:
+   - Earning: bought in the Shop or won in a game, a coupon card (pixel QR, "Show at the store
+     counter to collect your prize!", hold: redeem) -> a scan beep -> "You got: Melon Soda case!"
+     (one ritual for cases and stickers).
+   - Right after, the device turns round by itself: a new case slides on with a click (the old
+     one to your case shelf); a new sticker floats over the back stuck to your finger: drag,
+     let go to stick (a little squash).
+   - Later, on the back (double-tap the logo): press a sticker = pick it up and move it; hold =
+     peel it (it curls like the unboxing films) back into your sticker book. A "case" tab on the
+     back's edge: hold = slide the case off (bare device), then the case shelf: press = next case,
+     hold = put it on.
+   - Each case is saved with its own sticker layout (sticker, place, tilt): swapping cases swaps
+     the whole look; the bare device keeps its own. A sticker is one item: peel it from one case,
+     stick it on another.
+   - In the menus: a "Cases & Stickers" card (or in Dress-up) lists them; hold = put on / stick
+     (the device turns round, as above).
+   - The first case: a free gift (e.g. Splash Hoops' gift track), so the system is shown by a
+     present; stickers open after it. Some cases could come only
    from games' gift tracks or Lucky Pinch (not for sale), to make them collectable.
 Each section's cards look like the food ones (frame, icon box, type tag, price on the left), so
 the whole Shop reads the same. Undecided: the exact unlock moments and prices (pacing.py).
