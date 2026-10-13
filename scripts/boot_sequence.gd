@@ -115,6 +115,7 @@ func _run() -> void:
 func _power_on() -> void:
 	var t := create_tween().set_parallel(true)
 	t.tween_property(screen, "modulate:a", 0.0, screen_on_time).set_trans(Tween.TRANS_SINE)
+	_fade_in_boost(t)
 	for gut in _guts():
 		t.tween_property(gut, "modulate", Color.WHITE, gut_light_time).set_delay(0.6).set_trans(Tween.TRANS_SINE)
 	t.tween_callback(_first_song).set_delay(0.6 + gut_light_time)   # (when the gut is fully lit)
@@ -139,7 +140,8 @@ func _finish() -> void:
 	if done:
 		return
 	done = true
-	_hide_boost(false)
+	if not _boost_back:
+		_hide_boost(false)
 	_first_song()                           # (if the gut's light-up hasn't started it already)
 	for gut in _guts():
 		gut.modulate = Color.WHITE
@@ -265,3 +267,17 @@ func _hide_boost(hide: bool) -> void:
 			poop.aura.hide()
 	else:
 		poop._on_boost_changed(PetState.boost, false)
+
+var _boost_back := false
+
+## The boost droplet and the pal's glow come back with the pal, fading in as the screen comes on
+func _fade_in_boost(t: Tween) -> void:
+	var poop := get_node_or_null("../PetView/Poop")
+	if not poop or not poop.get("boost_badge") or PetState.boost == "":
+		return
+	_boost_back = true
+	poop._on_boost_changed(PetState.boost, false)
+	for n in [poop.boost_badge, poop.aura]:
+		if n and n.visible:
+			n.modulate.a = 0.0
+			t.tween_property(n, "modulate:a", 1.0, screen_on_time).set_trans(Tween.TRANS_SINE)
