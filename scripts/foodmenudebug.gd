@@ -530,8 +530,8 @@ func _build_barrier() -> void:
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	logo.size = clip.size * 0.8
-	logo.position = clip.size * 0.1
+	logo.size = clip.size * 0.66          # (a margin above and below the "?")
+	logo.position = clip.size * 0.17
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip.add_child(logo)
 	frame.visible = false

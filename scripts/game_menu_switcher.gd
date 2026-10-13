@@ -318,7 +318,7 @@ func _lock_overlay(page: Node) -> Control:
 	inner.clip_contents = true
 	var q: Sprite2D = inner.get_node("GameLogo")
 	q.texture = load(LOCKED_LOGO)
-	q.scale *= 1.15                     # (the "?" a little bigger)
+	q.scale *= 0.9                      # (a margin above and below the "?")
 	var bg: Sprite2D = inner.get_node("Background")
 	if _locked_bg:
 		bg.texture = _locked_bg
