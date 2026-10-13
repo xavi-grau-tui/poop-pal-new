@@ -380,7 +380,12 @@ func _case_layer(t: Texture2D, z: int) -> Sprite2D:
 	var sp := Sprite2D.new()
 	sp.texture = t
 	sp.centered = false
-	sp.position = Vector2(0, -1920)
+	# (the console's pieces are y-sorted: anchored at the bottom, the case is drawn after the
+	# screen's frame and the logo at its z, not under them)
+	# screen-sized art: lined up with what the camera shows (it isn't exactly at the console's
+	# middle: at -1920 the case sat 6 px high and covered the screens' bottom edges)
+	sp.position = Vector2(0, 0)
+	sp.offset = cam.position - Vector2(540, 960)
 	sp.z_index = z
 	sp.visible = false
 	return sp
@@ -393,6 +398,11 @@ func _show_front_case(on: bool) -> void:
 	var mirror := front.get_node_or_null("Console/LeftEdgeMirror") as CanvasItem
 	if mirror:
 		mirror.visible = not on                     # (the case's art has its own left side)
+	var screen := front.get_node_or_null("Console/MainScreen") as Sprite2D
+	if screen:
+		if not screen.has_meta("plain"):
+			screen.set_meta("plain", screen.texture)
+		screen.texture = load("res://textures/cases/melon_frame3.png") if on else screen.get_meta("plain")
 	for n in ["Console/Speaker1", "Console/Speaker2"]:
 		var spk := front.get_node_or_null(n) as CanvasItem
 		if spk:

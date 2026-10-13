@@ -28,7 +28,14 @@ for (x0, y0, x1, y1) in [(148, 1616, 333, 1791), (450, 1620, 630, 1742), (748, 1
     cmax = np.where(dark.any(0), hh - 1 - np.argmax(dark[::-1, :], 0), -1)[None, :]
     inside = (xs_ >= rmin) & (xs_ <= rmax) & (ys_ >= cmin) & (ys_ <= cmax)
     light = ~inside & ~dark
-    F[y0 - 2:y1 + 2, x0 - 2:x1 + 2, :3][light] = BODY
+    # the outline's steps at the corners: a gap with dark on two sides reads as a hole in the
+    # outline on the case: filled with the outline's own colour (the corners stay solid)
+    pad = np.pad(dark, 1)
+    nb = pad[:-2, 1:-1].astype(int) + pad[2:, 1:-1] + pad[1:-1, :-2] + pad[1:-1, 2:]
+    notch = light & (nb >= 2)
+    region = F[y0 - 2:y1 + 2, x0 - 2:x1 + 2, :3]
+    region[light & ~notch] = BODY
+    region[notch] = sub[dark].mean(0).astype(int) if dark.any() else region[notch]
     changed[y0 - 2:y1 + 2, x0 - 2:x1 + 2] |= light
 out = F.copy(); out[..., 3] = np.where(changed, 255, 0)
 Image.fromarray(out.astype(np.uint8)).save('textures/cases/melon_front.png')
@@ -50,7 +57,8 @@ from scipy.ndimage import binary_dilation, label as lab2
 base = out.copy()
 for (x0, y0, x1, y1) in [(52, 290, 358, 572), (382, 290, 688, 572), (712, 290, 1018, 572),
                          (140, 1608, 342, 1800), (442, 1612, 640, 1752), (740, 1608, 942, 1800)]:
-    base[y0:y1, x0:x1, :3] = BODY
+    emptyp = base[y0:y1, x0:x1, 3] == 0                        # (what the case already paints there stays)
+    base[y0:y1, x0:x1, :3][emptyp] = BODY
     base[y0:y1, x0:x1, 3] = 255
 # the speaker grille, painted on the case: its holes dark, round them the case (the speaker's own
 # images, with a light rim on each hole, are hidden while the case is on)
@@ -86,3 +94,15 @@ for name in ['buttonfoodnormal', 'buttonfoodpressed', 'padbuttonnormal', 'padbut
     a[..., :3] = rgb
     Image.fromarray(a.astype(np.uint8)).save(f'textures/cases/melon_{name}.png')
 print('layers ok')
+
+# the screen's frame image (Console/MainScreen, frame3.png): its cream in the case's tones (the
+# shading kept), its dark border as it is; swapped in while the case is on
+fr = np.asarray(Image.open('textures/console/frame3.png').convert('RGBA')).astype(int)
+frgb, fal = fr[..., :3], fr[..., 3] > 0
+REF = np.array([250, 237, 217])
+light = fal & (frgb.sum(-1) > 500) & (frgb[..., 0] >= frgb[..., 2])       # (warm light tones: the cream)
+off = (frgb - REF).mean(-1, keepdims=True)
+frgb[light] = np.clip(np.array(BODY) + off[light] * 1.4, 0, 255)
+fr[..., :3] = frgb
+Image.fromarray(fr.astype(np.uint8)).save('textures/cases/melon_frame3.png')
+print('frame ok')
