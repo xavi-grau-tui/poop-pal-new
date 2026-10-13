@@ -629,7 +629,8 @@ then pages); the section's name is the page title. Coins on the frame's top band
    (back, nothing else carved there) are CARVED into it, in
    the case's own colour (pressed in: a shade on the top-left inner edge, light on the bottom
    right). The menu buttons' (top three) borders are part of the case (user, 2026-10-13): raised
-   bumps in the case's plain colour (no pattern, no darker square) that hide the device's cream
+   bumps in the case's colour with a darker edge (the button's frame shape, no square round it,
+   no pattern) that hide the device's cream
    there, each with a hole showing only the pressable face and its dark outline. The bottom
    buttons stay as they are.
    The case covers the battery compartment too (user, 2026-10-13): to change the
