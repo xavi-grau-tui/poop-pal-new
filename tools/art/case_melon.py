@@ -22,7 +22,7 @@ def dots(rgb, m):
     whole = binary_erosion(m, structure=(xd * xd + yd * yd) <= 100)
     ok = whole[np.clip(py, 0, h - 1), np.clip(px, 0, w - 1)]
     for (x0, y0, x1, y1) in NODOTS:
-        ok &= ~((xx >= x0) & (xx < x1) & (yy >= y0) & (yy < y1))
+        ok &= ~((px >= x0 - 10) & (px < x1 + 10) & (py >= y0 - 10) & (py < y1 + 10))   # (the whole dot, never half)
     rgb[m & ok & ((cx * cx + cy * cy) < 81)] = DOT
 def make(path, keep_boxes, cover=(), logo_box=None, logo_tones=None, front_logo=None):
     a = np.asarray(Image.open(path).convert('RGBA')).astype(int)
