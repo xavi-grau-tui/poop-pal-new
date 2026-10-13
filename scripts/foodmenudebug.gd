@@ -646,8 +646,8 @@ func _build_upcoming_sign(top: TextureRect) -> void:
 		lb.size = Vector2(sign_rect.size.x, 80)
 	barrier_title.add_theme_font_size_override("font_size", 30)
 	var cy := sign_rect.get_center().y
-	barrier_title.position = Vector2(sign_rect.position.x, cy - 40 - 34)
-	barrier_time.position = Vector2(sign_rect.position.x, cy - 40 + 14)
+	barrier_title.position = Vector2(sign_rect.position.x, cy - 40 - 65)
+	barrier_time.position = Vector2(sign_rect.position.x, cy - 40 - 7)
 	_update_barrier()
 
 ## A roll-down shutter in the panel's own orange (pixel art): slats with light top edges, a
