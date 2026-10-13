@@ -56,8 +56,12 @@ for (x0, y0, x1, y1) in [(52, 290, 358, 572), (382, 290, 688, 572), (712, 290, 1
 # images, with a light rim on each hole, are hidden while the case is on)
 sx0, sy0, sx1, sy1 = ns['SPEAKER']
 grille = src[sy0:sy1, sx0:sx1, :3]
-holes = grille.sum(-1) < 520          # (the holes with their soft edge; only the light rim goes)
-base[sy0:sy1, sx0:sx1, :3] = np.where(holes[..., None], grille, BODY)
+# each pixel: how dark it is (0 = the old cream, 1 = the hole's core), re-blended between the
+# case's mint and the hole's own dark, so a hole's soft edge fades into mint (no cream fringe)
+lum = grille.sum(-1).astype(float)
+core = np.array([52, 50, 54], float)
+t = np.clip((690.0 - lum) / (690.0 - 170.0), 0.0, 1.0)[..., None]
+base[sy0:sy1, sx0:sx1, :3] = (np.array(BODY, float) * (1 - t) + core * t).astype(int)
 base[sy0:sy1, sx0:sx1, 3] = 255
 top = np.zeros_like(out)
 for (x0, y0, x1, y1) in [(575, 105, 1000, 265), (20, 1835, 80, 1895), (1000, 1835, 1060, 1895), (20, 20, 80, 80), (1000, 20, 1060, 80)]:
