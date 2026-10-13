@@ -620,7 +620,12 @@ then pages); the section's name is the page title. Coins on the frame's top band
 3. CASES (late game, e.g. 40 stars or every launch game bought): the "?" sign until then. A case
    re-skins the device's shell, front and back (the screen, buttons and labels stay): its colour
    plus a printed pattern; swapped on the back too. Example: docs/mockups/case_examples.png
-   (Melon Soda: mint with white dots; Sakura: pink with pale dots). Some cases could come only
+   (Melon Soda: mint with white dots; Sakura: pink with pale dots). With a case on (user,
+   2026-10-13; docs/mockups/case_melon_soda.png, the favourite: "this might be the way to go"):
+   the screws, the device's dark edges and the back sticker are hidden under it; the case has
+   its own darker rim; HaraTomo (front and back) and Kobaya Tech (back) are CARVED into it, in
+   the case's own colour (pressed in: a shade on the top-left inner edge, light on the bottom
+   right); the battery lid stays reachable. Some cases could come only
    from games' gift tracks or Lucky Pinch (not for sale), to make them collectable.
 Each section's cards look like the food ones (frame, icon box, type tag, price on the left), so
 the whole Shop reads the same. Undecided: the exact unlock moments and prices (pacing.py).
