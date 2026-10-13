@@ -310,13 +310,19 @@ func _lock_overlay(page: Node) -> Control:
 	mini.name = "Mini"
 	mini.texture = top.texture
 	mini.size = top.size
-	mini.scale = Vector2(0.5, 0.5)
-	mini.position = (ov.size - top.size * 0.5) / 2.0 - Vector2(0, 6)
+	const K := 0.66                    # (the label's size; its "?" pattern stays the games' size)
+	mini.scale = Vector2(K, K)
+	mini.position = (ov.size - top.size * K) / 2.0 - Vector2(0, 6)
 	mini.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var inner: Control = inner_src.duplicate()
-	inner.get_node("GameLogo").texture = load(LOCKED_LOGO)
+	inner.clip_contents = true
+	var q: Sprite2D = inner.get_node("GameLogo")
+	q.texture = load(LOCKED_LOGO)
+	q.scale *= 1.15                     # (the "?" a little bigger)
+	var bg: Sprite2D = inner.get_node("Background")
 	if _locked_bg:
-		inner.get_node("Background").texture = _locked_bg
+		bg.texture = _locked_bg
+	bg.scale = Vector2.ONE / K          # (the pattern back at the games' size; clipped by the label)
 	mini.add_child(inner)
 	ov.add_child(mini)
 	top.add_child(ov)
