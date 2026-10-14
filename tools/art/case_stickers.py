@@ -7,7 +7,8 @@ A sticker: its art, (a dark warm outline,) then the white die-cut border. The st
 for other sticker sets.
 
     <venv>/bin/python tools/art/case_stickers.py
-        -> textures/cases/stickers/<pal id>.png   every Sho and Chu (the book's pages: one family each)
+        -> textures/cases/stickers/<pal id>.png   every Sho and Chu, stuck size (x3 the pal's pixels)
+           textures/cases/stickers/book/<id>.png   ...and as the book shows them (x2)
            textures/cases/book/book.png           the open book (page + cover + its pull tab)
            textures/cases/book/tab_<family>.png   the page tabs on its top
 """
@@ -241,12 +242,15 @@ if __name__ == '__main__':
     os.makedirs(BOOK, exist_ok=True)
     forms = json.load(open(os.path.join(ROOT, 'data', 'evolution_tree.json')))['forms']
     ids = [k for k, v in forms.items() if v['stage'] <= 2]
-    for f in os.listdir(DEST):
-        if f.endswith('.png') and f[:-4] not in ids:
-            os.remove(os.path.join(DEST, f))
+    os.makedirs(os.path.join(DEST, 'book'), exist_ok=True)
+    for d in (DEST, os.path.join(DEST, 'book')):
+        for f in os.listdir(d):
+            if f.endswith('.png') and f[:-4] not in ids:
+                os.remove(os.path.join(d, f))
     for fid in ids:
-        # (the pal sprites are drawn finer than the console: x2, their own pixel size in the game)
-        sticker(pal(fid), outline=False, px=2).save(os.path.join(DEST, fid + '.png'))
+        # (the pal sprites are drawn finer than the console: whole multiples of their own pixels)
+        sticker(pal(fid), outline=False, px=3).save(os.path.join(DEST, fid + '.png'))
+        sticker(pal(fid), outline=False, px=2).save(os.path.join(DEST, 'book', fid + '.png'))
     starters = json.load(open(os.path.join(ROOT, 'data', 'evolution_tree.json')))['starters']
     im, geo = book(icon('picklet', 14))
     im.save(os.path.join(BOOK, 'book.png'))

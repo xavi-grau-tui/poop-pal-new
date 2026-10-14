@@ -21,7 +21,6 @@ const PEEK := 40.0                  # while a sticker is carried it peeks out th
 const GAPE := 110.0                 # ...and this much with the sticker over it (let go: stored)
 const CELL := Vector2(200, 205)     # the page's slots: 2 columns, 3 rows
 const FIRST := Vector2(152, 130)    # the first slot's middle, book coordinates
-const IN_BOOK := 0.8                # stickers on the page: a bit smaller than stuck
 const PAGE_TAB_X := 40.0            # the page tabs on the book's top: the first's left edge...
 const PAGE_TAB_STEP := 88.0         # ...and from one to the next
 const PAGE_TAB_Y := -52.0           # ...their top (the page showing: its tab a little higher)
@@ -40,8 +39,9 @@ var case_sprite: Sprite2D
 var book: Sprite2D
 var slots: Node2D
 var open := false
-var mode := ""                      # "" / "book" (dragging it) / "sticker" / "swallow"
+var mode := ""                      # "" / "book" (dragging it) / "pending" / "sticker" / "swallow"
 var carried: Sprite2D
+var pending: Sprite2D               # a sticker pressed in the book, not dragged yet
 var carried_id := ""
 var grab := Vector2.ZERO            # finger -> sticker centre
 var press_at := Vector2.ZERO
@@ -124,13 +124,8 @@ func _press(p: Vector2) -> bool:
 	if open and Rect2(Vector2.ZERO, BOOK.get_size()).has_point(lp):
 		for s in slots.get_children():
 			if _hit(s, p):
-				var gp: Vector2 = s.global_position
-				slots.remove_child(s)
-				stored.erase(s.get_meta("id"))
-				_carry(s, gp, p, randf_range(-TILT, TILT))
-				open = false
-				_slide(TUCKED + PEEK, 0.25)                 # (the book out of the way)
-				_fill_page()
+				pending = s                                 # (it comes out once the finger moves)
+				mode = "pending"
 				return true
 		_start_book_drag()
 		return true
@@ -163,6 +158,8 @@ func _start_book_drag() -> void:
 func _drag(p: Vector2) -> void:
 	if p.distance_to(press_at) > 14.0:
 		moved = true
+	if mode == "pending" and moved:
+		_take_out(pending, p)
 	if mode == "book":
 		book.position.x = clampf(book_from + p.x - press_at.x, TUCKED, OPEN)
 	elif mode == "sticker":
@@ -175,6 +172,7 @@ func _drag(p: Vector2) -> void:
 func _release(p: Vector2) -> void:
 	var m := mode
 	mode = ""
+	pending = null
 	if m == "book":
 		var go_open := not open if not moved else book.position.x > (TUCKED + OPEN) * 0.5 + (60.0 if open else -160.0)
 		open = go_open
@@ -186,6 +184,18 @@ func _release(p: Vector2) -> void:
 			_place()
 		_slide(TUCKED, 0.25)
 
+## A sticker dragged out of the book: the book tucks back to the side, out of the way
+func _take_out(s: Sprite2D, p: Vector2) -> void:
+	pending = null
+	var gp: Vector2 = s.global_position
+	slots.remove_child(s)
+	stored.erase(s.get_meta("id"))
+	_carry(s, gp, press_at, randf_range(-TILT, TILT))
+	carried.position = p + grab
+	open = false
+	_slide(TUCKED + PEEK, 0.25)
+	_fill_page()
+
 ## Carry a sticker sprite with the finger (from the book or peeled off the case)
 func _carry(s: Sprite2D, from: Vector2, p: Vector2, rot: float) -> void:
 	add_child(s)
@@ -194,6 +204,9 @@ func _carry(s: Sprite2D, from: Vector2, p: Vector2, rot: float) -> void:
 	s.z_index = 5
 	carried = s
 	carried_id = s.get_meta("id")
+	if s.texture != _tex(carried_id):                   # (out of the book: it grows to its stuck size)
+		s.scale = Vector2.ONE * s.texture.get_size().x / _tex(carried_id).get_size().x
+		s.texture = _tex(carried_id)
 	grab = s.position - p
 	mode = "sticker"
 	var t := create_tween()
@@ -242,9 +255,9 @@ func _stick_sprite(d: Dictionary) -> Sprite2D:
 	_shadow(s, false)
 	return s
 
-func _sticker(id: String) -> Sprite2D:
+func _sticker(id: String, small := false) -> Sprite2D:
 	var s := Sprite2D.new()
-	s.texture = _tex(id)
+	s.texture = _tex(("book/" if small else "") + id)
 	s.set_meta("id", id)
 	return s
 
@@ -265,9 +278,8 @@ func _fill_page() -> void:
 		c.queue_free()
 	var here := stored.filter(func(id): return PetState.FORMS[id]["family"] == FAMILIES[page])
 	for i in here.size():
-		var s := _sticker(here[i])
+		var s := _sticker(here[i], true)
 		s.position = FIRST + Vector2(i % 2, i / 2) * CELL
-		s.scale = Vector2.ONE * IN_BOOK
 		slots.add_child(s)
 	for i in page_tabs.size():
 		page_tabs[i].position = Vector2(PAGE_TAB_X + i * PAGE_TAB_STEP, PAGE_TAB_Y - (PAGE_TAB_UP if i == page else 0.0))
