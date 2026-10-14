@@ -11,6 +11,7 @@ extends Node2D
 ## the case); DeviceFlip passes it the touches first while the case is on.
 
 const BOOK := preload("res://textures/cases/book/book.png")   # (tools/art/case_stickers.py)
+const BODY_W := 608.0               # the book's body (its pull tab is to the right of it)
 const FAMILIES := ["green", "sweet", "greasy", "spicy", "sour"]
 const TAB := Rect2(608, 290, 96, 320)   # the pull tab, book coordinates (with some slack)
 const TOP := -960.0 - 452.0         # the book's top edge (it is centred on the device)
@@ -241,10 +242,12 @@ func _store(id: String, animated: bool) -> void:
 	stored = _sorted(stored)
 	page = maxi(0, FAMILIES.find(PetState.FORMS[id]["family"]))     # (the book on its page)
 	if animated and s:
-		var to := book.position + TAB.get_center()
+		# into the book's tab, riding along with the book as it tucks away to the side
+		s.reparent(book)
 		var t := create_tween().set_parallel(true)
-		t.tween_property(s, "position", to, 0.18).set_ease(Tween.EASE_IN)
-		t.tween_property(s, "scale", Vector2.ONE * 0.2, 0.18).set_ease(Tween.EASE_IN)
+		t.tween_property(s, "position", Vector2(BODY_W - 20.0, TAB.get_center().y), 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		t.tween_property(s, "scale", Vector2.ONE * 0.25, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		t.tween_property(s, "rotation_degrees", 0.0, 0.28)
 		t.chain().tween_callback(s.queue_free)
 		_sound("res://sounds/fx/click-6.mp3", -12.0, 0.9)
 	elif s:
