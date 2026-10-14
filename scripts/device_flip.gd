@@ -295,6 +295,7 @@ func _setup_case() -> void:
 	back.add_child(corner)
 	stickers = preload("res://scripts/case_stickers.gd").new()
 	stickers.case_sprite = case_sprite
+	stickers.corner = corner
 	back.add_child(stickers)                        # (above the case: its book peeks in at the left)
 	# the front: a base layer over the console body and under every button (solid where they sit,
 	# so a button pressed or not always lands on the case), a top layer for the carved logo and

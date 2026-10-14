@@ -36,6 +36,7 @@ static var stocked := false
 static var page := 0                # the book's page (a family)
 
 var case_sprite: Sprite2D
+var corner: Sprite2D                # the case off, its corner peeking in: shows the same stickers
 var book: Sprite2D
 var slots: Node2D
 var open := false
@@ -73,6 +74,7 @@ func _ready() -> void:
 	_fill_page()
 	for p in placed:
 		_stick_sprite(p)
+	_sync_corner()
 
 ## The case went on (the book's tab slides in) or is coming off (the book goes with it)
 func show_book(on: bool) -> void:
@@ -141,6 +143,7 @@ func _press(p: Vector2) -> bool:
 		var s: Sprite2D = stuck[i]
 		if s.has_meta("data") and _hit(s, p):
 			placed.erase(s.get_meta("data"))
+			_sync_corner()
 			var gp: Vector2 = s.global_position
 			case_sprite.remove_child(s)
 			_carry(s, gp, p, s.rotation_degrees)
@@ -226,6 +229,7 @@ func _place() -> void:
 	t.tween_property(stuck, "scale", Vector2.ONE * 0.96, 0.08)
 	t.tween_property(stuck, "scale", Vector2.ONE, 0.1)
 	_sound("res://sounds/fx/click-5.mp3", -12.0, 1.2)
+	_sync_corner()
 	Input.vibrate_handheld(12)
 
 ## Back into the book: shrinks into its tab (animated) or straight away
@@ -255,6 +259,20 @@ func _stick_sprite(d: Dictionary) -> Sprite2D:
 	case_sprite.add_child(s)
 	_shadow(s, false)
 	return s
+
+## The corner (the same case art, centred the same way) gets copies of the stuck stickers
+func _sync_corner() -> void:
+	if not corner:
+		return
+	for c in corner.get_children():
+		if c.has_meta("id"):
+			c.queue_free()
+	for d in placed:
+		var s := _sticker(d.id)
+		s.position = d.pos
+		s.rotation_degrees = d.rot
+		corner.add_child(s)
+		_shadow(s, false)
 
 func _sticker(id: String, small := false) -> Sprite2D:
 	var s := Sprite2D.new()
