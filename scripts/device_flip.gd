@@ -85,12 +85,8 @@ func _exit_tree() -> void:
 		AudioServer.set_bus_volume_db(0, 0.0)
 
 func _input(event: InputEvent) -> void:
-	if DevLaunch.case_demo and progress == 1.0 and (case_busy or case_drag == "placed"):
-		# the case is going on / coming off, or the finger that put it on is still down: every
-		# touch is the case's (that drag ends as a sideways swipe, which would turn the device)
-		var up := event as InputEventMouseButton
-		if up and not up.pressed:
-			case_drag = ""
+	if DevLaunch.case_demo and progress == 1.0 and case_busy:
+		# the case is going on / coming off: every touch is the case's (no turn meanwhile)
 		if event is InputEventMouse or event is InputEventScreenTouch or event is InputEventScreenDrag:
 			get_viewport().set_input_as_handled()
 		return
@@ -275,7 +271,7 @@ var corner: Sprite2D
 var front_case: Sprite2D           # (under the buttons)
 var front_case_top: Sprite2D       # (over the logo and the screws)
 var case_buttons := []             # [button, its normal, pressed, the case's normal, pressed]
-var case_drag := ""                 # "" / "corner" / "case" / "placed" (the finger still down)
+var case_drag := ""                 # "" / "corner" / "case"
 var case_busy := false              # the case going on / coming off: no turn meanwhile
 var stickers = null                 # the sticker book and the stickers (case_stickers.gd)
 var drag_from := Vector2.ZERO
@@ -331,7 +327,10 @@ func _case_input(event: InputEvent) -> bool:
 		# released
 		if case_drag == "corner":
 			case_drag = ""
-			create_tween().tween_property(corner, "position", corner_rest, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			if p.x < 540.0:
+				_put_case_on()                      # (let go past the middle: it goes on)
+			else:
+				create_tween().tween_property(corner, "position", corner_rest, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 			return true
 		if case_drag == "case":
 			case_drag = ""
@@ -346,9 +345,6 @@ func _case_input(event: InputEvent) -> bool:
 		var d := p - drag_from
 		if case_drag == "corner":
 			corner.position = corner_rest + Vector2(minf(0.0, d.x), 0.0)      # the case shows more as it comes in
-			if p.x < 540.0:
-				case_drag = "placed"                # (until this finger lifts, no turn)
-				_put_case_on()
 			return true
 		if case_on and case_drag == "" and d.y < -24.0 and absf(d.y) > absf(d.x):
 			case_drag = "case"                      # a swipe up: the case comes off with the finger
