@@ -94,6 +94,9 @@ func _input(event: InputEvent) -> void:
 		if event is InputEventMouse or event is InputEventScreenTouch or event is InputEventScreenDrag:
 			get_viewport().set_input_as_handled()
 		return
+	if DevLaunch.case_demo and progress == 1.0 and not turning and case_on and stickers.handle(event):
+		get_viewport().set_input_as_handled()
+		return
 	if DevLaunch.case_demo and progress == 1.0 and not turning and _case_input(event):
 		get_viewport().set_input_as_handled()
 		return
@@ -136,6 +139,8 @@ func _turn(target: float, direction := 0.0) -> void:
 		base_offset = cam.offset
 		rest_rect = _device_on_screen()
 	turning = true
+	if stickers:
+		stickers.close()
 	swing = direction
 	turn_target = target
 	settled = false
@@ -272,6 +277,7 @@ var front_case_top: Sprite2D       # (over the logo and the screws)
 var case_buttons := []             # [button, its normal, pressed, the case's normal, pressed]
 var case_drag := ""                 # "" / "corner" / "case" / "placed" (the finger still down)
 var case_busy := false              # the case going on / coming off: no turn meanwhile
+var stickers = null                 # the sticker book and the stickers (case_stickers.gd)
 var drag_from := Vector2.ZERO
 var corner_rest := Vector2.ZERO
 
@@ -287,6 +293,9 @@ func _setup_case() -> void:
 	corner_rest = CORNER_TIP - (-CASE_HALF).rotated(deg_to_rad(CORNER_TURN))
 	corner.position = corner_rest
 	back.add_child(corner)
+	stickers = preload("res://scripts/case_stickers.gd").new()
+	stickers.case_sprite = case_sprite
+	back.add_child(stickers)                        # (above the case: its book peeks in at the left)
 	# the front: a base layer over the console body and under every button (solid where they sit,
 	# so a button pressed or not always lands on the case), a top layer for the carved logo and
 	# the screws, and Melon Soda images for the menu buttons (their frame in the case's colours)
@@ -366,6 +375,7 @@ func _put_case_on() -> void:
 	s.tween_callback(func():
 		case_on = true
 		case_busy = false
+		stickers.show_book(true)
 		Input.vibrate_handheld(30)
 		_case_click())
 
@@ -373,6 +383,7 @@ func _put_case_on() -> void:
 func _take_case_off() -> void:
 	case_on = false
 	case_busy = true
+	stickers.show_book(false)
 	var t := create_tween()
 	t.tween_property(case_sprite, "position", CASE_CENTRE + Vector2(0, -1920), 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	t.tween_callback(func():
