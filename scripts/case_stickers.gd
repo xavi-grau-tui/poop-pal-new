@@ -118,7 +118,7 @@ func _press(p: Vector2) -> bool:
 				if page != i:
 					page = i
 					_fill_page()
-					_sound("res://sounds/fx/film_peel.wav", -16.0, 1.8)
+					_sound("res://sounds/fx/sticker_page.wav", -10.0, 1.0)
 				mode = "swallow"
 				return true
 	if open and Rect2(Vector2.ZERO, BOOK.get_size()).has_point(lp):
@@ -144,7 +144,7 @@ func _press(p: Vector2) -> bool:
 			var gp: Vector2 = s.global_position
 			case_sprite.remove_child(s)
 			_carry(s, gp, p, s.rotation_degrees)
-			_sound("res://sounds/fx/film_peel.wav", -10.0, 1.3)
+			_sound("res://sounds/fx/sticker_peel.wav", -8.0, 1.0)
 			_slide(TUCKED + PEEK, 0.2)
 			return true
 	return false
@@ -192,6 +192,7 @@ func _take_out(s: Sprite2D, p: Vector2) -> void:
 	stored.erase(s.get_meta("id"))
 	_carry(s, gp, press_at, randf_range(-TILT, TILT))
 	carried.position = p + grab
+	_sound("res://sounds/fx/sticker_peel.wav", -8.0, 1.1)
 	open = false
 	_slide(TUCKED + PEEK, 0.25)
 	_fill_page()
