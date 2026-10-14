@@ -12,18 +12,18 @@ extends Node2D
 
 const BOOK := preload("res://textures/cases/book/book.png")   # (tools/art/case_stickers.py)
 const FAMILIES := ["green", "sweet", "greasy", "spicy", "sour"]
-const TAB := Rect2(476, 200, 84, 272)   # the pull tab, book coordinates (with some slack)
-const TOP := -960.0 - 336.0         # the book's top edge (it is centred on the device)
-const TUCKED := -476.0              # book x tucked: only its tab shows, at the case's left edge
+const TAB := Rect2(608, 290, 96, 320)   # the pull tab, book coordinates (with some slack)
+const TOP := -960.0 - 452.0         # the book's top edge (it is centred on the device)
+const TUCKED := -608.0              # book x tucked: only its tab shows, at the case's left edge
 const OPEN := 36.0                  # ...and open
-const HIDDEN := -560.0              # ...and with no case on
+const HIDDEN := -720.0              # ...and with no case on
 const PEEK := 40.0                  # while a sticker is carried it peeks out this much more...
 const GAPE := 110.0                 # ...and this much with the sticker over it (let go: stored)
-const CELL := Vector2(200, 205)     # the page's slots: 2 columns, 3 rows
-const FIRST := Vector2(152, 130)    # the first slot's middle, book coordinates
-const PAGE_TAB_X := 40.0            # the page tabs on the book's top: the first's left edge...
-const PAGE_TAB_STEP := 88.0         # ...and from one to the next
-const PAGE_TAB_Y := -52.0           # ...their top (the page showing: its tab a little higher)
+const CELL := Vector2(264, 280)     # the page's slots: 2 columns, 3 rows
+const FIRST := Vector2(188, 172)    # the first slot's middle, book coordinates
+const PAGE_TAB_X := 36.0            # the page tabs on the book's top: the first's left edge...
+const PAGE_TAB_STEP := 112.0        # ...and from one to the next
+const PAGE_TAB_Y := -64.0           # ...their top (the page showing: its tab a little higher)
 const PAGE_TAB_UP := 14.0
 const LIFT := 1.12                  # a carried sticker, bigger (closer to you)
 const AREA := Rect2(50, -1870, 980, 1820)    # where a sticker can sit on the case
@@ -114,7 +114,7 @@ func _press(p: Vector2) -> bool:
 	var lp := p - book.position
 	if open:
 		for i in page_tabs.size():
-			if Rect2(page_tabs[i].position, page_tabs[i].texture.get_size()).has_point(lp) and lp.y < 8.0:
+			if Rect2(page_tabs[i].position, page_tabs[i].texture.get_size()).has_point(lp) and lp.y < 16.0:
 				if page != i:
 					page = i
 					_fill_page()

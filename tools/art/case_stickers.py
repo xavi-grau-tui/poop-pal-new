@@ -163,7 +163,7 @@ def sticker(art, outline=True, px=PX):
 FAMILIES = ['green', 'sweet', 'greasy', 'spicy', 'sour']
 FAM_COL = {'green': (128, 198, 104), 'sweet': (244, 162, 192), 'greasy': (232, 176, 98),
            'spicy': (232, 98, 82), 'sour': (238, 214, 92)}
-COVER = np.array([172, 146, 212])          # the book's cover (lilac: apart from the mint, pink, cream)
+COVER = np.array([176, 166, 152])          # the book's cover: a neutral warm grey (goes with any case)
 PAGE = np.array([252, 249, 242])
 BOOK = os.path.join(ROOT, 'textures', 'cases', 'book')
 
@@ -174,11 +174,14 @@ def rrect(xx, yy, x0, y0, x1, y1, r):
     return (xx - cx) ** 2 + (yy - cy) ** 2 <= r * r
 
 
+OUT = 2                                    # the book's outline, art px
+
+
 def outlined(a, shp, col):
-    """Art (h, w, 4) with its shape outlined 1 art px (the canvas grows by 1 all round), x PX."""
-    full = np.zeros((a.shape[0] + 2, a.shape[1] + 2, 4), int)
-    full[1:-1, 1:-1] = a
-    ring = binary_dilation(np.pad(shp, 1)) & ~np.pad(shp, 1)
+    """Art (h, w, 4) with its shape outlined OUT art px (the canvas grows by OUT all round), x PX."""
+    full = np.zeros((a.shape[0] + OUT * 2, a.shape[1] + OUT * 2, 4), int)
+    full[OUT:-OUT, OUT:-OUT] = a
+    ring = binary_dilation(np.pad(shp, OUT), iterations=OUT) & ~np.pad(shp, OUT)
     full[ring, :3], full[ring, 3] = col, 255
     im = Image.fromarray(full.astype(np.uint8), 'RGBA')
     return im.resize((im.width * PX, im.height * PX), Image.NEAREST)
@@ -202,7 +205,7 @@ def paste(a, art, x, y):
 def book(mark):
     """The open book: a lilac cover round a sheet of sticker paper, its spine on the left and a
     pull tab on its right (the part that peeks in at the case's left edge)."""
-    W, H, TW, TH = 118, 166, 20, 58
+    W, H, TW, TH = 150, 222, 22, 70
     yy, xx = np.mgrid[0:H, 0:W + TW]
     a = np.zeros((H, W + TW, 4), int)
     cover = rrect(xx, yy, 0, 0, W - 1, H - 1, 6)
@@ -225,7 +228,7 @@ def book(mark):
 
 def page_tab(fam, mark):
     """A page tab: a rounded top in the family's colour, its Sho on it."""
-    W, H = 21, 16
+    W, H = 24, 18
     yy, xx = np.mgrid[0:H, 0:W]
     a = np.zeros((H, W, 4), int)
     shp = rrect(xx, yy, 0, 0, W - 1, H + 6, 6)
@@ -252,10 +255,10 @@ if __name__ == '__main__':
         sticker(pal(fid), outline=False, px=3).save(os.path.join(DEST, fid + '.png'))
         sticker(pal(fid), outline=False, px=2).save(os.path.join(DEST, 'book', fid + '.png'))
     starters = json.load(open(os.path.join(ROOT, 'data', 'evolution_tree.json')))['starters']
-    im, geo = book(icon('picklet', 14))
+    im, geo = book(icon('picklet', 16))
     im.save(os.path.join(BOOK, 'book.png'))
     for fam in FAMILIES:
-        page_tab(fam, icon(starters[fam], 12)).save(os.path.join(BOOK, 'tab_%s.png' % fam))
+        page_tab(fam, icon(starters[fam], 14)).save(os.path.join(BOOK, 'tab_%s.png' % fam))
     sizes = [Image.open(os.path.join(DEST, f + '.png')).size for f in ids]
     print(len(ids), 'stickers, biggest', max(s[0] for s in sizes), max(s[1] for s in sizes))
     print('book', im.size, 'geometry (art px, before the outline)', geo)
