@@ -301,12 +301,20 @@ func _setup_case() -> void:
 	console.add_child(front_case)
 	front_case_top = _case_layer(load("res://textures/cases/melon_front_top.png"), 4)
 	console.add_child(front_case_top)
-	for b in [["MenuButtons/FoodButton", "buttonfood"], ["MenuButtons/GameButton", "padbutton"], ["MenuButtons/SettingsButton", "settingsbutton"]]:
-		var btn := front.get_node_or_null(b[0]) as TextureButton
+	# (menu_buttons.gd keeps its off / on images in normal_texture / pressed_texture, swapped from
+	# the files' names: off = the darker "...pressed.png". Each gets the case's version of ITS file,
+	# whatever the button shows right now: a menu may be open)
+	for path in ["MenuButtons/FoodButton", "MenuButtons/GameButton", "MenuButtons/SettingsButton"]:
+		var btn := front.get_node_or_null(path) as TextureButton
 		if btn:
-			case_buttons.append([btn, btn.texture_normal, btn.texture_pressed,
-				load("res://textures/cases/melon_%snormal.png" % b[1]), load("res://textures/cases/melon_%spressed.png" % b[1])])
+			var off: Texture2D = btn.get("normal_texture")
+			var lit: Texture2D = btn.get("pressed_texture")
+			case_buttons.append([btn, off, lit, _case_version(off), _case_version(lit)])
 	# (no automatic turn: you flip the device yourself, double-tap the logo, to find the corner)
+
+## textures/buttons/<name>.png -> textures/cases/melon_<name>.png
+func _case_version(t: Texture2D) -> Texture2D:
+	return load("res://textures/cases/melon_" + t.resource_path.get_file())
 
 func _back_pos(screen_pos: Vector2) -> Vector2:
 	return back.get_global_transform_with_canvas().affine_inverse() * screen_pos
