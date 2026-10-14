@@ -286,6 +286,20 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   6. Each new thing explained only when it opens: the first drink ("Drinks give your pal a boost in
      the next game"), the shop at its unlock ("The shop is open! Trade your [token] for treats and
      stickers", with tokens already earned), each new game, each new food type.
+- Teaching the turn: double-tap the HaraTomo logo (IDEAS 2026-10-14, not built). The peeled film
+  says it once, at unboxing, when nobody needs it yet, and nothing on the logo hints at it. Teach the
+  gesture itself (two taps), in-world, no text:
+  - The logo's double pulse: until the device has been turned once, every so often the logo does
+    two quick little presses (sinks a touch, a soft ring each), tap-tap, then rests. The rhythm IS
+    the gesture.
+  - When the back first matters (the first case bought, or anything else for the back): the device
+    tilts ~15° towards its back by itself and settles, then the logo does its tap-tap. The Shop's
+    case card can add, as packaging copy: "Turn your HaraTomo over to put it on."
+  - One press on the logo: it answers with the second pulse ("once more").
+  - Also weighed: a sideways swipe on the frame around the screen turns it too (like the swipe on
+    the back), a natural first try with an object; the double-tap stays as the trick.
+  - The booklet (planned) explains it too, so it must be reachable without turning the device first
+    (it's planned behind a sticker on the back): e.g. in the box at unboxing.
 
 ## Progression v2: stars, coins, pals (2026-10-10, built on branch `rearrange`)
 OFFICIAL (user, 2026-10-10): this progression (with round 2 below: food packs per size, Sho / Chu /
