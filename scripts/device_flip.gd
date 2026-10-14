@@ -85,6 +85,15 @@ func _exit_tree() -> void:
 		AudioServer.set_bus_volume_db(0, 0.0)
 
 func _input(event: InputEvent) -> void:
+	if DevLaunch.case_demo and progress == 1.0 and (case_busy or case_drag == "placed"):
+		# the case is going on / coming off, or the finger that put it on is still down: every
+		# touch is the case's (that drag ends as a sideways swipe, which would turn the device)
+		var up := event as InputEventMouseButton
+		if up and not up.pressed:
+			case_drag = ""
+		if event is InputEventMouse or event is InputEventScreenTouch or event is InputEventScreenDrag:
+			get_viewport().set_input_as_handled()
+		return
 	if DevLaunch.case_demo and progress == 1.0 and not turning and _case_input(event):
 		get_viewport().set_input_as_handled()
 		return
@@ -261,7 +270,8 @@ var corner: Sprite2D
 var front_case: Sprite2D           # (under the buttons)
 var front_case_top: Sprite2D       # (over the logo and the screws)
 var case_buttons := []             # [button, its normal, pressed, the case's normal, pressed]
-var case_drag := ""                 # "" / "corner" / "case"
+var case_drag := ""                 # "" / "corner" / "case" / "placed" (the finger still down)
+var case_busy := false              # the case going on / coming off: no turn meanwhile
 var drag_from := Vector2.ZERO
 var corner_rest := Vector2.ZERO
 
@@ -327,7 +337,7 @@ func _case_input(event: InputEvent) -> bool:
 		if case_drag == "corner":
 			corner.position = corner_rest + Vector2(minf(0.0, d.x), 0.0)      # the case shows more as it comes in
 			if p.x < 540.0:
-				case_drag = ""
+				case_drag = "placed"                # (until this finger lifts, no turn)
 				_put_case_on()
 			return true
 		if case_on and case_drag == "" and d.y < -24.0 and absf(d.y) > absf(d.x):
@@ -339,6 +349,7 @@ func _case_input(event: InputEvent) -> bool:
 
 ## The case slides on from above and clicks into place; the front wears it too
 func _put_case_on() -> void:
+	case_busy = true
 	# the whole case rises from the side and up out of the screen, straightening as it goes...
 	var t := create_tween().set_parallel(true)
 	t.tween_property(corner, "position", Vector2(CASE_CENTRE.x, CASE_CENTRE.y - 2200), 0.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -354,12 +365,14 @@ func _put_case_on() -> void:
 	s.tween_property(case_sprite, "position", CASE_CENTRE, 0.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	s.tween_callback(func():
 		case_on = true
+		case_busy = false
 		Input.vibrate_handheld(30)
 		_case_click())
 
 ## Up and away; its corner comes back in from the right
 func _take_case_off() -> void:
 	case_on = false
+	case_busy = true
 	var t := create_tween()
 	t.tween_property(case_sprite, "position", CASE_CENTRE + Vector2(0, -1920), 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	t.tween_callback(func():
@@ -367,6 +380,7 @@ func _take_case_off() -> void:
 		corner.position = corner_rest + Vector2(500, 0)      # (then its corner slides back in from the side)
 		corner.visible = true)
 	t.tween_property(corner, "position", corner_rest, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_callback(func(): case_busy = false)
 
 func _case_click() -> void:
 	var a := AudioStreamPlayer.new()
