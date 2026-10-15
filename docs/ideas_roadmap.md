@@ -86,22 +86,45 @@ To build:
   cute game menu music, 78 BPM, steady soft groove, narrow dynamic range, loopable, no intro, no
   outro, gentle repeating arrangement with subtle variations, warm rounded mix, even level
   throughout". Not liked: classic MIDI chiptune, city pop, toy-box acoustic, Animal Crossing style.
-- Minigames (2026-10-08, Top Spin's "Square Wave Battle"): "Soft pixel chiptune game battle
-  instrumental in a minor key, reduced-note square-wave lead playing a sparse, understated motif
-  with lower prominence in the mix, steady driving pulse-wave bassline, tight soft chiptune drums
-  and crisp wooden woodblock accents, Light warm arpeggios gradually add tension while the core
-  arrangement stays consistent with small melodic and rhythmic variations, 100 BPM, even steady
-  groove, narrow dynamics, warm rounded mix, seamless loop-like ending". Keep games at 88-104 BPM
-  (118 BPM was too fast), only a light touch of each game's flavour.
-- In use: Top Spin "Pixel Battle" (100 BPM), Paper Sumo "Pixel Sumo" (93.75), Splash Hoops "Light
-  Through Water" (82, "dreamy underwater"). Suno misses the BPM: measure it, then loop (see the
-  music notes: trim on the last bar line, OGG, loop_offset on the first beat).
-- Pal Prix (2026-10-15, to generate): "Soft pixel chiptune racing game instrumental in a bright
-  major key, reduced-note square-wave lead playing a sparse, playful motif with lower prominence in
-  the mix, bouncy driving pulse-wave bassline, tight soft chiptune drums with light hi-hat shuffle
-  and crisp toy-clap accents, quick light arpeggios that give a sense of speed while the core
-  arrangement stays consistent with small melodic and rhythmic variations, cheerful toy-race feel,
-  102 BPM, even steady groove, narrow dynamics, warm rounded mix, seamless loop-like ending".
+- Minigames: the prompts that ended up in the build (user, 2026-10-15). Shared recipe: "Soft
+  pixel chiptune game instrumental", one BPM in 82-104 (118 was too fast), "even steady groove,
+  narrow dynamics", "keep the core arrangement consistent with small melodic and rhythmic
+  variations", a square-wave lead (sparse / set low in the mix, or a concise motif from the first
+  beat), a pulse-wave bass, only a light touch of the game's own instruments, "warm rounded mix",
+  "seamless loop-like ending". Suno misses the BPM: measure it, then loop (trim on the last bar
+  line, OGG, loop_offset on the first beat).
+  - TOP SPIN (the user's FAVOURITE: the template to start from), "Pixel Battle", 100 BPM:
+    "Soft pixel chiptune game battle instrumental in a minor key, determined square-wave lead
+    carrying a concise repeating motif from the first beat, steady driving pulse-wave bassline,
+    tight soft chiptune drums and crisp wooden woodblock accents, Light warm arpeggios gradually
+    add tension while the core arrangement stays consistent with small melodic and rhythmic
+    variations, 100 BPM, even steady groove, narrow dynamics, warm rounded mix, seamless loop-like
+    ending, Keep the low frequencies warm and prominent, with a compact, soft-edged mix and an
+    immediate start on the repeating motif, Maintain consistent arrangement and level throughout,
+    with subtle changes that preserve a seamless loop feel"
+  - PAPER SUMO, "Pixel Sumo", 93.75 BPM measured: "Soft pixel chiptune game instrumental, 92 BPM,
+    even steady groove and narrow dynamics, Keep a consistent core arrangement with small melodic
+    and rhythmic variations: a sparse, cheeky reduced-note square-wave lead set low in the mix;
+    bouncy pulse-wave bass; soft taiko taps leading the rhythm with light wooden woodblock accents;
+    gentle shamisen-like plucks and kalimba phrases taking turns answering the lead; soft hand
+    claps; light, warm arpeggios for a comedic edge, Rounded, warm mix, restrained transients,
+    seamless loop-like ending"
+  - SPLASH HOOPS, "Light Through Water", 82 BPM: "Dreamy underwater game instrumental, 82 BPM slow
+    swaying groove, Soft filtered pads drift gently like light through water; gentle vibraphone
+    carries a sparse melody with slow, soft echo, Add occasional water-drop plucks, a soft rubbery
+    bass, and light brushed percussion, A few quiet pixel chiptune notes sit low in the mix, Keep
+    the core arrangement consistent with small variations, narrow dynamics, a warm rounded mix, and
+    a seamless loop-like ending"
+  - PAL PRIX (2026-10-15, to generate; built on Top Spin's): "Soft pixel chiptune racing game
+    instrumental in a bright major key, upbeat square-wave lead carrying a catchy, concise repeating
+    motif from the first beat, rolling pulse-wave bassline that pushes forward like an engine, tight
+    soft chiptune drums with a light shuffled hi-hat and crisp toy-clap accents, quick light
+    arpeggios rising like gear shifts give a sense of speed while the core arrangement stays
+    consistent with small melodic and rhythmic variations, playful toy-race feel, 100 BPM, even
+    steady groove, narrow dynamics, warm rounded mix, seamless loop-like ending, Keep the low
+    frequencies warm and prominent, with a compact, soft-edged mix and an immediate start on the
+    repeating motif, Maintain consistent arrangement and level throughout, with subtle changes that
+    preserve a seamless loop feel"
 
 ## Boost-gated prizes (PROPOSED 2026-10-15, to confirm)
 Every boost opens its own kind of hidden thing, and what's inside belongs to where it's found
