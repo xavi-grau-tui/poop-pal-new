@@ -26,10 +26,11 @@ const PX := 4                         # world px per board px (the games' chunky
 const CELL := 300.0                   # a grid square, world px (the road stays a square from itself)
 const EDGE := 10                      # the mat's wooden frame, board px
 const MARGIN := 24.0                  # road edge -> frame, world px
-const SPEED := 270.0                  # mat px/s, always
-const TURN := 3.1                     # rad/s while a button is held (a full turn in ~2 s)
+const SPEED := 380.0                  # mat px/s, always
+const TURN := 4.2                     # rad/s while a button is held (a full turn in 1.5 s; turning
+                                      # circle ~90 px, inside the circuits' 150 px corners)
 const ZOOM := 1.5                     # the view, close up (board px shown 6 px)
-const LOOK_AHEAD := 150.0             # the view looks this far ahead of the car (mat px)
+const LOOK_AHEAD := 200.0             # the view looks this far ahead of the car (mat px)
 const FALL_AT := 6.0                  # past the road's edge by this much: off the track
 const CHECKPOINTS := 10               # per lap: where a fallen car is put back
 const TRACK_SIDE := 6                 # the raised track's side face, board px (seen from the south)
@@ -92,7 +93,12 @@ var held := [false, false]             # the device buttons (main = left, forwar
 var _touch := {}                       # touch index -> button
 
 var world: Node2D                      # the mat and the car (moved by the view)
-var board: Sprite2D
+var board: Sprite2D                    # the floor
+var track: Sprite2D                    # the raised track, over it
+var track_image: Image
+var trail: Trail                       # the speed streaks behind the wheels and the exhaust puffs
+var behind: Node2D                     # under the track: where a car falling off its far side goes
+var front: Node2D                      # over the track: the car
 var car: Node2D
 var slices: Array[Sprite2D] = []       # the car, bottom slice first
 var driver: Sprite2D
@@ -115,6 +121,36 @@ var hint_left: HBoxContainer           # the controls along the bottom (shown at
 var hint_right: HBoxContainer
 var lcd_font: Font
 var _stars_shown := 3
+
+## Speed: short light streaks left on the road by the rear wheels, fading fast, and puffs from the
+## exhaust; both on the 4 px grid
+class Trail extends Node2D:
+	var marks: Array = []             # [position, age, kind]
+	var puff_t := 0.0
+	const LIFE := 0.28
+	func add(p: Vector2, heading: float, delta: float) -> void:
+		var back := Vector2.from_angle(heading) * -34.0
+		var side := Vector2.from_angle(heading + PI / 2.0) * 24.0
+		marks.append([p + back + side, 0.0, 0])
+		marks.append([p + back - side, 0.0, 0])
+		puff_t -= delta
+		if puff_t <= 0.0:
+			puff_t = 0.07
+			marks.append([p + back * 1.35 + side * randf_range(-0.3, 0.3), 0.0, 1])
+	func _process(delta: float) -> void:
+		for m in marks:
+			m[1] += delta
+		marks = marks.filter(func(m): return m[1] < (LIFE if m[2] == 0 else 0.45))
+		queue_redraw()
+	func _draw() -> void:
+		for m in marks:
+			var p: Vector2 = (m[0] as Vector2).snapped(Vector2(4, 4))
+			if m[2] == 0:
+				draw_rect(Rect2(p - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, 0.35 * (1.0 - m[1] / LIFE)))
+			else:
+				var f: float = m[1] / 0.45
+				var sz := 4.0 + 8.0 * f
+				draw_rect(Rect2(p - Vector2(sz, sz) / 2.0 + Vector2(0, -f * 10.0), Vector2(sz, sz)).abs(), Color(0.85, 0.85, 0.9, 0.5 * (1.0 - f)))
 
 func _ready() -> void:
 	game_music_path = "res://sounds/music/Pixel Chase.ogg"     # (107.22 BPM, looped on bar lines: tools/audio/loop_track.py)
@@ -153,6 +189,7 @@ func _begin(n: int) -> void:
 	level = clampi(n, 1, LEVELS.size())
 	_build_circuit()
 	board.texture = ImageTexture.create_from_image(_paint())
+	track.texture = ImageTexture.create_from_image(track_image)
 	car_pos = centre[0]
 	heading = (centre[2] - centre[0]).angle()
 	near = 0
@@ -160,6 +197,7 @@ func _begin(n: int) -> void:
 	lap = 1
 	race_time = 0.0
 	falls = 0
+	trail.marks.clear()
 	last_cp = 0.0
 	car_drop = 0.0
 	held = [false, false]
@@ -386,8 +424,12 @@ func _paint() -> Image:
 				if d < dist[i]:
 					dist[i] = d
 					idx[i] = s
+	# two layers: the floor (the carpet, the frame, the track's shadow) and the raised track (the
+	# road, its curbs, its side face): a car falling off the far side drops between them
 	var data := PackedByteArray()
 	data.resize(w * h * 4)
+	var top := PackedByteArray()
+	top.resize(w * h * 4)
 	var k := 0
 	var curb := 3.0
 	for y in h:
@@ -395,8 +437,10 @@ func _paint() -> Image:
 			var i := y * w + x
 			var d := dist[i]
 			var col: Color
+			var on_track := true
 			var e := mini(mini(x, y), mini(w - 1 - x, h - 1 - y))
 			if e < EDGE:
+				on_track = false
 				# the mat's wooden frame: outlined both sides, lit top / left, shaded bottom / right
 				if e <= 1 or e >= EDGE - 2:
 					col = MAT_EDGE[2]
@@ -429,6 +473,7 @@ func _paint() -> Image:
 				elif up_t == TRACK_SIDE + 1:
 					col = OUTLINE
 				else:
+					on_track = false
 					col = CARPET[0] if (x + y * 2) % 5 else CARPET[1]
 					if (x * 7 + y * 3) % 23 == 0:
 						col = CARPET[2]
@@ -436,11 +481,19 @@ func _paint() -> Image:
 					var sy := y - TRACK_SIDE - 3
 					if sx >= 0 and sy >= 0 and dist[sy * w + sx] <= hw + 2.0:
 						col = col.darkened(0.22)
+			if on_track:
+				top[k] = col.r8
+				top[k + 1] = col.g8
+				top[k + 2] = col.b8
+				top[k + 3] = 255
+				# (under the track the floor is just carpet)
+				col = CARPET[0] if (x + y * 2) % 5 else CARPET[1]
 			data[k] = col.r8
 			data[k + 1] = col.g8
 			data[k + 2] = col.b8
 			data[k + 3] = 255
 			k += 4
+	track_image = Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, top)
 	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
 
 ## A little red RC car seen from above, nose to the right: 22 x 16 px (x4), a seat in the middle
@@ -531,6 +584,18 @@ func _create_nodes() -> void:
 	board.scale = Vector2(PX, PX)
 	board.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	world.add_child(board)
+	# drawn in this order: the floor, a car falling behind the track, the raised track, the car
+	behind = Node2D.new()
+	world.add_child(behind)
+	track = Sprite2D.new()
+	track.centered = false
+	track.scale = Vector2(PX, PX)
+	track.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	world.add_child(track)
+	trail = Trail.new()
+	world.add_child(trail)
+	front = Node2D.new()
+	world.add_child(front)
 	world.scale = Vector2(ZOOM, ZOOM)
 	var layers := car_slices()
 	shadow = Sprite2D.new()
@@ -538,9 +603,9 @@ func _create_nodes() -> void:
 	shadow.scale = Vector2(PX, PX)
 	shadow.modulate = Color(0.05, 0.04, 0.1, 0.35)
 	shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	world.add_child(shadow)
+	front.add_child(shadow)
 	car = Node2D.new()
-	world.add_child(car)
+	front.add_child(car)
 	for i in layers.size():
 		var sl := Sprite2D.new()
 		sl.texture = layers[i]
@@ -556,7 +621,7 @@ func _create_nodes() -> void:
 	antenna.width = 4.0
 	antenna.default_color = Color8(40, 30, 40)
 	antenna.antialiased = false
-	world.add_child(antenna)
+	front.add_child(antenna)
 	var tip := Image.create(3, 3, false, Image.FORMAT_RGBA8)
 	for p in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(1, 2)]:
 		tip.set_pixel(p.x, p.y, Color8(226, 70, 64))
@@ -565,13 +630,13 @@ func _create_nodes() -> void:
 	antenna_tip.texture = ImageTexture.create_from_image(tip)
 	antenna_tip.scale = Vector2(PX, PX)
 	antenna_tip.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	world.add_child(antenna_tip)
+	front.add_child(antenna_tip)
 	# the pal, curled up in the seat (its face kept upright: it looks at you, not at the road)
 	driver = Sprite2D.new()
 	driver.texture = PalBall.texture()
 	driver.scale = Vector2(2, 2)
 	driver.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	world.add_child(driver)
+	front.add_child(driver)
 
 	# the HUD on a wooden band above the view: the lap, the clock / par, the stars, the coins
 	var band := ColorRect.new()
@@ -798,6 +863,7 @@ func _drive(delta: float) -> void:
 	var turn := (1.0 if _held(1) else 0.0) - (1.0 if _held(0) else 0.0)
 	heading += turn * TURN * delta
 	car_pos += Vector2.from_angle(heading) * SPEED * delta
+	trail.add(car_pos, heading, delta)
 	_find_near()
 	if progress >= last_cp + count / CHECKPOINTS:
 		last_cp = floorf(progress / (count / CHECKPOINTS)) * (count / CHECKPOINTS)
@@ -821,6 +887,10 @@ func _drive(delta: float) -> void:
 func _fall() -> void:
 	state = State.FALL
 	falls += 1
+	# off the far side (above the road on screen): the car drops BEHIND the raised track
+	if (car_pos - centre[near]).y < 0.0:
+		for n in [car, antenna, antenna_tip, driver]:
+			n.reparent(behind, false)
 	motor.stop()
 	_sfx("res://sounds/fx/rc_fall.wav", -12.0)
 	Input.vibrate_handheld(80)
@@ -838,6 +908,11 @@ func _fall() -> void:
 		near = i
 		progress = last_cp
 		car_drop = 0.0
+		for n in [car, antenna, antenna_tip, driver]:
+			if n.get_parent() != front:
+				n.reparent(front, false)
+		front.move_child(shadow, 0)
+		trail.marks.clear()
 		car.modulate = Color(1, 1, 1)
 		car.scale = Vector2.ONE
 		held = [false, false]
