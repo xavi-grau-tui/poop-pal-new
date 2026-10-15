@@ -420,12 +420,18 @@ func _process(delta: float) -> void:
 	ring.set_value(clampf((_hold_t - 0.15) / (HOLD - 0.15), 0.0, 1.0))
 	if _hold_t >= HOLD:
 		_used = true
-		ring.visible = false
 		var c := cells[selection] if selection < cells.size() else null
 		if c and c.get_meta("open"):
+			# the frame closes all the way round, a beat, then the level starts
+			ring.set_value(1.0)
 			_sfx("res://sounds/fx/clack.mp3", -6.0)
-			chosen.emit("play", c.get_meta("level"))
+			var lvl: int = c.get_meta("level")
+			get_tree().create_timer(0.18).timeout.connect(func():
+				ring.visible = false
+				if mode == Mode.SELECT:
+					chosen.emit("play", lvl))
 		else:
+			ring.visible = false
 			_sfx("res://sounds/fx/error.mp3", -14.0)
 			Input.vibrate_handheld(30)
 
@@ -546,5 +552,10 @@ class HoldFrame extends Control:
 			run += seg
 		if part.size() < 2:
 			return
-		draw_polyline(part, Color(0.290196, 0.184314, 0.121569, 1), W_DARK)
-		draw_polyline(part, Color8(243, 182, 126), W_FILL)
+		if value >= 1.0:
+			part.append(pts[1])                       # (closed: the end runs over the start)
+		# a thick polyline leaves notches at its joints: a round dab on each one fills them
+		for layer in [[Color(0.290196, 0.184314, 0.121569, 1), W_DARK], [Color8(243, 182, 126), W_FILL]]:
+			draw_polyline(part, layer[0], layer[1])
+			for i in range(1, part.size() - 1):
+				draw_circle(part[i], layer[1] / 2.0, layer[0])

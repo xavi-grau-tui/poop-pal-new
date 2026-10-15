@@ -179,6 +179,105 @@ static func wall_px(th: Dictionary, x: int, y: int, m: int, d_up: int, d_dn: int
 				return w[2].darkened(0.08)
 			return w[1] if grain < 0.35 else w[2]
 
+# ------------------------------------------------------------------ the exit (the trapdoor) and the vault fences, per world
+
+## Each world's trapdoor: [door, door's darker board, straps, strap highlight, seam / rim, frame side,
+## handle, the water down there] and how its doors are built ("planks" / "plates" / "flaps")
+const HATCH := [
+	{ "build": "planks", "c": [Color8(176, 112, 64), Color8(150, 92, 50), Color8(78, 74, 80), Color8(132, 128, 136), Color8(74, 44, 32), Color8(132, 84, 48), Color8(206, 176, 92), Color8(36, 62, 96)] },
+	# bath: a chrome drain cover in two halves
+	{ "build": "plates", "c": [Color8(214, 226, 236), Color8(184, 198, 212), Color8(150, 164, 180), Color8(250, 252, 255), Color8(46, 64, 84), Color8(122, 154, 188), Color8(250, 252, 255), Color8(60, 120, 170)] },
+	# gut: two plump flaps
+	{ "build": "flaps", "c": [Color8(224, 118, 132), Color8(200, 92, 112), Color8(176, 68, 92), Color8(246, 170, 176), Color8(78, 26, 42), Color8(130, 44, 70), Color8(250, 196, 192), Color8(110, 40, 60)] },
+	# sewer: rusty iron doors with bolts
+	{ "build": "plates", "c": [Color8(120, 104, 92), Color8(98, 84, 76), Color8(150, 92, 60), Color8(176, 150, 128), Color8(34, 36, 34), Color8(74, 48, 44), Color8(186, 120, 70), Color8(52, 80, 70)] },
+	# factory: steel doors with hazard stripes
+	{ "build": "hazard", "c": [Color8(132, 146, 168), Color8(108, 122, 146), Color8(30, 30, 34), Color8(226, 178, 52), Color8(30, 34, 46), Color8(58, 66, 86), Color8(226, 178, 52), Color8(40, 90, 140)] },
+	# space: an airlock, white panels and a little light
+	{ "build": "airlock", "c": [Color8(232, 228, 248), Color8(200, 194, 226), Color8(140, 128, 176), Color8(255, 255, 255), Color8(14, 12, 30), Color8(96, 84, 134), Color8(120, 236, 200), Color8(70, 40, 120)] },
+]
+
+## The trapdoor's frame: a rim round a deep opening (seen when it opens), s = its opening + 4
+static func hatch_frame(w: int, s: int) -> Texture2D:
+	var key := "hframe_%d" % w
+	if key in _cache:
+		return _cache[key]
+	var c: Array = HATCH[w]["c"]
+	var img := _img(s, s)
+	for y in s:
+		for x in s:
+			var e := mini(mini(x, y), mini(s - 1 - x, s - 1 - y))
+			var col: Color
+			if e == 0:
+				col = c[4]
+			elif e == 1:
+				col = c[5] if (x + y) % 5 != 0 else c[5].darkened(0.15)
+			elif e == 2 and (y == 2 or x == 2):
+				col = c[4].darkened(0.2)                     # the opening's shadowed inner lip
+			else:
+				col = c[7]                                   # deep water down there
+			img.set_pixel(x, y, col)
+	for p in [Vector2i(1, 1), Vector2i(s - 2, 1), Vector2i(1, s - 2), Vector2i(s - 2, s - 2)]:
+		img.set_pixel(p.x, p.y, c[3] if w != 0 else Color8(70, 70, 76))     # corner bolts
+	return _tex(key, img)
+
+## One trapdoor door (the left one; the right is mirrored): hinge on the left edge, the seam on
+## the right with half of the handle; w x h px
+static func hatch_leaf(w: int, lw: int, lh: int) -> Texture2D:
+	var key := "hleaf_%d" % w
+	if key in _cache:
+		return _cache[key]
+	var c: Array = HATCH[w]["c"]
+	var build: String = HATCH[w]["build"]
+	var img := _img(lw, lh)
+	for y in lh:
+		for x in lw:
+			var col: Color = c[0]
+			match build:
+				"planks":
+					col = c[0] if (y / 3) % 2 == 0 else c[1]
+					if y % 3 == 2:
+						col = col.darkened(0.18)             # gaps between the boards
+					if (x * 7 + y * 3) % 11 == 0:
+						col = col.darkened(0.08)             # grain specks
+					if y == 3 or y == lh - 4:
+						col = c[2] if x > 0 else c[3]        # iron straps from the hinge
+				"plates":
+					col = c[0] if y < lh / 2 else c[1]       # lit top half, shaded bottom
+					if y == 1 or x == 1:
+						col = c[3]                           # a lit bevel
+					if (x == 2 or x == lw - 3) and (y == 2 or y == lh - 3):
+						col = c[2]                           # bolts
+					if y % 4 == 0 and x > 2 and x < lw - 3 and build == "plates" and w == 1:
+						col = c[2].lightened(0.3)            # the drain's slots
+				"flaps":
+					var bulge := sin(float(y) / lh * PI)
+					col = c[0].lerp(c[3], 0.35) if x < lw * 0.4 * bulge + 1 else (c[0] if x < lw - 2 else c[1])
+					if (x + y * 2) % 9 == 0:
+						col = c[1]                           # wrinkles
+				"hazard":
+					col = c[0] if y < lh / 2 else c[1]
+					if y >= lh - 4 or y <= 2:
+						col = c[3] if ((x + y) / 2) % 2 == 0 else c[2]   # hazard bands
+					if y == 3:
+						col = c[3].darkened(0.4)
+				"airlock":
+					col = c[0] if y < lh / 2 else c[1]
+					if y % 5 == 0:
+						col = c[2]                           # panel seams
+					if x == 1:
+						col = c[3]
+			if x == lw - 1:
+				col = c[4]                                   # the seam
+			elif x == 0 and y % 6 == 1 and build == "planks":
+				col = c[3]                                   # hinge pins
+			img.set_pixel(x, y, col)
+	# half of the handle at the seam (a ring, a grip, a light...)
+	for p in [Vector2i(lw - 3, 8), Vector2i(lw - 4, 9), Vector2i(lw - 3, 10), Vector2i(lw - 2, 11)]:
+		img.set_pixel(p.x, p.y, c[6])
+	img.set_pixel(lw - 2, 8, c[6].darkened(0.45))
+	return _tex(key, img)
+
 # ------------------------------------------------------------------ small sprites (shown x4)
 
 static func _img(w: int, h: int) -> Image:
@@ -305,10 +404,18 @@ static func pickup(w: int, taken := false) -> Texture2D:
 			img.set_pixel(x, y, col)
 	return _tex(key, img)
 
-## The low fence across a vault's door (the Fizzy pal hops it): wooden pickets under a striped
-## rail, w x 9 px (w = the opening), seen from above at a slant like the walls
-static func fence(w: int, vertical: bool) -> Texture2D:
-	var key := "fence_%d_%s" % [w, vertical]
+## The low fence across a vault's door (the Fizzy pal hops it): pickets in the world's material
+## under the striped rail (that rail is what says "a low fence" in every world), w x 9 px
+## The pickets' colours per world: [lit, shaded] (wood, white ceramic, pink, rusty iron, steel, moon white)
+const PICKETS := [
+	[Color8(222, 172, 110), Color8(176, 124, 74)], [Color8(240, 246, 250), Color8(188, 210, 228)],
+	[Color8(236, 140, 150), Color8(198, 92, 110)], [Color8(150, 112, 92), Color8(112, 80, 66)],
+	[Color8(170, 182, 200), Color8(120, 134, 158)], [Color8(226, 220, 246), Color8(176, 166, 210)],
+]
+
+static func fence(w: int, vertical: bool, world := 0) -> Texture2D:
+	var key := "fence_%d_%s_%d" % [w, vertical, world]
+	var pk: Array = PICKETS[world]
 	if key in _cache:
 		return _cache[key]
 	var long := w
@@ -328,7 +435,7 @@ static func fence(w: int, vertical: bool) -> Texture2D:
 				if a % 4 == 3:
 					col = Color(0, 0, 0, 0)                  # the gaps between the pickets
 				else:
-					col = Color8(222, 172, 110) if b < 6 else Color8(176, 124, 74)
+					col = pk[0] if b < 6 else pk[1]
 			elif b == 8 and a % 4 != 3:
 				col = ink                                     # the pickets' feet
 			if (a == 0 or a == long - 1) and b >= 1:

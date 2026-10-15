@@ -140,6 +140,7 @@ var finish_sprite: Sprite2D           # the flush swirl, under the trapdoor
 var exit_node: Node2D                 # the trapdoor: frame + swirl + two hatch doors
 var hatch_l: Sprite2D
 var hatch_r: Sprite2D
+var hatch_frame: Sprite2D
 var exit_open := false
 var locked_hint_cd := 0.0
 var fence_hint_cd := 0.0
@@ -777,8 +778,8 @@ func _create_static_nodes() -> void:
 	# The exit: a trapdoor in the floor; it opens once every marble is collected
 	exit_node = Node2D.new()
 	add_child(exit_node)
-	var frame_s := Sprite2D.new()
-	frame_s.texture = _make_hatch_frame_texture()
+	hatch_frame = Sprite2D.new()
+	var frame_s := hatch_frame
 	frame_s.scale = Vector2(DETAIL, DETAIL)
 	frame_s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	exit_node.add_child(frame_s)
@@ -787,11 +788,9 @@ func _create_static_nodes() -> void:
 	finish_sprite.scale = Vector2(DETAIL, DETAIL)
 	finish_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	exit_node.add_child(finish_sprite)
-	var leaf := _make_hatch_leaf_texture()
 	hatch_l = Sprite2D.new()
 	hatch_r = Sprite2D.new()
 	for h in [hatch_l, hatch_r]:
-		h.texture = leaf
 		h.centered = false
 		h.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		exit_node.add_child(h)
@@ -877,6 +876,11 @@ func _spawn_level_nodes() -> void:
 	for n in level_nodes.get_children():
 		n.queue_free()
 	exit_node.position = finish_pos
+	# the trapdoor in the world's material (wooden planks, a chrome drain cover, flaps...)
+	hatch_frame.texture = TiltMazeArt.hatch_frame(world, HATCH_IN + 4)
+	var leaf := TiltMazeArt.hatch_leaf(world, HATCH_IN / 2, HATCH_IN)
+	hatch_l.texture = leaf
+	hatch_r.texture = leaf
 	_set_exit_open(false)
 	current_layer.lanes = currents
 	current_layer.visible = not currents.is_empty()
@@ -899,7 +903,7 @@ func _spawn_vault() -> void:
 	if vault["kind"] == "fizz":
 		var vertical := dir.x != 0.0
 		var long := int((door.size.y if vertical else door.size.x) / DETAIL)
-		var f := _sprite(TiltMazeArt.fence(long, vertical), door.get_center())
+		var f := _sprite(TiltMazeArt.fence(long, vertical, world), door.get_center())
 		vault["fence_node"] = f
 		# the sign: which drink hops it (the fizzy boost's icon on a little card)
 		var sign := _sprite(TiltMazeArt.sign_card(), door.get_center() + dir * TILE * 0.62)   # (outside the fence)
@@ -1024,58 +1028,6 @@ func _open_exit() -> void:
 	t.tween_property(hatch_l, "modulate", Color(0.62, 0.55, 0.5), 0.45).set_delay(0.15)
 	t.tween_property(hatch_r, "modulate", Color(0.62, 0.55, 0.5), 0.45).set_delay(0.15)
 	t.tween_callback(func(): _sfx("res://sounds/fx/clack.mp3", -12.0)).set_delay(0.3)
-
-func _make_hatch_frame_texture() -> Texture2D:
-	## The trapdoor's frame: a dark wooden rim round a deep opening (seen when it opens)
-	const S := HATCH_IN + 4
-	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
-	for y in S:
-		for x in S:
-			var e := mini(mini(x, y), mini(S - 1 - x, S - 1 - y))
-			var col: Color
-			if e == 0:
-				col = Color8(74, 44, 32)
-			elif e == 1:
-				col = Color8(132, 84, 48) if (x + y) % 5 != 0 else Color8(132, 84, 48).darkened(0.15)
-			elif e == 2 and (y == 2 or x == 2):
-				col = Color8(74, 44, 32).darkened(0.2)        # the opening's shadowed inner lip
-			else:
-				col = Color8(36, 62, 96)                     # deep water down there
-			img.set_pixel(x, y, col)
-	# iron corner bolts
-	for p in [Vector2i(1, 1), Vector2i(S - 2, 1), Vector2i(1, S - 2), Vector2i(S - 2, S - 2)]:
-		img.set_pixel(p.x, p.y, Color8(70, 70, 76))
-	return ImageTexture.create_from_image(img)
-
-func _make_hatch_leaf_texture() -> Texture2D:
-	## One hatch door (the left one; the right is mirrored). Hinge on the left edge,
-	## the seam on the right edge, with half of the ring handle.
-	const W := HATCH_IN / 2
-	const H := HATCH_IN
-	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
-	var plank := Color8(176, 112, 64)
-	var plank_lo := Color8(150, 92, 50)
-	var iron := Color8(78, 74, 80)
-	var iron_hi := Color8(132, 128, 136)
-	for y in H:
-		for x in W:
-			var col := plank if (y / 3) % 2 == 0 else plank_lo
-			if y % 3 == 2:
-				col = col.darkened(0.18)                     # gaps between the boards
-			if (x * 7 + y * 3) % 11 == 0:
-				col = col.darkened(0.08)                     # grain specks
-			if y == 3 or y == H - 4:
-				col = iron if x > 0 else iron_hi             # iron straps from the hinge
-			if x == W - 1:
-				col = Color8(74, 44, 32)                     # the seam
-			elif x == 0 and y % 6 == 1:
-				col = iron_hi                                # hinge pins
-			img.set_pixel(x, y, col)
-	# half of the ring handle, at the seam
-	for p in [Vector2i(W - 3, 8), Vector2i(W - 4, 9), Vector2i(W - 3, 10), Vector2i(W - 2, 11)]:
-		img.set_pixel(p.x, p.y, Color8(206, 176, 92))
-	img.set_pixel(W - 2, 8, Color8(110, 86, 40))
-	return ImageTexture.create_from_image(img)
 
 func _make_shadow_texture() -> Texture2D:
 	var img := Image.create(13, 7, false, Image.FORMAT_RGBA8)
