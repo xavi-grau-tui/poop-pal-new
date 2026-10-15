@@ -139,6 +139,15 @@ To build:
     sound, consistent level throughout, seamless loop-like ending". Rule for new tracks: describe a
     different opening and lead voice, and never reuse another track's sentences. (Looping: the
     revving pickup can play once, the loop starting on the riff's first beat.)
+    Still the same kind of opening every time, so (user, 2026-10-15) NO opening at all, said first:
+    "No intro, no fade-in, no pickup, no build-up: the full band starts together on the very first
+    beat, already mid-race. Soft pixel chiptune racing game instrumental in a minor key, syncopated
+    climbing lead riff on a thin 25% pulse-wave voice, fast driving eighth-note bassline, tight
+    punchy soft chiptune drums with a steady hi-hat and crisp backbeat snare, short rising arpeggio
+    runs between phrases like gear shifts, focused race-to-the-finish tension, the arrangement stays
+    the same from start to end with small melodic and rhythmic variations, 104 BPM, even steady
+    groove, narrow dynamics, warm rounded mix with warm prominent lows, compact soft-edged sound,
+    consistent level throughout, seamless loop-like ending" (the current one).
 
 - Drafts written by Claude (2026-10-08 / 10-15), not all used; references for new tracks:
   - Paper Sumo, a grander showdown (for a boss or final level): "Soft pixel chiptune game battle
