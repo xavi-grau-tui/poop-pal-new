@@ -23,7 +23,7 @@ extends BaseMinigame
 ## Desktop: Left / Right arrows (or A / D).
 
 const PX := 4                         # world px per board px (the games' chunky grid)
-const CELL := 260.0                   # a grid square, world px
+const CELL := 300.0                   # a grid square, world px (the road stays a square from itself)
 const EDGE := 10                      # the mat's wooden frame, board px
 const MARGIN := 24.0                  # road edge -> frame, world px
 const SPEED := 270.0                  # mat px/s, always
@@ -46,10 +46,16 @@ const VIEW := Rect2(27, 92, 896, 830)
 const HUD_BAND := Rect2(27, 26, 896, 66)
 
 const WORLDS := ["Playroom"]
-## The 9 Playroom circuits: [grid columns, rows, squares in the patch, road half-width px]
+## The 9 Playroom circuits: [grid columns, rows, squares in the patch, road half-width px, a fixed
+## shape or null, corners wanted]. The first ones are fixed shapes, long straights and few turns:
+## an oval, an L, a U (its first hairpin); then grown patches, each level a bigger patch and more
+## corners (the patch closest to that many), so the circuits get longer and twistier step by step.
 const LEVELS := [
-	[4, 3, 6, 72.0], [4, 4, 8, 72.0], [5, 4, 10, 70.0], [5, 5, 12, 68.0], [6, 5, 14, 66.0],
-	[6, 6, 17, 64.0], [7, 6, 20, 62.0], [7, 7, 24, 60.0], [8, 7, 28, 58.0],
+	[6, 2, 0, 100.0, [Rect2i(0, 0, 6, 2)], 0],
+	[6, 4, 0, 98.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2)], 0],
+	[6, 4, 0, 96.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2), Rect2i(4, 2, 2, 2)], 0],
+	[8, 4, 14, 94.0, null, 10], [8, 5, 16, 90.0, null, 12], [9, 5, 18, 88.0, null, 14],
+	[9, 6, 21, 84.0, null, 16], [10, 6, 24, 80.0, null, 20], [10, 7, 28, 76.0, null, 99],
 ]
 
 # --- the Playroom's look (the Tilt Maze rules: hard pixels, a 2 px dark outline, top-left light) ---
@@ -92,6 +98,11 @@ var slices: Array[Sprite2D] = []       # the car, bottom slice first
 var driver: Sprite2D
 var shadow: Sprite2D
 var car_drop := 0.0                    # how far the car has fallen (screen down, mat px)
+var antenna: Line2D                    # a thin wire at the car's back, a ball on its tip
+var antenna_tip: Sprite2D
+var sway := 0.0                        # the antenna's lean (it swings out in the turns)
+var sway_v := 0.0
+var _last_heading := 0.0
 var hud_lap: Label
 var hud_time: Label
 var hud_stars: Array[TextureRect] = []
@@ -165,20 +176,30 @@ func _build_circuit() -> void:
 	var spec: Array = LEVELS[level - 1]
 	half_w = spec[3]
 	var pad := EDGE * PX + half_w + MARGIN
-	mat_size = Vector2(spec[0], spec[1]) * CELL + Vector2(pad, pad) * 2.0
 	var best: Array = []
-	var best_corners := -1
+	var best_err := 1 << 40
 	for i in SEED_TRIES:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 6151 * level + 92821 * i + 3
-		var corners := _patch_outline(rng, spec[0], spec[1], spec[2])
-		if corners.size() > best_corners:
-			best_corners = corners.size()
+		var corners := _patch_outline(rng, spec[0], spec[1], spec[2], spec[4])
+		# the corners wanted first, then the longest (so every level is longer than the last)
+		var err: int = absi(corners.size() - spec[5]) * 100000 - _perimeter(corners)
+		if err < best_err:
+			best_err = err
 			best = corners
-	# the outline's corners (grid points) -> mat px, the corners rounded, evenly spaced points
+		if spec[4] != null:
+			break                                        # (a fixed shape: one is enough)
+	# the outline's corners (grid points) -> mat px (the mat cut to the circuit), the corners
+	# rounded, evenly spaced points
+	var lo := Vector2i(1 << 20, 1 << 20)
+	var hi := Vector2i(-(1 << 20), -(1 << 20))
+	for c in best:
+		lo = Vector2i(mini(lo.x, c.x), mini(lo.y, c.y))
+		hi = Vector2i(maxi(hi.x, c.x), maxi(hi.y, c.y))
+	mat_size = Vector2(hi - lo) * CELL + Vector2(pad, pad) * 2.0
 	var pts: Array[Vector2] = []
 	for c in best:
-		pts.append(Vector2(c) * CELL + Vector2(pad, pad))
+		pts.append(Vector2(c - lo) * CELL + Vector2(pad, pad))
 	centre = _resample(_rounded(pts))
 	count = centre.size()
 	lap_length = count * STEP
@@ -210,12 +231,17 @@ func _build_circuit() -> void:
 
 ## A patch of `n` grid squares grown from the middle, and its outline as corner points (grid
 ## coordinates, clockwise). No two squares may touch only at a corner (the outline would pinch)
-func _patch_outline(rng: RandomNumberGenerator, cols: int, rows: int, n: int) -> Array:
+func _patch_outline(rng: RandomNumberGenerator, cols: int, rows: int, n: int, shape) -> Array:
 	var cells := {}
-	var first := Vector2i(cols / 2, rows / 2)
-	cells[first] = true
+	if shape != null:
+		for r in shape:
+			for x in range(r.position.x, r.end.x):
+				for y in range(r.position.y, r.end.y):
+					cells[Vector2i(x, y)] = true
+	else:
+		cells[Vector2i(cols / 2, rows / 2)] = true
 	var tries := 0
-	while cells.size() < n and tries < 400:
+	while shape == null and cells.size() < n and tries < 400:
 		tries += 1
 		var from: Vector2i = cells.keys()[rng.randi() % cells.size()]
 		var d: Vector2i = [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP][rng.randi() % 4]
@@ -252,6 +278,13 @@ func _patch_outline(rng: RandomNumberGenerator, cols: int, rows: int, n: int) ->
 		if (b - a) != (c - b):
 			corners.append(b)
 	return corners
+
+func _perimeter(corners: Array) -> int:
+	var l := 0
+	for i in corners.size():
+		var d: Vector2i = corners[(i + 1) % corners.size()] - corners[i]
+		l += absi(d.x) + absi(d.y)
+	return l
 
 func _pinched(cells: Dictionary) -> bool:
 	for c in cells:
@@ -333,7 +366,7 @@ func _paint() -> Image:
 	idx.resize(w * h)
 	var hw := half_w / PX
 	var reach := hw + 4.0
-	for s in range(0, count, 2):                     # (points 16 px apart: the discs overlap)
+	for s in range(0, count, 3):                     # (points 24 px apart: the discs overlap)
 		var c := centre[s] / PX
 		for y in range(maxi(0, int(c.y - reach)), mini(h, int(c.y + reach) + 1)):
 			for x in range(maxi(0, int(c.x - reach)), mini(w, int(c.x + reach) + 1)):
@@ -507,6 +540,21 @@ func _create_nodes() -> void:
 		sl.modulate = Color(k, k, k)
 		car.add_child(sl)
 		slices.append(sl)
+	# the antenna: a thin dark wire (4 mat px) with a red ball on top
+	antenna = Line2D.new()
+	antenna.width = 4.0
+	antenna.default_color = Color8(40, 30, 40)
+	antenna.antialiased = false
+	world.add_child(antenna)
+	var tip := Image.create(3, 3, false, Image.FORMAT_RGBA8)
+	for p in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(1, 2)]:
+		tip.set_pixel(p.x, p.y, Color8(226, 70, 64))
+	tip.set_pixel(1, 1, Color8(255, 170, 160))
+	antenna_tip = Sprite2D.new()
+	antenna_tip.texture = ImageTexture.create_from_image(tip)
+	antenna_tip.scale = Vector2(PX, PX)
+	antenna_tip.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	world.add_child(antenna_tip)
 	# the pal, curled up in the seat (its face kept upright: it looks at you, not at the road)
 	driver = Sprite2D.new()
 	driver.texture = PalBall.texture()
@@ -563,11 +611,11 @@ func _create_nodes() -> void:
 	banner.modulate.a = 0.0
 
 	motor = AudioStreamPlayer.new()
-	var hum: AudioStream = load("res://sounds/fx/Retro-Vehicle-Motor-02.mp3").duplicate()
-	if hum is AudioStreamMP3:
-		hum.loop = true                              # (the motor hums the whole race)
+	var hum: AudioStreamWAV = load("res://sounds/fx/rc_motor.wav").duplicate()
+	hum.loop_mode = AudioStreamWAV.LOOP_FORWARD      # (the motor hums the whole race: a seamless 1 s loop)
+	hum.loop_end = hum.get_length() * hum.mix_rate
 	motor.stream = hum
-	motor.volume_db = -26.0
+	motor.volume_db = -30.0                           # (in the background, under the music)
 	add_child(motor)
 
 func _label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
@@ -592,6 +640,14 @@ func _place_car() -> void:
 	shadow.rotation = heading
 	shadow.visible = state != State.FALL
 	driver.position = car.position + Vector2.from_angle(heading) * -5.0 + Vector2(0, -LAYERS * LAYER_UP - 4.0)
+	# the antenna stands up from the car's back left corner, leaning back and out in the turns
+	var base := car.position + Vector2(-30, -22).rotated(heading) + Vector2(0, -LAYERS * LAYER_UP)
+	var lean := Vector2.from_angle(heading) * -10.0 + Vector2.from_angle(heading + PI / 2.0) * sway * 26.0
+	var top := base + Vector2(0, -46) + lean
+	antenna.points = PackedVector2Array([base.round(), (base.lerp(top, 0.5) + lean * 0.15).round(), top.round()])
+	antenna_tip.position = top.round()
+	antenna.visible = state != State.FALL
+	antenna_tip.visible = antenna.visible
 
 ## The view follows the car (a small mat just sits in the middle of it)
 func _follow(amount: float) -> void:
@@ -650,6 +706,11 @@ func _process(delta: float) -> void:
 				motor.play()
 		State.DRIVE:
 			_drive(delta)
+	# the antenna's swing: a spring pushed by how fast the car turns
+	var turn_rate := wrapf(heading - _last_heading, -PI, PI) / maxf(delta, 0.001)
+	_last_heading = heading
+	sway_v += (-turn_rate * 0.18 - sway * 40.0 - sway_v * 6.0) * delta
+	sway = clampf(sway + sway_v * delta, -1.0, 1.0)
 	_place_car()
 	_follow(minf(1.0, delta * 6.0))
 
@@ -665,7 +726,8 @@ func _drive(delta: float) -> void:
 		_fall()
 		return
 	if motor.playing:
-		motor.pitch_scale = lerpf(motor.pitch_scale, 1.0 + absf(turn) * 0.08, minf(1.0, delta * 6.0))
+		# (it strains a little in the turns)
+		motor.pitch_scale = lerpf(motor.pitch_scale, 1.0 - absf(turn) * 0.07, minf(1.0, delta * 5.0))
 	if progress >= count * lap and lap <= LAPS:
 		lap += 1
 		if lap > LAPS:
@@ -681,14 +743,14 @@ func _fall() -> void:
 	state = State.FALL
 	falls += 1
 	motor.stop()
-	_sfx("res://sounds/fx/sfx_sounds_falling4.wav", -12.0)
+	_sfx("res://sounds/fx/rc_fall.wav", -12.0)
 	Input.vibrate_handheld(80)
 	var t := create_tween()
 	t.tween_method(func(f: float):
 		car_drop = f * f * TRACK_SIDE * PX * 3.0
 		car.modulate = Color(1, 1, 1).lerp(Color(0.4, 0.38, 0.45), f)
 		car.scale = Vector2.ONE * (1.0 - 0.15 * f), 0.0, 1.0, 0.45)
-	t.tween_callback(func(): _sfx("res://sounds/fx/hole_plop.wav", -14.0, 1.3))
+	t.tween_callback(func(): _sfx("res://sounds/fx/rc_land.wav", -10.0))
 	t.tween_interval(0.35)
 	t.tween_callback(func():
 		var i := int(fposmod(last_cp, count))

@@ -66,6 +66,11 @@ To build:
 - Tilt Maze: tune physics and par times on the phone; the vaults of the other boosts once they
   exist (see "Boost-gated prizes"); the world map showing vaults; a tutorial per world's thing.
 - Splash Hoops: more polish (it has the skeleton).
+- RC Racer (Pipe Dream's rework, branch `pipe-dream`, 2026-10-15): world 1 Playroom built (9 levels:
+  an oval, an L, a U, then grown patches, longer and twistier). Next, per world (user): a
+  background under the raised track (the Playroom's carpet; clouds = a sky track, water = a lagoon
+  track...), and in the harder worlds obstacles, a rival pal to beat, speed boosts (Mario Kart
+  style). Name: "Pal Prix" proposed. Its own song (prompt drafted 2026-10-15).
 - The other launch games onto levels and worlds (Paper Sumo, Pipe Dream / RC car, Top Spin, Tummy
   Tunes), each world with its own look and new mechanic, prizes from where they belong.
 - The other 3 boosts (Focus, Sturdy, Lucky) in the games (boost table in Drinks).
