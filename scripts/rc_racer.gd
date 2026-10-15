@@ -1,8 +1,11 @@
 extends BaseMinigame
 ## RC Racer (Pipe Dream's rework, its card for now) — your pal rides a little RC car round a toy
-## road mat, seen from above. The car drives by itself at a fixed speed; hold ORANGE to turn left,
-## FORWARD to turn right (all the way round: the circuits wind, double back and hairpin). Off the
-## road the car slows down (no crash). 3 laps.
+## race track raised on blocks above the floor, seen from above at an angle and close up (Micro
+## Machines). The car drives by itself at a fixed speed; hold ORANGE to turn left, FORWARD to turn
+## right (all the way round: the circuits wind, double back and hairpin). Drive off the track and
+## the car falls to the floor: it's put back on the last checkpoint (the clock keeps going). 3 laps.
+## The car is "sprite-stacked": a pile of pixel slices (wheels, body, the lit top), each turned
+## with the car and drawn a little higher, so it shows its sides and looks solid as it turns.
 ##
 ## Circuits: a random patch of grid squares (grown square by square from a seed), and the road
 ## runs round its outline, every corner rounded (a quarter circle of half a square: two corners a
@@ -13,7 +16,7 @@ extends BaseMinigame
 ## the circuit (Micro Machines), so you read the road as it comes.
 ##
 ## Levels (the level menu, BaseMinigame / LevelMenu): world 1, the Playroom, for now.
-## Stars: 1 = finished, +1 = within the par time, +1 = never off the road.
+## Stars: 1 = finished, +1 = within the par time, +1 = never fell off.
 ##
 ## Later (user, 2026-10-15): a rival pal to beat, speed boosts (Mario Kart style), more worlds
 ## (kitchen tiles, the garden, the pipes, a toy race track), both buttons = drift.
@@ -23,9 +26,15 @@ const PX := 4                         # world px per board px (the games' chunky
 const CELL := 260.0                   # a grid square, world px
 const EDGE := 10                      # the mat's wooden frame, board px
 const MARGIN := 24.0                  # road edge -> frame, world px
-const SPEED := 330.0                  # px/s, always
-const OFFROAD := 0.5                  # speed on the carpet
-const TURN := 3.4                     # rad/s while a button is held (a full turn in ~1.8 s)
+const SPEED := 270.0                  # mat px/s, always
+const TURN := 3.1                     # rad/s while a button is held (a full turn in ~2 s)
+const ZOOM := 1.5                     # the view, close up (board px shown 6 px)
+const LOOK_AHEAD := 150.0             # the view looks this far ahead of the car (mat px)
+const FALL_AT := 6.0                  # past the road's edge by this much: off the track
+const CHECKPOINTS := 10               # per lap: where a fallen car is put back
+const TRACK_SIDE := 6                 # the raised track's side face, board px (seen from the south)
+const LAYERS := 6                     # the car's slices
+const LAYER_UP := 2.5                 # each slice this much higher (mat px)
 const LAPS := 3
 const STEP := 8.0                     # centre-line points, every STEP px
 const SEED_TRIES := 30
@@ -49,9 +58,11 @@ const ROAD := [Color8(112, 108, 118), Color8(100, 96, 106)]
 const LINE := Color8(244, 240, 226)
 const CURB := [Color8(226, 70, 64), Color8(246, 242, 232)]
 const OUTLINE := Color8(40, 34, 44)
+const SIDE := [Color8(236, 150, 64), Color8(198, 110, 44), Color8(150, 78, 34)]    # the track's orange plastic side
+const BLOCK := [Color8(246, 214, 92), Color8(206, 168, 60)]                          # the yellow toy blocks under it
 const MAT_EDGE := [Color8(214, 160, 100), Color8(132, 84, 48), Color8(74, 44, 32)]   # a wooden frame
 
-enum State { WAIT, DRIVE, DONE }
+enum State { WAIT, DRIVE, FALL, DONE }
 
 var state := State.WAIT
 var level := 1
@@ -69,16 +80,18 @@ var progress := 0.0                    # centre-line points passed (laps x count
 var lap := 1
 var race_time := 0.0
 var countdown := 0.0
-var offroad_ever := false
+var falls := 0
+var last_cp := 0.0                     # progress at the last checkpoint passed
 var held := [false, false]             # the device buttons (main = left, forward = right)
 var _touch := {}                       # touch index -> button
 
 var world: Node2D                      # the mat and the car (moved by the view)
 var board: Sprite2D
 var car: Node2D
-var car_body: Sprite2D
+var slices: Array[Sprite2D] = []       # the car, bottom slice first
 var driver: Sprite2D
 var shadow: Sprite2D
+var car_drop := 0.0                    # how far the car has fallen (screen down, mat px)
 var hud_lap: Label
 var hud_time: Label
 var hud_stars: Array[TextureRect] = []
@@ -89,11 +102,11 @@ var lcd_font: Font
 var _stars_shown := 3
 
 func _ready() -> void:
-	game_music_path = "res://sounds/music/Hidden Passage.mp3"
+	# (no game music: the main screen's songs go on playing)
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	_create_nodes()
 	intro_text = "Hold the orange button to turn left, forward to turn right"
-	intro_icon = car_body.texture
+	intro_icon = car_texture()
 	super._ready()
 
 # --- the level menu (BaseMinigame) ---
@@ -131,7 +144,9 @@ func _begin(n: int) -> void:
 	progress = 0.0
 	lap = 1
 	race_time = 0.0
-	offroad_ever = false
+	falls = 0
+	last_cp = 0.0
+	car_drop = 0.0
 	held = [false, false]
 	_touch.clear()
 	_stars_shown = 3
@@ -356,14 +371,27 @@ func _paint() -> Image:
 			elif d <= hw + 2.0:
 				col = OUTLINE
 			else:
-				# the carpet: a soft weave, and the road's shadow on it (light from the top-left)
-				col = CARPET[0] if (x + y * 2) % 5 else CARPET[1]
-				if (x * 7 + y * 3) % 23 == 0:
-					col = CARPET[2]
-				var sx := x - 2
-				var sy := y - 3
-				if sx >= 0 and sy >= 0 and dist[sy * w + sx] <= hw + 2.0:
-					col = col.darkened(0.18)
+				# below the road's south edge: the raised track's side (seen at an angle), on toy
+				# blocks every so often; then the floor, the carpet, in the track's shadow
+				var up_t := -1
+				for t in range(1, TRACK_SIDE + 2):
+					if y - t >= 0 and dist[(y - t) * w + x] <= hw + 2.0:
+						up_t = t
+						break
+				if up_t >= 1 and up_t <= TRACK_SIDE:
+					col = SIDE[0] if up_t <= 2 else (SIDE[1] if up_t < TRACK_SIDE else SIDE[2])
+					if up_t > 2 and (idx[(y - up_t) * w + x] / 10) % 3 == 0:
+						col = BLOCK[0] if up_t < TRACK_SIDE else BLOCK[1]          # a block holding it up
+				elif up_t == TRACK_SIDE + 1:
+					col = OUTLINE
+				else:
+					col = CARPET[0] if (x + y * 2) % 5 else CARPET[1]
+					if (x * 7 + y * 3) % 23 == 0:
+						col = CARPET[2]
+					var sx := x - 3
+					var sy := y - TRACK_SIDE - 3
+					if sx >= 0 and sy >= 0 and dist[sy * w + sx] <= hw + 2.0:
+						col = col.darkened(0.22)
 			data[k] = col.r8
 			data[k + 1] = col.g8
 			data[k + 2] = col.b8
@@ -410,6 +438,41 @@ static func car_texture() -> Texture2D:
 		img.set_pixel(x, 8, Color8(250, 246, 236))
 	return ImageTexture.create_from_image(img)
 
+## The car as slices, bottom first (the same 22 x 16 footprint as car_texture): wheels, the
+## body, the body with its cockpit and windscreen, its lit top rim
+static func car_slices() -> Array[Texture2D]:
+	var top := car_texture().get_image()
+	var out: Array[Texture2D] = []
+	var wheel := Color8(52, 50, 58)
+	for layer in LAYERS:
+		var img := Image.create(22, 16, false, Image.FORMAT_RGBA8)
+		for y in 16:
+			for x in 22:
+				var c := top.get_pixel(x, y)
+				if c.a == 0.0:
+					continue
+				var is_wheel := c.is_equal_approx(wheel) or (c.is_equal_approx(Color8(40, 30, 40)) and (y <= 2 or y >= 13))
+				var col := Color(0, 0, 0, 0)
+				if layer <= 1:
+					col = c if is_wheel else (Color8(40, 30, 40) if x > 2 and x < 20 and y > 3 and y < 12 else col)
+				elif layer == 2:
+					col = c if is_wheel else (Color8(190, 46, 50) if not c.is_equal_approx(Color8(40, 30, 40)) else c)
+				elif layer == 3:
+					col = Color(0, 0, 0, 0) if is_wheel else (Color8(190, 46, 50) if not c.is_equal_approx(Color8(40, 30, 40)) else c)
+				elif layer == 4:
+					col = Color(0, 0, 0, 0) if is_wheel else c
+				else:
+					# the top rim: the body's lit edge round the open cockpit
+					if is_wheel:
+						continue
+					col = c.lightened(0.18) if c.is_equal_approx(Color8(226, 70, 64)) else c
+					if c.is_equal_approx(Color8(96, 80, 88)) or c.is_equal_approx(Color8(70, 56, 64)):
+						col = Color(0, 0, 0, 0)                       # (the cockpit is open)
+				if col.a > 0.0:
+					img.set_pixel(x, y, col)
+		out.append(ImageTexture.create_from_image(img))
+	return out
+
 # ================================================================== NODES
 
 func _create_nodes() -> void:
@@ -424,20 +487,26 @@ func _create_nodes() -> void:
 	board.scale = Vector2(PX, PX)
 	board.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	world.add_child(board)
-	var tex := car_texture()
+	world.scale = Vector2(ZOOM, ZOOM)
+	var layers := car_slices()
 	shadow = Sprite2D.new()
-	shadow.texture = tex
+	shadow.texture = layers[2]
 	shadow.scale = Vector2(PX, PX)
-	shadow.modulate = Color(0.1, 0.08, 0.15, 0.3)
+	shadow.modulate = Color(0.05, 0.04, 0.1, 0.35)
 	shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	world.add_child(shadow)
 	car = Node2D.new()
 	world.add_child(car)
-	car_body = Sprite2D.new()
-	car_body.texture = tex
-	car_body.scale = Vector2(PX, PX)
-	car_body.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	car.add_child(car_body)
+	for i in layers.size():
+		var sl := Sprite2D.new()
+		sl.texture = layers[i]
+		sl.scale = Vector2(PX, PX)
+		sl.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		# the lower slices darker: the car's sides in shade, its top in the light
+		var k := 0.62 + 0.38 * float(i) / (layers.size() - 1)
+		sl.modulate = Color(k, k, k)
+		car.add_child(sl)
+		slices.append(sl)
 	# the pal, curled up in the seat (its face kept upright: it looks at you, not at the road)
 	driver = Sprite2D.new()
 	driver.texture = PalBall.texture()
@@ -515,22 +584,27 @@ func _label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color)
 	return l
 
 func _place_car() -> void:
-	car.position = car_pos.round()
-	car.rotation = heading
-	shadow.position = car.position + Vector2(6, 10)
+	car.position = car_pos.round() + Vector2(0, car_drop)
+	for i in slices.size():
+		slices[i].rotation = heading
+		slices[i].position = Vector2(0, -i * LAYER_UP)          # (lifted on screen, not turned)
+	shadow.position = car_pos.round() + Vector2(5, 8 + car_drop * 0.3)
 	shadow.rotation = heading
-	driver.position = car.position - Vector2.from_angle(heading) * 6.0 + Vector2(0, -6)
+	shadow.visible = state != State.FALL
+	driver.position = car.position + Vector2.from_angle(heading) * -5.0 + Vector2(0, -LAYERS * LAYER_UP - 4.0)
 
 ## The view follows the car (a small mat just sits in the middle of it)
 func _follow(amount: float) -> void:
-	var want := VIEW.get_center() - car_pos
+	var aim := car_pos + Vector2.from_angle(heading) * LOOK_AHEAD
+	var want := VIEW.get_center() - aim * ZOOM
+	var shown := mat_size * ZOOM
 	var pos := Vector2.ZERO
 	for ax in 2:
 		var view_len := VIEW.size[ax]
-		if mat_size[ax] <= view_len:
-			pos[ax] = VIEW.position[ax] + (view_len - mat_size[ax]) / 2.0
+		if shown[ax] <= view_len:
+			pos[ax] = VIEW.position[ax] + (view_len - shown[ax]) / 2.0
 		else:
-			pos[ax] = clampf(want[ax], VIEW.end[ax] - mat_size[ax], VIEW.position[ax])
+			pos[ax] = clampf(want[ax], VIEW.end[ax] - shown[ax], VIEW.position[ax])
 	world.position = world.position.lerp(pos, amount).round()
 
 func _refresh_hud() -> void:
@@ -550,9 +624,9 @@ func _refresh_hud() -> void:
 			t.tween_property(st, "scale", Vector2.ONE, 0.2)
 		_stars_shown = now
 
-## 1 + within the par time + never off the road
+## 1 + within the par time + never fell off
 func _stars_now() -> int:
-	return 1 + (1 if race_time <= par else 0) + (0 if offroad_ever else 1)
+	return 1 + (1 if race_time <= par else 0) + (1 if falls == 0 else 0)
 
 # ================================================================== LOOP
 
@@ -583,18 +657,15 @@ func _drive(delta: float) -> void:
 	race_time += delta
 	var turn := (1.0 if _held(1) else 0.0) - (1.0 if _held(0) else 0.0)
 	heading += turn * TURN * delta
+	car_pos += Vector2.from_angle(heading) * SPEED * delta
 	_find_near()
-	var off := car_pos.distance_to(centre[near]) > half_w
-	if off and not offroad_ever:
-		offroad_ever = true
-		Input.vibrate_handheld(20)
-	var v := SPEED * (OFFROAD if off else 1.0)
-	car_pos += Vector2.from_angle(heading) * v * delta
-	# (the mat's frame stops the car)
-	var rim := EDGE * PX + 30.0
-	car_pos = car_pos.clamp(Vector2(rim, rim), mat_size - Vector2(rim, rim))
+	if progress >= last_cp + count / CHECKPOINTS:
+		last_cp = floorf(progress / (count / CHECKPOINTS)) * (count / CHECKPOINTS)
+	if car_pos.distance_to(centre[near]) > half_w + FALL_AT:
+		_fall()
+		return
 	if motor.playing:
-		motor.pitch_scale = lerpf(motor.pitch_scale, 0.75 if off else 1.0 + absf(turn) * 0.08, minf(1.0, delta * 6.0))
+		motor.pitch_scale = lerpf(motor.pitch_scale, 1.0 + absf(turn) * 0.08, minf(1.0, delta * 6.0))
 	if progress >= count * lap and lap <= LAPS:
 		lap += 1
 		if lap > LAPS:
@@ -603,6 +674,38 @@ func _drive(delta: float) -> void:
 		_show_banner("LAP %d" % lap if lap < LAPS else "FINAL LAP!", 0.7)
 		_sfx("res://sounds/fx/gamecoin.wav", -10.0)
 	_refresh_hud()
+
+## Off the track: the car tips over the edge and drops to the floor, then it's back on the last
+## checkpoint, pointing down the road (the clock goes on; the no-fall star is gone)
+func _fall() -> void:
+	state = State.FALL
+	falls += 1
+	motor.stop()
+	_sfx("res://sounds/fx/sfx_sounds_falling4.wav", -12.0)
+	Input.vibrate_handheld(80)
+	var t := create_tween()
+	t.tween_method(func(f: float):
+		car_drop = f * f * TRACK_SIDE * PX * 3.0
+		car.modulate = Color(1, 1, 1).lerp(Color(0.4, 0.38, 0.45), f)
+		car.scale = Vector2.ONE * (1.0 - 0.15 * f), 0.0, 1.0, 0.45)
+	t.tween_callback(func(): _sfx("res://sounds/fx/hole_plop.wav", -14.0, 1.3))
+	t.tween_interval(0.35)
+	t.tween_callback(func():
+		var i := int(fposmod(last_cp, count))
+		car_pos = centre[i]
+		heading = (centre[(i + 2) % count] - centre[i]).angle()
+		near = i
+		progress = last_cp
+		car_drop = 0.0
+		car.modulate = Color(1, 1, 1)
+		car.scale = Vector2.ONE
+		held = [false, false]
+		state = State.DRIVE
+		motor.play()
+		var blink := create_tween()
+		for k in 3:
+			blink.tween_property(car, "modulate:a", 0.25, 0.08)
+			blink.tween_property(car, "modulate:a", 1.0, 0.08))
 
 ## The nearest centre-line point, searched near the last one; progress counts the points passed
 ## (forwards only adds up: driving the wrong way takes it back)
