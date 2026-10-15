@@ -4,6 +4,8 @@
                              (the game raises its pitch with the speed and the turns)
     sounds/fx/rc_fall.wav    driving off the track: a cartoon whistle sliding down
     sounds/fx/rc_land.wav    ...and the toy landing on the floor: a plastic clatter and a bump
+    sounds/fx/rc_beep.wav    the start lights: a short beep for each red light (3, 2, 1)
+    sounds/fx/rc_go.wav      ...and a higher, longer one when they all turn green: GO
 
     <venv>/bin/python tools/audio/rc_sounds.py
 """
@@ -75,7 +77,19 @@ def land():
     return x
 
 
+def beep(hz, dur):
+    """The classic start-light tone: a clean square-ish beep, a soft attack, a short tail"""
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    x = np.sign(np.sin(2 * np.pi * hz * t)) * 0.35 + np.sin(2 * np.pi * hz * t) * 0.65
+    x = low(x, 4000)
+    env = np.minimum(1, t / 0.004) * np.minimum(1, (dur - t) / 0.04)
+    return x * env
+
+
 if __name__ == '__main__':
+    save('rc_beep.wav', beep(660.0, 0.22))
+    save('rc_go.wav', beep(1320.0, 0.6))
     save('rc_motor.wav', motor(), peak=0.6, fade=False)
     save('rc_fall.wav', fall())
     save('rc_land.wav', land())

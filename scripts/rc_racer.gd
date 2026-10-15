@@ -109,14 +109,18 @@ var hud_stars: Array[TextureRect] = []
 var coin_label: Label
 var banner: Label
 var motor: AudioStreamPlayer
+var lights: Node2D                     # the start lights over the view (3 red, then all green)
+var lamps: Array[Sprite2D] = []
+var hint_left: HBoxContainer           # the controls along the bottom (shown at the start)
+var hint_right: HBoxContainer
 var lcd_font: Font
 var _stars_shown := 3
 
 func _ready() -> void:
-	# (no game music: the main screen's songs go on playing)
+	game_music_path = "res://sounds/music/Pixel Chase.ogg"     # (107.22 BPM, looped on bar lines: tools/audio/loop_track.py)
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	_create_nodes()
-	intro_text = "Hold the orange button to turn left, forward to turn right"
+	intro_text = "Hold to steer"
 	intro_icon = car_texture()
 	super._ready()
 
@@ -165,6 +169,13 @@ func _begin(n: int) -> void:
 		s.texture = UiArt.star(true)
 	state = State.WAIT
 	countdown = COUNTDOWN + 0.6
+	lights.visible = true
+	lights.modulate.a = 1.0
+	lights.position.y = HUD_BAND.end.y + 64
+	_set_lamps(0, false)
+	for h in [hint_left, hint_right]:
+		h.visible = true
+		h.modulate.a = 1.0
 	_place_car()
 	_follow(1.0)
 	_refresh_hud()
@@ -605,6 +616,34 @@ func _create_nodes() -> void:
 	add_child(coin)
 	coin_label = _label(box.position + Vector2(44, 0), box.size - Vector2(54, 0), 28, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
 
+	# the start lights: a dark gantry with three lamps, hanging under the HUD
+	lights = Node2D.new()
+	lights.position = Vector2(PLAY_WIDTH / 2.0, HUD_BAND.end.y + 64)
+	add_child(lights)
+	var gantry := ColorRect.new()
+	gantry.color = Color8(40, 34, 44)
+	gantry.size = Vector2(264, 96)
+	gantry.position = -gantry.size / 2.0
+	lights.add_child(gantry)
+	var inner := ColorRect.new()
+	inner.color = Color8(70, 62, 76)
+	inner.size = gantry.size - Vector2(12, 12)
+	inner.position = gantry.position + Vector2(6, 6)
+	lights.add_child(inner)
+	for i in 3:
+		var lamp := Sprite2D.new()
+		lamp.texture = _lamp_texture()
+		lamp.scale = Vector2(PX, PX)
+		lamp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		lamp.position = Vector2((i - 1) * 80, 0)
+		lights.add_child(lamp)
+		lamps.append(lamp)
+	# what the two buttons do, along the bottom (from the countdown to a few seconds in)
+	hint_left = make_button_hint(0, "LEFT")
+	hint_left.position = Vector2(72, PLAY_HEIGHT - 86)
+	hint_right = make_button_hint(1, "RIGHT")
+	hint_right.position = Vector2(PLAY_WIDTH - 250, PLAY_HEIGHT - 86)
+
 	banner = _label(Vector2(0, PLAY_HEIGHT / 2 - 70), Vector2(PLAY_WIDTH, 140), 72, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
 	banner.add_theme_color_override("font_outline_color", MAT_EDGE[2])
 	banner.add_theme_constant_override("outline_size", 16)
@@ -617,6 +656,34 @@ func _create_nodes() -> void:
 	motor.stream = hum
 	motor.volume_db = -30.0                           # (in the background, under the music)
 	add_child(motor)
+
+## A start lamp, 16 x 16 px (x4): a round glass in a dark rim, its glint top-left; the colour
+## is set with modulate (off = grey, red, green)
+func _lamp_texture() -> Texture2D:
+	var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	var c := Vector2(8, 8)
+	for y in 16:
+		for x in 16:
+			var d := Vector2(x + 0.5, y + 0.5).distance_to(c)
+			if d > 7.5:
+				continue
+			var col := Color8(255, 255, 255)
+			if d > 6.3:
+				col = Color8(30, 26, 34)
+			elif Vector2(x + 0.5, y + 0.5).distance_to(Vector2(5.5, 5.5)) < 1.8:
+				col = Color8(255, 255, 255).lerp(Color8(255, 255, 255), 1.0)
+			elif d > 4.5:
+				col = Color8(200, 200, 200)
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+const LAMP_OFF := Color(0.32, 0.3, 0.36)
+const LAMP_RED := Color(1.0, 0.28, 0.24)
+const LAMP_GREEN := Color(0.36, 1.0, 0.44)
+
+func _set_lamps(lit: int, green: bool) -> void:
+	for i in lamps.size():
+		lamps[i].modulate = LAMP_GREEN if green else (LAMP_RED if i < lit else LAMP_OFF)
 
 func _label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
 	var l := Label.new()
@@ -697,13 +764,25 @@ func _process(delta: float) -> void:
 			countdown -= delta
 			var now := ceili(countdown - 0.6)
 			if now != before and now >= 1 and now <= COUNTDOWN:
-				_show_banner(str(now), 0.35)
-				_sfx("res://sounds/fx/click-5.mp3", -10.0, 0.9)
+				_set_lamps(COUNTDOWN - now + 1, false)          # 3, 2, 1: one more red light
+				_sfx("res://sounds/fx/rc_beep.wav", -10.0)
+				Input.vibrate_handheld(15)
 			if countdown <= 0.6:
 				state = State.DRIVE
+				_set_lamps(COUNTDOWN, true)                    # all green: GO
 				_show_banner("GO!", 0.5)
-				_sfx("res://sounds/fx/click-5.mp3", -6.0, 1.4)
+				_sfx("res://sounds/fx/rc_go.wav", -8.0)
+				Input.vibrate_handheld(40)
 				motor.play()
+				var t := create_tween()
+				t.tween_interval(0.7)
+				t.tween_property(lights, "position:y", HUD_BAND.end.y - 80.0, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+				t.parallel().tween_property(lights, "modulate:a", 0.0, 0.35)
+				t.tween_callback(func(): lights.visible = false)
+				var h := create_tween()
+				h.tween_interval(3.5)                           # (the controls: gone a few seconds in)
+				h.tween_property(hint_left, "modulate:a", 0.0, 0.4)
+				h.parallel().tween_property(hint_right, "modulate:a", 0.0, 0.4)
 		State.DRIVE:
 			_drive(delta)
 	# the antenna's swing: a spring pushed by how fast the car turns
