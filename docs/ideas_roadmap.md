@@ -12,7 +12,18 @@ minigames. The minigames are digital versions of real physical toys living insid
 come back to, and each feeding the rest (rewards, foods, drinks, secrets). Everything must feel
 light, playful and visually intuitive: icons over text, learn by doing. Asia first (Japan above all).
 
-## Where things stand (2026-10-07)
+## Where things stand (2026-10-15)
+- Branches: `main` holds everything up to Progression v2, the shop, the 120 sheet-4 pals, CASE mode
+  (Melon Soda case + the sticker book). `tilt-maze` (not merged yet): Tilt Maze's 6 worlds x 9
+  levels, vaults, the fizz boost, the level menu under the console frame, the menu on every entry.
+- Saving: BOOT + PROGRESSION in the dev launcher is the real game with real saves (user://progress/);
+  the other launches use the testing save (wiped each launch). Release builds still use the testing
+  save: switch them to the real one before TestFlight.
+- Levels: Splash Hoops (45) and Tilt Maze (54) have level menus and stars; the other launch games
+  don't yet. STRAIGHT TO GAMES opens every level of every game (testing).
+- Boosts: Splash (watery) and Fizz (fizzy, Tilt Maze's fences) work; Focus, Sturdy, Lucky don't yet.
+
+## Where things stood (2026-10-07)
 - Built and playable: the pet (feeding, drinks, evolution tree of 120 pals, Pal Pedia, flush),
   collection (backgrounds, accessories, gut decor), Lucky Pinch (bonus claw machine), the
   first-launch box unboxing, and the minigames: Pipe Dream, Tilt Maze, Splash Hoops, Pal Dash,
@@ -33,6 +44,48 @@ light, playful and visually intuitive: icons over text, learn by doing. Asia fir
 - Dev launcher (debug builds only: the editor and the debug installs on the phone): picks FULL BOOT
   or STRAIGHT TO GAMES (Picklet as the pal, Games menu open). scripts/dev_launch.gd, started via
   `run/main_scene.debug` in project.godot; release builds start the real main scene and never see it.
+
+## Open questions & pending (one list; keep it updated, details in the sections below)
+To decide:
+- Coins vs won items (PROPOSED 2026-10-15): coins buy the basics (games, food packs, special foods,
+  drink levels, a sticker pack of the pals you've discovered, a few plain cases); the themed / rare
+  stickers and cases are only WON (vaults, gift tracks, Lucky Pinch, bosses). Some stickers in the
+  Shop, not all: to confirm which.
+- Music tracks as prizes: for the main screen (most heard; lo-fi kawaii direction) and/or extra
+  tracks per minigame. Leaning: main screen.
+- The 5 special foods and the legendary pals: one legendary food per world-ending challenge (a
+  world's last vault, a Paper Sumo boss...)? Later.
+- Lives in Tilt Maze: removed (falls cost time + the no-fall star). If the tension is missed: a fall
+  limit on later worlds (e.g. 5 falls = restart).
+- Menu legend: an arrow down instead of "next" in every menu except the Pal Pedia ("next pal");
+  the Pedia's FORWARD (next family) next to dots that are its pages (confusing).
+- Teaching the logo double-tap turn (see Onboarding: the logo's tap-tap pulse etc.).
+To build:
+- Tilt Maze: tune physics and par times on the phone; the vaults of the other boosts once they
+  exist (see "Boost-gated prizes"); the world map showing vaults; a tutorial per world's thing.
+- Splash Hoops: more polish (it has the skeleton).
+- The other launch games onto levels and worlds (Paper Sumo, Pipe Dream / RC car, Top Spin, Tummy
+  Tunes), each world with its own look and new mechanic, prizes from where they belong.
+- The other 3 boosts (Focus, Sturdy, Lucky) in the games (boost table in Drinks).
+- Release builds on the real save; the testing switches off (Before release).
+- Cases for real: the Shop's CASES and STICKERS sections, saving the case and the stickers' places
+  (now only for the launch), a generator for more cases (the Melon Soda rules kept in
+  tools/art/case_melon*.py, to generalise).
+- The booklet; Japanese localisation; the art pass (mutants, legends, hunger faces).
+
+## Boost-gated prizes (PROPOSED 2026-10-15, to confirm)
+Every boost opens its own kind of hidden thing, and what's inside belongs to where it's found
+(the rule: prizes come from where they belong). In Tilt Maze:
+| Boost             | Gate                         | Prizes                                                    |
+|-------------------|------------------------------|-----------------------------------------------------------|
+| Fizz (built)      | a low fence to hop           | pal stickers (then special foods in the later worlds)     |
+| Sturdy (milky)    | a cracked wall to ram        | pal accessories from that world: snorkel (Bath Tiles), headlamp (Sewer), hard hat (Factory), space helmet (Space) |
+| Splash (watery)   | a water channel to skim      | pet-screen backgrounds: bath bubbles, sewer pipes, a starfield |
+| Focus (caffeine)  | a shutter to time            | gut decor: lights, garlands, themed gut colours           |
+| Lucky (fruity)    | a chest that needs a key     | case designs (the rarest: a Space case, a Factory case)   |
+Also possible anywhere: stronger drinks (levels 2-3 of a type), Pedia hints (a missing pal's
+silhouette + its food), music tracks, a few coins. Other games follow the same idea (Paper Sumo:
+beat the robot -> the Microchip).
 
 ## What to implement next (pick a few to offer)
 Sizes: S = a session, M = a few sessions, L = a big block. "Needs" = do that first.
