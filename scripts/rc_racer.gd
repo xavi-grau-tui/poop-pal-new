@@ -156,7 +156,8 @@ func _ready() -> void:
 	game_music_path = "res://sounds/music/Pixel Chase.ogg"     # (107.22 BPM, looped on bar lines: tools/audio/loop_track.py)
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	_create_nodes()
-	intro_text = "Hold to steer"
+	intro_text = "Steer your car"
+	intro_controls = [[0, "LEFT"], [1, "RIGHT"]]       # (the buttons on the card: hold one to turn)
 	intro_icon = car_texture()
 	super._ready()
 

@@ -37,6 +37,9 @@ const PLAY_HEIGHT := 948.0
 # main button is pressed ("OK").
 var intro_text := ""
 var intro_icon: Texture2D = null
+## Optional: the controls, shown on the card as the device's buttons instead of the icon:
+## [[0 = main / 1 = forward, "WORD"], ...] (e.g. [[0, "LEFT"], [1, "RIGHT"]])
+var intro_controls: Array = []
 var intro_card: Control = null
 
 func _ready() -> void:
@@ -176,7 +179,32 @@ func _show_intro() -> void:
 	text.add_theme_font_size_override("font_size", 46)
 	text.add_theme_color_override("font_color", Color8(92, 60, 44))
 	card.add_child(text)
-	if intro_icon:                                 # e.g. the pal's ball, rolling side to side
+	if not intro_controls.is_empty():              # the buttons themselves, each with its word
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 46)
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.position = Vector2(0, 205)
+		row.size = Vector2(card.size.x, 80)
+		card.add_child(row)
+		for c in intro_controls:
+			var pair := HBoxContainer.new()
+			pair.add_theme_constant_override("separation", 12)
+			var ic := TextureRect.new()
+			ic.texture = load(BUTTON_ICONS[c[0]])
+			ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			ic.custom_minimum_size = Vector2(74 if c[0] == 1 else 56, 54)
+			pair.add_child(ic)
+			var w := Label.new()
+			w.text = c[1]
+			w.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			if font:
+				w.add_theme_font_override("font", font)
+			w.add_theme_font_size_override("font_size", 40)
+			w.add_theme_color_override("font_color", Color8(92, 60, 44))
+			pair.add_child(w)
+			row.add_child(pair)
+	elif intro_icon:                               # e.g. the pal's ball, rolling side to side
 		var icon := TextureRect.new()
 		icon.texture = intro_icon
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
