@@ -71,7 +71,13 @@ func _ready() -> void:
 		page_tabs.append(t)
 	if not stocked:
 		stocked = true
-		stored = _sorted(PetState.FORMS.keys().filter(func(id): return int(PetState.FORMS[id]["stage"]) <= 2))
+		# the CASE demo: every pal sticker; otherwise the ones won (Tilt Maze's vaults)
+		if DevLaunch.case_demo:
+			stored = _sorted(PetState.FORMS.keys().filter(func(id): return int(PetState.FORMS[id]["stage"]) <= 2))
+	for id in Collection.owned.get("stickers", []):
+		if id not in stored and not placed.any(func(d): return d.id == id):
+			stored.append(id)
+	stored = _sorted(stored)
 	_fill_page()
 	for p in placed:
 		_stick_sprite(p)

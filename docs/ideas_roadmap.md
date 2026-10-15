@@ -839,6 +839,25 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
 - Games feed each other: game A drops the drink whose boost opens game B's secrets.
 
 ## Tilt Maze (the model for the others)
+- BUILT (2026-10-15, branch `tilt-maze`, to tune on the phone): 6 worlds x 9 levels in the level menu
+  (scripts/tilt_maze.gd; the art in scripts/tilt_maze_art.gd, every world on the first one's grid:
+  4 px cells, 2 px dark outline, top-left light, wall front faces, two-step drop shadows):
+  1 Wooden Toy (amber marbles; holes come in from 1-2) · 2 Bath Tiles (slippery floor; soap bubbles;
+  drains) · 3 The Gut (bouncy walls, holes drift from 3-2; spores) · 4 Sewer (currents along the
+  route, some against you; rings) · 5 Factory (magnets in the walls; hex nuts; hazard pits) ·
+  6 Space (floaty low gravity, goo puddles that slow; stars; black holes). From the 7th level of a
+  world the world before's thing joins in (gut + slippery, sewer + bouncy, factory + currents,
+  space + magnets). Each level = the best of 24 seeds for its route length, so it ramps smoothly.
+  No lives: a fall puts the pal back on the last marble taken. Stars: clear / within par (from the
+  route's length, PAR_PER_CELL per world) / no fall. Marbles are the world's collectible (pink gone).
+  Vaults on 3 levels per world (VAULTS): "fizz" = a low striped fence the FIZZY boost hops (it
+  falls flat, the boost is spent; a sign on it shows the fizz icon), "skill" = two holes guard the
+  door. Prizes: pal stickers (Collection "stickers", into the case's sticker book) in worlds 1-3,
+  then special foods (Microchip, Battery, Moon Rock, Alien Goo) mixed with stickers. Taken once
+  (GameData vaults). The fizzy drinks now give the "fizz" boost (DrinkLibrary).
+  Still to do: tune physics / par times on the phone; a world-themed trapdoor (it's wooden
+  everywhere); the other boosts' vaults (Sturdy's cracked walls, Lucky's chests...) once those
+  boosts exist; the world map showing vaults; tutorials for each world's thing beyond the banner.
 - Lots of levels: the seeded generator makes endless boards, but variety comes from WORLDS
   (~10 levels each), each with its own look and a new mechanic:
   wooden toy → bathroom tiles (slippery) → the gut (soft walls, moving holes) → the sewer (currents,

@@ -35,7 +35,7 @@ const GAME_PRICE := { 1: 5, 9: 40, 0: 60, 8: 90, 6: 135 }   # Tilt Maze, Paper S
 ## Every game: worlds of LEVELS_PER_WORLD levels (one page of its level menu)
 const LEVELS_PER_WORLD := 9
 ## The games that already have their level menu, and how many levels (5 worlds = 45 at launch)
-const LEVEL_COUNTS := { 2: 45 }
+const LEVEL_COUNTS := { 2: 45, 1: 54 }
 
 var coins := 0
 
@@ -84,6 +84,7 @@ func _start() -> void:
 			games[idx]["intro"] = false               # (and the how-to cards show again)
 			games[idx]["levels"] = {}
 			games[idx]["last"] = 0
+			games[idx]["vaults"] = []
 		coins = 0
 		save_data()
 	for idx in DEBUG_UNLOCKED:
@@ -91,7 +92,7 @@ func _start() -> void:
 
 func _init_game(index: int, unlocked: bool) -> void:
 	if index not in games:
-		games[index] = { "max_score": 0, "progress": 0.0, "unlocked": unlocked, "intro": false, "levels": {}, "last": 0 }
+		games[index] = { "max_score": 0, "progress": 0.0, "unlocked": unlocked, "intro": false, "levels": {}, "last": 0, "vaults": [] }
 
 ## The "how to play" card is shown the first time a game is played
 func intro_seen(game_index: int) -> bool:
@@ -185,6 +186,18 @@ func set_last_level(game_index: int, level: int) -> void:
 	if game_index in games:
 		games[game_index]["last"] = level
 		save_data()
+
+## Vaults (Tilt Maze): a level's vault prize, once taken, is gone for good
+func vault_taken(game_index: int, level: int) -> bool:
+	return game_index in games and level in games[game_index].get("vaults", [])
+
+func take_vault(game_index: int, level: int) -> void:
+	if game_index not in games or vault_taken(game_index, level):
+		return
+	if not games[game_index].has("vaults"):
+		games[game_index]["vaults"] = []
+	games[game_index]["vaults"].append(level)
+	save_data()
 
 ## The last level played (0 = none yet)
 func last_level(game_index: int) -> int:
@@ -295,5 +308,9 @@ func load_data() -> void:
 						if str(k).is_valid_int():
 							lv[int(k)] = int(saved_levels[k])
 				games[idx]["levels"] = lv
+				var vs := []
+				for v in g.get("vaults", []):
+					vs.append(int(v))
+				games[idx]["vaults"] = vs
 		# the first game is always unlocked
 		games[FIRST_GAME]["unlocked"] = true

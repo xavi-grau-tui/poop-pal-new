@@ -29,8 +29,8 @@ const REWARDS := [
 	{ "game": 2, "stars": 30, "category": "accessories", "id": "sunglasses" },
 	{ "game": 2, "stars": 60, "category": "decor", "id": "purple_gut" },
 	{ "game": 2, "stars": 100, "category": "backgrounds", "id": "pastel_yellow" },
-	# Tilt Maze: levels cleared in one run (until it gets its level menu)
-	{ "game": 1, "levels": 2, "category": "accessories", "id": "round_glasses" },
+	# Tilt Maze: its stars (its vaults hold stickers and special foods)
+	{ "game": 1, "stars": 6, "category": "accessories", "id": "round_glasses" },
 ]
 
 ## "layers": [far layer (CloudA), near layer (CloudB)] — drop-in replacements for the cloud textures.
@@ -76,7 +76,7 @@ const ACCESSORIES := {
 	"sunglasses": { "name": "Sunglasses", "dir": "res://textures/pet/accessories/sunglasses/", "unlocked": false, "unlock": "Splash Hoops: 30 stars" },
 	"scarf": { "name": "Scarf", "dir": "res://textures/pet/accessories/scarf/", "unlocked": false, "unlock": "Lucky Pinch" },
 	"headphones": { "name": "Headphones", "dir": "res://textures/pet/accessories/headphones/", "unlocked": false, "unlock": "Lucky Pinch" },
-	"round_glasses": { "name": "Round Glasses", "dir": "res://textures/pet/accessories/round_glasses/", "unlocked": false, "unlock": "Tilt Maze: 2 levels" },
+	"round_glasses": { "name": "Round Glasses", "dir": "res://textures/pet/accessories/round_glasses/", "unlocked": false, "unlock": "Tilt Maze: 6 stars" },
 	"mystery_acc_4": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
 }
 const ACCESSORY_ORDER := ["none", "sunglasses", "round_glasses", "scarf", "headphones", "mystery_acc_4"]

@@ -66,6 +66,13 @@ const BOOSTS := {
 		"icon": ["...#...", "..#b#..", "..#b#..", ".#bbb#.", "#bwbbb#", "#bwbbb#", "#bbbbb#", ".#bbb#.", "..###.."],
 		"colors": { "#": Color8(46, 40, 60), "b": Color8(140, 196, 236), "w": Color8(250, 252, 255) },
 	},
+	"fizz": {
+		"name": "Fizz",
+		"desc": "Bouncy: hops low fences",
+		# pixel icon: bubbles rising (# outline, b fill, w shine)
+		"icon": ["....###", "...#bw#", "...#bb#", "##..###", "#w#....", "###.###", "...#bw#", "...#bb#", "....###"],
+		"colors": { "#": Color8(60, 34, 30), "b": Color8(236, 120, 80), "w": Color8(255, 236, 214) },
+	},
 }
 var boost := ""
 

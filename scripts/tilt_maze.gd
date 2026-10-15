@@ -1,8 +1,26 @@
 extends BaseMinigame
 ## Tilt Maze — lay the phone flat and tilt it to roll your pal (curled into a ball)
-## through a wooden labyrinth. Collect the numbered checkpoints, dodge the holes,
-## reach the flush swirl. Every level is generated from a fixed seed, so level 1
-## is always the same board and each level adds more holes.
+## through a labyrinth toy. Collect every marble (they open the trapdoor), dodge the holes,
+## roll into the flush swirl.
+##
+## Levels: 6 worlds of 9 (WORLDS), picked in the level menu (BaseMinigame / LevelMenu). Every
+## world has its own look (TiltMazeArt.THEMES) and brings in one new thing, shown alone on its
+## first levels, then mixed with what came before:
+##   1 Wooden Toy (the basics: tilt, walls, then holes) · 2 Bath Tiles (a slippery floor) ·
+##   3 The Gut (bouncy walls, holes that drift) · 4 Sewer (currents that push the ball) ·
+##   5 Factory (magnets that pull it) · 6 Space (low gravity, goo that slows it)
+## Each level is made by the maze generator from a seed, the best of SEED_TRIES for the route
+## length that level should have (so difficulty climbs smoothly, the same board every time).
+##
+## No lives: a fall into a hole puts the pal back on the last marble collected (the time keeps
+## running). Stars: 1 = cleared, +1 = within the par time (from the route's length), +1 = no fall
+## at all. Speed against care: going fast is how you fall.
+##
+## Vaults (VAULTS): a dead end off the route holds a prize, visible from the first visit:
+##   "fizz"  a low fence across its door: only a FIZZY pal (the boost from a fizzy drink) hops
+##           it, knocking it flat (the boost is spent on the hop, never on a level without one)
+##   "skill" no gate, but two holes guard its door: a steady hand gets through
+## Prizes: pal stickers (the case's sticker book) and special foods (the pantry). Taken once.
 ##
 ## Tilt: gravity sensor on device. Desktop: arrow keys / WASD / hold mouse to pull.
 ## Tilt is measured from how the phone is held when each level starts (any angle works).
@@ -17,7 +35,7 @@ const CELLS := 5                      # maze cells per side: 2-tile corridors + 
 const BOARD_PX := GRID * TILE_PX      # 224
 const ORIGIN := Vector2(27, 26)       # board top-left inside the play area (centred)
 
-# --- Ball physics ---
+# --- Ball physics (each world scales them: WORLD_PHYSICS) ---
 const BALL_R := 24.0
 const DETAIL := 4                     # world px per texture px for small sprites (same grid as the board)
 const BALL_SCALE := 3                 # (a finer grid than the board, for the face details)
@@ -37,35 +55,78 @@ const HOLE_PULL := 900.0
 const CHECK_R := 34.0
 const FINISH_R := 34.0
 const HATCH_IN := 20                  # trapdoor opening, texture px (x DETAIL)
-const LIVES := 3
+const DRIFT_R := 16.0                 # The Gut: a drifting hole's circle
+const DRIFT_SPEED := 0.9              # ...radians per second
+const CURRENT_PUSH := 1100.0          # Sewer: px/s² along a current
+const MAGNET_R := 190.0               # Factory: a magnet's reach
+const MAGNET_PULL := 1700.0           # ...and its pull at the magnet
+const GOO_R := 30.0                   # Space: a goo puddle's radius
+const GOO_DRAG := 6.0                 # ...extra damping per second inside it
+const PRIZE_R := 40.0
 
-# --- Palette: a wooden labyrinth toy (light plywood floor, darker wooden walls) ---
-const WOOD := Color8(236, 206, 158)          # floor
-const WOOD_GRAIN := Color8(216, 180, 128)
-const WOOD_KNOT := Color8(196, 156, 104)
-const WALL_TOP := Color8(214, 160, 100)      # wall planks
-const WALL_MID := Color8(192, 136, 80)
-const WALL_GRAIN := Color8(168, 112, 62)
-const WALL_SIDE := Color8(132, 84, 48)
-const OUTLINE := Color8(74, 44, 32)
-const HOLE_DARK := Color8(34, 20, 16)
-const HOLE_RIM := Color8(120, 78, 50)
-const PATH_INK := Color8(58, 38, 30)
+## The worlds (one per page of the level menu) and what each brings, said on its first level
+const WORLDS := ["Wooden Toy", "Bath Tiles", "The Gut", "Sewer", "Factory", "Space"]
+const WORLD_HINTS := ["", "slippery floor!", "bouncy walls!", "currents push you!", "magnets pull you!", "low gravity!"]
+## Per world: [accel, friction, bounce, max speed] multipliers of the constants above
+const WORLD_PHYSICS := [
+	[1.0, 1.0, 1.0, 1.0],
+	[1.0, 0.28, 1.0, 1.05],      # tiles: the ball keeps sliding
+	[1.0, 1.0, 2.5, 1.0],        # the gut: walls bounce it back
+	[1.0, 1.0, 1.0, 1.0],
+	[1.0, 1.0, 1.0, 1.0],
+	[0.5, 0.42, 1.4, 0.72],      # space: floaty, slow to start and slow to stop
+]
+## Par time: seconds per maze cell of the route (+ PAR_BASE), per world (tune on the phone)
+const PAR_BASE := 4.0
+const PAR_PER_CELL := [1.25, 1.45, 1.35, 1.5, 1.5, 1.9]
+## The levels of a world, 1st to 9th: marbles, holes, the world's things (currents, magnets...)
+const MARBLES := [2, 2, 3, 3, 3, 4, 4, 5, 5]
+const HOLES := [0, 1, 2, 3, 4, 5, 6, 7, 8]
+const THINGS := [1, 2, 2, 3, 3, 3, 4, 4, 5]
+## From the 7th level of a world, the world before's thing joins in
+const MIX_FROM := 6
+const SEED_TRIES := 24
+
+## Vaults: level -> [kind, prize]; prize "sticker:<pal id>" or "food:<special food name>"
+const VAULTS := {
+	3: ["fizz", "sticker:bud"], 6: ["skill", "sticker:peapod"], 8: ["fizz", "sticker:usagi"],
+	12: ["fizz", "sticker:nib"], 15: ["skill", "sticker:fudge"], 17: ["fizz", "sticker:glazy"],
+	21: ["fizz", "sticker:inari"], 24: ["skill", "sticker:kitsune"], 26: ["fizz", "sticker:ember"],
+	30: ["fizz", "food:Microchip"], 33: ["skill", "sticker:daruma"], 35: ["fizz", "sticker:kimchi"],
+	39: ["fizz", "food:Battery"], 42: ["skill", "sticker:kappa_maki"], 44: ["fizz", "sticker:hermit"],
+	48: ["fizz", "food:Moon Rock"], 51: ["skill", "sticker:teru_teru"], 53: ["fizz", "food:Alien Goo"],
+}
+
 const TEXT_DARK := Color(0.2, 0.12, 0.08)
 
-enum State { PLAY, FALLING, CLEAR }
+enum State { PLAY, FALLING, HOP, CLEAR }
 
 var state := State.PLAY
 var level := 1
-var lives := LIVES
+var world := 0
+var theme: Dictionary = TiltMazeArt.THEMES[0]
 var level_time := 0.0
+var falls := 0
+var par := 30.0
+
+# this level's physics (the world's, with its mixes)
+var accel := ACCEL
+var friction := FRICTION
+var bounce := BOUNCE
+var max_speed := MAX_SPEED
+var drifting := false
+var bouncy := false
 
 var tiles := PackedByteArray()        # 1 = wall
 var open_e := {}                      # Vector2i(cell) -> true if wall to the east is open
 var open_s := {}                      # Vector2i(cell) -> true if wall to the south is open
 var path_cells: Array[Vector2i] = []
-var holes: Array[Vector2] = []
+var holes: Array[Dictionary] = []     # { pos, base, phase, node }
 var checkpoints: Array[Dictionary] = []   # { pos, node, taken }
+var currents: Array[Dictionary] = []  # { rect, dir }
+var magnets: Array[Vector2] = []
+var goos: Array[Vector2] = []
+var vault := {}                       # { kind, prize, cell, door (Rect2), fence (Rect2 or empty), flat, prize_pos, taken, node }
 var start_pos := Vector2.ZERO
 var finish_pos := Vector2.ZERO
 var respawn_pos := Vector2.ZERO
@@ -81,16 +142,48 @@ var hatch_l: Sprite2D
 var hatch_r: Sprite2D
 var exit_open := false
 var locked_hint_cd := 0.0
+var fence_hint_cd := 0.0
 var ball: Sprite2D
 var shadow: Sprite2D
 var level_nodes: Node2D
+var current_layer: CurrentLayer
 var hud_level: Label
 var hud_time: Label
-var score_label: Label
-var lives_box: HBoxContainer
+var hud_stars: Array[TextureRect] = []
+var coin_label: Label
 var banner: Label
 var ball_texture: Texture2D
 var lcd_font: Font
+var _stars_shown := 3
+
+## The Sewer's currents, drawn under the ball: water lanes with ripples that run with the flow
+class CurrentLayer extends Node2D:
+	var lanes: Array = []             # the game's currents
+	var t := 0.0
+	func _process(delta: float) -> void:
+		t += delta
+		queue_redraw()
+	func _draw() -> void:
+		for c in lanes:
+			var r: Rect2 = c["rect"]
+			var d: Vector2 = c["dir"]
+			draw_rect(r, Color8(92, 150, 156, 150))
+			# ripples: short light dashes on the 4 px grid, moving along the flow
+			var along := r.size.x if d.x != 0.0 else r.size.y
+			var across := r.size.y if d.x != 0.0 else r.size.x
+			var step := 28.0
+			var shift := fposmod(t * 90.0, step)
+			var k := 0
+			for a in range(0, int(along / step) + 1):
+				for b in range(0, int(across / 24.0)):
+					var pa := fposmod(a * step + (shift if (d.x + d.y) > 0.0 else -shift) + (b % 2) * 14.0, along)
+					var pb := 12.0 + b * 24.0
+					var p := Vector2(pa, pb) if d.x != 0.0 else Vector2(pb, pa)
+					var sz := Vector2(12, 4) if d.x != 0.0 else Vector2(4, 12)
+					p = (r.position + p).snapped(Vector2(4, 4))
+					if r.has_point(p) and r.has_point(p + sz - Vector2.ONE):
+						draw_rect(Rect2(p, sz), Color8(196, 232, 226, 200))
+					k += 1
 
 func _ready() -> void:
 	game_music_path = "res://sounds/music/Hidden Passage.mp3"
@@ -101,36 +194,117 @@ func _ready() -> void:
 	intro_icon = ball_texture
 	super._ready()
 
+# --- the level menu (BaseMinigame) ---
+
+func uses_levels() -> bool:
+	return true
+
+func world_names() -> Array:
+	return WORLDS
+
+func level_count() -> int:
+	return WORLDS.size() * GameData.LEVELS_PER_WORLD
+
+func level_pattern() -> Texture2D:
+	return load("res://textures/menus/pattern_ball_moss.png")
+
+func level_backdrop() -> Color:
+	return TiltMazeArt.THEMES[0]["menu"]
+
+func world_backdrop(w: int) -> Color:
+	return TiltMazeArt.THEMES[clampi(w, 0, TiltMazeArt.THEMES.size() - 1)]["menu"]
+
 func start_game() -> void:
 	super.start_game()
-	level = 1
-	lives = LIVES
+	_begin(1)
+
+## Chosen in the level menu (or NEXT / RETRY on the result card)
+func play_level(n: int) -> void:
+	super.start_game()                        # (score from 0, running)
+	_begin(n)
+
+func _begin(n: int) -> void:
+	level = clampi(n, 1, level_count())
 	_build_level()
+	var k := (level - 1) % GameData.LEVELS_PER_WORLD
+	if k == 0:
+		_show_banner(WORLDS[world], 1.8)
+		if WORLD_HINTS[world] != "":
+			get_tree().create_timer(2.0).timeout.connect(func():
+				if is_running and level == n:
+					_show_banner(WORLD_HINTS[world], 1.4))
+	else:
+		_show_banner("%d-%d" % [world + 1, k + 1], 1.0)
 
 # ================================================================== LEVEL BUILD
 
 func _build_level() -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 7919 * level + 17
-	_generate_maze(rng)
-	_place_features(rng)
+	world = clampi((level - 1) / GameData.LEVELS_PER_WORLD, 0, WORLDS.size() - 1)
+	theme = TiltMazeArt.THEMES[world]
+	var k := (level - 1) % GameData.LEVELS_PER_WORLD
+	_set_physics(k)
+	# the best of SEED_TRIES boards for this level's route length (the same pick every time)
+	var target := 8 + k * 2 + world
+	var best_seed := 0
+	var best_err := 1 << 20
+	for i in SEED_TRIES:
+		var s := 7919 * level + 104729 * i + 17
+		var rng := RandomNumberGenerator.new()
+		rng.seed = s
+		_generate_maze(rng, k)
+		_place_route(rng, k)
+		var err := absi(path_cells.size() - target)
+		if level in VAULTS and _vault_cell().x < 0:
+			err += 100                                   # (a vault level needs a free dead end)
+		if err < best_err:
+			best_err = err
+			best_seed = s
+		if err == 0:
+			break
+	var rng2 := RandomNumberGenerator.new()
+	rng2.seed = best_seed
+	_generate_maze(rng2, k)
+	_place_route(rng2, k)
+	_place_vault()
+	_place_holes(rng2, k)
+	_place_things(rng2, k)
+	par = ceilf(PAR_BASE + path_cells.size() * PAR_PER_CELL[world])
 	board.texture = ImageTexture.create_from_image(_paint_board())
+	bg_rect.color = theme["outline"]
 	_spawn_level_nodes()
 	calibrate_tilt()                     # however the phone is held now = level
 	ball_pos = start_pos
 	respawn_pos = start_pos
 	vel = Vector2.ZERO
 	level_time = 0.0
+	falls = 0
 	state = State.PLAY
-	_refresh_lives()
 	# (drawn right away, also while the how-to card waits)
 	ball.position = ball_pos
+	ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
+	ball.modulate = Color(1, 1, 1, 1)
 	shadow.position = ball.position + Vector2(8, 20)
-	hud_level.text = "LV %d" % level
-	hud_time.text = "0:00"
-	score_label.text = str(score)
+	hud_level.text = "%d-%d" % [world + 1, k + 1]
+	_stars_shown = 3
+	for s in hud_stars:
+		s.texture = UiArt.star(true)
+	_refresh_hud()
 
-func _generate_maze(rng: RandomNumberGenerator) -> void:
+## This level's physics: the world's own, plus the world before's thing from MIX_FROM on
+func _set_physics(k: int) -> void:
+	var ph: Array = WORLD_PHYSICS[world]
+	accel = ACCEL * ph[0]
+	friction = FRICTION * ph[1]
+	bounce = BOUNCE * ph[2]
+	max_speed = MAX_SPEED * ph[3]
+	bouncy = world == 2 or (world == 3 and k >= MIX_FROM)
+	if world == 3 and k >= MIX_FROM:
+		bounce = BOUNCE * WORLD_PHYSICS[2][2]
+	if world == 2 and k >= MIX_FROM:
+		friction = FRICTION * 0.6                        # the gut gets slippery too
+	drifting = world == 2 and k >= 1
+
+func _generate_maze(rng: RandomNumberGenerator, k: int) -> void:
 	tiles.resize(GRID * GRID)
 	tiles.fill(1)
 	open_e.clear()
@@ -160,9 +334,9 @@ func _generate_maze(rng: RandomNumberGenerator) -> void:
 		visited[nxt] = true
 		stack.append(nxt)
 
-	# Knock out a few extra walls (loops and shortcuts); fewer as the levels go up, so the
+	# Knock out a few extra walls (loops and shortcuts); fewer as a world goes on, so the
 	# routes get longer and harder
-	var extra := maxi(0, 5 - level)
+	var extra := maxi(0, 4 - k)
 	var tries := 0
 	while extra > 0 and tries < 200:
 		tries += 1
@@ -185,6 +359,13 @@ func _open_between(a: Vector2i, b: Vector2i) -> void:
 		for dx in 2:
 			_set_tile(1 + 3 * lo.x + dx, 3 * lo.y + 3, 0)
 
+## The two floor tiles between two neighbouring cells (the gap in the wall), world px
+func _door_rect(a: Vector2i, b: Vector2i) -> Rect2:
+	var lo := Vector2i(mini(a.x, b.x), mini(a.y, b.y))
+	if a.y == b.y:
+		return Rect2(ORIGIN + Vector2(3 * lo.x + 3, 1 + 3 * lo.y) * TILE, Vector2(TILE, TILE * 2))
+	return Rect2(ORIGIN + Vector2(1 + 3 * lo.x, 3 * lo.y + 3) * TILE, Vector2(TILE * 2, TILE))
+
 func _cell_neighbors(c: Vector2i) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
 	if open_e.has(c): out.append(c + Vector2i.RIGHT)
@@ -195,6 +376,10 @@ func _cell_neighbors(c: Vector2i) -> Array[Vector2i]:
 
 func _cell_center(c: Vector2i) -> Vector2:
 	return ORIGIN + Vector2(3 * c.x + 2, 3 * c.y + 2) * TILE
+
+func _cell_of(p: Vector2) -> Vector2i:
+	var t := (p - ORIGIN) / TILE
+	return Vector2i(clampi(int(t.x) / 3, 0, CELLS - 1), clampi(int(t.y) / 3, 0, CELLS - 1))
 
 ## Maze distance (in cells) from one cell to every other, and the way back
 func _bfs(from: Vector2i) -> Dictionary:
@@ -219,15 +404,17 @@ func _path(a: Vector2i, b: Vector2i) -> Array[Vector2i]:
 		c = prev[c]
 	return out
 
-func _place_features(rng: RandomNumberGenerator) -> void:
+var _check_cells := {}
+var _finish_cell := Vector2i.ZERO
+
+## The marbles (spread over the maze, visited nearest-first), the finish, the ink route
+func _place_route(rng: RandomNumberGenerator, k: int) -> void:
 	var start := Vector2i(0, 0)
 	var all_cells: Array[Vector2i] = []
 	for cy in CELLS:
 		for cx in CELLS:
 			all_cells.append(Vector2i(cx, cy))
-	# Checkpoints spread all over the maze: each one as far (in maze distance) as possible
-	# from the start and from the ones already picked. One more per level.
-	var n_checks := clampi(2 + level, 3, 7)
+	var n_checks: int = MARBLES[k]
 	var dists := { start: _bfs(start)["dist"] }
 	var min_d := {}
 	for c in all_cells:
@@ -247,7 +434,6 @@ func _place_features(rng: RandomNumberGenerator) -> void:
 		dists[best] = _bfs(best)["dist"]
 		for c in all_cells:
 			min_d[c] = mini(min_d[c], dists[best][c])
-	# Visit them nearest-first from the start; the last one is the finish
 	var order: Array[Vector2i] = []
 	var cur := start
 	while picked.size() > 0:
@@ -258,37 +444,78 @@ func _place_features(rng: RandomNumberGenerator) -> void:
 		order.append(nxt)
 		picked.erase(nxt)
 		cur = nxt
-	var last: Vector2i = order.pop_back()
-	# the ink route goes through all of them
+	_finish_cell = order.pop_back()
 	path_cells.clear()
 	path_cells.append(start)
 	cur = start
-	for c in order + [last]:
+	for c in order + [_finish_cell]:
 		path_cells.append_array(_path(cur, c))
 		cur = c
-
 	start_pos = _cell_center(start)
-	finish_pos = _cell_center(last)
+	finish_pos = _cell_center(_finish_cell)
 	checkpoints.clear()
-	var check_cells := {}
+	_check_cells.clear()
 	for c in order:
-		check_cells[c] = true
+		_check_cells[c] = true
 		checkpoints.append({ "pos": _cell_center(c), "taken": false })
 
-	# Holes: dead ends first (traps), then beside the route (tension)
-	holes.clear()
-	# (a gentle ramp: 2, 4, 6, 8... up to 18; early levels keep them spread out)
-	var want := mini(level * 2, 18)
-	var spacing := 2 if level <= 3 else (1 if level <= 6 else 0)   # free cells between holes
+## The vault's cell: a dead end off the route, its door right off the route if possible (the
+## prize is seen on the way); (-1, -1) if the board has none
+func _vault_cell() -> Vector2i:
 	var on_path := {}
 	for c in path_cells:
 		on_path[c] = true
-	var dead_ends: Array[Vector2i] = []
-	var others: Array[Vector2i] = []
+	var best := Vector2i(-1, -1)
+	var best_score := -1
 	for cy in CELLS:
 		for cx in CELLS:
 			var c := Vector2i(cx, cy)
-			if c == start or c == last or check_cells.has(c) or (c - start).length_squared() <= 1:
+			var nb := _cell_neighbors(c)
+			if nb.size() != 1 or on_path.has(c) or c == Vector2i(0, 0):
+				continue
+			var sc := 10 if on_path.has(nb[0]) else 1
+			if sc > best_score:
+				best_score = sc
+				best = c
+	return best
+
+## This level's vault, if it has one: a dead end off the route (next to it if possible)
+func _place_vault() -> void:
+	vault = {}
+	if level not in VAULTS:
+		return
+	var best := _vault_cell()
+	if best.x < 0:
+		return
+	var door_cell: Vector2i = _cell_neighbors(best)[0]
+	var v: Array = VAULTS[level]
+	var dir := Vector2(door_cell - best)
+	vault = { "kind": v[0], "prize": v[1], "cell": best, "dir": dir, "door": _door_rect(best, door_cell),
+		"flat": false, "taken": GameData.vault_taken(_game_index(), level),
+		"prize_pos": _cell_center(best) - dir * TILE * 0.45 }
+
+func _place_holes(rng: RandomNumberGenerator, k: int) -> void:
+	holes.clear()
+	var want: int = HOLES[k] + (1 if world >= 2 and k >= 2 else 0)
+	var spacing := 2 if k <= 2 else (1 if k <= 5 else 0)   # free cells between holes
+	var on_path := {}
+	for c in path_cells:
+		on_path[c] = true
+	var keep_clear := {}
+	if not vault.is_empty():
+		keep_clear[vault["cell"]] = true
+		var outside := _cell_of(_cell_center(vault["cell"]) + vault["dir"] * TILE * 3)
+		keep_clear[outside] = true
+		if vault["kind"] == "skill":                    # (its guard holes stand alone)
+			for d in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
+				keep_clear[outside + d] = true
+	var dead_ends: Array[Vector2i] = []
+	var others: Array[Vector2i] = []
+	var start := Vector2i(0, 0)
+	for cy in CELLS:
+		for cx in CELLS:
+			var c := Vector2i(cx, cy)
+			if c == start or c == _finish_cell or _check_cells.has(c) or (c - start).length_squared() <= 1 or keep_clear.has(c):
 				continue
 			if _cell_neighbors(c).size() == 1 and not on_path.has(c):
 				dead_ends.append(c)
@@ -303,7 +530,7 @@ func _place_features(rng: RandomNumberGenerator) -> void:
 		if not _hole_room(c, used, spacing):
 			continue
 		used.append(c)
-		holes.append(_cell_center(c))
+		_add_hole(_cell_center(c), rng)
 	for c in others:
 		if holes.size() >= want:
 			break
@@ -313,7 +540,17 @@ func _place_features(rng: RandomNumberGenerator) -> void:
 		# One hole per cell, in a corner quadrant, so the other side stays passable
 		var o := TILE * 0.5
 		var q := Vector2(o if rng.randf() < 0.5 else -o, o if rng.randf() < 0.5 else -o)
-		holes.append(_cell_center(c) + q)
+		_add_hole(_cell_center(c) + q, rng)
+	# a skill vault: two holes guard its door (pass between them, in the middle)
+	if not vault.is_empty() and vault["kind"] == "skill":
+		var c := _cell_center(vault["cell"])
+		var d: Vector2 = vault["dir"]
+		var side := Vector2(d.y, d.x)
+		for s in [-1.0, 1.0]:
+			holes.append({ "pos": c + d * TILE * 0.5 + side * TILE * 0.5 * s, "base": c + d * TILE * 0.5 + side * TILE * 0.5 * s, "phase": 0.0, "drift": false })
+
+func _add_hole(p: Vector2, rng: RandomNumberGenerator) -> void:
+	holes.append({ "pos": p, "base": p, "phase": rng.randf() * TAU, "drift": drifting })
 
 ## No other hole within `spacing` cells (so early levels don't bunch them up in one spot)
 func _hole_room(c: Vector2i, used: Array[Vector2i], spacing: int) -> bool:
@@ -321,6 +558,89 @@ func _hole_room(c: Vector2i, used: Array[Vector2i], spacing: int) -> bool:
 		if maxi(absi(u.x - c.x), absi(u.y - c.y)) <= spacing:
 			return false
 	return true
+
+## The world's things: Sewer currents, Factory magnets, Space goo (and the mixes)
+func _place_things(rng: RandomNumberGenerator, k: int) -> void:
+	currents.clear()
+	magnets.clear()
+	goos.clear()
+	var n: int = THINGS[k]
+	var mix := k >= MIX_FROM
+	if world == 3 or (world == 4 and mix):
+		_place_currents(rng, n if world == 3 else 2)
+	if world == 4 or (world == 5 and mix):
+		_place_magnets(rng, n if world == 4 else 2)
+	if world == 5:
+		_place_goo(rng, n)
+
+## Currents run along the route (with it or against it), between two cells, over their door
+func _place_currents(rng: RandomNumberGenerator, n: int) -> void:
+	var spans: Array[int] = []
+	for i in range(1, path_cells.size() - 1):
+		if path_cells[i] != path_cells[i + 1] and (path_cells[i] - path_cells[i + 1]).length_squared() == 1:
+			spans.append(i)
+	_shuffle(spans, rng)
+	var used := {}
+	for i in spans:
+		if currents.size() >= n:
+			break
+		var a: Vector2i = path_cells[i]
+		var b: Vector2i = path_cells[i + 1]
+		if used.has(a) or used.has(b) or _check_cells.has(a) or _check_cells.has(b) or b == _finish_cell:
+			continue
+		used[a] = true
+		used[b] = true
+		var ra := Rect2(_cell_center(a) - Vector2(TILE, TILE), Vector2(TILE * 2, TILE * 2))
+		var rb := Rect2(_cell_center(b) - Vector2(TILE, TILE), Vector2(TILE * 2, TILE * 2))
+		var dir := Vector2(b - a)
+		if rng.randf() < 0.4:
+			dir = -dir                                   # some push against you
+		currents.append({ "rect": ra.merge(rb), "dir": dir })
+
+## Magnets sit in a wall beside the route, never next to the start
+func _place_magnets(rng: RandomNumberGenerator, n: int) -> void:
+	var spots: Array[Vector2] = []
+	for i in range(2, path_cells.size()):
+		var c: Vector2i = path_cells[i]
+		for d in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
+			var nb: Vector2i = c + d
+			# (an inner wall only: the frame's own wall is half hidden by the screen's edge)
+			var inside := nb.x >= 0 and nb.y >= 0 and nb.x < CELLS and nb.y < CELLS
+			if inside and not (nb in _cell_neighbors(c)):
+				spots.append(_cell_center(c) + Vector2(d) * TILE * 1.5)
+	_shuffle(spots, rng)
+	for p in spots:
+		if magnets.size() >= n:
+			break
+		var ok := true
+		for m in magnets:
+			if m.distance_to(p) < TILE * 4:
+				ok = false
+		for h in holes:
+			if h["pos"].distance_to(p) < TILE * 1.2:
+				ok = false
+		if ok:
+			magnets.append(p)
+
+## Goo puddles on the route's cells (not on a marble or the finish)
+func _place_goo(rng: RandomNumberGenerator, n: int) -> void:
+	var cells := path_cells.slice(2)
+	_shuffle(cells, rng)
+	for c in cells:
+		if goos.size() >= n:
+			break
+		if _check_cells.has(c) or c == _finish_cell:
+			continue
+		var p := _cell_center(c) + Vector2(rng.randf_range(-12, 12), rng.randf_range(-12, 12))
+		var ok := true
+		for g in goos:
+			if g.distance_to(p) < TILE * 2:
+				ok = false
+		for h in holes:
+			if h["pos"].distance_to(p) < TILE:
+				ok = false
+		if ok:
+			goos.append(p)
 
 func _shuffle(arr: Array, rng: RandomNumberGenerator) -> void:
 	for i in range(arr.size() - 1, 0, -1):
@@ -360,7 +680,7 @@ func _paint_board() -> Image:
 	var noise := RandomNumberGenerator.new()
 	noise.seed = 99
 	# a few knots in the plywood (fixed per board)
-	var knots: Array[Vector2] = []
+	var knots: Array = []
 	for i in 7:
 		knots.append(Vector2(noise.randf() * n, noise.randf() * n))
 	var k := 0
@@ -378,33 +698,11 @@ func _paint_board() -> Image:
 				var d_lf := lx if lf[i] else 99
 				var d_rt := (t - 1 - lx) if rt[i] else 99
 				var m := mini(mini(d_up, d_dn), mini(d_lf, d_rt))
-				# planks: the grain runs along the wall (horizontal unless it's a vertical run)
+				# (the grain runs along the wall: horizontal unless it's a vertical run)
 				var vertical := (up[i] == 0 or dn[i] == 0) and lf[i] + rt[i] > 0
-				var along := float(y if vertical else x)
-				var across := float(x if vertical else y)
-				var grain := sin(across * 1.3 + sin(along * 0.11 + across * 0.7) * 1.6)
-				if m <= 1:
-					c = OUTLINE                                      # (2 px thick)
-				elif d_dn <= 4:
-					c = WALL_SIDE.darkened(0.1 * (4 - d_dn))         # front face, darker at the base
-				elif d_up <= 2 or d_lf <= 2:
-					c = WALL_TOP                                     # lit edges
-				elif d_rt <= 2:
-					c = WALL_MID.darkened(0.08)
-				else:
-					c = WALL_MID if grain < 0.35 else WALL_GRAIN
-					if grain > 0.85:
-						c = WALL_GRAIN.darkened(0.08)
+				c = TiltMazeArt.wall_px(theme, x, y, m, d_up, d_dn, d_lf, d_rt, vertical)
 			else:
-				# plywood: soft wavy grain bands + a few knots, quantized (pixel art, no gradients)
-				var g := sin(y * 0.55 + sin(x * 0.07 + y * 0.02) * 2.4)
-				c = WOOD if g < 0.45 else WOOD_GRAIN
-				for kp in knots:
-					var kd := Vector2((x - kp.x) * 0.6, y - kp.y).length()
-					if kd < 2.2:
-						c = WOOD_KNOT
-					elif kd < 3.4:
-						c = WOOD_GRAIN
+				c = TiltMazeArt.floor_px(theme, x, y, knots)
 				# drop shadow of the walls (light from the top-left), two steps
 				if _is_wall_px(x - 1, y - 2):
 					c = c.darkened(0.2)
@@ -421,9 +719,6 @@ func _paint_board() -> Image:
 	for j in range(path_cells.size() - 1):
 		_ink_line(img, _to_px(_cell_center(path_cells[j])), _to_px(_cell_center(path_cells[j + 1])))
 	_ink_ring(img, _to_px(start_pos), 7.0)
-
-	for h in holes:
-		_paint_hole(img, _to_px(h))
 	return img
 
 func _to_px(p: Vector2) -> Vector2:
@@ -441,35 +736,14 @@ func _ink_line(img: Image, a: Vector2, b: Vector2) -> void:
 		var x := int(p.x)
 		var y := int(p.y)
 		if not _is_wall_px(x, y):
-			_blend(img, x, y, PATH_INK, 0.55)
+			_blend(img, x, y, theme["ink"], 0.55)
 
 func _ink_ring(img: Image, center: Vector2, r: float) -> void:
 	for y in range(int(center.y - r - 2), int(center.y + r + 3)):
 		for x in range(int(center.x - r - 2), int(center.x + r + 3)):
 			var d := Vector2(x + 0.5, y + 0.5).distance_to(center)
 			if not _is_wall_px(x, y) and absf(d - r) < 0.6:
-				_blend(img, x, y, PATH_INK, 0.6)
-
-## A hole drilled in the board: dark inside, a lit wooden lip at the bottom, a dark rim at
-## the top (hard pixels, no blending)
-func _paint_hole(img: Image, center: Vector2) -> void:
-	var r := HOLE_R / PX
-	for y in range(int(center.y - r - 2), int(center.y + r + 3)):
-		for x in range(int(center.x - r - 2), int(center.x + r + 3)):
-			if x < 0 or y < 0 or x >= BOARD_PX or y >= BOARD_PX:
-				continue
-			var off := Vector2(x + 0.5, y + 0.5) - center
-			var d := off.length()
-			if d > r + 0.5:
-				continue
-			var col := HOLE_DARK
-			if d > r - 0.5:
-				col = HOLE_RIM.lightened(0.15) if off.y > 0 else OUTLINE
-			elif d > r - 1.5 and off.y > 0:
-				col = HOLE_RIM
-			elif d < r * 0.45:
-				col = HOLE_DARK.darkened(0.3)
-			img.set_pixel(x, y, col)
+				_blend(img, x, y, theme["ink"], 0.6)
 
 func _is_wall_px(x: int, y: int) -> bool:
 	if x < 0 or y < 0 or x >= BOARD_PX or y >= BOARD_PX:
@@ -478,11 +752,13 @@ func _is_wall_px(x: int, y: int) -> bool:
 
 # ================================================================== NODES
 
+var bg_rect: ColorRect
+
 func _create_static_nodes() -> void:
-	var bg := ColorRect.new()
-	bg.color = OUTLINE
-	bg.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT)
-	add_child(bg)
+	bg_rect = ColorRect.new()
+	bg_rect.color = theme["outline"]
+	bg_rect.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT)
+	add_child(bg_rect)
 
 	board = Sprite2D.new()
 	board.centered = false
@@ -491,10 +767,14 @@ func _create_static_nodes() -> void:
 	board.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(board)
 
+	current_layer = CurrentLayer.new()
+	current_layer.lanes = currents
+	add_child(current_layer)
+
 	level_nodes = Node2D.new()
 	add_child(level_nodes)
 
-	# The exit: a trapdoor in the floor; it opens once every pink ball is collected
+	# The exit: a trapdoor in the floor; it opens once every marble is collected
 	exit_node = Node2D.new()
 	add_child(exit_node)
 	var frame_s := Sprite2D.new()
@@ -531,15 +811,21 @@ func _create_static_nodes() -> void:
 	ball.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(ball)
 
-	# HUD lives on the top wall strip
-	# (all on the top wooden rail, clear of the frame's edges)
-	hud_level = _make_label(Vector2(ORIGIN.x + 22, ORIGIN.y + 2), Vector2(130, 52), 36, HORIZONTAL_ALIGNMENT_LEFT, Color(0.98, 0.93, 0.84))
-	hud_time = _make_label(Vector2(PLAY_WIDTH / 2 - 85, ORIGIN.y + 2), Vector2(170, 52), 36, HORIZONTAL_ALIGNMENT_CENTER, Color(0.98, 0.93, 0.84))
-
-	lives_box = HBoxContainer.new()
-	lives_box.position = Vector2(ORIGIN.x + 150, ORIGIN.y + 8)
-	lives_box.add_theme_constant_override("separation", 6)
-	add_child(lives_box)
+	# The HUD, on the top rail (clear of the frame's edges): the level, the clock / par, the
+	# three stars still possible, the coins
+	var light := Color(0.98, 0.93, 0.84)
+	hud_level = _make_label(Vector2(ORIGIN.x + 22, ORIGIN.y + 2), Vector2(110, 52), 36, HORIZONTAL_ALIGNMENT_LEFT, light)
+	hud_time = _make_label(Vector2(ORIGIN.x + 128, ORIGIN.y + 2), Vector2(250, 52), 34, HORIZONTAL_ALIGNMENT_CENTER, light)
+	for i in 3:
+		var st := TextureRect.new()
+		st.texture = UiArt.star(true)
+		st.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		st.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		st.size = Vector2(39, 39)
+		st.pivot_offset = st.size / 2.0
+		st.position = Vector2(ORIGIN.x + 392 + i * 44, ORIGIN.y + 8)
+		add_child(st)
+		hud_stars.append(st)
 
 	var frame := ColorRect.new()
 	frame.color = Color(0, 0, 0)
@@ -547,14 +833,21 @@ func _create_static_nodes() -> void:
 	frame.position = Vector2(ORIGIN.x + BOARD_PX * PX - 20 - frame.size.x, ORIGIN.y + 3)
 	add_child(frame)
 	var box := ColorRect.new()
-	box.color = Color(0.65, 0.72, 0.6)   # LCD green, like Pipe Dream
+	box.color = Color(0.65, 0.72, 0.6)   # LCD green, like the other games
 	box.position = frame.position + Vector2(5, 5)
 	box.size = frame.size - Vector2(10, 10)
 	add_child(box)
-	score_label = _make_label(box.position + Vector2(6, 0), box.size - Vector2(14, 0), 32, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
+	var coin := TextureRect.new()
+	coin.texture = UiArt.coin()
+	coin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	coin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	coin.size = Vector2(36, 36)
+	coin.position = box.position + Vector2(8, (box.size.y - 36) / 2.0)
+	add_child(coin)
+	coin_label = _make_label(box.position + Vector2(46, 0), box.size - Vector2(56, 0), 32, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
 
 	banner = _make_label(Vector2(0, PLAY_HEIGHT / 2 - 60), Vector2(PLAY_WIDTH, 120), 54, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
-	banner.add_theme_color_override("font_outline_color", OUTLINE)
+	banner.add_theme_color_override("font_outline_color", Color8(74, 44, 32))
 	banner.add_theme_constant_override("outline_size", 14)
 	banner.modulate.a = 0.0
 
@@ -571,32 +864,107 @@ func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: C
 	add_child(l)
 	return l
 
+func _sprite(tex: Texture2D, pos: Vector2, parent: Node = null) -> Sprite2D:
+	var s := Sprite2D.new()
+	s.texture = tex
+	s.scale = Vector2(DETAIL, DETAIL)
+	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	s.position = pos
+	(parent if parent else level_nodes).add_child(s)
+	return s
+
 func _spawn_level_nodes() -> void:
 	for n in level_nodes.get_children():
 		n.queue_free()
 	exit_node.position = finish_pos
 	_set_exit_open(false)
-	var coin := _make_coin_texture()
+	current_layer.lanes = currents
+	current_layer.visible = not currents.is_empty()
+	for g in goos:
+		_sprite(TiltMazeArt.goo(int(GOO_R / DETAIL)), g)
+	for h in holes:
+		h["node"] = _sprite(TiltMazeArt.hole(world), h["pos"])
+	for m in magnets:
+		_sprite(TiltMazeArt.magnet(), m)
+	var pick := TiltMazeArt.pickup(world)
 	for cp in checkpoints:
-		var s := Sprite2D.new()
-		s.texture = coin
-		s.scale = Vector2(DETAIL, DETAIL)
-		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		s.position = cp["pos"]
-		level_nodes.add_child(s)
-		cp["node"] = s
+		cp["node"] = _sprite(pick, cp["pos"])
+	if not vault.is_empty():
+		_spawn_vault()
 
-func _refresh_lives() -> void:
-	for n in lives_box.get_children():
-		n.queue_free()
-	for i in LIVES:
-		var t := TextureRect.new()
-		t.texture = ball_texture
-		t.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		t.custom_minimum_size = Vector2(43, 43)          # (the 16 px ball inside a 24 px texture)
-		t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		t.modulate = Color(1, 1, 1, 1) if i < lives else Color(0, 0, 0, 0.35)
-		lives_box.add_child(t)
+## A vault: its fence (Fizzy) with the drink's sign, its prize glinting inside
+func _spawn_vault() -> void:
+	var door: Rect2 = vault["door"]
+	var dir: Vector2 = vault["dir"]
+	if vault["kind"] == "fizz":
+		var vertical := dir.x != 0.0
+		var long := int((door.size.y if vertical else door.size.x) / DETAIL)
+		var f := _sprite(TiltMazeArt.fence(long, vertical), door.get_center())
+		vault["fence_node"] = f
+		# the sign: which drink hops it (the fizzy boost's icon on a little card)
+		var sign := _sprite(TiltMazeArt.sign_card(), door.get_center() + dir * TILE * 0.62)   # (outside the fence)
+		var icon := Sprite2D.new()
+		icon.texture = PetState.boost_icon("fizz")
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sign.add_child(icon)
+		vault["sign_node"] = sign
+	if vault["taken"]:
+		return
+	var prize := Node2D.new()
+	prize.position = vault["prize_pos"]
+	level_nodes.add_child(prize)
+	var p: String = vault["prize"]
+	var art := Sprite2D.new()
+	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	if p.begins_with("sticker:"):
+		art.texture = load("res://textures/cases/stickers/book/%s.png" % p.substr(8))
+	else:
+		var food := _special(p.substr(5))
+		art.texture = load(food.get("icon", "")) if food else null
+	if art.texture:
+		var big := maxf(art.texture.get_width(), art.texture.get_height())
+		art.scale = Vector2.ONE * (76.0 / big) if p.begins_with("sticker:") else Vector2.ONE * (64.0 / big)
+	prize.add_child(art)
+	var bob := art.create_tween().set_loops()       # (dies with the prize)
+	bob.tween_property(art, "position:y", -6.0, 0.6).set_trans(Tween.TRANS_SINE)
+	bob.tween_property(art, "position:y", 0.0, 0.6).set_trans(Tween.TRANS_SINE)
+	for i in 2:
+		var tw := Sprite2D.new()
+		tw.texture = TiltMazeArt.twinkle()
+		tw.scale = Vector2(DETAIL, DETAIL)
+		tw.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tw.position = Vector2(-30, -26) if i == 0 else Vector2(28, 18)
+		prize.add_child(tw)
+		var tt := tw.create_tween().set_loops()
+		tt.tween_property(tw, "modulate:a", 0.0, 0.5).set_delay(0.4 * i)
+		tt.tween_property(tw, "modulate:a", 1.0, 0.5)
+	vault["node"] = prize
+
+func _special(food_name: String) -> Dictionary:
+	for f in FoodLibrary.SPECIALS:
+		if f["name"] == food_name:
+			return f
+	return {}
+
+func _refresh_hud() -> void:
+	var tm := "%d:%02d" % [int(level_time) / 60, int(level_time) % 60]
+	var pt := "%d:%02d" % [int(par) / 60, int(par) % 60]
+	hud_time.text = "%s/%s" % [tm, pt]
+	hud_time.add_theme_color_override("font_color", Color(0.98, 0.93, 0.84) if level_time <= par else Color(0.95, 0.55, 0.45))
+	coin_label.text = str(GameData.coins)
+	var now := _stars_now()
+	if now < _stars_shown:
+		for i in range(now, _stars_shown):
+			var st := hud_stars[i]
+			st.texture = UiArt.star(false)
+			var t := create_tween()
+			t.tween_property(st, "scale", Vector2(1.4, 1.4), 0.08)
+			t.tween_property(st, "scale", Vector2.ONE, 0.2)
+		_stars_shown = now
+
+## Stars if the level ended now: 1 + within the par time + no fall
+func _stars_now() -> int:
+	return 1 + (1 if level_time <= par else 0) + (1 if falls == 0 else 0)
 
 # ================================================================== GENERATED TEXTURES
 
@@ -613,7 +981,7 @@ func _make_swirl_texture() -> Texture2D:
 				continue
 			var col := Color8(84, 150, 206) if d > S * 0.25 else Color8(54, 110, 170)
 			if d > S / 2.0 - 1.2:
-				col = OUTLINE
+				col = Color8(74, 44, 32)
 			else:
 				var arm := fposmod(off.angle() * 3.0 / TAU + d * 0.4, 1.0)
 				if arm < 0.3:
@@ -635,7 +1003,7 @@ func _set_exit_open(open: bool) -> void:
 	hatch_r.modulate = Color(1, 1, 1)
 	finish_sprite.visible = open
 
-## Every pink ball collected: the two hatch doors swing up (seen from above they get
+## Every marble collected: the two hatch doors swing up (seen from above they get
 ## narrower and darker towards their hinges) and the flush swirl shows underneath.
 func _open_exit() -> void:
 	exit_open = true
@@ -666,11 +1034,11 @@ func _make_hatch_frame_texture() -> Texture2D:
 			var e := mini(mini(x, y), mini(S - 1 - x, S - 1 - y))
 			var col: Color
 			if e == 0:
-				col = OUTLINE
+				col = Color8(74, 44, 32)
 			elif e == 1:
-				col = WALL_SIDE if (x + y) % 5 != 0 else WALL_SIDE.darkened(0.15)
+				col = Color8(132, 84, 48) if (x + y) % 5 != 0 else Color8(132, 84, 48).darkened(0.15)
 			elif e == 2 and (y == 2 or x == 2):
-				col = OUTLINE.darkened(0.2)                  # the opening's shadowed inner lip
+				col = Color8(74, 44, 32).darkened(0.2)        # the opening's shadowed inner lip
 			else:
 				col = Color8(36, 62, 96)                     # deep water down there
 			img.set_pixel(x, y, col)
@@ -699,7 +1067,7 @@ func _make_hatch_leaf_texture() -> Texture2D:
 			if y == 3 or y == H - 4:
 				col = iron if x > 0 else iron_hi             # iron straps from the hinge
 			if x == W - 1:
-				col = OUTLINE                                # the seam
+				col = Color8(74, 44, 32)                     # the seam
 			elif x == 0 and y % 6 == 1:
 				col = iron_hi                                # hinge pins
 			img.set_pixel(x, y, col)
@@ -707,24 +1075,6 @@ func _make_hatch_leaf_texture() -> Texture2D:
 	for p in [Vector2i(W - 3, 8), Vector2i(W - 4, 9), Vector2i(W - 3, 10), Vector2i(W - 2, 11)]:
 		img.set_pixel(p.x, p.y, Color8(206, 176, 92))
 	img.set_pixel(W - 2, 8, Color8(110, 86, 40))
-	return ImageTexture.create_from_image(img)
-
-func _make_coin_texture() -> Texture2D:
-	const S := 15
-	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
-	var c := Vector2(S / 2.0, S / 2.0)
-	for y in S:
-		for x in S:
-			var off := Vector2(x + 0.5, y + 0.5) - c
-			var d := off.length()
-			if d > S / 2.0:
-				continue
-			var col := Color8(248, 150, 182) if off.x + off.y < 0 else Color8(214, 96, 136)
-			if d > S / 2.0 - 1.1:
-				col = Color8(110, 36, 70)
-			elif Vector2(off.x + 2.5, off.y + 2.5).length() < 1.6:
-				col = Color8(255, 222, 232)
-			img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
 
 func _make_shadow_texture() -> Texture2D:
@@ -744,7 +1094,9 @@ func _process(delta: float) -> void:
 		return
 	finish_sprite.rotation -= delta * 2.5
 	locked_hint_cd = maxf(0.0, locked_hint_cd - delta)
+	fence_hint_cd = maxf(0.0, fence_hint_cd - delta)
 	bump_cooldown = maxf(0.0, bump_cooldown - delta)
+	_move_holes(delta)
 
 	if state == State.PLAY:
 		level_time += delta
@@ -752,30 +1104,64 @@ func _process(delta: float) -> void:
 		const STEPS := 4
 		var dt := delta / STEPS
 		for i in STEPS:
-			vel += tilt * ACCEL * dt
-			_apply_hole_pull(dt)
-			vel *= maxf(0.0, 1.0 - FRICTION * dt)
-			vel = vel.limit_length(MAX_SPEED)
+			vel += tilt * accel * dt
+			_apply_forces(dt)
+			var drag := friction + (GOO_DRAG if _in_goo() else 0.0)
+			vel *= maxf(0.0, 1.0 - drag * dt)
+			vel = vel.limit_length(max_speed)
 			ball_pos += vel * dt
 			_collide_walls()
+			_collide_fence()
+			if state != State.PLAY:
+				break
 		var speed := vel.length()
 		if speed > 60.0:
 			ball.rotation += vel.x * delta / BALL_R
 		else:
 			ball.rotation = lerp_angle(ball.rotation, 0.0, minf(1.0, delta * 6.0))
-		_check_checkpoints()
-		_check_finish()
-		_check_holes()
+		if state == State.PLAY:
+			_check_checkpoints()
+			_check_prize()
+			_check_finish()
+			_check_holes()
+		_refresh_hud()
 
-	if state == State.PLAY:                 # (falling / flushed: the tweens move the ball)
+	if state == State.PLAY:                 # (falling / hopping / flushed: the tweens move the ball)
 		ball.position = ball_pos
 	shadow.position = ball.position + Vector2(8, 20) * (ball.scale.x / BALL_SCALE)
 	shadow.visible = state != State.FALLING
-	hud_level.text = "LV %d" % level
-	hud_time.text = "%d:%02d" % [int(level_time) / 60, int(level_time) % 60]
-	score_label.text = str(score)
-	# Shrink long numbers so they always fit the LCD box
-	score_label.add_theme_font_size_override("font_size", 32 if score < 10000 else (27 if score < 100000 else 23))
+
+## The Gut: drifting holes go round their little circles
+func _move_holes(delta: float) -> void:
+	for h in holes:
+		if not h["drift"]:
+			continue
+		h["phase"] += delta * DRIFT_SPEED
+		h["pos"] = h["base"] + Vector2(cos(h["phase"]), sin(h["phase"])) * DRIFT_R
+		if h.has("node"):
+			h["node"].position = (h["pos"] as Vector2).snapped(Vector2(DETAIL, DETAIL))
+
+## The holes' pull, the currents' push, the magnets' pull
+func _apply_forces(dt: float) -> void:
+	for h in holes:
+		var d: Vector2 = h["pos"] - ball_pos
+		var l := d.length()
+		if l < HOLE_R + 6.0 and l > 0.001:
+			vel += d / l * HOLE_PULL * (1.0 - l / (HOLE_R + 6.0)) * dt
+	for c in currents:
+		if (c["rect"] as Rect2).has_point(ball_pos):
+			vel += (c["dir"] as Vector2) * CURRENT_PUSH * dt
+	for m in magnets:
+		var d2 := m - ball_pos
+		var l2 := d2.length()
+		if l2 < MAGNET_R and l2 > 0.001:
+			vel += d2 / l2 * MAGNET_PULL * (1.0 - l2 / MAGNET_R) * dt
+
+func _in_goo() -> bool:
+	for g in goos:
+		if ball_pos.distance_to(g) < GOO_R:
+			return true
+	return false
 
 func _collide_walls() -> void:
 	var tx0 := int(floor((ball_pos.x - BALL_R - ORIGIN.x) / TILE))
@@ -786,33 +1172,83 @@ func _collide_walls() -> void:
 		for tx in range(tx0, tx1 + 1):
 			if not _is_wall_tile(tx, ty):
 				continue
-			var rect := Rect2(ORIGIN + Vector2(tx, ty) * TILE, Vector2(TILE, TILE))
-			var closest := ball_pos.clamp(rect.position, rect.end)
-			var d := ball_pos - closest
-			var dist := d.length()
-			if dist >= BALL_R or dist <= 0.0001:
-				continue
-			var n := d / dist
-			ball_pos += n * (BALL_R - dist)
-			var vn := vel.dot(n)
-			if vn < 0.0:
-				vel -= (1.0 + BOUNCE) * vn * n
-				if -vn > 220.0 and bump_cooldown <= 0.0:
-					bump_cooldown = 0.12
-					_sfx("res://sounds/fx/wood_tap.wav", clampf(-34.0 + (-vn) / 50.0, -30.0, -16.0), 0.0, randf_range(0.92, 1.08))
-					Input.vibrate_handheld(12)
+			_push_out(Rect2(ORIGIN + Vector2(tx, ty) * TILE, Vector2(TILE, TILE)), bounce)
 
-func _apply_hole_pull(dt: float) -> void:
-	for h in holes:
-		var d := h - ball_pos
-		var l := d.length()
-		if l < HOLE_R + 6.0 and l > 0.001:
-			vel += d / l * HOLE_PULL * (1.0 - l / (HOLE_R + 6.0)) * dt
+## Pushes the ball out of a rectangle and bounces it; true if they touched
+func _push_out(rect: Rect2, b: float) -> bool:
+	var closest := ball_pos.clamp(rect.position, rect.end)
+	var d := ball_pos - closest
+	var dist := d.length()
+	if dist >= BALL_R or dist <= 0.0001:
+		return false
+	var n := d / dist
+	ball_pos += n * (BALL_R - dist)
+	var vn := vel.dot(n)
+	if vn < 0.0:
+		vel -= (1.0 + b) * vn * n
+		if -vn > 220.0 and bump_cooldown <= 0.0:
+			bump_cooldown = 0.12
+			if bouncy:
+				_sfx("res://sounds/fx/water_boing.wav", clampf(-36.0 + (-vn) / 60.0, -32.0, -20.0), 0.0, randf_range(1.2, 1.4))
+			else:
+				_sfx("res://sounds/fx/wood_tap.wav", clampf(-34.0 + (-vn) / 50.0, -30.0, -16.0), 0.0, randf_range(0.92, 1.08))
+			Input.vibrate_handheld(12)
+	return true
+
+## A Fizzy vault's fence: a wall until a fizzy pal hops it (then it lies flat)
+func _collide_fence() -> void:
+	if vault.is_empty() or vault["kind"] != "fizz" or vault["flat"]:
+		return
+	var door: Rect2 = vault["door"]
+	# the fence is a thin bar across the middle of the door
+	var dir: Vector2 = vault["dir"]
+	var bar := door.grow_individual(-door.size.x * 0.32, 0, -door.size.x * 0.32, 0) if dir.x != 0.0 else door.grow_individual(0, -door.size.y * 0.32, 0, -door.size.y * 0.32)
+	if not _push_out(bar, BOUNCE):
+		return
+	if PetState.boost == "fizz":
+		_hop(bar)
+	elif fence_hint_cd <= 0.0:
+		fence_hint_cd = 2.5
+		var sign: Node2D = vault.get("sign_node")
+		if sign:
+			var t := create_tween()
+			t.tween_property(sign, "scale", Vector2(DETAIL, DETAIL) * 1.35, 0.1)
+			t.tween_property(sign, "scale", Vector2(DETAIL, DETAIL), 0.2)
+		_float_text("A fizzy pal could hop it!", door.get_center())
+
+## The fizzy hop: up and over the fence, which falls flat behind; the boost is spent
+func _hop(bar: Rect2) -> void:
+	state = State.HOP
+	PetState.use_boost()
+	vault["flat"] = true
+	var c := bar.get_center()
+	var side := (ball_pos - c)
+	var axis := Vector2(signf(side.x), 0) if vault["dir"].x != 0.0 else Vector2(0, signf(side.y))
+	var to := c - axis * (BALL_R + 30.0)
+	vel = Vector2.ZERO
+	_sfx("res://sounds/fx/water_boing.wav", -12.0, 0.0, 1.5)
+	Input.vibrate_handheld(30)
+	var t := create_tween()
+	t.tween_method(func(f: float):
+		ball.position = ball_pos.lerp(to, f)
+		ball.scale = Vector2.ONE * BALL_SCALE * (1.0 + sin(f * PI) * 0.45), 0.0, 1.0, 0.45)
+	t.tween_callback(func():
+		ball_pos = to
+		ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
+		state = State.PLAY
+		_sfx("res://sounds/fx/clack.mp3", -14.0))
+	var f: Sprite2D = vault.get("fence_node")
+	if f:
+		var ft := create_tween()
+		ft.tween_property(f, "modulate", Color(0.6, 0.55, 0.5, 0.7), 0.3).set_delay(0.25)
+	var sign: Node2D = vault.get("sign_node")
+	if sign:
+		sign.visible = false
 
 func _check_holes() -> void:
 	for h in holes:
-		if ball_pos.distance_to(h) < HOLE_FALL_R:
-			_fall_into(h)
+		if ball_pos.distance_to(h["pos"]) < HOLE_FALL_R:
+			_fall_into(h["pos"])
 			return
 
 func _check_checkpoints() -> void:
@@ -828,10 +1264,35 @@ func _check_checkpoints() -> void:
 		var t := create_tween()
 		t.tween_property(s, "scale", Vector2(DETAIL, DETAIL) * 1.6, 0.12)
 		t.tween_property(s, "scale", Vector2(DETAIL, DETAIL), 0.15)
-		t.parallel().tween_property(s, "modulate", Color(0.45, 0.35, 0.3, 0.55), 0.3)
-		_float_text("+10", cp["pos"])
+		s.texture = TiltMazeArt.pickup(world, true)
 		if not exit_open and checkpoints.all(func(c): return c["taken"]):
 			_open_exit()
+
+## A vault's prize: a sticker for the case's book, or a special food for the pantry
+func _check_prize() -> void:
+	if vault.is_empty() or vault["taken"] or not vault.has("node"):
+		return
+	if ball_pos.distance_to(vault["prize_pos"]) > PRIZE_R:
+		return
+	vault["taken"] = true
+	GameData.take_vault(_game_index(), level)
+	var p: String = vault["prize"]
+	var text := ""
+	if p.begins_with("sticker:"):
+		var id := p.substr(8)
+		Collection.unlock("stickers", id)
+		text = "New sticker!\n%s" % PetState.FORMS.get(id, {}).get("name", id)
+	else:
+		Shop.give_special(p.substr(5))
+		text = "%s!" % p.substr(5)
+	_sfx("res://sounds/fx/claw_prize.wav", -8.0)
+	Input.vibrate_handheld(50)
+	var node: Node2D = vault["node"]
+	var t := create_tween()
+	t.tween_property(node, "scale", Vector2(1.6, 1.6), 0.15)
+	t.tween_property(node, "scale", Vector2(0.0, 0.0), 0.25).set_ease(Tween.EASE_IN)
+	t.tween_callback(node.queue_free)
+	_show_banner(text, 1.4)
 
 func _check_finish() -> void:
 	if ball_pos.distance_to(finish_pos) > FINISH_R:
@@ -840,36 +1301,30 @@ func _check_finish() -> void:
 		# shut: it's just floor, but say why once in a while
 		if locked_hint_cd <= 0.0:
 			locked_hint_cd = 2.5
-			_float_text("Get all the balls!", finish_pos)
+			_float_text("Get all the marbles!", finish_pos)
 		return
 	state = State.CLEAR
 	vel = Vector2.ZERO
-	var bonus := 50 + maxi(0, 60 - int(level_time)) * 2
-	add_score(bonus)
-	Collection.report_game_levels(1, level)          # (levels cleared so far this run)
+	var stars := _stars_now()
 	_sfx("res://sounds/fx/water-pouring-98795.mp3", -12.0, 1.4)
 	Input.vibrate_handheld(60)
-	# Flushed! Spiral into the swirl
+	# Flushed! Spiral into the swirl, then the result card
 	var t := create_tween()
 	ball_pos = finish_pos
 	t.tween_property(ball, "position", finish_pos, 0.25).set_ease(Tween.EASE_OUT)
 	t.parallel().tween_property(ball, "rotation", ball.rotation + TAU * 3.0, 1.0)
 	t.parallel().tween_property(ball, "scale", Vector2(0.1, 0.1) * BALL_SCALE, 1.0).set_ease(Tween.EASE_IN)
-	_show_banner("LEVEL %d CLEAR!\n+%d" % [level, bonus], 1.6)
-	t.tween_interval(1.0)
+	t.tween_interval(0.3)
 	t.tween_callback(func():
-		if not is_running:
-			return
-		level += 1
-		ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
-		_build_level()
-		_show_banner("LEVEL %d" % level, 1.0))
+		if is_running:
+			finish_level(level, stars))
 
+## Into a hole: back on the last marble taken (no lives; the clock keeps going, the
+## no-fall star is gone)
 func _fall_into(h: Vector2) -> void:
 	state = State.FALLING
 	vel = Vector2.ZERO
-	lives -= 1
-	_refresh_lives()
+	falls += 1
 	_sfx("res://sounds/fx/hole_plop.wav", -16.0)
 	Input.vibrate_handheld(90)
 	var t := create_tween()
@@ -877,9 +1332,6 @@ func _fall_into(h: Vector2) -> void:
 	t.tween_property(ball, "scale", Vector2(0.15, 0.15) * BALL_SCALE, 0.45).set_ease(Tween.EASE_IN)
 	t.parallel().tween_property(ball, "modulate", Color(0.2, 0.15, 0.1, 1), 0.45)
 	t.tween_callback(func():
-		if lives <= 0:
-			end_game()
-			return
 		ball_pos = respawn_pos
 		ball.position = ball_pos
 		ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
@@ -920,7 +1372,7 @@ func on_main_button_pressed() -> void:
 	if intro_active():
 		dismiss_intro()
 		return
-	if is_game_over:
+	if is_game_over or level_menu_open():
 		super.on_main_button_pressed()
 		return
 	# Current phone angle becomes "flat"
@@ -928,10 +1380,11 @@ func on_main_button_pressed() -> void:
 	_show_banner("Calibrated", 0.7)
 
 func on_main_button_released() -> void:
-	pass
+	if level_menu_open():
+		super.on_main_button_released()
 
 func on_forward_button_pressed() -> void:
-	if is_game_over:
+	if is_game_over or level_menu_open():
 		super.on_forward_button_pressed()
 
 func end_game() -> void:
@@ -951,7 +1404,7 @@ func _show_banner(text: String, hold: float) -> void:
 func _float_text(text: String, at: Vector2) -> void:
 	var lx := clampf(at.x - 200, 30, PLAY_WIDTH - 430)          # (kept inside the board)
 	var l := _make_label(Vector2(lx, at.y - 60), Vector2(400, 40), 28, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.95, 0.85))
-	l.add_theme_color_override("font_outline_color", OUTLINE)
+	l.add_theme_color_override("font_outline_color", Color8(74, 44, 32))
 	l.add_theme_constant_override("outline_size", 10)
 	l.text = text
 	var t := create_tween()

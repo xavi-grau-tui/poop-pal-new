@@ -2,7 +2,8 @@ extends Node
 ## Drinks. Every drink has a TYPE; a type gives a boost (the last drink counts), and each
 ## minigame decides what a boost does there (players find out which is best where).
 ##   watery  -> splash (a boing and a second chance)        [in Pipe Dream, Pal Dash, Flipper Belly]
-##   fizzy, caffeinated, milky, fruity -> boosts to come (fizz, focus, sturdy, lucky)
+##   fizzy   -> fizz (bouncy: hops Tilt Maze's low fences, opening its vaults)
+##   caffeinated, milky, fruity -> boosts to come (focus, sturdy, lucky)
 ## The types come with the games (decided 2026-10-09: a drink is on offer only once a game it
 ## helps is yours): one more type with each game you own, in TYPES order. Watery with the first
 ## game (Splash Hoops), Fizzy with the 2nd (always Tilt Maze: its low fences), then Energy, Milky,
@@ -10,7 +11,7 @@ extends Node
 ## docs/ideas_roadmap.md). Nothing random: the menu lists the types you have, then the rest locked.
 
 const TYPES := ["watery", "fizzy", "caffeinated", "milky", "fruity"]
-const BOOST_OF_TYPE := { "watery": "splash" }       # the others get theirs later
+const BOOST_OF_TYPE := { "watery": "splash", "fizzy": "fizz" }   # the others get theirs later
 
 var all_drinks = [
 	{ "name": "Water", "type": "watery", "icon": preload("res://textures/drinks/water.png"), "color": Color(0.75, 0.85, 1.0, 0.5) },
