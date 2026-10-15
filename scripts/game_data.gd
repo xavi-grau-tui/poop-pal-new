@@ -41,7 +41,8 @@ var coins := 0
 
 # Target score for 100% progress per game
 var progress_target := {
-	0: 300,  # Pipe Dream: 300 pipes = 100%
+	0: 300,  # Pal Prix (levels: its stars count instead)
+	10: 300, # Pipe Dream (the classic, an extra card): 300 pipes = 100%
 	1: 1500, # Tilt Maze: 1500 points = 100%
 	2: 2000, # Splash Hoops
 	3: 3000, # Pal Dash
@@ -56,7 +57,7 @@ var progress_target := {
 ## Prototype/testing: games unlocked regardless of coins (now only the four on hold: the six
 ## launch games are bought with coins, see the dev launcher's 999 COINS start). Not in BOOT +
 ## PROGRESSION, where only the six launch games exist (GameMenuSwitcher hides the rest).
-const DEBUG_UNLOCKED := [3, 4, 5, 7]
+const DEBUG_UNLOCKED := [3, 4, 5, 7, 10]   # (10: the classic Pipe Dream)
 ## Prototype/testing: every launch starts with no best scores, stars, coins or bought games
 const RESET_SCORES_ON_LAUNCH := true
 
@@ -71,7 +72,7 @@ func reload() -> void:
 func _start() -> void:
 	games = {}
 	coins = 0
-	for idx in 10:
+	for idx in 11:
 		_init_game(idx, idx == FIRST_GAME)   # Splash Hoops — unlocked by default (FIRST_GAME)
 	load_data()
 	if SaveSlot.real():

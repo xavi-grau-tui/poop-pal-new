@@ -23,6 +23,7 @@ var game_scenes := {
 	7: "res://scenes/minigames/flipper_belly.tscn",
 	8: "res://scenes/minigames/top_spin.tscn",                # prototype: the 9th card
 	9: "res://scenes/minigames/paper_sumo.tscn",              # prototype: the 10th card
+	10: "res://scenes/minigames/pipe_dream.tscn",             # the classic Pipe Dream, an extra card (on hold)
 	LuckyPinch.GAME_INDEX: "res://scenes/minigames/lucky_pinch.tscn",   # the bonus (not a card)
 }
 
