@@ -66,11 +66,18 @@ To build:
 - Tilt Maze: tune physics and par times on the phone; the vaults of the other boosts once they
   exist (see "Boost-gated prizes"); the world map showing vaults; a tutorial per world's thing.
 - Splash Hoops: more polish (it has the skeleton).
-- RC Racer (Pipe Dream's rework, branch `pipe-dream`, 2026-10-15): world 1 Playroom built (9 levels:
-  an oval, an L, a U, then grown patches, longer and twistier). Next, per world (user): a
-  background under the raised track (the Playroom's carpet; clouds = a sky track, water = a lagoon
-  track...), and in the harder worlds obstacles, a rival pal to beat, speed boosts (Mario Kart
-  style). Named Pal Prix (2026-10-15). Its song: see "Music prompts".
+- Pal Prix (Pipe Dream's rework, branch `pipe-dream`, 2026-10-15): the pal on an RC car round a
+  raised toy track (angled close-up view, sprite-stacked 3D car, fixed speed 500, orange = left,
+  forward = right, falling off = back on the last checkpoint; the far side: the car drops behind
+  the track). Curbs slow the car; par = a clean run +3% +1 s (the 2nd star needs a near-perfect
+  run). WORLDS (user, 2026-10-15), one new thing each, its own floor under the track:
+  1 Playroom (BUILT): carpet with toy blocks; the basics (an oval, an L, a U, then grown patches).
+  2 Kitchen (BUILT): checkered kitchen tiles; SPEED BOOST pads on the straights (a boosted car
+    takes the next turn wider).
+  3 Garden or Sky: JUMPS, ramps over gaps (fall if not straight on the ramp); grass or clouds.
+  4 Lagoon: CROSSOVERS, the road passing under itself on a bridge (figure-8 circuits); water.
+  5 Grand Prix: a RIVAL pal to beat, everything mixed; a stadium.
+  Also later: obstacles. Its song: see "Music prompts".
 - The other launch games onto levels and worlds (Paper Sumo, Pipe Dream / RC car, Top Spin, Tummy
   Tunes), each world with its own look and new mechanic, prizes from where they belong.
 - The other 3 boosts (Focus, Sturdy, Lucky) in the games (boost table in Drinks).

@@ -39,24 +39,42 @@ const LAYER_UP := 2.5                 # each slice this much higher (mat px)
 const LAPS := 3
 const STEP := 8.0                     # centre-line points, every STEP px
 const SEED_TRIES := 30
-const PAR_SLACK := 1.15               # par time = a clean drive's time x this, + PAR_PLUS
-const PAR_PLUS := 2.0
+const PAR_SLACK := 1.03               # par time = a clean drive's time x this, + PAR_PLUS: the
+const PAR_PLUS := 1.0                 # 2nd star only for a near-perfect run (no curbs, clean lines)
+const CURB_TOUCH := 26.0              # the car's body on the curb (this close to the road's edge)...
+const CURB_SLOW := 0.72               # ...slows it to this
+const BOOST := 0.6                    # a boost pad: this much faster...
+const BOOST_TIME := 1.4               # ...fading out over this long
+const PAD_LEN := 64.0                 # a pad's length along the road (mat px)
+const PAD_SAVES := 0.35               # (par: seconds a pad saves, each lap)
 const COUNTDOWN := 3
 ## The view under the HUD (play-area px) and the HUD's band above it
 const VIEW := Rect2(27, 92, 896, 830)
 const HUD_BAND := Rect2(27, 26, 896, 66)
 
-const WORLDS := ["Playroom"]
-## The 9 Playroom circuits: [grid columns, rows, squares in the patch, road half-width px, a fixed
-## shape or null, corners wanted]. The first ones are fixed shapes, long straights and few turns:
+const WORLDS := ["Playroom", "Kitchen"]
+## What each world brings, said on its first level
+const WORLD_HINTS := ["", "speed boosts!"]
+## Each world's page in the level menu
+const WORLD_BACKDROPS := [Color8(226, 170, 140), Color8(196, 214, 200)]
+## The circuits, 9 per world: [grid columns, rows, squares in the patch, road half-width px, a fixed
+## shape or null, corners wanted, boost pads]. The first ones are fixed shapes, long straights and few turns:
 ## an oval, an L, a U (its first hairpin); then grown patches, each level a bigger patch and more
 ## corners (the patch closest to that many), so the circuits get longer and twistier step by step.
 const LEVELS := [
-	[6, 2, 0, 100.0, [Rect2i(0, 0, 6, 2)], 0],
-	[6, 4, 0, 98.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2)], 0],
-	[6, 4, 0, 96.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2), Rect2i(4, 2, 2, 2)], 0],
-	[8, 4, 14, 94.0, null, 10], [8, 5, 16, 90.0, null, 12], [9, 5, 18, 88.0, null, 14],
-	[9, 6, 21, 84.0, null, 16], [10, 6, 24, 80.0, null, 20], [10, 7, 28, 76.0, null, 99],
+	# 1 Playroom: the basics
+	[6, 2, 0, 100.0, [Rect2i(0, 0, 6, 2)], 0, 0],
+	[6, 4, 0, 98.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2)], 0, 0],
+	[6, 4, 0, 96.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2), Rect2i(4, 2, 2, 2)], 0, 0],
+	[8, 4, 14, 94.0, null, 10, 0], [8, 5, 16, 90.0, null, 12, 0], [9, 5, 18, 88.0, null, 14, 0],
+	[9, 6, 21, 84.0, null, 16, 0], [10, 6, 24, 80.0, null, 20, 0], [10, 7, 28, 76.0, null, 99, 0],
+	# 2 Kitchen: speed boosts on the straights (a boosted car takes the next turn wider: brake by
+	# turning early); it starts gentle again, an oval and an L, with pads to learn them
+	[7, 2, 0, 96.0, [Rect2i(0, 0, 7, 2)], 0, 2],
+	[7, 4, 0, 94.0, [Rect2i(0, 0, 7, 2), Rect2i(0, 2, 2, 2)], 0, 3],
+	[8, 4, 14, 92.0, null, 10, 2], [8, 5, 16, 90.0, null, 12, 3], [9, 5, 18, 88.0, null, 14, 3],
+	[9, 6, 21, 84.0, null, 16, 3], [10, 6, 24, 82.0, null, 18, 4], [10, 7, 27, 78.0, null, 20, 4],
+	[11, 7, 30, 76.0, null, 99, 5],
 ]
 
 # --- the Playroom's look (the Tilt Maze rules: hard pixels, a 2 px dark outline, top-left light) ---
@@ -65,6 +83,10 @@ const ROAD := [Color8(112, 108, 118), Color8(100, 96, 106)]
 const LINE := Color8(244, 240, 226)
 const CURB := [Color8(226, 70, 64), Color8(246, 242, 232)]
 const OUTLINE := Color8(40, 34, 44)
+const PAD := [Color8(252, 210, 64), Color8(226, 150, 40), Color8(70, 64, 78)]    # chevrons, their edge, the plate
+const TILES := [Color8(242, 234, 216), Color8(206, 226, 214), Color8(196, 188, 172)]  # the kitchen: cream, mint, grout
+const BLOCKS := [[Color8(232, 84, 72), Color8(176, 52, 48)], [Color8(84, 150, 226), Color8(52, 104, 176)],
+	[Color8(250, 210, 80), Color8(206, 158, 44)], [Color8(120, 200, 110), Color8(70, 146, 70)]]
 const SIDE := [Color8(236, 150, 64), Color8(198, 110, 44), Color8(150, 78, 34)]    # the track's orange plastic side
 const BLOCK := [Color8(246, 214, 92), Color8(206, 168, 60)]                          # the yellow toy blocks under it
 const MAT_EDGE := [Color8(214, 160, 100), Color8(132, 84, 48), Color8(74, 44, 32)]   # a wooden frame
@@ -73,6 +95,11 @@ enum State { WAIT, DRIVE, FALL, DONE }
 
 var state := State.WAIT
 var level := 1
+var world_no := 0                      # which world (0 Playroom, 1 Kitchen...)
+var pads: Array = []                   # boost pads: [centre (mat px), direction along the road]
+var boost_t := 0.0                     # the boost left (1 = just hit a pad)
+var curb_t := 0.0                      # (the rumble's ticks)
+var _on_pad := false
 var half_w := 70.0
 var centre := PackedVector2Array()     # the circuit's centre line, mat px, closed, every ~STEP px
 var count := 0                         # its points
@@ -176,7 +203,10 @@ func level_pattern() -> Texture2D:
 	return load("res://textures/menus/pattern_trophy_terracotta.png")
 
 func level_backdrop() -> Color:
-	return Color8(226, 170, 140)
+	return WORLD_BACKDROPS[0]
+
+func world_backdrop(w: int) -> Color:
+	return WORLD_BACKDROPS[clampi(w, 0, WORLD_BACKDROPS.size() - 1)]
 
 func start_game() -> void:
 	super.start_game()
@@ -188,6 +218,7 @@ func play_level(n: int) -> void:
 
 func _begin(n: int) -> void:
 	level = clampi(n, 1, LEVELS.size())
+	world_no = (level - 1) / GameData.LEVELS_PER_WORLD
 	_build_circuit()
 	board.texture = ImageTexture.create_from_image(_paint())
 	track.texture = ImageTexture.create_from_image(track_image)
@@ -218,7 +249,17 @@ func _begin(n: int) -> void:
 	_place_car()
 	_follow(1.0)
 	_refresh_hud()
-	_show_banner("1-%d" % level, 0.8)
+	var k := (level - 1) % GameData.LEVELS_PER_WORLD
+	if k == 0:
+		_show_banner(WORLDS[world_no], 1.2)
+		if WORLD_HINTS[world_no] != "":
+			get_tree().create_timer(1.4).timeout.connect(func():
+				if is_running and level == n:
+					_show_banner(WORLD_HINTS[world_no], 1.2))
+	else:
+		_show_banner("%d-%d" % [world_no + 1, k + 1], 0.8)
+	boost_t = 0.0
+	curb_t = 0.0
 
 # ================================================================== THE CIRCUIT
 
@@ -278,6 +319,35 @@ func _build_circuit() -> void:
 	for i in count:
 		rolled.append(centre[(best_i + i) % count])
 	centre = rolled
+	_place_pads(spec[6])
+	par = ceilf(lap_length * LAPS / SPEED * PAR_SLACK + PAR_PLUS - pads.size() * LAPS * PAD_SAVES)
+
+## Boost pads in the middle of the longest straights (never on the start line)
+func _place_pads(n: int) -> void:
+	pads.clear()
+	if n <= 0:
+		return
+	var runs: Array = []                 # [length, middle index]
+	var run := 0
+	for i in range(1, count + 1):
+		var a := centre[(i - 1) % count]
+		var b := centre[i % count]
+		var c := centre[(i + 1) % count]
+		if absf((b - a).angle_to(c - b)) < 0.01:
+			run += 1
+		else:
+			if run >= 30:
+				runs.append([run, (i - run / 2) % count])
+			run = 0
+	runs.sort_custom(func(x, y): return x[0] > y[0])
+	for r in runs:
+		if pads.size() >= n:
+			break
+		var mid: int = r[1]
+		if mid < 20 or mid > count - 20:
+			mid = (mid + r[0] / 4) % count             # (off the start line)
+		var dir := (centre[(mid + 1) % count] - centre[mid]).normalized()
+		pads.append([centre[mid], dir])
 
 ## A patch of `n` grid squares grown from the middle, and its outline as corner points (grid
 ## coordinates, clockwise). No two squares may touch only at a corner (the outline would pinch)
@@ -427,6 +497,7 @@ func _paint() -> Image:
 					idx[i] = s
 	# two layers: the floor (the carpet, the frame, the track's shadow) and the raised track (the
 	# road, its curbs, its side face): a car falling off the far side drops between them
+	var deco := _decor(w, h, dist, hw)
 	var data := PackedByteArray()
 	data.resize(w * h * 4)
 	var top := PackedByteArray()
@@ -455,6 +526,16 @@ func _paint() -> Image:
 					col = LINE                                   # the dashed centre line
 				if idx[i] <= 2 or idx[i] >= count - 2:
 					col = Color8(30, 30, 34) if ((x / 2) + (y / 2)) % 2 else LINE   # the start / finish
+				for pd in pads:
+					var loc := Vector2(x + 0.5, y + 0.5) * PX - (pd[0] as Vector2)
+					var u := loc.dot(pd[1])
+					var v := loc.dot(Vector2(-pd[1].y, pd[1].x))
+					if absf(u) < PAD_LEN / 2.0 and absf(v) < half_w - 14.0:
+						# a boost pad: yellow chevrons pointing down the road on a dark plate
+						var ch := fposmod(u / PX - absf(v) / PX * 0.8, 8.0)
+						col = PAD[0] if ch < 3.0 else (PAD[1] if ch < 4.0 else PAD[2])
+						if absf(u) > PAD_LEN / 2.0 - PX or absf(v) > half_w - 14.0 - PX:
+							col = OUTLINE
 			elif d <= hw:
 				col = CURB[(idx[i] / 4) % 2]                     # red-and-white curbs
 			elif d <= hw + 2.0:
@@ -475,9 +556,7 @@ func _paint() -> Image:
 					col = OUTLINE
 				else:
 					on_track = false
-					col = CARPET[0] if (x + y * 2) % 5 else CARPET[1]
-					if (x * 7 + y * 3) % 23 == 0:
-						col = CARPET[2]
+					col = deco[i] if deco.has(i) else _floor_px(x, y)
 					var sx := x - 3
 					var sy := y - TRACK_SIDE - 3
 					if sx >= 0 and sy >= 0 and dist[sy * w + sx] <= hw + 2.0:
@@ -487,8 +566,8 @@ func _paint() -> Image:
 				top[k + 1] = col.g8
 				top[k + 2] = col.b8
 				top[k + 3] = 255
-				# (under the track the floor is just carpet)
-				col = CARPET[0] if (x + y * 2) % 5 else CARPET[1]
+				# (under the track the floor is just floor)
+				col = _floor_px(x, y)
 			data[k] = col.r8
 			data[k + 1] = col.g8
 			data[k + 2] = col.b8
@@ -496,6 +575,71 @@ func _paint() -> Image:
 			k += 4
 	track_image = Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, top)
 	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
+
+## The floor under the track, per world: the Playroom's carpet, the Kitchen's tiles
+func _floor_px(x: int, y: int) -> Color:
+	if world_no == 1:
+		var lx := x % 14
+		var ly := y % 14
+		if lx == 0 or ly == 0:
+			return TILES[2]                                  # grout
+		var c: Color = TILES[0] if ((x / 14) + (y / 14)) % 2 == 0 else TILES[1]
+		return c.lightened(0.12) if lx == 1 or ly == 1 else c  # a glazed edge, lit top-left
+	var col: Color = CARPET[0] if (x + y * 2) % 5 else CARPET[1]
+	if (x * 7 + y * 3) % 23 == 0:
+		col = CARPET[2]
+	return col
+
+## Things on the floor, away from the track: the Playroom's toy blocks (seen from above at the
+## track's angle: a lit top, a darker front face, outlined). {board px index: colour}
+func _decor(w: int, h: int, dist: PackedFloat32Array, hw: float) -> Dictionary:
+	var out := {}
+	if world_no != 0:
+		return out
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77 * level + 5
+	var placed: Array[Rect2i] = []
+	for t in int(w * h / 3000):
+		var size := 16
+		var r := Rect2i(rng.randi_range(EDGE + 3, w - EDGE - size - 3), rng.randi_range(EDGE + 3, h - EDGE - size - 10), size, size + 5)
+		var ok := true
+		for q in placed:
+			if q.grow(10).intersects(r):
+				ok = false
+		if not ok:
+			continue
+		for yy in range(r.position.y - 6, r.end.y + 8):
+			for xx in range(r.position.x - 6, r.end.x + 6):
+				if xx >= 0 and yy >= 0 and xx < w and yy < h and dist[yy * w + xx] <= hw + 12.0:
+					ok = false
+		if not ok:
+			continue
+		placed.append(r)
+		var pal: Array = BLOCKS[rng.randi() % BLOCKS.size()]
+		for yy in range(r.position.y, r.end.y):
+			for xx in range(r.position.x, r.end.x):
+				var lx := xx - r.position.x
+				var ly := yy - r.position.y
+				var c: Color
+				if lx == 0 or lx == size - 1 or ly == 0 or ly == r.size.y - 1 or ly == size - 1:
+					c = OUTLINE
+				elif ly < size - 1:
+					c = pal[0].lightened(0.2) if lx == 1 or ly == 1 else pal[0]   # its top
+					if lx >= 5 and lx <= 10 and ly >= 4 and ly <= 9 and (lx == 5 or lx == 10 or ly == 4 or ly == 9):
+						c = pal[1]                                   # a letter's square on it
+				else:
+					c = pal[1]                                       # its front face
+				out[yy * w + xx] = c
+		# its shadow on the floor (down-right)
+		for yy in range(r.position.y + 2, r.end.y + 2):
+			for xx in range(r.end.x, r.end.x + 2):
+				if xx < w and yy < h and not out.has(yy * w + xx):
+					out[yy * w + xx] = _floor_px(xx, yy).darkened(0.25)
+		for xx in range(r.position.x + 2, r.end.x + 2):
+			var yy := r.end.y
+			if xx < w and yy < h and not out.has(yy * w + xx):
+				out[yy * w + xx] = _floor_px(xx, yy).darkened(0.25)
+	return out
 
 ## A little red RC car seen from above, nose to the right: 22 x 16 px (x4), a seat in the middle
 static func car_texture() -> Texture2D:
@@ -863,8 +1007,30 @@ func _drive(delta: float) -> void:
 	race_time += delta
 	var turn := (1.0 if _held(1) else 0.0) - (1.0 if _held(0) else 0.0)
 	heading += turn * TURN * delta
-	car_pos += Vector2.from_angle(heading) * SPEED * delta
+	# on the curb: slowed down, rumbling; on a pad: a boost that fades
+	var from_mid := car_pos.distance_to(centre[near])
+	var v := SPEED * (1.0 + BOOST * boost_t)
+	if from_mid > half_w - CURB_TOUCH:
+		v *= CURB_SLOW
+		curb_t -= delta
+		if curb_t <= 0.0:
+			curb_t = 0.09
+			Input.vibrate_handheld(6)
+	var on := false
+	for pd in pads:
+		var loc: Vector2 = car_pos - pd[0]
+		if absf(loc.dot(pd[1])) < PAD_LEN / 2.0 + 6.0 and absf(loc.dot(Vector2(-pd[1].y, pd[1].x))) < half_w:
+			on = true
+	if on and not _on_pad:
+		boost_t = 1.0
+		_sfx("res://sounds/fx/rc_boost.wav", -8.0)
+		Input.vibrate_handheld(30)
+	_on_pad = on
+	boost_t = maxf(0.0, boost_t - delta / BOOST_TIME)
+	car_pos += Vector2.from_angle(heading) * v * delta
 	trail.add(car_pos, heading, delta)
+	if boost_t > 0.3:
+		trail.add(car_pos, heading, delta)                  # (more streaks while boosted)
 	_find_near()
 	if progress >= last_cp + count / CHECKPOINTS:
 		last_cp = floorf(progress / (count / CHECKPOINTS)) * (count / CHECKPOINTS)

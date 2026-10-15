@@ -6,6 +6,7 @@
     sounds/fx/rc_land.wav    ...and the toy landing on the floor: a plastic clatter and a bump
     sounds/fx/rc_beep.wav    the start lights: a short beep for each red light (3, 2, 1)
     sounds/fx/rc_go.wav      ...and a higher, longer one when they all turn green: GO
+    sounds/fx/rc_boost.wav   a boost pad: a rising whoosh
 
     <venv>/bin/python tools/audio/rc_sounds.py
 """
@@ -87,7 +88,20 @@ def beep(hz, dur):
     return x * env
 
 
+def boost():
+    """A boost pad: a rising whoosh (a sweep of noise and a chirp up)"""
+    n = int(SR * 0.6)
+    t = np.arange(n) / SR
+    f = 260.0 + 900.0 * (t / t[-1]) ** 1.5
+    phase = 2 * np.pi * np.cumsum(f) / SR
+    chirp = np.sign(np.sin(phase)) * 0.3 + np.sin(phase) * 0.5
+    noise = band(rng.standard_normal(n), 1500, 6000) * 0.35
+    env = np.minimum(1, t / 0.03) * (1 - t / t[-1]) ** 1.2
+    return (low(chirp, 3000) + noise) * env
+
+
 if __name__ == '__main__':
+    save('rc_boost.wav', boost())
     save('rc_beep.wav', beep(660.0, 0.22))
     save('rc_go.wav', beep(1320.0, 0.6))
     save('rc_motor.wav', motor(), peak=0.6, fade=False)
