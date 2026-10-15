@@ -26,11 +26,11 @@ const PX := 4                         # world px per board px (the games' chunky
 const CELL := 300.0                   # a grid square, world px (the road stays a square from itself)
 const EDGE := 10                      # the mat's wooden frame, board px
 const MARGIN := 24.0                  # road edge -> frame, world px
-const SPEED := 380.0                  # mat px/s, always
-const TURN := 4.2                     # rad/s while a button is held (a full turn in 1.5 s; turning
-                                      # circle ~90 px, inside the circuits' 150 px corners)
+const SPEED := 500.0                  # mat px/s, always
+const TURN := 5.4                     # rad/s while a button is held (a full turn in 1.2 s; turning
+                                      # circle ~93 px, inside the circuits' 150 px corners)
 const ZOOM := 1.5                     # the view, close up (board px shown 6 px)
-const LOOK_AHEAD := 200.0             # the view looks this far ahead of the car (mat px)
+const LOOK_AHEAD := 260.0             # the view looks this far ahead of the car (mat px)
 const FALL_AT := 6.0                  # past the road's edge by this much: off the track
 const CHECKPOINTS := 10               # per lap: where a fallen car is put back
 const TRACK_SIDE := 6                 # the raised track's side face, board px (seen from the south)
