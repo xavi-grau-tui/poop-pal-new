@@ -40,8 +40,9 @@ var intro_icon: Texture2D = null
 var intro_card: Control = null
 
 func _ready() -> void:
-	# a game with levels, played before: its level menu first (the first time: straight into level 1)
-	if uses_levels() and GameData.last_level(_game_index()) > 0:
+	# a game with levels: its level menu first, every time (for now also the first time; its
+	# how-to card shows when the first level starts)
+	if uses_levels():
 		is_running = false
 		open_level_menu()
 		return
@@ -103,6 +104,9 @@ func _on_level_chosen(action: String, level: int) -> void:
 		return
 	level_menu.close()
 	play_level(level)
+	if intro_text != "" and not GameData.intro_seen(_game_index()):
+		is_running = false
+		_show_intro()
 
 ## A level is over: `stars` 1-3 = cleared, 0 = not (time's up...). Records the stars (each new
 ## one is a coin) and shows the result card.
@@ -539,7 +543,7 @@ func show_coach(text: String, which := -1, small := "") -> void:
 		coach.size = Vector2(820, 150)
 		coach.position = Vector2((PLAY_WIDTH - coach.size.x) / 2.0, 96)
 		coach.pivot_offset = coach.size / 2.0
-		coach.z_index = 10
+		coach.z_index = 7                      # (over the game, under the console's frame)
 		add_child(coach)
 		var bg := NinePatchRect.new()
 		bg.texture = _label_frame_texture()

@@ -78,7 +78,10 @@ func setup(owner_game: BaseMinigame, index: int, names: Array, level_count: int,
 	font = load("res://fonts/pixChicago.ttf")
 	size = Vector2(W, H)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	z_index = 20
+	# above the game, but UNDER the console's frame (lifted to z 10+, MenuManager): the game
+	# area runs a little past the screen's window, and the frame must hide that margin (also
+	# while the screen slides away; at z 20 it showed as a stripe over the frame's left side)
+	z_index = 6
 	visible = false
 
 	# everything of the level grid lives in select_root (hidden under the result card)
@@ -258,9 +261,13 @@ func _refresh_selection() -> void:
 		cells[i].scale = Vector2.ONE * (1.07 if i == selection else 1.0)
 		cells[i].z_index = 1 if i == selection else 0
 	if selection < cells.size():
+		# inside the raised card, just within its border
 		var c := cells[selection]
-		ring.position = c.position - Vector2(22, 22)      # (round the raised card, not under it)
-		ring.size = c.size + Vector2(44, 44)
+		var k := c.scale.x
+		var shown := Rect2(c.position + c.size * (1.0 - k) / 2.0, c.size * k)
+		var r := shown.grow(-(7.0 * k + HoldFrame.W_DARK / 2.0))
+		ring.position = r.position
+		ring.size = r.size
 
 # ================================================================== RESULT
 
@@ -496,9 +503,9 @@ func _sfx(path: String, volume_db: float) -> void:
 ## top middle, apricot on a dark edge (like the menus' round hold rings, but the card's shape)
 class HoldFrame extends Control:
 	var value := 0.0
-	const R := 18.0                               # corner radius
-	const W_DARK := 14.0
-	const W_FILL := 8.0
+	const R := 8.0                                # corner radius (inside the card's own corners)
+	const W_DARK := 18.0
+	const W_FILL := 11.0
 
 	func set_value(v: float) -> void:
 		value = v
