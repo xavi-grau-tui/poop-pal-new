@@ -739,6 +739,11 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   then the four on hold at the end of the list (Pal Dash, Tile Break, Germ Zap, Flipper Belly).
   After the first two, the player chooses what to unlock next, so this is the suggested path.
   Locked games show as "?" cards with a hint.
+- RULE (user, 2026-10-15): prizes make sense where you win them. A special food or item comes from
+  the place or the rival it belongs to: Alien Goo in a Space level of Tilt Maze (built), the
+  Microchip after beating a robot in Paper Sumo, a Battery in the Factory, Kraken Brine from a sea
+  rival... Every game's rewards (vaults, boss bouts, gift tracks) follow this: the story of where it
+  came from is part of the prize.
 - Rule: no generic clones. A game stays only if it has its own twist; otherwise it's replaced.
 - "A toy box in a toy": the ones that work are digital versions of real physical toys, living inside
   the handheld and using its hardware (tilt, the two buttons, touch). But the toy is only the
