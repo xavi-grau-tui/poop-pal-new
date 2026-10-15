@@ -127,6 +127,18 @@ To build:
     repeating motif, Maintain consistent arrangement and level throughout, with subtle changes that
     preserve a seamless loop feel". Still too soft: "heroic" lead, or "fast pulsing arpeggios"
     (one change at a time).
+    The user liked the results, but the intro sounded too much like Top Spin's (Suno copies the
+    wording: that prompt reused Top Spin's opening sentence). Version with its own opening:
+    "Soft pixel chiptune racing game instrumental in a minor key, opens with a quick rising
+    pulse-wave arpeggio pickup like an engine revving, then drops straight into a syncopated,
+    climbing lead riff played on a thin 25% pulse-wave voice, fast driving eighth-note bassline,
+    tight punchy soft chiptune drums with a steady hi-hat and crisp snare on the backbeat, short
+    rising arpeggio runs between phrases like gear shifts, focused race-to-the-finish tension, the
+    core arrangement stays consistent with small melodic and rhythmic variations, 104 BPM, even
+    steady groove, narrow dynamics, warm rounded mix with warm prominent lows, compact soft-edged
+    sound, consistent level throughout, seamless loop-like ending". Rule for new tracks: describe a
+    different opening and lead voice, and never reuse another track's sentences. (Looping: the
+    revving pickup can play once, the loop starting on the riff's first beat.)
 
 - Drafts written by Claude (2026-10-08 / 10-15), not all used; references for new tracks:
   - Paper Sumo, a grander showdown (for a boss or final level): "Soft pixel chiptune game battle
