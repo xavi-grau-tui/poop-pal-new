@@ -13,7 +13,7 @@ var game_music_player: AudioStreamPlayer2D = null
 
 # Map page indices to minigame scene paths.
 var game_scenes := {
-	0: "res://scenes/minigames/rc_racer.tscn",               # RC Racer: Pipe Dream's rework (its card for now; pipe_dream.tscn kept)
+	0: "res://scenes/minigames/rc_racer.tscn",               # Pal Prix: Pipe Dream's rework (pipe_dream.tscn kept, unused)
 	1: "res://scenes/minigames/tilt_maze.tscn",
 	2: "res://scenes/minigames/splash_hoops.tscn",
 	3: "res://scenes/minigames/pal_dash.tscn",

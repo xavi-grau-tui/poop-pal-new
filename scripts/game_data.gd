@@ -30,7 +30,7 @@ const LAUNCH_GAMES := [2, 1, 9, 0, 8, 6]
 ## no "opens after Tilt Maze" gate). The prices follow the menu's easy -> hard order, so Tilt Maze
 ## (5) is the natural 2nd game and the last ones take a while (tools/design/pacing.py: about a new
 ## game a day in the first week for a regular player).
-const GAME_PRICE := { 1: 5, 9: 40, 0: 60, 8: 90, 6: 135 }   # Tilt Maze, Paper Sumo, Pipe Dream / RC car, Top Spin, Tummy Tunes
+const GAME_PRICE := { 1: 5, 9: 40, 0: 60, 8: 90, 6: 135 }   # Tilt Maze, Paper Sumo, Pal Prix (was Pipe Dream), Top Spin, Tummy Tunes
 
 ## Every game: worlds of LEVELS_PER_WORLD levels (one page of its level menu)
 const LEVELS_PER_WORLD := 9

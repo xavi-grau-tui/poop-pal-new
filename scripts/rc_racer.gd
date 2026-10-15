@@ -1,5 +1,5 @@
 extends BaseMinigame
-## RC Racer (Pipe Dream's rework, its card for now) — your pal rides a little RC car round a toy
+## Pal Prix (Pipe Dream's rework, on its card) — your pal rides a little RC car round a toy
 ## race track raised on blocks above the floor, seen from above at an angle and close up (Micro
 ## Machines). The car drives by itself at a fixed speed; hold ORANGE to turn left, FORWARD to turn
 ## right (all the way round: the circuits wind, double back and hairpin). Drive off the track and
@@ -132,10 +132,10 @@ func level_count() -> int:
 	return LEVELS.size()
 
 func level_pattern() -> Texture2D:
-	return load("res://textures/menus/pattern_pipe_brown.png")
+	return load("res://textures/menus/pattern_trophy_terracotta.png")
 
 func level_backdrop() -> Color:
-	return Color8(168, 140, 110)
+	return Color8(226, 170, 140)
 
 func start_game() -> void:
 	super.start_game()
