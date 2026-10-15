@@ -147,7 +147,35 @@ To build:
     runs between phrases like gear shifts, focused race-to-the-finish tension, the arrangement stays
     the same from start to end with small melodic and rhythmic variations, 104 BPM, even steady
     groove, narrow dynamics, warm rounded mix with warm prominent lows, compact soft-edged sound,
-    consistent level throughout, seamless loop-like ending" (the current one).
+    consistent level throughout, seamless loop-like ending" (also started the same way).
+    What fixed it: a different SOUND FAMILY in the prompt's first words (Suno anchors its opening
+    on the genre it reads first; every "Soft pixel chiptune ..." prompt opened alike). All three
+    gave very cool tracks (user, 2026-10-15):
+    A "16-bit FM synth arcade racing instrumental, YM2612 style, slap FM bass riff driving in
+      eighth notes, punchy FM brass stabs and a bright FM lead with a fast syncopated hook, crisp
+      sampled-style drums with a tight snare, minor key, 104 BPM, energetic and determined, the
+      arrangement stays the same from start to end with small variations, full-length track about
+      2 minutes 30 seconds with a long repeating form, narrow dynamics, warm rounded mix with warm
+      prominent lows, seamless loop-like ending"
+    B "Fast breakbeat chiptune racing instrumental, chopped drum break leading from the first bar,
+      deep rolling sub bass, a short stuttering pulse-wave hook answered by glittering arpeggios,
+      minor key, 112 BPM, urgent and focused, the arrangement stays the same from start to end
+      with small variations, narrow dynamics, compact warm mix, seamless loop-like ending"
+    C "Pixel surf rock racing instrumental, twangy chiptune guitar lead with fast tremolo picking,
+      galloping pulse-wave bass, driving snare on every beat, short organ-like square-wave stabs,
+      minor key, 108 BPM, thrilling chase mood, the arrangement stays the same from start to end
+      with small variations, narrow dynamics, warm rounded mix, seamless loop-like ending"
+    MIX (A + B + C, to try): "16-bit FM synth arcade racing instrumental with a pixel surf rock
+      twist, chopped breakbeat drums driving from the first bar with a tight snare, rolling slap FM
+      bass in eighth notes, twangy tremolo-picked chiptune guitar lead playing a fast syncopated
+      hook, punchy FM brass stabs answering it, short glittering arpeggio runs between phrases,
+      minor key, 108 BPM, thrilling and determined chase mood, the arrangement stays the same from
+      start to end with small variations, full-length track about 2 minutes 30 seconds with a long
+      repeating form, narrow dynamics, warm rounded mix with warm prominent lows, seamless
+      loop-like ending"
+    Length: at least 2 minutes (user). Say it in the prompt, add sections in Suno's lyrics box
+    ([Instrumental] [Main Riff] [Variation] [Main Riff] [Breakdown: bass and drums] [Main Riff]
+    [Variation] [Main Riff], no [Intro]), or Extend the one you like.
 
 - Drafts written by Claude (2026-10-08 / 10-15), not all used; references for new tracks:
   - Paper Sumo, a grander showdown (for a boss or final level): "Soft pixel chiptune game battle
