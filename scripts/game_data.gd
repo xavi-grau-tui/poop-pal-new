@@ -157,8 +157,10 @@ func level_stars(game_index: int, level: int) -> int:
 		return 0
 	return int(games[game_index]["levels"].get(level, 0))
 
-## Level 1 is always open; any other once the one before it is cleared
+## Level 1 is always open; any other once the one before it is cleared (STRAIGHT TO GAMES: all)
 func level_open(game_index: int, level: int) -> bool:
+	if DevLaunch.all_open:
+		return true                                  # (STRAIGHT TO GAMES: every level, for testing)
 	return level <= 1 or level_stars(game_index, level - 1) > 0
 
 ## A level was cleared with `stars` (1-3). Keeps the best, and each NEW star is a coin.
