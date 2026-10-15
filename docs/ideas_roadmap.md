@@ -70,7 +70,7 @@ To build:
   an oval, an L, a U, then grown patches, longer and twistier). Next, per world (user): a
   background under the raised track (the Playroom's carpet; clouds = a sky track, water = a lagoon
   track...), and in the harder worlds obstacles, a rival pal to beat, speed boosts (Mario Kart
-  style). Name: "Pal Prix" proposed. Its own song (prompt drafted 2026-10-15).
+  style). Named Pal Prix (2026-10-15). Its song: see "Music prompts".
 - The other launch games onto levels and worlds (Paper Sumo, Pipe Dream / RC car, Top Spin, Tummy
   Tunes), each world with its own look and new mechanic, prizes from where they belong.
 - The other 3 boosts (Focus, Sturdy, Lucky) in the games (boost table in Drinks).
@@ -79,6 +79,29 @@ To build:
   (now only for the launch), a generator for more cases (the Melon Soda rules kept in
   tools/art/case_melon*.py, to generalise).
 - The booklet; Japanese localisation; the art pass (mutants, legends, hunger faces).
+
+## Music prompts (Suno; the templates that worked)
+- Menus / main screen (2026-10-08, liked a lot): "Lo-fi kawaii meets bubbly ambient, soft dusty
+  drums, kalimba and music box melody, water-bubble plucks, warm Rhodes chords, squishy bass, cozy
+  cute game menu music, 78 BPM, steady soft groove, narrow dynamic range, loopable, no intro, no
+  outro, gentle repeating arrangement with subtle variations, warm rounded mix, even level
+  throughout". Not liked: classic MIDI chiptune, city pop, toy-box acoustic, Animal Crossing style.
+- Minigames (2026-10-08, Top Spin's "Square Wave Battle"): "Soft pixel chiptune game battle
+  instrumental in a minor key, reduced-note square-wave lead playing a sparse, understated motif
+  with lower prominence in the mix, steady driving pulse-wave bassline, tight soft chiptune drums
+  and crisp wooden woodblock accents, Light warm arpeggios gradually add tension while the core
+  arrangement stays consistent with small melodic and rhythmic variations, 100 BPM, even steady
+  groove, narrow dynamics, warm rounded mix, seamless loop-like ending". Keep games at 88-104 BPM
+  (118 BPM was too fast), only a light touch of each game's flavour.
+- In use: Top Spin "Pixel Battle" (100 BPM), Paper Sumo "Pixel Sumo" (93.75), Splash Hoops "Light
+  Through Water" (82, "dreamy underwater"). Suno misses the BPM: measure it, then loop (see the
+  music notes: trim on the last bar line, OGG, loop_offset on the first beat).
+- Pal Prix (2026-10-15, to generate): "Soft pixel chiptune racing game instrumental in a bright
+  major key, reduced-note square-wave lead playing a sparse, playful motif with lower prominence in
+  the mix, bouncy driving pulse-wave bassline, tight soft chiptune drums with light hi-hat shuffle
+  and crisp toy-clap accents, quick light arpeggios that give a sense of speed while the core
+  arrangement stays consistent with small melodic and rhythmic variations, cheerful toy-race feel,
+  102 BPM, even steady groove, narrow dynamics, warm rounded mix, seamless loop-like ending".
 
 ## Boost-gated prizes (PROPOSED 2026-10-15, to confirm)
 Every boost opens its own kind of hidden thing, and what's inside belongs to where it's found
