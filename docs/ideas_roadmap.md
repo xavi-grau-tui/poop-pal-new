@@ -126,6 +126,35 @@ To build:
     repeating motif, Maintain consistent arrangement and level throughout, with subtle changes that
     preserve a seamless loop feel"
 
+- Drafts written by Claude (2026-10-08 / 10-15), not all used; references for new tracks:
+  - Paper Sumo, a grander showdown (for a boss or final level): "Soft pixel chiptune game battle
+    instrumental in a minor key, reduced-note square-wave lead playing a proud, sparse motif with
+    lower prominence in the mix, heavy steady pulse-wave bassline, deep soft chiptune taiko-like
+    drums and crisp wooden clapper accents, light warm arpeggios build ceremonial tension while the
+    core arrangement stays consistent with small melodic and rhythmic variations, 88 BPM, even
+    steady groove, narrow dynamics, warm rounded mix, seamless loop-like ending"
+  - Tummy Tunes (rhythm game: the beat must stay steady): "Soft pixel chiptune rhythm game
+    instrumental in a major key, toy xylophone and square-wave melody with a clear catchy but simple
+    motif, steady pulse-wave bassline, soft but clearly audible chiptune kick and snare on every
+    beat, light warm arpeggios, the arrangement stays consistent with small variations, constant 96
+    BPM with no tempo changes, even steady groove, narrow dynamics, warm rounded mix, seamless
+    loop-like ending"
+  - Tilt Maze / a calm puzzle game: "Lo-fi kawaii meets bubbly ambient, soft pixel chiptune bells,
+    ceramic marimba, dripping-tap percussion, water-bubble plucks, warm Rhodes chords, squishy bass,
+    curious calm puzzle music, 82 BPM, steady soft groove, narrow dynamic range, loopable, no intro,
+    no outro, gentle repeating arrangement with subtle variations, warm rounded mix, even level
+    throughout"
+  - Motion (was for Flipper Belly or a racer; an alternative for Pal Prix): "Soft pixel chiptune
+    game instrumental with a gentle sense of motion, reduced-note square-wave lead playing a sparse,
+    light motif with lower prominence in the mix, steady rolling pulse-wave bassline, tight soft
+    chiptune drums, water-bubble plucks, light warm arpeggios keep it moving while the core
+    arrangement stays consistent with small melodic and rhythmic variations, 100 BPM, even steady
+    groove, narrow dynamics, warm rounded mix, seamless loop-like ending"
+  - Earlier versions of the used ones (Top Spin "Retro handheld battle theme...", Paper Sumo "with
+    playful tension...", Splash Hoops "with an underwater feel, 90 BPM...", and the first minigame
+    template "...reduced-note square-wave lead playing a sparse, understated motif..."): superseded
+    by the build prompts above.
+
 ## Boost-gated prizes (PROPOSED 2026-10-15, to confirm)
 Every boost opens its own kind of hidden thing, and what's inside belongs to where it's found
 (the rule: prizes come from where they belong). In Tilt Maze:
