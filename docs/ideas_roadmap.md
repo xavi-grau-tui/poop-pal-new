@@ -115,16 +115,18 @@ To build:
     bass, and light brushed percussion, A few quiet pixel chiptune notes sit low in the mix, Keep
     the core arrangement consistent with small variations, narrow dynamics, a warm rounded mix, and
     a seamless loop-like ending"
-  - PAL PRIX (2026-10-15, to generate; built on Top Spin's): "Soft pixel chiptune racing game
-    instrumental in a bright major key, upbeat square-wave lead carrying a catchy, concise repeating
-    motif from the first beat, rolling pulse-wave bassline that pushes forward like an engine, tight
-    soft chiptune drums with a light shuffled hi-hat and crisp toy-clap accents, quick light
-    arpeggios rising like gear shifts give a sense of speed while the core arrangement stays
-    consistent with small melodic and rhythmic variations, playful toy-race feel, 100 BPM, even
-    steady groove, narrow dynamics, warm rounded mix, seamless loop-like ending, Keep the low
+  - PAL PRIX (2026-10-15, to generate; built on Top Spin's, intense: the first, bright-major
+    version sounded too kawaii): "Soft pixel chiptune racing game battle instrumental in a minor
+    key, determined square-wave lead carrying a concise, urgent repeating motif from the first
+    beat, fast driving pulse-wave bassline in steady eighth notes like a revving engine, tight
+    punchy soft chiptune drums with a steady hi-hat and crisp snare on the backbeat, Light warm
+    arpeggios rise and build competitive tension like gear shifts while the core arrangement stays
+    consistent with small melodic and rhythmic variations, focused race-to-the-finish mood, 104 BPM,
+    even steady groove, narrow dynamics, warm rounded mix, seamless loop-like ending, Keep the low
     frequencies warm and prominent, with a compact, soft-edged mix and an immediate start on the
     repeating motif, Maintain consistent arrangement and level throughout, with subtle changes that
-    preserve a seamless loop feel"
+    preserve a seamless loop feel". Still too soft: "heroic" lead, or "fast pulsing arpeggios"
+    (one change at a time).
 
 - Drafts written by Claude (2026-10-08 / 10-15), not all used; references for new tracks:
   - Paper Sumo, a grander showdown (for a boss or final level): "Soft pixel chiptune game battle
