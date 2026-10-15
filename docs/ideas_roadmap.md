@@ -60,6 +60,8 @@ To decide:
 - Menu legend: an arrow down instead of "next" in every menu except the Pal Pedia ("next pal");
   the Pedia's FORWARD (next family) next to dots that are its pages (confusing).
 - Teaching the logo double-tap turn (see Onboarding: the logo's tap-tap pulse etc.).
+- The game order (user, 2026-10-15): RC Racer and Top Spin feel the "coolest"; maybe one of them
+  should be the 3rd game (now Paper Sumo). Later.
 To build:
 - Tilt Maze: tune physics and par times on the phone; the vaults of the other boosts once they
   exist (see "Boost-gated prizes"); the world map showing vaults; a tutorial per world's thing.

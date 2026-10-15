@@ -35,7 +35,7 @@ const GAME_PRICE := { 1: 5, 9: 40, 0: 60, 8: 90, 6: 135 }   # Tilt Maze, Paper S
 ## Every game: worlds of LEVELS_PER_WORLD levels (one page of its level menu)
 const LEVELS_PER_WORLD := 9
 ## The games that already have their level menu, and how many levels (5 worlds = 45 at launch)
-const LEVEL_COUNTS := { 2: 45, 1: 54 }
+const LEVEL_COUNTS := { 2: 45, 1: 54, 0: 9 }
 
 var coins := 0
 
