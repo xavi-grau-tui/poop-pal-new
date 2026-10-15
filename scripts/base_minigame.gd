@@ -170,7 +170,7 @@ func _show_intro() -> void:
 	var text := Label.new()
 	text.text = intro_text
 	text.position = Vector2(40, 40)
-	text.size = Vector2(card.size.x - 80, 150)
+	text.size = Vector2(card.size.x - 80, 150 if intro_controls.is_empty() else 100)
 	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -180,10 +180,24 @@ func _show_intro() -> void:
 	text.add_theme_color_override("font_color", Color8(92, 60, 44))
 	card.add_child(text)
 	if not intro_controls.is_empty():              # the buttons themselves, each with its word
+		if intro_icon:                             # (and the icon above them, turning on the spot)
+			var spin := TextureRect.new()
+			spin.texture = intro_icon
+			spin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			spin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			spin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			spin.size = Vector2(110, 80)
+			spin.pivot_offset = spin.size / 2.0
+			spin.position = Vector2((card.size.x - spin.size.x) / 2.0, 140)
+			card.add_child(spin)
+			var turn := spin.create_tween().set_loops()
+			turn.tween_property(spin, "rotation", -0.9, 0.7).set_trans(Tween.TRANS_SINE)
+			turn.tween_property(spin, "rotation", 0.9, 1.4).set_trans(Tween.TRANS_SINE)
+			turn.tween_property(spin, "rotation", 0.0, 0.7).set_trans(Tween.TRANS_SINE)
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 46)
 		row.alignment = BoxContainer.ALIGNMENT_CENTER
-		row.position = Vector2(0, 205)
+		row.position = Vector2(0, 240 if intro_icon else 205)
 		row.size = Vector2(card.size.x, 80)
 		card.add_child(row)
 		for c in intro_controls:
