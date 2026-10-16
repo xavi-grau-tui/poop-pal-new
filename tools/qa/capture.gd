@@ -79,6 +79,8 @@ func _run() -> void:
 				g.level_menu.close()
 			g.play_level(lvl)
 			g.is_running = true
+			if "qa_autopilot" in g:
+				g.qa_autopilot = true
 		for k in shots:
 			await _wait(wait)
 			await _shot("g%s_l%02d%s" % [game, lvl, "" if shots == 1 else "_%d" % k])
