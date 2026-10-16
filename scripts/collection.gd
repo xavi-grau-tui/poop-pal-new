@@ -45,8 +45,9 @@ const CASES := {
 	"melon": { "name": "Melon Soda", "unlock": "100 stars in all" },
 	# the games' own cases: each one the prize of its masters' world finale (6-9)
 	"maze": { "name": "Labyrinth", "unlock": "Tilt Maze: 6-9" },
+	"splash": { "name": "Lagoon", "unlock": "Splash Hoops: 6-9" },
 }
-const CASE_ORDER := ["melon", "maze"]
+const CASE_ORDER := ["melon", "maze", "splash"]
 
 ## Themed stickers (won only: secrets, gift tracks, Lucky Pinch): textures/cases/stickers/<id>.png
 ## (+ book/<id>.png). The pal stickers (one per Sho and Chu) are PAL_STICKERS.

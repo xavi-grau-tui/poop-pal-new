@@ -11,7 +11,15 @@ extends BaseMinigame
 ## balls, baskets and bubbles; the level menu's page in its colour) and brings in one new thing:
 ## 1 Morning Lagoon (the pumps, one by one) · 2 Sunset Drift (drifting baskets) · 3 Pufferfish
 ## Reef (the pufferfish) · 4 Night Lights (baskets going round; balls and baskets glow) · 5 Storm
-## (the storm current: gusts push everything sideways; rain, lightning).
+## (the storm current: gusts push everything sideways; rain, lightning) · 6 Deep Sea, the masters'
+## world (almost dark: you see what your pal's glow and the anglerfish's lure light; the lure
+## pulls the balls towards its jaws; from its 7th level the storm's gusts too).
+##
+## No points: the baskets are the level's progress (the HUD's tray: one icon per basket, gold once
+## it's filled). Drinks: a SPLASH pal gets a second chance (+10 s when the clock runs out, +15 /
+## +20 with a stronger watery drink; once), a FIZZY pal's jets are stronger for a level (and only
+## they throw a ball through a world's golden hoop), a LUCKY pal opens the chest on the sand.
+## Secrets (BaseMinigame): the golden hoop (fizzy) and the chest (fruity), on a world's 6th level.
 ##
 ## Main button: LEFT pump. Forward button: RIGHT pump. Both work the same way:
 ## hold to keep pumping (a pump runs dry after a moment), release to stop.
@@ -89,10 +97,10 @@ const STAGE_TITLES := {
 ## ("still" / "sway"; drift, orbit and wheel always move), speed, seconds, pufferfish]
 ## World 1 Morning Lagoon: the pumps, one by one (two 100s, then the 200s, then the 300 with both
 ## pumps), then a gentle sway · 2 Sunset Drift · 3 Pufferfish Reef · 4 Night Lights · 5 Storm.
-const WORLDS := ["Morning Lagoon", "Sunset Drift", "Pufferfish Reef", "Night Lights", "Storm"]
+const WORLDS := ["Morning Lagoon", "Sunset Drift", "Pufferfish Reef", "Night Lights", "Storm", "Deep Sea"]
 ## What each world brings, said on its first level under its name (the pufferfish says it when it
 ## first swims in)
-const WORLD_HINTS := ["", "the baskets drift!", "", "the baskets go round!", "gusts push everything!"]
+const WORLD_HINTS := ["", "the baskets drift!", "", "the baskets go round!", "gusts push everything!", "only light shows the way!"]
 const LEVELS := [
 	["classic", [3, 4], "still", 1.0, 30, false], ["classic", [0, 2, 3, 4], "still", 1.0, 45, false],
 	["classic", null, "still", 1.0, 60, false], ["triangle", null, "still", 1.0, 70, false],
@@ -123,7 +131,28 @@ const LEVELS := [
 	["wheel", null, "", 1.6, 55, false], ["drift", null, "", 1.7, 55, true],
 	["orbit", null, "", 1.7, 55, true], ["wheel", null, "", 1.8, 55, true],
 	["triangle", null, "sway", 1.9, 60, true],
+	# 6 Deep Sea (the masters' world): dark, the anglerfish in every level, the gusts from the 7th
+	["classic", null, "sway", 1.2, 65, true], ["triangle", null, "sway", 1.3, 70, true],
+	["drift", null, "", 1.4, 65, true], ["orbit", null, "", 1.4, 65, true],
+	["wheel", null, "", 1.5, 65, true], ["classic", null, "sway", 1.6, 65, true],
+	["drift", null, "", 1.6, 65, true], ["orbit", null, "", 1.7, 65, true],
+	["wheel", null, "", 1.8, 70, true],
 ]
+## Secrets (a world's 6th level): the golden hoop high up (only fizzy jets throw a ball through
+## it) and the chest on the sand (a lucky pal opens it); finales: Kraken Brine (5-9), the case (6-9)
+const SECRETS := {
+	15: ["fizzy", "sticker:starfish"], 24: ["fruity", "decor:seaweed"], 33: ["fizzy", "sticker:pufferfish"],
+	42: ["fruity", "sticker:anchor"], 51: ["fizzy", "sticker:anglerfish"],
+}
+const FINALES := { 45: "food:Kraken Brine", 54: "case:splash" }
+const HOOP_AT := Vector2(150, 236)      # the golden hoop (higher with the gate's level)
+const HOOP_R := 26.0
+const CHEST_X := 475.0                  # the chest: half buried on the sand between the pumps
+## The anglerfish (Deep Sea): its lure pulls the balls near it towards its jaws
+const LURE_PULL := 330.0
+const LURE_REACH := 190.0
+const LIGHT_PAL := 170.0                # how far your pal's glow reaches (the deep)
+const LIGHT_LURE := 220.0
 ## Stars: 1 = cleared, 2 = with at least STAR_2 of the time left, 3 = with STAR_3 (tune on the phone)
 const STAR_2 := 0.2
 const STAR_3 := 0.45
@@ -167,8 +196,13 @@ var diver := {}                         # the pal: { pos, vel, node, r }: floats
 var cups: Array[Dictionary] = []        # { pos, home, rim, full, points, net, rim_node, label }
 var bubbles: Array[Dictionary] = []
 var puffer := {}                        # { node, pos, dir, state: off/away/swim/flee, eaten, timer, base_y, phase }
-var coin_label: Label
 var hud_stars: Array[TextureRect] = []  # the three stars still possible (dim as the clock passes them)
+var tray: Array[TextureRect] = []       # the HUD's baskets: one per basket, gold once it's filled
+var boost_icon: TextureRect             # the pal's boost, if it does something here
+var fizz_power := 0                     # this level's fizzy jets (the boost's level, 0 = none)
+var splash_used := false                # the second chance, once a level
+var secret := {}                        # this level's secret: { gate, lvl, prize, taken, node }
+var dark_layer: ColorRect               # the deep: darkness with the lights' holes in it
 var _stars_left := 3
 
 var tex := {}
@@ -189,7 +223,6 @@ var diver_layer: Node2D                 # the diver: over the baskets (it rests 
 var bubble_layer: Node2D
 var hud_level: Label
 var hud_time: Label
-var score_label: Label
 var banner: Label
 var rng := RandomNumberGenerator.new()
 var _key_jets := [false, false]
@@ -208,6 +241,8 @@ func _ready() -> void:
 	tex["diver"] = SplashArt.diver(pal_art)
 	tex["puffer"] = SplashArt.puffer(false)
 	tex["puffer_puffed"] = SplashArt.puffer(true)
+	tex["angler"] = SplashArt.angler()
+	tex["lure"] = SplashArt.angler_lure()
 	tex["coin"] = SplashArt.coin()
 	GameData.coins_changed.connect(func(_c): _refresh_coins())
 	_create_static_nodes()
@@ -234,7 +269,17 @@ func level_backdrop() -> Color:
 func world_backdrop(w: int) -> Color:
 	return SplashArt.THEMES[clampi(w, 0, SplashArt.THEMES.size() - 1)]["menu"]
 
-## Which world this level is in (0-4)
+## The golden hoops and chests as BaseMinigame secrets; the finales' prizes
+func secrets() -> Dictionary:
+	var out := {}
+	for lvl in SECRETS:
+		out[lvl] = { "gate": SECRETS[lvl][0], "lvl": 1 + clampi((lvl - 1) / GameData.LEVELS_PER_WORLD, 0, 5) / 2, "prize": SECRETS[lvl][1] }
+	return out
+
+func finale_prizes() -> Dictionary:
+	return FINALES
+
+## Which world this level is in (0-5)
 func _world() -> int:
 	return clampi((level - 1) / GameData.LEVELS_PER_WORLD, 0, SplashArt.THEMES.size() - 1)
 
@@ -330,6 +375,12 @@ func _build_level() -> void:
 	calibrate_tilt()                                 # (however the phone is held now = level)
 	var per := GameData.LEVELS_PER_WORLD
 	hud_level.text = "%d-%d" % [(level - 1) / per + 1, (level - 1) % per + 1]
+	fizz_power = PetState.boost_power("fizz")
+	splash_used = false
+	_build_tray()
+	_refresh_boost_icon()
+	_place_secret()
+	dark_layer.visible = theme.get("dark", false)
 	_stars_left = 3
 	for s in hud_stars:
 		s.texture = UiArt.star(true)
@@ -433,6 +484,7 @@ func _make_cup(center: Vector2, points: int) -> Dictionary:
 	net_layer.add_child(rim)
 	var label := _make_label(center + Vector2(-45, -CUP_H / 2.0 - 34), Vector2(90, 30), 22, HORIZONTAL_ALIGNMENT_CENTER, theme["label"])
 	label.text = str(points)
+	label.visible = false                  # (no points: the baskets are just baskets)
 	return { "pos": center, "rim": center.y - CUP_H / 2.0 + 12.0, "full": false, "points": points, "net": net, "rim_node": rim, "label": label }
 
 # ================================================================== LOOP
@@ -448,12 +500,15 @@ func _process(delta: float) -> void:
 		_update_storm(delta)
 		time_left -= delta
 		_update_hud_stars()
-		if time_left <= 0.0:
+		if time_left <= 0.0 and _second_chance():
+			pass
+		elif time_left <= 0.0:
 			time_left = 0.0
 			_refresh_hud()
 			_time_up()
 			return
 		_update_puffer(delta)
+		_update_secret(delta)
 		# the baskets move in the same small steps as the balls (a basket rising past a ball in
 		# one big jump would miss the ball dropping in: see _collide_cups)
 		const STEPS := 4
@@ -468,6 +523,7 @@ func _process(delta: float) -> void:
 		diver["node"].position = diver["pos"]
 		var lean := clampf(diver["vel"].x / 600.0, -0.25, 0.25)
 		diver["node"].rotation = lerpf(diver["node"].rotation, lean, minf(1.0, delta * 6.0))
+	_update_dark()
 	_refresh_hud()
 
 ## Everything that floats: the balls, and the diving pal
@@ -505,15 +561,18 @@ func _update_jets(delta: float) -> void:
 func _jet_force(p: Vector2, v: Vector2) -> Vector2:
 	var f := Vector2.ZERO
 	var h := FLOOR_Y - p.y
+	# a fizzy pal's jets: stronger, and pushing higher up the tank (the boost's level)
+	var power := 1.0 + 0.22 * fizz_power
+	var jet_top := JET_TOP - 70.0 * fizz_power
 	# both pumps at once: the two currents meet in the middle of the tank
 	var both: float = minf(jets[0]["power"], jets[1]["power"])
 	if both > 0.01 and h > MEET_MIN_H:
 		f.x += both * (MEET_PULL * (CENTER_X - p.x) - MEET_DAMP * v.x)
 		var cx := (p.x - CENTER_X) / MEET_WIDTH
 		f.y -= both * MEET_LIFT * exp(-cx * cx)
-	if p.y < JET_TOP:
+	if p.y < jet_top:
 		return f
-	var fade := clampf((p.y - JET_TOP) / 60.0, 0.0, 1.0)     # soft edge at mid-screen
+	var fade := clampf((p.y - jet_top) / 60.0, 0.0, 1.0)     # soft edge at mid-screen
 	for j in jets:
 		if j["power"] <= 0.01:
 			continue
@@ -523,7 +582,7 @@ func _jet_force(p: Vector2, v: Vector2) -> Vector2:
 		# straight up at the nozzle, fanning out a little higher up
 		var fan := clampf((h - 120.0) / 250.0, 0.0, 1.0)
 		fan *= 1.0 - both                                       # meeting currents cancel the fan
-		f += Vector2((signf(dx) * 0.3 + randf_range(-0.2, 0.2)) * fan, -1.0) * JET_FORCE * k
+		f += Vector2((signf(dx) * 0.3 + randf_range(-0.2, 0.2)) * fan, -1.0) * JET_FORCE * k * power
 	return f
 
 func _physics(dt: float) -> void:
@@ -536,6 +595,8 @@ func _physics(dt: float) -> void:
 		v.y += GRAVITY * dt
 		v.x += clampf(tilt * 2.0, -1.0, 1.0) * TILT_PUSH * dt
 		v.x += gust * dt                                       # (the storm's current)
+		if not b.has("r"):
+			v += _lure_force(b["pos"]) * dt                    # (the deep: the lure's pull)
 		v += _jet_force(b["pos"], v) * dt
 		v *= maxf(0.0, 1.0 - DRAG * dt)
 		v = v.limit_length(MAX_SPEED)
@@ -647,9 +708,9 @@ func _fill_cup(_b: Dictionary, c: Dictionary) -> void:
 	tw.tween_property(c["rim_node"], "scale", Vector2(S * 1.15, S * 0.85), 0.08)
 	tw.tween_property(c["rim_node"], "scale", Vector2(S, S), 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	c["label"].modulate.a = 0.3
-	add_score(c["points"])
-	_float_text("+%d" % c["points"], c["pos"])
-	_sfx("res://sounds/fx/gamecoin.wav", -9.0)
+	var filled := cups.filter(func(q): return q["full"]).size()
+	_fill_tray(filled - 1)
+	_sfx("res://sounds/fx/gamecoin.wav", -9.0, 0.0, 1.0 + 0.12 * (filled - 1))
 	for q in cups:
 		if not q["full"]:
 			return
@@ -658,20 +719,19 @@ func _fill_cup(_b: Dictionary, c: Dictionary) -> void:
 func _level_clear() -> void:
 	state = State.CLEAR
 	var stars := _stars_now()
-	var bonus := int(time_left) * 5
-	if bonus > 0:
-		add_score(bonus)
-	_show_banner("Clear! +%d" % bonus, 1.1)
+	_show_banner("Clear!", 1.1)
 	await get_tree().create_timer(1.3).timeout
 	if not is_running:
 		return
 	_release_pumps()
-	finish_level(level, stars)                     # (the result card: stars, coins, NEXT / RETRY / LEVELS)
+	_spend_fizz()
+	finish_level(level, stars, time_left, false)  # (the result card; the time left = its record)
 
 ## The clock ran out before the last basket
 func _time_up() -> void:
 	state = State.CLEAR
 	_release_pumps()
+	_spend_fizz()
 	_play_error_sound()
 	finish_level(level, 0)
 
@@ -693,10 +753,9 @@ func _update_hud_stars() -> void:
 		t.tween_property(st, "scale", Vector2.ONE, 0.2)
 	_stars_left = now
 
-## The coin counter: the coins you have
+## (the coins show in the level menu and on the LCD)
 func _refresh_coins() -> void:
-	if coin_label:
-		coin_label.text = str(GameData.coins)
+	pass
 
 # ================================================================== THE PUFFERFISH
 
@@ -705,6 +764,8 @@ func _reset_puffer() -> void:
 		b["node"].queue_free()
 	puffer["eaten"] = []
 	puffer["node"].visible = false
+	puffer["kind"] = "angler" if _world() == 5 else "puffer"
+	(puffer["lure"] as Sprite2D).visible = puffer["kind"] == "angler"
 	puffer["state"] = "away" if _has_puffer() else "off"
 	puffer["timer"] = PUFFER_FIRST
 	puffer.erase("next_dir")                       # (a new level: it swims in from a random side)
@@ -723,16 +784,21 @@ func _update_puffer(delta: float) -> void:
 				puffer["pos"] = Vector2(-PUFFER_OFF if puffer["dir"] > 0 else PLAY_WIDTH + PUFFER_OFF, puffer["base_y"])
 				puffer["phase"] = 0.0
 				puffer["state"] = "swim"
-				n.texture = tex["puffer"]
+				n.texture = tex["angler"] if puffer["kind"] == "angler" else tex["puffer"]
 				n.visible = true
-				if not puffer.get("met", false) and GameData.level_stars(_game_index(), PUFFER_FROM) == 0:
+				if puffer["kind"] == "angler":
+					if not puffer.get("met_angler", false) and GameData.level_stars(_game_index(), 46) == 0:
+						puffer["met_angler"] = true
+						_show_banner("Anglerfish!", 1.0)
+						_float_text("its lure pulls the balls!", Vector2(PLAY_WIDTH / 2.0, PLAY_HEIGHT / 2.0 + 120), 380)
+				elif not puffer.get("met", false) and GameData.level_stars(_game_index(), PUFFER_FROM) == 0:
 					puffer["met"] = true
 					_show_banner("Pufferfish!", 1.0)
 					_float_text("bump it with your pal!", Vector2(PLAY_WIDTH / 2.0, PLAY_HEIGHT / 2.0 + 120), 340)
 		"swim":
 			puffer["phase"] += delta
 			var p: Vector2 = puffer["pos"]
-			p.x += puffer["dir"] * PUFFER_SPEED * _speed() * delta
+			p.x += puffer["dir"] * PUFFER_SPEED * _speed() * delta * (0.7 if puffer["kind"] == "angler" else 1.0)
 			p.y = puffer["base_y"] + sin(puffer["phase"] * 1.6) * 14.0
 			puffer["pos"] = p
 			if (p.x < -PUFFER_OFF and puffer["dir"] < 0) or (p.x > PLAY_WIDTH + PUFFER_OFF and puffer["dir"] > 0):
@@ -745,6 +811,7 @@ func _update_puffer(delta: float) -> void:
 				n.position = p
 				return
 			n.flip_h = puffer["dir"] > 0                               # (the art faces left)
+			_place_lure()
 			# a ball near its mouth: gulp
 			if puffer["eaten"].size() < PUFFER_MAX_EAT:
 				var mouth: Vector2 = p + Vector2(puffer["dir"] * 40.0, 6.0)
@@ -785,8 +852,9 @@ func _puffer_scare() -> void:
 	if absf(p.x - diver["pos"].x) > 4.0:
 		puffer["dir"] = signf(p.x - diver["pos"].x)              # away from the pal
 	var n: Sprite2D = puffer["node"]
-	n.texture = tex["puffer_puffed"]
+	n.texture = tex["angler"] if puffer["kind"] == "angler" else tex["puffer_puffed"]
 	n.flip_h = puffer["dir"] > 0
+	_place_lure()
 	for b in puffer["eaten"]:
 		b["pos"] = p + Vector2(rng.randf_range(-12, 12), rng.randf_range(-12, 12))
 		b["vel"] = Vector2(rng.randf_range(-220, 220), rng.randf_range(-320, -140))
@@ -823,6 +891,200 @@ func _update_bubbles(delta: float) -> void:
 			n.queue_free()
 			bubbles.remove_at(i)
 
+# ================================================================== THE DEEP (world 6)
+
+const DARK_SHADER := """
+shader_type canvas_item;
+uniform vec2 size = vec2(950.0, 844.0);
+uniform vec3 light_a = vec3(0.0);
+uniform vec3 light_b = vec3(0.0);
+void fragment() {
+	vec2 p = floor(UV * size / 3.0) * 3.0 + 1.5;
+	float la = light_a.z > 0.0 ? 1.0 - length(p - light_a.xy) / light_a.z : 0.0;
+	float lb = light_b.z > 0.0 ? 1.0 - length(p - light_b.xy) / light_b.z : 0.0;
+	float lit = clamp(max(la, lb) * 1.6, 0.0, 1.0);
+	lit = floor(lit * 4.0 + 0.5) / 4.0;
+	COLOR = vec4(0.01, 0.02, 0.05, 0.82 * (1.0 - lit));
+}
+"""
+
+## The anglerfish's lure, in front of its head (it follows the fish's facing)
+func _place_lure() -> void:
+	var lure: Sprite2D = puffer["lure"]
+	if not lure.visible:
+		return
+	var right: bool = puffer.get("dir", -1.0) > 0
+	lure.flip_h = right
+	lure.position = Vector2(10.0 if right else -10.0, -10.0)
+
+## Where the lure's bulb glows (world px), or null-ish (x < -500) when it's not there
+func _lure_pos() -> Vector2:
+	if puffer.get("kind", "") != "angler" or puffer.get("state", "") != "swim" or not (puffer["node"] as Sprite2D).visible:
+		return Vector2(-1000, -1000)
+	var right: bool = puffer.get("dir", -1.0) > 0
+	return puffer["pos"] + Vector2(84.0 if right else -84.0, -78.0)
+
+## The lure pulls the balls near it towards the anglerfish's jaws
+func _lure_force(p: Vector2) -> Vector2:
+	var lp := _lure_pos()
+	if lp.x < -500.0:
+		return Vector2.ZERO
+	var d := lp - p
+	var l := d.length()
+	if l > LURE_REACH or l < 1.0:
+		return Vector2.ZERO
+	return d / l * LURE_PULL * (1.0 - l / LURE_REACH)
+
+## The deep's darkness: lit round your pal and round the lure
+func _update_dark() -> void:
+	if not dark_layer or not dark_layer.visible:
+		return
+	var mat := dark_layer.material as ShaderMaterial
+	if not diver.is_empty():
+		mat.set_shader_parameter("light_a", Vector3(diver["pos"].x, diver["pos"].y - BAND_Y, LIGHT_PAL))
+	var lp := _lure_pos()
+	mat.set_shader_parameter("light_b", Vector3(lp.x, lp.y - BAND_Y, LIGHT_LURE) if lp.x > -500.0 else Vector3.ZERO)
+
+# ================================================================== SECRETS, BOOSTS, THE TRAY
+
+var _secret_hint_cd := 0.0
+
+## This level's secret, if it has one: the golden hoop up by the left wall (higher with its
+## level), or the chest half buried on the sand between the pumps, with the drink's sign
+func _place_secret() -> void:
+	if secret.has("node"):
+		(secret["node"] as Node).queue_free()
+	secret = secret_of(level)
+	if secret.is_empty():
+		return
+	var node := Node2D.new()
+	world.add_child(node)
+	secret["node"] = node
+	var lvl: int = secret["lvl"]
+	var spot := Vector2.ZERO
+	if secret["gate"] == "fizzy":
+		spot = HOOP_AT + Vector2(0, -26.0 * (lvl - 1))
+		var hoop := _sprite(SplashArt.golden_hoop(), spot)
+		node.add_child(hoop)
+		if secret["taken"]:
+			hoop.modulate = Color(1, 1, 1, 0.35)
+		else:
+			var t := hoop.create_tween().set_loops()
+			t.tween_property(hoop, "modulate", Color(1.3, 1.2, 0.9), 0.5)
+			t.tween_property(hoop, "modulate", Color.WHITE, 0.5)
+	else:
+		spot = Vector2(CHEST_X, floor_at(CHEST_X) - 14.0)
+		var chest := _sprite(TiltMazeArt.chest(secret["taken"]), spot)
+		node.add_child(chest)
+		secret["chest"] = chest
+	secret["pos"] = spot
+	var sign := _sprite(TiltMazeArt.sign_card(), spot + Vector2(62, -10))
+	node.add_child(sign)
+	var icon := Sprite2D.new()
+	icon.texture = gate_icon(secret["gate"], lvl)
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sign.add_child(icon)
+	sign.visible = not secret["taken"]
+
+func _update_secret(delta: float) -> void:
+	_secret_hint_cd = maxf(0.0, _secret_hint_cd - delta)
+	if secret.is_empty() or secret["taken"]:
+		return
+	var lvl: int = secret["lvl"]
+	if secret["gate"] == "fizzy":
+		for b in balls:
+			if b["pos"].distance_to(secret["pos"]) < HOOP_R - BALL_R * 0.4:
+				if gate_open("fizzy", lvl):
+					_win_secret()
+				elif _secret_hint_cd <= 0.0:
+					_secret_hint_cd = 3.0
+					_float_text("only fizzy jets reach it!", secret["pos"] + Vector2(120, 40), 340)
+				return
+	elif not diver.is_empty() and diver["pos"].distance_to(secret["pos"]) < DIVER_R + 34.0:
+		if gate_open("fruity", lvl):
+			(secret["chest"] as Sprite2D).texture = TiltMazeArt.chest(true)
+			_win_secret()
+		elif _secret_hint_cd <= 0.0:
+			_secret_hint_cd = 3.0
+			_float_text("locked! a lucky pal finds the key", secret["pos"] + Vector2(0, -60), 420)
+
+func _win_secret() -> void:
+	secret["taken"] = true
+	PetState.use_boost()
+	_refresh_boost_icon()
+	take_secret(level)
+	for i in 8:
+		var sp := _sprite(tex["bubble_small"], secret["pos"])
+		world.add_child(sp)
+		var t := sp.create_tween()
+		t.tween_property(sp, "position", secret["pos"] + Vector2.from_angle(TAU * i / 8.0) * 70.0, 0.4)
+		t.parallel().tween_property(sp, "modulate:a", 0.0, 0.45)
+		t.tween_callback(sp.queue_free)
+
+## A splashy pal's second chance: the clock refills once (+10 s, +15, +20 by the drink's level)
+func _second_chance() -> bool:
+	if splash_used or PetState.boost_power("splash") <= 0:
+		return false
+	splash_used = true
+	time_left = 5.0 + 5.0 * PetState.boost_power("splash")
+	PetState.use_boost()
+	_refresh_boost_icon()
+	_sfx("res://sounds/fx/water-pouring-98795.mp3", -10.0, 0.8)
+	_float_text("+%d s" % int(time_left), Vector2(PLAY_WIDTH / 2.0, 120), 200)
+	var wave := ColorRect.new()
+	wave.color = Color(0.62, 0.84, 0.98, 0.35)
+	wave.size = Vector2(220, PLAY_HEIGHT - BAND_Y)
+	wave.position = Vector2(-220, BAND_Y)
+	wave.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(wave)
+	var t := wave.create_tween()
+	t.tween_property(wave, "position:x", PLAY_WIDTH, 0.6)
+	t.tween_callback(wave.queue_free)
+	return true
+
+## The fizzy jets helped a whole level: that boost is used up when the level ends
+func _spend_fizz() -> void:
+	if fizz_power > 0 and PetState.boost == "fizz":
+		PetState.use_boost()
+	fizz_power = 0
+	_refresh_boost_icon()
+
+## The HUD's boost icon: only a boost that does something here (Splash, Fizz, Lucky)
+func _refresh_boost_icon() -> void:
+	if not boost_icon:
+		return
+	var b := PetState.boost
+	boost_icon.visible = b in ["splash", "fizz", "lucky"]
+	if boost_icon.visible:
+		boost_icon.texture = PetState.boost_icon(b)
+
+## The baskets' tray on the band's right: one empty basket per basket of the level
+func _build_tray() -> void:
+	for t in tray:
+		t.queue_free()
+	tray.clear()
+	var n := cups.size()
+	var rim: Color = theme["rim"][1]
+	for i in n:
+		var r := TextureRect.new()
+		r.texture = SplashArt.basket_icon(false, rim)
+		r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		r.size = Vector2(27, 24)
+		r.pivot_offset = r.size / 2.0
+		r.position = Vector2(PLAY_WIDTH - 40 - (n - i) * 31, 40)
+		add_child(r)
+		tray.append(r)
+
+func _fill_tray(i: int) -> void:
+	if i < 0 or i >= tray.size():
+		return
+	var r := tray[i]
+	r.texture = SplashArt.basket_icon(true, theme["rim"][1])
+	var t := create_tween()
+	t.tween_property(r, "scale", Vector2(1.5, 1.5), 0.08)
+	t.tween_property(r, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
 # ================================================================== NIGHT GLOW
 
 ## A soft halo behind a ball or a basket rim, added on (light), in the thing's own colour
@@ -851,7 +1113,7 @@ func _update_glows(delta: float) -> void:
 
 func _reset_storm() -> void:
 	storm = { "phase": "calm", "t": GUST_CALM * 0.6, "dir": 1.0 if rng.randf() < 0.5 else -1.0, "power": 0.0,
-		"on": _world() == 4, "flash_in": rng.randf_range(6.0, 10.0) }
+		"on": _world() == 4 or (_world() == 5 and (level - 1) % GameData.LEVELS_PER_WORLD >= 6), "flash_in": rng.randf_range(6.0, 10.0) }
 	for r in rain:
 		r["node"].queue_free()
 	rain.clear()
@@ -960,9 +1222,15 @@ func _create_static_nodes() -> void:
 	add_child(net_layer)
 	diver_layer = Node2D.new()
 	add_child(diver_layer)
-	puffer = { "node": _sprite(tex["puffer"], Vector2(-100, 0)), "state": "off", "eaten": [] }
+	puffer = { "node": _sprite(tex["puffer"], Vector2(-100, 0)), "state": "off", "eaten": [], "kind": "puffer" }
 	puffer["node"].scale = Vector2(PUFFER_S, PUFFER_S)
 	puffer["node"].visible = false
+	var lure := Sprite2D.new()                        # (the anglerfish's lure: a child, in art px)
+	lure.texture = tex["lure"]
+	lure.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	lure.visible = false
+	puffer["node"].add_child(lure)
+	puffer["lure"] = lure
 	diver_layer.add_child(puffer["node"])           # (under the diver, added later)
 	bubble_layer = Node2D.new()
 	add_child(bubble_layer)
@@ -973,11 +1241,26 @@ func _create_static_nodes() -> void:
 	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(flash)
 
+	# the deep's darkness: over the tank and everything in it, under the HUD (its band stays lit)
+	dark_layer = ColorRect.new()
+	dark_layer.position = Vector2(0, BAND_Y)
+	dark_layer.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT - BAND_Y)
+	dark_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sh := Shader.new()
+	sh.code = DARK_SHADER
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	dark_layer.material = mat
+	dark_layer.visible = false
+	add_child(dark_layer)
 	hud_level = _make_label(Vector2(40, 26), Vector2(160, 52), 38, HORIZONTAL_ALIGNMENT_LEFT, OUTLINE)
-	var coin_icon := _sprite(tex["coin"], Vector2(214, 52))
-	add_child(coin_icon)
-	coin_label = _make_label(Vector2(236, 26), Vector2(120, 52), 30, HORIZONTAL_ALIGNMENT_LEFT, OUTLINE)
-	_refresh_coins()
+	boost_icon = TextureRect.new()
+	boost_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	boost_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	boost_icon.size = Vector2(35, 45)
+	boost_icon.position = Vector2(170, 30)
+	boost_icon.visible = false
+	add_child(boost_icon)
 	hud_time = _make_label(Vector2(PLAY_WIDTH / 2 - 85, 26), Vector2(170, 52), 38, HORIZONTAL_ALIGNMENT_CENTER, OUTLINE)
 	# the three stars still possible, right of the clock
 	for k in 3:
@@ -990,17 +1273,7 @@ func _create_static_nodes() -> void:
 		st.position = Vector2(PLAY_WIDTH / 2 + 92 + k * 42, 32)
 		add_child(st)
 		hud_stars.append(st)
-	var frame := ColorRect.new()
-	frame.color = Color(0, 0, 0)
-	frame.position = Vector2(PLAY_WIDTH - 245, 18)
-	frame.size = Vector2(205, 70)
-	add_child(frame)
-	var box := ColorRect.new()
-	box.color = Color(0.65, 0.72, 0.6)   # LCD green, like the other games
-	box.position = frame.position + Vector2(5, 5)
-	box.size = frame.size - Vector2(10, 10)
-	add_child(box)
-	score_label = _make_label(box.position + Vector2(6, 0), box.size - Vector2(18, 0), 36, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
+	# (the baskets' tray goes on the band's right: _build_tray, per level)
 
 	banner = _make_label(Vector2(0, PLAY_HEIGHT / 2 - 60), Vector2(PLAY_WIDTH, 120), 54, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
 	banner.add_theme_color_override("font_outline_color", OUTLINE)
@@ -1010,8 +1283,6 @@ func _create_static_nodes() -> void:
 func _refresh_hud() -> void:
 	hud_time.text = "%d" % ceili(time_left)
 	hud_time.add_theme_color_override("font_color", Color(0.75, 0.15, 0.2) if time_left < 10.0 else OUTLINE)
-	score_label.add_theme_font_size_override("font_size", 36 if str(score).length() <= 5 else 30)
-	score_label.text = str(score)
 
 func _sprite(t: Texture2D, pos: Vector2) -> Sprite2D:
 	var s := Sprite2D.new()
@@ -1051,13 +1322,14 @@ func _float_text(text: String, at: Vector2, width := 120.0) -> void:
 	t.parallel().tween_property(l, "modulate:a", 0.0, 0.6)
 	t.tween_callback(l.queue_free)
 
-func _sfx(path: String, volume_db: float, max_time := 0.0) -> void:
+func _sfx(path: String, volume_db: float, max_time := 0.0, pitch := 1.0) -> void:
 	var stream = load(path) as AudioStream
 	if not stream:
 		return
 	var sfx := AudioStreamPlayer.new()
 	sfx.stream = stream
 	sfx.volume_db = volume_db
+	sfx.pitch_scale = pitch
 	add_child(sfx)
 	sfx.play()
 	sfx.finished.connect(sfx.queue_free)

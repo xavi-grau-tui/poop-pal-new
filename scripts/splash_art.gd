@@ -35,13 +35,16 @@ const BALLS := {
 	"glow_cyan": [Color8(112, 240, 255), Color8(62, 192, 232), Color8(222, 255, 255)],
 }
 
-## The five worlds' looks (user, 2026-10-11: every world clearly different from the others): the
+## The six worlds' looks (user, 2026-10-11: every world clearly different from the others): the
 ## water (5 bands, top to bottom), what's printed on the tank's back panel (scene), the sand, the
 ## baskets' and pumps' plastic, the nets, the balls, the bubbles, the points on the baskets, and
-## the level menu's page colour. glow = balls and baskets light up (night).
+## the level menu's page colour. glow = balls and baskets light up (night, the deep).
+## The back panels (2026-10-16, after Pal Prix's Garden): one time of day and one small palette per
+## world, depth by haze (things further back are paler, closer to the water's colour), light
+## playing through the water (caustics), and the sand dressed (shells, pebbles, seagrass).
 const THEMES := [
-	{ # 1 Morning Lagoon: the toy as it always was
-		"water": WATER, "rays": true, "scene": "",
+	{ # 1 Morning Lagoon: the toy as it always was, and a sunny lagoon printed behind it
+		"water": WATER, "rays": true, "scene": "lagoon",
 		"sand": [CASE, CASE_LIGHT, CASE_SHADE],
 		"rim": [CORAL_LIGHT, CORAL, CORAL_DARK], "net": NET,
 		"balls": ["pink", "yellow", "mint"], "bubble": Color(0.94, 0.98, 0.97), "glow": false,
@@ -74,6 +77,14 @@ const THEMES := [
 		"rim": [Color8(255, 192, 112), Color8(240, 134, 52), Color8(180, 88, 32)], "net": NET,
 		"balls": ["yellow", "red", "white"], "bubble": Color(0.9, 0.95, 0.96), "glow": false,
 		"label": OUTLINE, "menu": Color8(98, 114, 120) },
+	{ # 6 Deep Sea (the masters' world): almost black water, glowing life; you see what the light
+	  # shows (your pal's glow, the anglerfish's lure); the lure pulls the balls to its jaws
+		"water": [Color8(26, 40, 62), Color8(20, 32, 52), Color8(16, 26, 44), Color8(12, 20, 36), Color8(10, 16, 30)],
+		"rays": false, "scene": "deep",
+		"sand": [Color8(46, 52, 70), Color8(66, 74, 96), Color8(34, 38, 54)],
+		"rim": [Color8(255, 196, 240), Color8(232, 120, 214), Color8(150, 62, 160)], "net": Color8(255, 220, 246),
+		"balls": ["glow_cyan", "glow_lime", "glow_pink"], "bubble": Color(0.6, 0.9, 1.0), "glow": true,
+		"label": Color8(255, 220, 246), "menu": Color8(30, 44, 70), "dark": true },
 ]
 
 ## The tank: top band (the HUD sits on it), water (edge to edge: no side rails, they peeked
@@ -102,6 +113,7 @@ static func tank(w_px: int, h_px: int, band_y: float, _wall_l: float, _wall_r: f
 					col = OUTLINE
 			elif wy > fy:                                        # the funnel floor: sand
 				col = _sand(int(wx / P), int(wy / P), wy - fy, sand)
+				col = _sand_decor(scene, wx, wy, fy, col, sand)
 			else:                                                # the water
 				var t := clampf((wy - water_top) / (water_bottom - water_top), 0.0, 0.999)
 				var band := int(t * water.size())
@@ -138,6 +150,26 @@ static func _scene(kind: String, wx: float, wy: float, fy: float, col: Color, wa
 	var ax := int(wx / P)
 	var ay := int(wy / P)
 	match kind:
+		"lagoon":
+			# a sunny lagoon: caustics near the surface, a pale sandbank far back with seagrass on it,
+			# a school of little fish, tall seagrass along the floor (all printed paler than the toy)
+			var c := _caustic(wx, wy)
+			if c > 0.0 and wy < 520.0:
+				col = col.lerp(Color8(214, 240, 232), c * (1.0 - (wy - 104.0) / 420.0) * 0.55)
+			var bank := 560.0 + 34.0 * sin(wx * 0.006 + 1.0) + 18.0 * sin(wx * 0.017)
+			if wy > bank and wy < fy - 40.0:
+				col = col.lerp(Color8(176, 214, 198), 0.32)              # the sandbank, hazy
+				if absf(fmod(wx + 13.0 * sin(wy * 0.05), 41.0) - 20.0) < 2.0 and wy < bank + 46.0:
+					col = col.lerp(Color8(110, 170, 140), 0.35)          # seagrass on it
+			for f in [Vector2(250, 330), Vector2(286, 352), Vector2(232, 368), Vector2(272, 384), Vector2(310, 330)]:
+				if _fish(wx, wy, f, 1.0, 9.0):
+					return col.lerp(Color8(90, 140, 150), 0.42)
+			if wy > fy - 190.0:
+				for sx in [70.0, 118.0, 400.0, 560.0, 860.0, 905.0]:
+					var x0: float = sx + 10.0 * sin(wy * 0.04 + sx * 0.3)
+					if absf(wx - x0) < 4.5 and wy > fy - 150.0 - fmod(sx * 7.0, 50.0):
+						return col.lerp(Color8(70, 150, 112), 0.5)
+			return col
 		"sun":
 			# the sky above the horizon, a big low sun with a striped bottom, the sea below with
 			# the sun's broken reflection
@@ -146,6 +178,23 @@ static func _scene(kind: String, wx: float, wy: float, fy: float, col: Color, wa
 			const HORIZON := 402.0
 			if wy < HORIZON:
 				col = water[0] if wy < 250.0 else water[1]
+				# islands far off on the horizon, a palm on each; gulls in the sky
+				for it in [[Vector2(220, HORIZON), 110.0, 26.0], [Vector2(470, HORIZON), 60.0, 14.0]]:
+					var ic: Vector2 = it[0]
+					var dx: float = absf(wx - ic.x) / float(it[1])
+					if dx < 1.0 and wy > HORIZON - float(it[2]) * (1.0 - dx * dx):
+						return Color8(150, 92, 120)
+				for pt in [Vector2(196, HORIZON - 26), Vector2(462, HORIZON - 14)]:
+					var tx: float = pt.x + (pt.y - wy) * 0.25
+					if absf(wx - tx) < 2.5 and wy < pt.y + 2.0 and wy > pt.y - 44.0:
+						return Color8(150, 92, 120)                  # a trunk
+					var crown := Vector2(wx, wy) - Vector2(pt.x + 11.0, pt.y - 46.0)
+					if absf(crown.y + 0.25 * absf(crown.x)) < 3.0 and absf(crown.x) < 26.0:
+						return Color8(150, 92, 120)                  # its fronds
+				for bd in [Vector2(330, 160), Vector2(372, 140), Vector2(560, 182)]:
+					var bx := absf(wx - bd.x)
+					if bx < 9.0 and absf(wy - (bd.y + bx * 0.45)) < 1.5:
+						return Color8(120, 70, 100)                  # a gull
 				var d := Vector2(wx, wy).distance_to(SUN)
 				if d < R:
 					var below := wy - SUN.y
@@ -165,7 +214,19 @@ static func _scene(kind: String, wx: float, wy: float, fy: float, col: Color, wa
 			return col
 		"reef":
 			# corals, sea fans and seaweed along the bottom, two little fish: printed darker than the
-			# water so they stay behind the toy
+			# water so they stay behind the toy; caustics over the top, a turtle far off
+			var cc := _caustic(wx, wy)
+			if cc > 0.0 and wy < 460.0:
+				col = col.lerp(Color8(220, 250, 246), cc * 0.4)
+			var turtle := Vector2(wx, wy) - Vector2(640, 250)
+			if (turtle.x / 46.0) * (turtle.x / 46.0) + (turtle.y / 26.0) * (turtle.y / 26.0) < 1.0:
+				return col.lerp(water[2], 0.5)                       # its shell, hazy
+			for fl in [Vector2(-40, -20), Vector2(30, -24), Vector2(-40, 22), Vector2(34, 20)]:
+				var ff: Vector2 = turtle - fl
+				if absf(ff.x) < 16.0 and absf(ff.y) < 6.0:
+					return col.lerp(water[2], 0.42)                  # its flippers
+			if Vector2(wx, wy).distance_to(Vector2(698, 246)) < 13.0:
+				return col.lerp(water[2], 0.45)                      # its head
 			var back: Color = water[3]
 			for f in [Vector2(150, 300), Vector2(800, 360)]:
 				var dd: Vector2 = Vector2(wx, wy) - f
@@ -211,6 +272,30 @@ static func _scene(kind: String, wx: float, wy: float, fy: float, col: Color, wa
 				return Color8(250, 248, 230)                         # a star
 			if wy > 520.0 and h > 0.992:
 				return col.lerp(Color8(120, 244, 230), 0.7)          # plankton
+			# a jellyfish drifting far back: a glowing dome and long trailing tentacles
+			var jf := Vector2(wx, wy) - Vector2(720, 330)
+			if jf.y < 0.0 and (jf.x / 54.0) * (jf.x / 54.0) + (jf.y / 40.0) * (jf.y / 40.0) < 1.0:
+				return col.lerp(Color8(200, 150, 240), 0.45 if jf.y > -30.0 else 0.32)
+			if jf.y >= 0.0 and jf.y < 150.0:
+				for tx in [-36.0, -14.0, 8.0, 30.0]:
+					if absf(jf.x - tx - 8.0 * sin(jf.y * 0.06 + tx)) < 2.0:
+						return col.lerp(Color8(190, 140, 230), 0.4 * (1.0 - jf.y / 150.0))
+			return col
+		"deep":
+			# the deep: glowing specks, a kraken's tentacles curling up from the dark far back, a
+			# faint glow from the vents on the floor
+			var h2 := _hash(ax, ay)
+			if h2 > 0.995:
+				return col.lerp(Color8(120, 220, 255), 0.75)
+			if h2 < 0.003 and wy > 300.0:
+				return col.lerp(Color8(255, 150, 220), 0.6)
+			for tk in [[140.0, 0.0], [820.0, 2.0], [600.0, 4.0]]:
+				var base: float = tk[0]
+				var tx: float = base + 46.0 * sin(wy * 0.012 + tk[1]) + 20.0 * sin(wy * 0.031)
+				var width := 14.0 * clampf((wy - 260.0) / 500.0, 0.25, 1.0)
+				if absf(wx - tx) < width and wy > 260.0 and wy < fy - 30.0:
+					var suck := fmod(wy, 26.0) < 6.0 and wx > tx
+					return col.lerp(Color8(70, 54, 96) if not suck else Color8(110, 80, 130), 0.55)
 			return col
 		"rain":
 			# dark clouds along the top, rain slanting down
@@ -225,7 +310,77 @@ static func _scene(kind: String, wx: float, wy: float, fy: float, col: Color, wa
 			var lane := int(u / 46.0)
 			if fmod(u, 46.0) < 3.0 and fmod(wy + lane * 37.0, 70.0) < 24.0 and wy < fy - 40.0:
 				return col.lerp(Color8(186, 200, 204), 0.45)         # a raindrop's streak
+			# a lighthouse on a rock far off, its beam sweeping over the waves
+			var lh := Vector2(wx, wy) - Vector2(800, 330)
+			if absf(lh.x) < 13.0 - lh.y * 0.04 and lh.y > -70.0 and lh.y < 40.0:
+				var stripe := int((lh.y + 70.0) / 22.0) % 2 == 0
+				return col.lerp(Color8(214, 206, 196) if stripe else Color8(170, 90, 84), 0.55)
+			if absf(lh.x) < 16.0 and lh.y > -86.0 and lh.y <= -70.0:
+				return col.lerp(Color8(255, 236, 160), 0.7)          # its lamp
+			if lh.y > 40.0 and lh.y < 70.0 and absf(lh.x) < 60.0 - lh.y * 0.3:
+				return col.lerp(Color8(60, 70, 74), 0.6)             # its rock
+			var beam := Vector2(wx, wy) - Vector2(800, 252)
+			if beam.x < -20.0 and absf(beam.y + beam.x * 0.08) < 10.0 - beam.x * 0.06 and (ax + ay) % 2 == 0:
+				return col.lerp(Color8(255, 240, 190), 0.25)
+			# waves breaking along the top, under the clouds
+			if wy > 214.0 and wy < 236.0 and fmod(wx + 30.0 * sin(wy * 0.3), 90.0) < 40.0 - (wy - 214.0):
+				return col.lerp(Color8(214, 224, 222), 0.35)
 			return col
+	return col
+
+## Light playing through the water: a bright net of wobbly lines (0 = none .. 1 = brightest)
+static func _caustic(wx: float, wy: float) -> float:
+	var a := sin(wx * 0.045 + 2.0 * sin(wy * 0.03)) * sin(wy * 0.06 + 2.2 * sin(wx * 0.021))
+	var v := 1.0 - absf(a) * 9.0
+	return clampf(v, 0.0, 1.0) if (int(wx / P) + int(wy / P)) % 2 == 0 or v > 0.6 else 0.0
+
+## A little fish shape facing left (its tail on the right), at f, size k
+static func _fish(wx: float, wy: float, f: Vector2, k: float, r: float) -> bool:
+	var d := (Vector2(wx, wy) - f) / k
+	if (d.x / r) * (d.x / r) + (d.y / (r * 0.5)) * (d.y / (r * 0.5)) < 1.0:
+		return true
+	return d.x > r * 0.7 and d.x < r * 1.5 and absf(d.y) < (d.x - r * 0.7) * 0.7
+
+## What lies on the sand in each world: shells, a starfish, pebbles, glowing urchins in the deep
+static func _sand_decor(kind: String, wx: float, wy: float, fy: float, col: Color, sand: Array) -> Color:
+	var depth := wy - fy
+	if depth < P * 3 or depth > 70.0:
+		return col
+	var spots: Array = []
+	match kind:
+		"lagoon", "reef":
+			spots = [[Vector2(96, 18), "shell"], [Vector2(360, 26), "star"], [Vector2(600, 16), "pebble"], [Vector2(880, 22), "shell"]]
+		"sun":
+			spots = [[Vector2(120, 20), "shell"], [Vector2(830, 24), "pebble"]]
+		"night":
+			spots = [[Vector2(380, 22), "glow"], [Vector2(590, 18), "glow"]]
+		"rain":
+			spots = [[Vector2(150, 18), "pebble"], [Vector2(870, 22), "pebble"]]
+		"deep":
+			spots = [[Vector2(110, 22), "urchin"], [Vector2(475, 30), "glow"], [Vector2(860, 20), "urchin"]]
+	for sp in spots:
+		var at: Vector2 = sp[0]
+		var d := Vector2(wx - at.x, depth - at.y)
+		match sp[1]:
+			"shell":                                     # a fan shell: ribs, pink
+				if d.y < 0.0 and d.length() < 13.0:
+					return OUTLINE if d.length() > 11.0 else (Color8(240, 170, 160) if int(atan2(d.y, d.x) * 6.0) % 2 == 0 else Color8(250, 206, 190))
+			"star":                                      # a starfish: five arms
+				var ang := atan2(d.y, d.x)
+				var arm := 6.0 + 7.0 * pow(absf(cos(ang * 2.5)), 4.0)
+				if d.length() < arm:
+					return OUTLINE if d.length() > arm - 2.0 else Color8(240, 140, 90)
+			"pebble":
+				if (d.x / 12.0) * (d.x / 12.0) + (d.y / 7.0) * (d.y / 7.0) < 1.0:
+					return OUTLINE if (d.x / 12.0) * (d.x / 12.0) + (d.y / 7.0) * (d.y / 7.0) > 0.7 else (sand[2] as Color).darkened(0.15)
+			"glow":                                      # a glowing shell
+				if d.length() < 9.0:
+					return Color8(140, 250, 230) if d.length() < 6.0 else OUTLINE
+			"urchin":                                    # a sea urchin, its spines lit at the tips
+				var a2 := atan2(d.y, d.x)
+				var spine := 5.0 + (4.0 if int((a2 + PI) * 8.0) % 2 == 0 else 0.0)
+				if d.length() < spine:
+					return Color8(255, 150, 230) if d.length() > spine - 1.5 else Color8(70, 40, 90)
 	return col
 
 ## A fixed pseudo-random 0..1 per art pixel (the same sand every time)
@@ -655,4 +810,86 @@ static func coin() -> Texture2D:
 			img.set_pixel(x, y, col)
 	img.set_pixel(3, 3, Color8(255, 246, 200))
 	img.set_pixel(4, 2, Color8(255, 246, 200))
+	return ImageTexture.create_from_image(img)
+
+## The anglerfish (Deep Sea), facing left (flip it to face right): a dark round fish with a big
+## jaw of white teeth, a pale belly, and its lure on a stalk over its head (the glowing bulb is
+## drawn separately: angler_lure). o outline · d body · D its lit top · b belly · t tooth · w eye
+## white · k pupil · f fin
+const ANGLER := [
+	"..........oooooo..........",
+	".......oooddddddooo.......",
+	".....ooDDDDDDdddddoo......",
+	"....oDDDDDDDDdddddddo..oo.",
+	"...owkdddddddddddddddoofo.",
+	"..oddddddddddddddddddoffo.",
+	".otototododdddddddddddffo.",
+	"o..........obbdddddddooffo",
+	"otototototobbbddddddo.ofo.",
+	".oddddddddbbbbdddddo..oo..",
+	"..oobbbbbbbbbdddddo.......",
+	"....oooobbbbbddoo.........",
+	"........oooooo............",
+]
+
+static func angler() -> Texture2D:
+	var cols := { "o": OUTLINE, "d": Color8(92, 74, 110), "D": Color8(122, 102, 142), "b": Color8(160, 140, 168),
+		"t": Color8(250, 248, 236), "w": Color.WHITE, "k": OUTLINE, "f": Color8(70, 56, 90) }
+	var img := Image.create(ANGLER[0].length(), ANGLER.size(), false, Image.FORMAT_RGBA8)
+	for y in ANGLER.size():
+		for x in ANGLER[y].length():
+			var ch: String = ANGLER[y][x]
+			if cols.has(ch):
+				img.set_pixel(x, y, cols[ch])
+	return ImageTexture.create_from_image(img)
+
+## The lure's stalk and glowing bulb (7 x 9), its bulb at the top left
+static func angler_lure() -> Texture2D:
+	var rows := [".LL....", "LYYL...", "LYYL...", ".LLs...", "...s...", "....s..", ".....s.", ".....s.", "......s"]
+	var cols := { "L": Color8(150, 240, 255), "Y": Color8(255, 255, 220), "s": Color8(70, 56, 90) }
+	var img := Image.create(7, 9, false, Image.FORMAT_RGBA8)
+	for y in rows.size():
+		for x in 7:
+			var ch: String = rows[y][x]
+			if cols.has(ch):
+				img.set_pixel(x, y, cols[ch])
+	return ImageTexture.create_from_image(img)
+
+## The golden hoop (a secret: only fizzy jets throw a ball up through it), 22 x 22: a gold ring,
+## lit at the top left, twinkling
+static func golden_hoop() -> Texture2D:
+	var img := Image.create(22, 22, false, Image.FORMAT_RGBA8)
+	var c := Vector2(11, 11)
+	for y in 22:
+		for x in 22:
+			var off := Vector2(x + 0.5, y + 0.5) - c
+			var d := off.length()
+			if d > 10.5 or d < 6.5:
+				continue
+			var col := Color8(246, 204, 70) if off.x + off.y < 0 else Color8(214, 150, 40)
+			if d > 9.6 or d < 7.4:
+				col = OUTLINE
+			elif off.x + off.y < -9.0:
+				col = Color8(255, 246, 190)
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+## A basket's icon for the HUD's tray (9 x 8): an empty net, or gold once it's filled
+static func basket_icon(full: bool, rim: Color) -> Texture2D:
+	var rows := ["#########", "#rrrrrrr#", "#########", ".#n.n.n#.", ".#.n.n.#.", "..#n.n#..", "..#.n.#..", "...###..."]
+	var img := Image.create(9, 8, false, Image.FORMAT_RGBA8)
+	for y in rows.size():
+		for x in 9:
+			var ch: String = rows[y][x]
+			var col := Color(0, 0, 0, 0)
+			if ch == "#":
+				col = OUTLINE
+			elif ch == "r":
+				col = rim
+			elif ch == "n":
+				col = Color8(250, 214, 90) if full else Color8(244, 236, 214)
+			elif ch == "." and full and y >= 3 and x > 1 and x < 7 and rows[y].substr(0, x).count("#") == 1:
+				col = Color8(240, 190, 60)                     # (filled: gold inside the net)
+			if col.a > 0.0:
+				img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
