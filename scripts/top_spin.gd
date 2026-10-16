@@ -1683,8 +1683,8 @@ func on_main_button_pressed() -> void:
 	if intro_active():
 		dismiss_intro()
 		return
-	if is_game_over:
-		super.on_main_button_pressed()
+	if is_game_over or level_menu_open():
+		super.on_main_button_pressed()                 # (the level menu and its result card)
 		return
 	if not _touch_mode:
 		_main_tap()
@@ -1702,7 +1702,8 @@ func _main_tap() -> void:
 				_player_dash()
 
 func on_main_button_released() -> void:
-	pass
+	if level_menu_open():
+		super.on_main_button_released()                # (the level menu's hold)
 
 func on_forward_button_down() -> void:
 	if not _touch_mode:
@@ -1732,8 +1733,8 @@ func _forward_up() -> void:
 		player.braced = false
 
 func on_forward_button_pressed() -> void:
-	if is_game_over:
-		super.on_forward_button_pressed()
+	if is_game_over or level_menu_open():
+		super.on_forward_button_pressed()              # (the level menu's next world)
 
 ## Phones: every finger counts (hold GUARD with one thumb, DASH with the other)
 func _input(event: InputEvent) -> void:

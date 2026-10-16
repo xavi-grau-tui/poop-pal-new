@@ -1107,14 +1107,15 @@ func on_main_button_pressed() -> void:
 	if intro_active():
 		dismiss_intro()
 		return
-	if is_game_over:
-		super.on_main_button_pressed()
+	if is_game_over or level_menu_open():
+		super.on_main_button_pressed()                 # (the level menu and its result card)
 		return
 	if not _touch_mode:
 		_main_tap()
 
 func on_main_button_released() -> void:
-	pass
+	if level_menu_open():
+		super.on_main_button_released()                # (the level menu's hold)
 
 func on_forward_button_down() -> void:
 	if not is_running or is_game_over or _touch_mode:
@@ -1152,8 +1153,8 @@ func on_forward_button_up() -> void:
 	pass
 
 func on_forward_button_pressed() -> void:
-	if is_game_over:
-		super.on_forward_button_pressed()
+	if is_game_over or level_menu_open():
+		super.on_forward_button_pressed()              # (the level menu's next world)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or event.echo or not event.pressed:

@@ -14,6 +14,7 @@ extends Node
 ##   skill=N       the autopilot's skill, where a game has one (Paper Sumo: 1 or 2)
 ##   unlock=all    start like ALL UNLOCKED (every item owned, a random pal)
 ##   case=ID       the device wears that case (with unlock=all)
+##   menutest=N    drive the game's level menu: FORWARD N times, tap, hold; print what plays
 ## Prints "QA DONE" and quits when finished. The testing save is wiped at every launch anyway.
 
 var args := {}
@@ -73,6 +74,10 @@ func _run() -> void:
 		return
 	mgr.transition_to_game_screen(int(game))
 	await _wait(1.2)
+	if args.has("menutest"):
+		await _menu_test(gs, int(args["menutest"]))
+		_quit()
+		return
 	var levels: Array = []
 	for s in str(args.get("levels", "1")).split(","):
 		if s.strip_edges() != "":
@@ -137,6 +142,26 @@ func _open_menu(which: String) -> void:
 		await _shot("menu_" + which.replace(":", "_"))
 		return
 	print("QA: no such menu ", which)
+
+## menutest=N: drives the game's level menu with the device buttons' own calls (what a player
+## does): FORWARD N times (the next world), then a HOLD on the selected level; prints what plays
+func _menu_test(gs, pages: int) -> void:
+	var g = gs.current_game
+	print("QA menu open: ", g.level_menu_open())
+	for i in pages:
+		g.on_forward_button_pressed()
+		await _wait(0.4)
+	await _shot("menutest_page")
+	g.on_main_button_pressed()
+	await _wait(0.2)
+	g.on_main_button_released()                          # (a tap: the next level)
+	await _wait(0.3)
+	g.on_main_button_pressed()
+	await _wait(0.9)                                     # (a hold: play it)
+	g.on_main_button_released()
+	await _wait(1.5)
+	print("QA menu open after: ", g.level_menu_open(), "  running: ", g.is_running, "  level: ", g.get("level"))
+	await _shot("menutest_play")
 
 func _wait(s: float) -> void:
 	await get_tree().create_timer(s).timeout
