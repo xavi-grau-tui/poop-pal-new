@@ -570,7 +570,10 @@ func _build_list(v: int) -> void:
 		name_l.text = item["name"] if owned else "???"     # locked items stay a mystery
 		var st: Label = row.get_meta("status_label")
 		if not owned:
-			st.text = "Play to unlock"
+			var src := Collection.source_text(cat, id)          # where it comes from ("Tilt Maze: 2-8")
+			st.text = src if src != "" else "Play to unlock"
+			if st.text.length() > 15:
+				st.add_theme_font_size_override("font_size", 22)
 		elif Collection.is_in_use(cat, id):
 			st.text = "In use"
 			st.add_theme_color_override("font_color", IN_USE)

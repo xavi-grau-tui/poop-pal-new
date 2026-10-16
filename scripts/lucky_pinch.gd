@@ -278,8 +278,13 @@ func _grab() -> void:
 		return                                         # closed on nothing
 	held = capsules[best]
 	capsules.remove_at(best)
-	var firm: bool = absf(held["x"] - x) <= FIRM_DX and absf(held["d"] - claw_d) <= FIRM_DD
-	held_loose = 0.05 if firm else 0.6
+	# a lucky pal (a fruity drink) grips firmer: right on top counts from further off, and a loose
+	# grip slips less (the drink's level: more); the boost is spent on the first grab it helps
+	var lucky := PetState.boost_power("lucky")
+	var firm: bool = absf(held["x"] - x) <= FIRM_DX * (1.0 + 0.5 * lucky) and absf(held["d"] - claw_d) <= FIRM_DD * (1.0 + 0.5 * lucky)
+	held_loose = 0.05 if firm else maxf(0.15, 0.6 - 0.15 * lucky)
+	if lucky > 0 and (firm or held_loose < 0.6):
+		PetState.use_boost()
 	slip_at = randf_range(0.2, 1.9) if randf() < held_loose else 9.0
 	var node: Sprite2D = held["node"]
 	node.get_parent().remove_child(node)
