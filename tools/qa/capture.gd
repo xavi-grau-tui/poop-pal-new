@@ -10,6 +10,8 @@ extends Node
 ##   wait=S        seconds of play before each screenshot (default 2)
 ##   shots=K       screenshots per level, `wait` seconds apart (default 1)
 ##   out=DIR       where the PNGs go (default user://qa)
+##   boost=B:L     the pal has boost B (splash, fizz, focus, sturdy, lucky) at level L before each level
+##   skill=N       the autopilot's skill, where a game has one (Paper Sumo: 1 or 2)
 ## Prints "QA DONE" and quits when finished. The testing save is wiped at every launch anyway.
 
 var args := {}
@@ -74,6 +76,9 @@ func _run() -> void:
 		var g = gs.current_game
 		if not g:
 			break
+		if args.has("boost"):
+			PetState.boost = str(args["boost"]).get_slice(":", 0)
+			PetState.boost_level = int(str(args["boost"]).get_slice(":", 1)) if ":" in str(args["boost"]) else 1
 		if g.has_method("uses_levels") and g.uses_levels():
 			if g.level_menu:
 				g.level_menu.close()
@@ -81,6 +86,8 @@ func _run() -> void:
 			g.is_running = true
 			if "qa_autopilot" in g:
 				g.qa_autopilot = true
+			if "qa_skill" in g and args.has("skill"):
+				g.qa_skill = int(args["skill"])
 		for k in shots:
 			await _wait(wait)
 			await _shot("g%s_l%02d%s" % [game, lvl, "" if shots == 1 else "_%d" % k])

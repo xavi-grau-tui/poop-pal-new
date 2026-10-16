@@ -135,6 +135,8 @@ PLANS = {
  'cone':    dict(b=[(0, -8, 16, 8), (0, -18, 11, 10), (0, -28, 6, 7), (0, -35, 3, 4)], face=(0, -14)),
  'tree':    dict(b=[(0, -7, 5.5, 7.5, 3), (-10, -19, 9, 8), (10, -19, 9, 8), (0, -27, 11, 9), (0, -17, 12, 7.5)], face=(0, -21)),
  'corn':    dict(b=[(0, -8, 16, 8.5), (0, -20, 11, 7), (0, -30, 6.5, 6)], face=(0, -11), tiers=True),
+ # (2026-10-16, Paper Sumo's rivals: tools/art/sumo_rivals.py)
+ 'turtle':  dict(b=[(0, -3, 22, 17)], face=(0, -8), cutbottom=True, fhw=8.0),          # a shell dome; turtlehead in front
 }
 
 
@@ -229,6 +231,16 @@ EYES = ['none', 'gloss', 'dot', 'lid', 'sleep', 'happy', 'side', 'glance', 'wide
         'tiny', 'one', 'three', 'visor', 'star', 'x', 'shades', 'squint', 'spiral', 'heavy']
 MOUTHS = ['none', 'flat', 'dot', 'o', 'w', 'v', 'smile', 'frown', 'pout', 'smirk', 'fang', 'fangs', 'teeth', 'wavy',
           'open', 'tongue', 'beak', 'grin']
+
+
+def face_size(g, fx, fy, stage, fs=1.0, fhw=None):
+    """(eye spread, eye radius) as face() will draw them"""
+    er0, sp0 = EYE[stage]
+    hw = max(min(g.half_w(fy), abs(g.side_at(fy, 1) - fx), abs(fx - g.side_at(fy, -1))), 8)
+    if fhw:
+        hw = fhw
+    k = min(1.3, max(.72, hw / (sp0 * 1.95))) * fs
+    return min(sp0 * k, hw * .5), er0 * min(1.2, max(.8, k))
 
 
 def face(c, g, fx, fy, eyes, mouth, extras, stage, body_pal, fs=1.0, fhw=None):
@@ -427,20 +439,20 @@ def face(c, g, fx, fy, eyes, mouth, extras, stage, body_pal, fs=1.0, fhw=None):
 
 
 # ------------------------------------------------------------------ parts
-BACK = {'tails', 'broth', 'bone', 'ears_droop', 'eyestalks', 'lure', 'stinger', 'plate', 'ribbon', 'skirt', 'shroomcap', 'seaweed', 'bunhair',
+BACK = {'frogeyes', 'kabuto', 'pincers', 'atlashorns', 'herculeshorn', 'buglegs', 'tails', 'broth', 'bone', 'ears_droop', 'eyestalks', 'lure', 'stinger', 'plate', 'ribbon', 'skirt', 'shroomcap', 'seaweed', 'bunhair',
         'leaf', 'leaf2', 'leaf3', 'bigleaf', 'sprout', 'clover', 'stem', 'stalk', 'twig', 'flame', 'flames', 'ears', 'ears_cat',
         'ears_bear', 'ears_bunny', 'ears_fox', 'ears_mouse', 'horns', 'horn', 'nubs', 'ramhorns', 'antennae', 'antenna',
         'wings', 'wings_bug', 'wings_bat', 'wings_tiny', 'tail', 'tail_fluff', 'tail_fish', 'tail_devil', 'tail_curl', 'tail_lizard',
         'fins', 'fin', 'spikes', 'crest', 'quills', 'petals', 'tentacles', 'legs', 'claws', 'roots', 'bow', 'wrapper', 'cherry',
         'stick', 'mane', 'frills', 'whiskers_b', 'topknot', 'tuft', 'curl', 'umbrella', 'halo_b', 'shell', 'pinwheel', 'feather',
         'cap_leaf', 'vines', 'mushcap', 'flower', 'hat', 'tassel', 'bubbles_b', 'crown_b'}
-FRONT = {'arms', 'feet', 'nose', 'snout', 'beak_f', 'cheeks', 'paws', 'bib', 'tie', 'scarf', 'pin', 'mitts', 'longnose', 'longbeak',
+FRONT = {'muzzle', 'clamshell', 'turtlehead', 'arms', 'feet', 'nose', 'snout', 'beak_f', 'cheeks', 'paws', 'bib', 'tie', 'scarf', 'pin', 'mitts', 'longnose', 'longbeak',
          'tusks', 'pawup', 'collar', 'leg'}
-REGION = {'cap', 'drip', 'base', 'band', 'belly', 'half', 'diag', 'spots', 'stripes', 'hstripes', 'tip', 'mask', 'nori',
+REGION = {'tsuna', 'pronotum', 'split', 'hexes', 'shellrim', 'cap', 'drip', 'base', 'band', 'belly', 'half', 'diag', 'spots', 'stripes', 'hstripes', 'tip', 'mask', 'nori',
           'crust', 'glaze', 'warts', 'seeds', 'scales', 'socks', 'patch', 'dapple', 'blaze', 'tiers', 'sugar', 'grill',
           'swirlband', 'face_patch', 'rim', 'bottom', 'speckle', 'zigzag', 'checker', 'facets', 'web', 'eyepatches', 'bangs',
           'darumaface', 'lanternbands', 'ribs', 'leafveins', 'ridges', 'holes', 'crustedge', 'grid', 'clamridges'}
-OVER = {'sprinkles', 'sesame', 'sparkles', 'steam', 'bubbles', 'drop', 'stars', 'crumbs', 'bolts', 'chip', 'crack',
+OVER = {'shide', 'sprinkles', 'sesame', 'sparkles', 'steam', 'bubbles', 'drop', 'stars', 'crumbs', 'bolts', 'chip', 'crack',
         'crown', 'halo', 'bandage', 'gem', 'flowerpin', 'sweatband', 'smoke', 'zzz', 'notes', 'plaster', 'bowtie', 'lightning',
         'embers', 'rune', 'mark', 'glow', 'snow', 'heart', 'scar', 'monocle', 'leafpin', 'sticker', 'antenna_bulb', 'whiskers',
         'hachimaki', 'kanji', 'capspots', 'pleats', 'swirltop'}
@@ -833,6 +845,58 @@ def render(spec, stage, seed_name='', _lift=0.0, _fit=1.0, _pass=0, squash=(1.0,
         elif name == 'bunhair':               # two hair buns
             for sd in (-1, 1):
                 add_back(sfield(c, [(cxp + sd * g.half_w(g.top + g.h * .2) * .62, g.top + 1 * u, 3.4 * u, 3.4 * u)]), fp)
+        elif name == 'frogeyes':              # a frog's: two domes on top of the head, the eyes in them
+            sp_, er_ = face_size(g, fx, fy, stage, mods.get('fs', plan.get('fs', 1.0)), plan['fhw'] * s if plan.get('fhw') else None)
+            for sd in (-1, 1):
+                add_back(sfield(c, [(fx + sd * sp_, fy - .6 * u, er_ + 2.6 * u, er_ + 2.3 * u)]), colr(tok, pal))
+        elif name == 'muzzle':                # a whiskered muzzle (an otter's): light, with a dark nose on top
+            front.append((sfield(c, [(fx, fy + 4.4 * u, 5.6 * u, 3.7 * u)]), colr(tok, P['cream']), {}))
+            def nose_(d):
+                x, y = fx, fy + 2.5 * u
+                d.polygon([c.P(x - 1.7 * u, y - .6 * u), c.P(x + 1.7 * u, y - .6 * u), c.P(x, y + 1.3 * u)], fill=INK)
+            deferred.append(('call', nose_, 0))
+        elif name == 'clamshell':             # a little clam held on the tummy (a sea otter's), two paws on it
+            y = g.bot - g.h * .27
+            front.append((sfield(c, [(cxp, y, 4.6 * u, 3.6 * u)]), colr(tok, P['peach']), {'ridges': True}))
+            for sd in (-1, 1):
+                front.append((sfield(c, [(cxp + sd * 4.4 * u, y + .4 * u, 2.4 * u, 2.2 * u)]), pal, {}))
+        elif name == 'kabuto':                # a rhinoceros beetle's horn: up from the head, forked at the tip
+            hp = colr(tok, pal)
+            base, tip = (cxp, tt + 2.5), (cxp + 1.2 * u, tt - 12 * u)
+            pts = chain(base, tip, 3.6 * u, 1.7 * u, 9, -1.2 * u)
+            for sd in (-1, 1):
+                pts += chain(tip, (tip[0] + sd * 3.6 * u, tip[1] - 3.2 * u), 1.7 * u, .8 * u, 5)
+            add_back(sfield(c, pts), hp, gloss=(.75, 14))
+        elif name == 'pincers':               # a stag beetle's jaws: two curved prongs over the head
+            hp = colr(tok, pal)
+            for sd in (-1, 1):
+                x0 = cxp + sd * 4.5 * u
+                pts = chain((x0, g.top_at(x0) + 2), (cxp + sd * 2.2 * u, tt - 12 * u), 2.4 * u, 1.0 * u, 10, sd * 4.5 * u)
+                pts += [(cxp + sd * 6.0 * u, tt - 6.5 * u, 1.3 * u, 1.3 * u)]         # (a tooth)
+                add_back(sfield(c, pts), hp, gloss=(.7, 14))
+        elif name == 'atlashorns':            # an atlas beetle: a horn up from the head, two long ones from its shoulders
+            hp = colr(tok, pal)
+            add_back(sfield(c, chain((cxp, tt + 2), (cxp, tt - 9 * u), 2.8 * u, 1.0 * u, 8, -1 * u)), hp, gloss=(.75, 14))
+            y = g.top + g.h * .2; hw = g.half_w(y)
+            for sd in (-1, 1):
+                add_back(sfield(c, chain((cxp + sd * hw * .62, y + 1), (cxp + sd * (hw + 2.5 * u), tt - 9 * u), 2.5 * u, .8 * u, 9, -sd * 2.5 * u)), hp, gloss=(.75, 14))
+        elif name == 'herculeshorn':          # a hercules beetle: one very long horn, a little curved
+            hp = colr(tok, P['char'])
+            add_back(sfield(c, chain((cxp, tt + 2.5), (cxp + 2 * u, tt - 17 * u), 3.2 * u, 1.4 * u, 11, -3 * u)), hp, gloss=(.8, 12))
+            add_back(sfield(c, [(cxp + 2.2 * u, tt - 17.5 * u, 1.6 * u, 1.6 * u)]), hp, gloss=(.8, 12))
+        elif name == 'buglegs':               # an insect's six legs, out at the sides, bent at the knee
+            lp = colr(tok, P['char'])
+            f_ = np.zeros_like(c.x)
+            for sd in (-1, 1):
+                for i in range(3):
+                    y0 = g.top + g.h * (.5 + .16 * i)
+                    x0 = g.side_at(y0, sd) - sd * 1.8 * u
+                    knee = (x0 + sd * (6.0 - i * .6) * u, y0 + (1.0 + i * 1.6) * u)
+                    foot = (knee[0] + sd * 1.0 * u, min(knee[1] + 4.2 * u, g.bot + 1.5))
+                    f_ += sfield(c, chain((x0, y0), knee, 1.5 * u, 1.2 * u, 5) + chain(knee, foot, 1.2 * u, .9 * u, 4))
+            add_back(f_, lp)
+        elif name == 'turtlehead':            # the head poking out in front of the shell (the face goes on it)
+            front.append((sfield(c, [(fx, fy + .6 * u, 10.5 * u, 8.8 * u)]), colr(tok, acc), {}))
         elif name in FRONT:
             if name == 'arms':
                 y = g.top + g.h * .72; hw = g.half_w(y)
@@ -1034,9 +1098,30 @@ def render(spec, stage, seed_name='', _lift=0.0, _fit=1.0, _pass=0, squash=(1.0,
             reg = bm & ((c.y < g.top + g.h * .12) | (c.y > g.bot - g.h * .1))
         elif name == 'ribs':                   # paper lantern ribs
             reg = bm & (np.abs(np.sin((c.y - g.top) * 1.3 / u)) > .94) & (c.y > g.top + g.h * .12) & (c.y < g.bot - g.h * .1)
+        elif name == 'tsuna':                 # a yokozuna's white rope, just above the mawashi (the band)
+            y0 = g.top + g.h * .56
+            reg = bm & (c.y > y0) & (c.y < y0 + g.h * .1)
+            material(c, bh * 1.05, reg, colr(tok, P['rice']), bump=4, spec_amt=.3, spec_pow=24, grain=.05)
+            seam(c, reg, bm & ~reg, .45)
+            paint(c, reg & (np.abs(((c.x + c.y * .9) / (2.4 * u)) % 2 - 1) < .16), np.array(tone(P['rice'], 1), np.float32))
+            reg = None
+        elif name == 'pronotum':              # a beetle's head and thorax: the dark top, its edge curving up at the sides
+            hx = (c.x - cx) / max(g.w * .5, 1)
+            reg = bm & (c.y < g.top + g.h * .46 - 3.5 * u * hx * hx)
+        elif name == 'split':                 # a beetle's wing cases: the line down the middle
+            reg = bm & (np.abs(c.x - cx) < .5 * u) & (c.y > g.top + g.h * .44)
+        elif name == 'hexes':                 # a turtle shell's plates
+            ctr = []
+            for j in range(4):
+                for i in range(-3, 4):
+                    ctr.append((cx + (i + (.5 if j % 2 else 0)) * 9 * u, g.top + (1.5 + j * 7.2) * u))
+            ds = np.sort(np.stack([np.hypot(c.x - x_, (c.y - y_) * 1.15) for x_, y_ in ctr]), 0)
+            reg = bm & ((ds[1] - ds[0]) < .9 * u) & (c.y < g.bot - 3.5 * u)
+        elif name == 'shellrim':              # its rim, lighter, all round the bottom
+            reg = bm & (c.y > g.bot - 3.5 * u)
         elif name == 'leafveins':
             reg = bm & ((np.abs(c.x - cx) < .5 * u) | (np.abs(np.abs(c.x - cx) - (g.bot - c.y) * .4 + 2 * u) < .45 * u)) & (c.y < g.bot - 2 * u) & (c.y > g.top + 2 * u)
-        if reg is not None and name in ('ribs', 'leafveins', 'grid', 'clamridges'):
+        if reg is not None and name in ('ribs', 'leafveins', 'grid', 'clamridges', 'split', 'hexes'):
             paint(c, reg, np.array(tone(fp, 1), np.float32))
             reg = None
         if reg is not None:
@@ -1082,6 +1167,12 @@ def render(spec, stage, seed_name='', _lift=0.0, _fit=1.0, _pass=0, squash=(1.0,
             material(c, np.clip(height(f_, .5) * .6 + .5, 0, 1), m, p_, bump=2, spec_amt=.6, spec_pow=10, grain=.02, ao=0)
             continue
         material(c, height(f_, .5), m, p_, bump=4, spec_amt=.4, spec_pow=22, grain=.06)
+        if kw.get('ridges'):
+            ys_, xs_ = np.nonzero(m)
+            if len(ys_):
+                hx, hy = xs_.mean() / (c.k * c.f), ys_.max() / (c.k * c.f)
+                ang = np.arctan2(c.y - hy, c.x - hx)
+                paint(c, m & (np.abs(np.sin(ang * 5)) < .2) & (c.y < hy - .6), np.array(tone(p_, 1), np.float32))
         seam(c, m, (c.a > .5) & ~m, .45)
         if kw.get('nostrils'):
             def nos(d, f_=f_):
@@ -1257,6 +1348,14 @@ def render(spec, stage, seed_name='', _lift=0.0, _fit=1.0, _pass=0, squash=(1.0,
                     for k_, dy in enumerate((-.6, .9)):
                         x0 = fx + sd * (g.half_w(fy) * .55); y0 = fy + 3.5 * u + dy * u
                         d.line([P_(x0, y0), P_(x0 + sd * 5 * u, y0 + dy * 1.4 * u)], fill=tone(pal, 0), width=wd(c, .6))
+            elif name == 'shide':              # the rope's zigzag paper strips
+                y0 = g.top + g.h * .66
+                for dx in (-6.5, 0, 6.5):
+                    x0 = cxp + dx * u; w_ = 1.3 * u; st = 2.4 * u
+                    pts = [(x0 - w_, y0), (x0 + w_, y0), (x0 + w_, y0 + st), (x0 + w_ * 3, y0 + st), (x0 + w_ * 3, y0 + st * 2),
+                           (x0 + w_, y0 + st * 2), (x0 + w_, y0 + st * 3), (x0 - w_, y0 + st * 3), (x0 - w_, y0 + st * 2 - .01),
+                           (x0 + w_ * 1.0, y0 + st * 2 - .01), (x0 + w_ * 1.0, y0 + st + .01), (x0 - w_, y0 + st + .01)]
+                    d.polygon([P_(*q) for q in pts], fill=(252, 250, 244), outline=INK)
             elif name == 'hachimaki':          # a headband with a knot
                 y = fy - 6.2 * u
                 hw_ = g.half_w(y)
