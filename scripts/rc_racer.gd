@@ -52,17 +52,17 @@ const COUNTDOWN := 3
 const VIEW := Rect2(27, 92, 896, 830)
 const HUD_BAND := Rect2(27, 26, 896, 66)
 
-const WORLDS := ["Playroom", "Kitchen"]
+const WORLDS := ["Garden", "Kitchen"]
 ## What each world brings, said on its first level
 const WORLD_HINTS := ["", "speed boosts!"]
 ## Each world's page in the level menu
-const WORLD_BACKDROPS := [Color8(226, 170, 140), Color8(196, 214, 200)]
+const WORLD_BACKDROPS := [Color8(150, 196, 120), Color8(196, 214, 200)]
 ## The circuits, 9 per world: [grid columns, rows, squares in the patch, road half-width px, a fixed
 ## shape or null, corners wanted, boost pads]. The first ones are fixed shapes, long straights and few turns:
 ## an oval, an L, a U (its first hairpin); then grown patches, each level a bigger patch and more
 ## corners (the patch closest to that many), so the circuits get longer and twistier step by step.
 const LEVELS := [
-	# 1 Playroom: the basics
+	# 1 Garden: the basics
 	[6, 2, 0, 100.0, [Rect2i(0, 0, 6, 2)], 0, 0],
 	[6, 4, 0, 98.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2)], 0, 0],
 	[6, 4, 0, 96.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2), Rect2i(4, 2, 2, 2)], 0, 0],
@@ -84,9 +84,6 @@ const LINE := Color8(244, 240, 226)
 const CURB := [Color8(226, 70, 64), Color8(246, 242, 232)]
 const OUTLINE := Color8(40, 34, 44)
 const PAD := [Color8(252, 210, 64), Color8(226, 150, 40), Color8(70, 64, 78)]    # chevrons, their edge, the plate
-const TILES := [Color8(242, 234, 216), Color8(206, 226, 214), Color8(196, 188, 172)]  # the kitchen: cream, mint, grout
-const BLOCKS := [[Color8(232, 84, 72), Color8(176, 52, 48)], [Color8(84, 150, 226), Color8(52, 104, 176)],
-	[Color8(250, 210, 80), Color8(206, 158, 44)], [Color8(120, 200, 110), Color8(70, 146, 70)]]
 const SIDE := [Color8(236, 150, 64), Color8(198, 110, 44), Color8(150, 78, 34)]    # the track's orange plastic side
 const BLOCK := [Color8(246, 214, 92), Color8(206, 168, 60)]                          # the yellow toy blocks under it
 const MAT_EDGE := [Color8(214, 160, 100), Color8(132, 84, 48), Color8(74, 44, 32)]   # a wooden frame
@@ -124,6 +121,9 @@ var board: Sprite2D                    # the floor
 var track: Sprite2D                    # the raised track, over it
 var track_image: Image
 var trail: Trail                       # the speed streaks behind the wheels and the exhaust puffs
+var crowd: Crowd                       # the little grandstand by the finish line
+var _cheer_cd := 0.0
+var look_k := 0.0                      # how much the view looks ahead (0 at the start)
 var behind: Node2D                     # under the track: where a car falling off its far side goes
 var front: Node2D                      # over the track: the car
 var car: Node2D
@@ -148,6 +148,115 @@ var hint_left: HBoxContainer           # the controls along the bottom (shown at
 var hint_right: HBoxContainer
 var lcd_font: Font
 var _stars_shown := 3
+
+## The little grandstand by the finish line: three wooden tiers and the crowd, tiny coloured dots
+## that hop when the car goes by (a wave that runs along the stand from the car), at GO, and
+## all together at the finish. Drawn on the floor, beside the start straight.
+class Crowd extends Node2D:
+	const DOT_COLS := [Color8(236, 96, 84), Color8(250, 210, 84), Color8(110, 170, 236), Color8(250, 250, 244),
+		Color8(186, 130, 226), Color8(120, 206, 130), Color8(250, 160, 190)]
+	const OUTLINE := Color8(40, 34, 44)
+	const TIERS := 4                      # rows of seats
+	const ROW := 20.0                     # a row's depth (px)
+	const BACK := 14.0                    # the awning
+	var rect := Rect2()                  # the stand, mat px (axis-aligned)
+	var along_x := true                  # the stand runs left-right (else up-down)
+	var dots: Array = []                 # [position, colour, when it hops (s), how many hops]
+	var t := 0.0
+	var party := false                   # (the finish: everyone keeps bouncing)
+	var away := Vector2.UP                # from the track towards the stand's back
+	func setup(r: Rect2, horizontal: bool, seed_n: int, away_dir := Vector2.UP) -> void:
+		rect = r
+		along_x = horizontal
+		away = away_dir
+		dots.clear()
+		party = false
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed_n
+		var long := r.size.x if horizontal else r.size.y
+		for tier in TIERS:
+			var n := int((long - 28.0) / 20.0)
+			for k in n:
+				if rng.randf() < 0.12:
+					continue                  # (a few empty seats)
+				var a := 18.0 + k * 20.0 + (10.0 if tier % 2 else 0.0)
+				var b := _tier_at(tier) + 10.0
+				var p := r.position + (Vector2(a, b) if horizontal else Vector2(b, a))
+				dots.append([p.snapped(Vector2(4, 4)), DOT_COLS[rng.randi() % DOT_COLS.size()], -10.0, 1])
+		queue_redraw()
+	## A wave of hops along the stand, starting from `from` (mat px)
+	func cheer(from: Vector2, hops := 1) -> void:
+		for d in dots:
+			var dist: float = absf((d[0].x - from.x) if along_x else (d[0].y - from.y))
+			d[2] = t + dist / 520.0 + randf() * 0.06
+			d[3] = hops
+	func _process(delta: float) -> void:
+		t += delta
+		if party:
+			for d in dots:
+				if t > d[2] + 0.36 * d[3]:
+					d[2] = t + randf() * 0.25
+					d[3] = 1
+		queue_redraw()
+	## Where a tier starts across the stand (px from its top / left): tier 0 next to the track,
+	## the awning at the far side
+	func _tier_at(tier: int) -> float:
+		var depth := rect.size.y if along_x else rect.size.x
+		var toward_neg := (away.y < 0.0) if along_x else (away.x < 0.0)   # the back is the top / left
+		return (depth - ROW * (tier + 1)) if toward_neg else (ROW * tier)
+	func _draw() -> void:
+		if rect.size == Vector2.ZERO:
+			return
+		# the stand: outlined like the track (it's a toy too), three tiers stepping up away from
+		# the track (the back ones lighter: higher, nearer the light), lit lips
+		draw_rect(rect.grow(4), OUTLINE)
+		draw_rect(rect, Color8(150, 106, 72))
+		var wood := [Color8(170, 122, 80), Color8(186, 138, 92), Color8(202, 154, 104), Color8(216, 170, 118)]
+		for tier in TIERS:
+			var at := _tier_at(tier)
+			var r: Rect2
+			if along_x:
+				r = Rect2(rect.position + Vector2(0, at), Vector2(rect.size.x, ROW))
+			else:
+				r = Rect2(rect.position + Vector2(at, 0), Vector2(ROW, rect.size.y))
+			draw_rect(r, wood[tier])
+			var lip := Rect2(r.position, Vector2(r.size.x, 4)) if along_x else Rect2(r.position, Vector2(4, r.size.y))
+			draw_rect(lip, wood[tier].lightened(0.15))
+		# the awning along the back: red and white stripes, a scalloped edge towards the crowd
+		var back := BACK
+		var toward_neg := (away.y < 0.0) if along_x else (away.x < 0.0)
+		var aw: Rect2
+		if along_x:
+			aw = Rect2(Vector2(rect.position.x, rect.position.y if toward_neg else rect.end.y - back), Vector2(rect.size.x, back))
+		else:
+			aw = Rect2(Vector2(rect.position.x if toward_neg else rect.end.x - back, rect.position.y), Vector2(back, rect.size.y))
+		var long := aw.size.x if along_x else aw.size.y
+		var k := 0
+		var a := 0.0
+		while a < long:
+			var col := Color8(226, 70, 64) if k % 2 == 0 else Color8(246, 242, 232)
+			var piece := Rect2(aw.position + Vector2(a, 0), Vector2(minf(20.0, long - a), back)) if along_x else Rect2(aw.position + Vector2(0, a), Vector2(back, minf(20.0, long - a)))
+			draw_rect(piece, col)
+			# the scallop: each stripe ends in a little rounded tab towards the seats
+			var tab := Rect2(piece.position + (Vector2(4, back if toward_neg else -4) if along_x else Vector2(back if toward_neg else -4, 4)), Vector2(12, 4) if along_x else Vector2(4, 12))
+			draw_rect(tab, col)
+			a += 20.0
+			k += 1
+		# the crowd: 16 px round dots (on the 4 px grid), a darker lower half, a shine; they hop
+		# up the screen
+		for d in dots:
+			var u: float = (t - d[2]) / 0.36
+			var up := 0.0
+			if u >= 0.0 and u < float(d[3]):
+				up = sin(fposmod(u, 1.0) * PI) * 16.0
+			var p: Vector2 = d[0] - Vector2(0, roundf(up / 4.0) * 4.0)
+			var c: Color = d[1]
+			draw_rect(Rect2(p + Vector2(-8, -4), Vector2(16, 8)), c)
+			draw_rect(Rect2(p + Vector2(-4, -8), Vector2(8, 16)), c)
+			draw_rect(Rect2(p + Vector2(-8, 0), Vector2(16, 4)), c.darkened(0.18))
+			draw_rect(Rect2(p + Vector2(-4, 4), Vector2(8, 4)), c.darkened(0.18))
+			draw_rect(Rect2(p + Vector2(-4, -4), Vector2(4, 4)), c.lightened(0.4))     # its shine
+
 
 ## Speed: short light streaks left on the road by the rear wheels, fading fast, and puffs from the
 ## exhaust; both on the 4 px grid
@@ -220,6 +329,7 @@ func _begin(n: int) -> void:
 	level = clampi(n, 1, LEVELS.size())
 	world_no = (level - 1) / GameData.LEVELS_PER_WORLD
 	_build_circuit()
+	_place_crowd()
 	board.texture = ImageTexture.create_from_image(_paint())
 	track.texture = ImageTexture.create_from_image(track_image)
 	car_pos = centre[0]
@@ -246,6 +356,7 @@ func _begin(n: int) -> void:
 	for h in [hint_left, hint_right]:
 		h.visible = true
 		h.modulate.a = 1.0
+	look_k = 0.0
 	_place_car()
 	_follow(1.0)
 	_refresh_hud()
@@ -321,6 +432,35 @@ func _build_circuit() -> void:
 	centre = rolled
 	_place_pads(spec[6])
 	par = ceilf(lap_length * LAPS / SPEED * PAR_SLACK + PAR_PLUS - pads.size() * LAPS * PAD_SAVES)
+
+## The stand beside the start straight, on whichever side has room (never near the road)
+func _place_crowd() -> void:
+	var dir := (centre[4] - centre[0]).normalized()
+	var horizontal := absf(dir.x) > absf(dir.y)
+	var normal := Vector2(-dir.y, dir.x)
+	# the biggest stand that fits beside the finish line (tight circuits get a smaller one)
+	for long in [340.0, 260.0, 200.0]:
+		if _try_crowd(dir, horizontal, normal, long):
+			return
+	crowd.visible = false
+
+func _try_crowd(dir: Vector2, horizontal: bool, normal: Vector2, long: float) -> bool:
+	var size := Vector2(long, 96) if horizontal else Vector2(96, long)
+	for side in [1.0, -1.0]:
+		var c: Vector2 = centre[0] + normal * side * (half_w + 30.0 + 48.0)   # (on the finish line)
+		var r := Rect2(c - size / 2.0, size)
+		var ok := r.position.x > EDGE * PX + 8 and r.position.y > EDGE * PX + 8 and r.end.x < mat_size.x - EDGE * PX - 8 and r.end.y < mat_size.y - EDGE * PX - 8
+		if ok:
+			for p in centre:
+				var q := p.clamp(r.position, r.end)
+				if p.distance_to(q) < half_w + 24.0:
+					ok = false
+					break
+		if ok:
+			crowd.setup(r, horizontal, level * 13 + 1, normal * side)
+			crowd.visible = true
+			return true
+	return false
 
 ## Boost pads in the middle of the longest straights (never on the start line)
 func _place_pads(n: int) -> void:
@@ -497,7 +637,17 @@ func _paint() -> Image:
 					idx[i] = s
 	# two layers: the floor (the carpet, the frame, the track's shadow) and the raised track (the
 	# road, its curbs, its side face): a car falling off the far side drops between them
-	var deco := _decor(w, h, dist, hw)
+	_bw = w
+	_bh = h
+	if not _grass_noise:
+		_grass_noise = FastNoiseLite.new()
+		_grass_noise.frequency = 0.022
+		_grass_noise.fractal_octaves = 3
+		_cloud_noise = FastNoiseLite.new()
+		_cloud_noise.frequency = 0.006
+	_grass_noise.seed = level
+	_cloud_noise.seed = level * 7 + 1
+	_garden_decor(w, h, dist, hw)
 	var data := PackedByteArray()
 	data.resize(w * h * 4)
 	var top := PackedByteArray()
@@ -556,18 +706,19 @@ func _paint() -> Image:
 					col = OUTLINE
 				else:
 					on_track = false
-					col = deco[i] if deco.has(i) else _floor_px(x, y)
+					col = _floor_px(x, y)
 					var sx := x - 3
 					var sy := y - TRACK_SIDE - 3
 					if sx >= 0 and sy >= 0 and dist[sy * w + sx] <= hw + 2.0:
 						col = col.darkened(0.22)
+			col = _lit(col, x, y)
 			if on_track:
 				top[k] = col.r8
 				top[k + 1] = col.g8
 				top[k + 2] = col.b8
 				top[k + 3] = 255
 				# (under the track the floor is just floor)
-				col = _floor_px(x, y)
+				col = _lit(_floor_px(x, y), x, y)
 			data[k] = col.r8
 			data[k + 1] = col.g8
 			data[k + 2] = col.b8
@@ -576,70 +727,117 @@ func _paint() -> Image:
 	track_image = Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, top)
 	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
 
-## The floor under the track, per world: the Playroom's carpet, the Kitchen's tiles
-func _floor_px(x: int, y: int) -> Color:
-	if world_no == 1:
-		var lx := x % 14
-		var ly := y % 14
-		if lx == 0 or ly == 0:
-			return TILES[2]                                  # grout
-		var c: Color = TILES[0] if ((x / 14) + (y / 14)) % 2 == 0 else TILES[1]
-		return c.lightened(0.12) if lx == 1 or ly == 1 else c  # a glazed edge, lit top-left
-	var col: Color = CARPET[0] if (x + y * 2) % 5 else CARPET[1]
-	if (x * 7 + y * 3) % 23 == 0:
-		col = CARPET[2]
-	return col
+## The floors, in the worlds' style (the user's Retry references, docs/mockups/palprix_worlds/v2):
+## no outlines, few colours in steps with a 2x2 dither between them. The Garden (a morning): soft
+## grass, flower clusters, chunky bushes, soft cloud shadows; the Kitchen: cream and mint tiles in
+## the morning sun through the window
+const DITHER := [[0.125, 0.625], [0.875, 0.375]]
+const GRASS := [Color8(116, 172, 82), Color8(130, 186, 90), Color8(146, 200, 98), Color8(162, 212, 110)]
+const BUSH := [Color8(60, 116, 56), Color8(80, 140, 62), Color8(104, 164, 72), Color8(132, 188, 86)]
+const FLOWERS := [Color8(250, 246, 232), Color8(248, 196, 206), Color8(252, 226, 140)]
+const KITCHEN := [Color8(240, 232, 214), Color8(214, 230, 218), Color8(206, 198, 184)]
+var _bw := 1                           # the mat being painted, board px
+var _bh := 1
+var _grass_noise: FastNoiseLite
+var _cloud_noise: FastNoiseLite
+var _decor := {}                       # board px index -> colour: the Garden's flowers and bushes
 
-## Things on the floor, away from the track: the Playroom's toy blocks (seen from above at the
-## track's angle: a lit top, a darker front face, outlined). {board px index: colour}
-func _decor(w: int, h: int, dist: PackedFloat32Array, hw: float) -> Dictionary:
-	var out := {}
+func _floor_px(x: int, y: int) -> Color:
+	if _decor.has(y * _bw + x):
+		return _decor[y * _bw + x]
+	if world_no == 1:
+		var lx := x % 16
+		var ly := y % 16
+		if lx == 0 or ly == 0:
+			return KITCHEN[2]                                # soft grout
+		return KITCHEN[0] if ((x / 16) + (y / 16)) % 2 == 0 else KITCHEN[1]
+	# the Garden: soft patches of grass in four greens, light mowing stripes over them
+	var v := (_grass_noise.get_noise_2d(x, y) + 1.0) * 0.5 * 0.85 + 0.08
+	var f := clampf(v, 0.0, 0.999) * GRASS.size()
+	var band := int(f)
+	if f - band > 0.75 and DITHER[y % 2][x % 2] < (f - band - 0.75) * 4.0:
+		band += 1
+	var c: Color = GRASS[clampi(band, 0, GRASS.size() - 1)]
+	if ((x + y / 2) / 20) % 2 == 0:
+		c = c.lerp(Color8(172, 220, 120), 0.1)
+	return c
+
+## The world's light over everything, the track too
+func _lit(c: Color, x: int, y: int) -> Color:
+	if world_no == 0:
+		# a bright morning, soft cloud shadows drifting over the garden (dithered edges)
+		var n := _cloud_noise.get_noise_2d(x, y)
+		var shade: bool = n > 0.32 or (n > 0.26 and DITHER[y % 2][x % 2] < 0.5)
+		if shade:
+			return c.lerp(Color8(56, 86, 110), 0.16)
+		return Color(minf(1.0, c.r * 1.02 + 0.015), minf(1.0, c.g * 1.02 + 0.01), c.b)
+	# the Kitchen's morning: the window's slanted beams on pale tiles, the rest in shade
+	var s := x - y * 0.6
+	var ph := fposmod(s, 300.0)
+	var lit := ph > 20.0 and ph < 150.0 and absf(ph - 85.0) >= 2.5
+	if not lit and ((ph > 12.0 and ph <= 20.0) or (ph >= 150.0 and ph < 158.0)):
+		lit = DITHER[y % 2][x % 2] < 0.5
+	if lit:
+		return Color(minf(1.0, c.r * 1.03 + 0.02), minf(1.0, c.g * 1.03 + 0.02), minf(1.0, c.b * 1.03 + 0.01))
+	return c.lerp(Color8(96, 108, 140), 0.12)
+
+## The Garden's flowers and bushes, away from the track (and the stand): chunky, no outlines
+func _garden_decor(w: int, h: int, dist: PackedFloat32Array, hw: float) -> void:
+	_decor.clear()
 	if world_no != 0:
-		return out
+		return
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 77 * level + 5
-	var placed: Array[Rect2i] = []
-	for t in int(w * h / 3000):
-		var size := 16
-		var r := Rect2i(rng.randi_range(EDGE + 3, w - EDGE - size - 3), rng.randi_range(EDGE + 3, h - EDGE - size - 10), size, size + 5)
-		var ok := true
-		for q in placed:
-			if q.grow(10).intersects(r):
-				ok = false
-		if not ok:
+	rng.seed = 91 * level + 3
+	var stand := Rect2(crowd.rect.position / PX, crowd.rect.size / PX).grow(4.0) if crowd.visible else Rect2()
+	var clear := func(x: int, y: int, room: float) -> bool:
+		return x >= EDGE and y >= EDGE and x < w - EDGE and y < h - EDGE and dist[y * w + x] > hw + room and not stand.has_point(Vector2(x, y))
+	# bushes: lumpy discs lit from the top-left, a few sparkles, a soft shadow down-right
+	for k in int(w * h / 9000):
+		var r := rng.randi_range(9, 16)
+		var cx := rng.randi_range(EDGE + r, w - EDGE - r)
+		var cy := rng.randi_range(EDGE + r, h - EDGE - r)
+		if not clear.call(cx, cy, r + 10.0):
 			continue
-		for yy in range(r.position.y - 6, r.end.y + 8):
-			for xx in range(r.position.x - 6, r.end.x + 6):
-				if xx >= 0 and yy >= 0 and xx < w and yy < h and dist[yy * w + xx] <= hw + 12.0:
-					ok = false
-		if not ok:
-			continue
-		placed.append(r)
-		var pal: Array = BLOCKS[rng.randi() % BLOCKS.size()]
-		for yy in range(r.position.y, r.end.y):
-			for xx in range(r.position.x, r.end.x):
-				var lx := xx - r.position.x
-				var ly := yy - r.position.y
-				var c: Color
-				if lx == 0 or lx == size - 1 or ly == 0 or ly == r.size.y - 1 or ly == size - 1:
-					c = OUTLINE
-				elif ly < size - 1:
-					c = pal[0].lightened(0.2) if lx == 1 or ly == 1 else pal[0]   # its top
-					if lx >= 5 and lx <= 10 and ly >= 4 and ly <= 9 and (lx == 5 or lx == 10 or ly == 4 or ly == 9):
-						c = pal[1]                                   # a letter's square on it
-				else:
-					c = pal[1]                                       # its front face
-				out[yy * w + xx] = c
-		# its shadow on the floor (down-right)
-		for yy in range(r.position.y + 2, r.end.y + 2):
-			for xx in range(r.end.x, r.end.x + 2):
-				if xx < w and yy < h and not out.has(yy * w + xx):
-					out[yy * w + xx] = _floor_px(xx, yy).darkened(0.25)
-		for xx in range(r.position.x + 2, r.end.x + 2):
-			var yy := r.end.y
-			if xx < w and yy < h and not out.has(yy * w + xx):
-				out[yy * w + xx] = _floor_px(xx, yy).darkened(0.25)
-	return out
+		var ph := rng.randf() * TAU
+		for y in range(cy - r - 3, cy + r + 4):
+			for x in range(cx - r - 3, cx + r + 4):
+				if x < 0 or y < 0 or x >= w or y >= h:
+					continue
+				var a := atan2(y - cy, x - cx)
+				var d := Vector2(x - cx, y - cy).length()
+				var lump := r * (1.0 + 0.22 * sin(a * 5.0 + ph) + 0.1 * sin(a * 9.0 + ph * 2.0))
+				var i := y * w + x
+				if d <= lump and ((x / 2 + y / 2) % 3 != 0 or d <= lump - 2.0):
+					var light := (-(x - cx) - (y - cy)) / (r * 1.6)
+					var v := clampf(0.5 + light * 0.6, 0.0, 0.999) * BUSH.size()
+					var b := int(v)
+					if v - b > 0.75 and DITHER[y % 2][x % 2] < (v - b - 0.75) * 4.0:
+						b += 1
+					var col: Color = BUSH[clampi(b, 0, BUSH.size() - 1)]
+					if light > -0.1 and rng.randf() < 0.012:
+						col = Color8(206, 240, 160)               # a sparkle
+					_decor[i] = col
+				elif d <= lump + 2.5 and y > cy and x > cx - r * 0.3 and not _decor.has(i):
+					_decor[i] = Color8(0, 0, 0, 0)                 # (its shadow: marked, painted below)
+	# flower clusters: small soft dots in groups of one colour, a stem dot under each
+	for k in int(w * h / 2600):
+		var cx := rng.randi_range(EDGE + 10, w - EDGE - 10)
+		var cy := rng.randi_range(EDGE + 8, h - EDGE - 8)
+		var col: Color = FLOWERS[rng.randi() % FLOWERS.size()]
+		for j in 8:
+			var fx := cx + rng.randi_range(-9, 9)
+			var fy := cy + rng.randi_range(-6, 6)
+			if not clear.call(fx, fy, 6.0) or not clear.call(fx + 1, fy + 2, 6.0):
+				continue
+			for p in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
+				_decor[(fy + p.y) * w + fx + p.x] = col
+			if not _decor.has((fy + 2) * w + fx):
+				_decor[(fy + 2) * w + fx] = Color8(92, 150, 70)
+	# the bushes' shadows: the grass under them, darker
+	for i in _decor.keys():
+		if _decor[i].a == 0.0:
+			_decor.erase(i)
+			_decor[i] = _floor_px(i % w, i / w).darkened(0.22)
 
 ## A little red RC car seen from above, nose to the right: 22 x 16 px (x4), a seat in the middle
 static func car_texture() -> Texture2D:
@@ -729,6 +927,8 @@ func _create_nodes() -> void:
 	board.scale = Vector2(PX, PX)
 	board.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	world.add_child(board)
+	crowd = Crowd.new()
+	world.add_child(crowd)                          # (on the floor, beside the track)
 	# drawn in this order: the floor, a car falling behind the track, the raised track, the car
 	behind = Node2D.new()
 	world.add_child(behind)
@@ -928,7 +1128,9 @@ func _place_car() -> void:
 
 ## The view follows the car (a small mat just sits in the middle of it)
 func _follow(amount: float) -> void:
-	var aim := car_pos + Vector2.from_angle(heading) * LOOK_AHEAD
+	# (at the start the view is on the car, the stand beside it; it looks ahead once racing)
+	look_k = move_toward(look_k, 1.0 if state == State.DRIVE else 0.0, 0.02)
+	var aim := car_pos + Vector2.from_angle(heading) * LOOK_AHEAD * look_k
 	var want := VIEW.get_center() - aim * ZOOM
 	var shown := mat_size * ZOOM
 	var pos := Vector2.ZERO
@@ -980,6 +1182,7 @@ func _process(delta: float) -> void:
 			if countdown <= 0.6:
 				state = State.DRIVE
 				_set_lamps(COUNTDOWN, true)                    # all green: GO
+				crowd.cheer(car_pos)
 				_show_banner("GO!", 0.5)
 				_sfx("res://sounds/fx/rc_go.wav", -8.0)
 				Input.vibrate_handheld(40)
@@ -1029,6 +1232,10 @@ func _drive(delta: float) -> void:
 	boost_t = maxf(0.0, boost_t - delta / BOOST_TIME)
 	car_pos += Vector2.from_angle(heading) * v * delta
 	trail.add(car_pos, heading, delta)
+	_cheer_cd = maxf(0.0, _cheer_cd - delta)
+	if crowd.visible and _cheer_cd <= 0.0 and crowd.rect.grow(170.0).has_point(car_pos):
+		_cheer_cd = 2.5
+		crowd.cheer(car_pos)                             # (the wave runs from where the car is)
 	if boost_t > 0.3:
 		trail.add(car_pos, heading, delta)                  # (more streaks while boosted)
 	_find_near()
@@ -1111,6 +1318,7 @@ func _find_near() -> void:
 
 func _finish() -> void:
 	state = State.DONE
+	crowd.party = true
 	motor.stop()
 	var stars := _stars_now()
 	_show_banner("FINISH!", 1.0)

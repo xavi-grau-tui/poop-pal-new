@@ -70,14 +70,18 @@ To build:
   raised toy track (angled close-up view, sprite-stacked 3D car, fixed speed 500, orange = left,
   forward = right, falling off = back on the last checkpoint; the far side: the car drops behind
   the track). Curbs slow the car; par = a clean run +3% +1 s (the 2nd star needs a near-perfect
-  run). WORLDS (user, 2026-10-15), one new thing each, its own floor under the track:
-  1 Playroom (BUILT): carpet with toy blocks; the basics (an oval, an L, a U, then grown patches).
-  2 Kitchen (BUILT): checkered kitchen tiles; SPEED BOOST pads on the straights (a boosted car
-    takes the next turn wider).
-  3 Garden or Sky: JUMPS, ramps over gaps (fall if not straight on the ramp); grass or clouds.
-  4 Lagoon: CROSSOVERS, the road passing under itself on a bridge (figure-8 circuits); water.
-  5 Grand Prix: a RIVAL pal to beat, everything mixed; a stadium.
-  Also later: obstacles. Its song: see "Music prompts".
+  run). Look (2026-10-16, after the user's Retry references, docs/mockups/palprix_worlds/v2): no
+  outlines in the background, one small palette and a time of day per world, each world's light
+  over the track too; a little grandstand by the finish line, its crowd of coloured dots hopping
+  as the car passes. WORLDS (user, 2026-10-15/16), one new thing each, its own floor:
+  1 Garden, morning (BUILT; it replaced the Playroom, whose floor didn't read close up): soft
+    grass, flowers, bushes, cloud shadows; the basics (an oval, an L, a U, then grown patches).
+  2 Kitchen (BUILT): cream and mint tiles in the window's sun; SPEED BOOST pads on the straights.
+  3 Sky, noon: JUMPS, ramps over gaps (fall if not straight on the ramp); hazy fields far below.
+  4 Lagoon, sunset: CROSSOVERS, the road passing under itself on a bridge (figure-8 circuits).
+  5 Grand Prix, night: RIVALS, the last world with 3 of them (a rival pal earlier, at some point).
+  To add incrementally across worlds (user, 2026-10-16): SLIP obstacles (oil, puddles: the car
+  spins a full 360° and stops for a moment), more boosts, obstacles. Its song: see "Music prompts".
 - The other launch games onto levels and worlds (Paper Sumo, Pipe Dream / RC car, Top Spin, Tummy
   Tunes), each world with its own look and new mechanic, prizes from where they belong.
 - The other 3 boosts (Focus, Sturdy, Lucky) in the games (boost table in Drinks).
