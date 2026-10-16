@@ -26,9 +26,9 @@ const PX := 4                         # world px per board px (the games' chunky
 const CELL := 300.0                   # a grid square, world px (the road stays a square from itself)
 const EDGE := 10                      # the mat's wooden frame, board px
 const MARGIN := 24.0                  # road edge -> frame, world px
-const SPEED := 500.0                  # mat px/s, always
-const TURN := 5.4                     # rad/s while a button is held (a full turn in 1.2 s; turning
-                                      # circle ~93 px, inside the circuits' 150 px corners)
+const SPEED := 580.0                  # mat px/s, always
+const TURN := 6.2                     # rad/s while a button is held (a full turn in 1 s; turning
+                                      # circle ~94 px, inside the circuits' 150 px corners)
 const ZOOM := 1.5                     # the view, close up (board px shown 6 px)
 const LOOK_AHEAD := 260.0             # the view looks this far ahead of the car (mat px)
 const FALL_AT := 6.0                  # past the road's edge by this much: off the track
@@ -156,9 +156,9 @@ class Crowd extends Node2D:
 	const DOT_COLS := [Color8(236, 96, 84), Color8(250, 210, 84), Color8(110, 170, 236), Color8(250, 250, 244),
 		Color8(186, 130, 226), Color8(120, 206, 130), Color8(250, 160, 190)]
 	const OUTLINE := Color8(40, 34, 44)
-	const TIERS := 4                      # rows of seats
-	const ROW := 20.0                     # a row's depth (px)
-	const BACK := 14.0                    # the awning
+	const TIERS := 5                      # rows of seats
+	const ROW := 24.0                     # a row's depth (px)
+	const BACK := 16.0                    # the awning
 	var rect := Rect2()                  # the stand, mat px (axis-aligned)
 	var along_x := true                  # the stand runs left-right (else up-down)
 	var dots: Array = []                 # [position, colour, when it hops (s), how many hops]
@@ -175,12 +175,12 @@ class Crowd extends Node2D:
 		rng.seed = seed_n
 		var long := r.size.x if horizontal else r.size.y
 		for tier in TIERS:
-			var n := int((long - 28.0) / 20.0)
+			var n := int((long - 36.0) / 24.0)
 			for k in n:
-				if rng.randf() < 0.12:
+				if rng.randf() < 0.1:
 					continue                  # (a few empty seats)
-				var a := 18.0 + k * 20.0 + (10.0 if tier % 2 else 0.0)
-				var b := _tier_at(tier) + 10.0
+				var a := 22.0 + k * 24.0 + (12.0 if tier % 2 else 0.0)
+				var b := _tier_at(tier) + 12.0
 				var p := r.position + (Vector2(a, b) if horizontal else Vector2(b, a))
 				dots.append([p.snapped(Vector2(4, 4)), DOT_COLS[rng.randi() % DOT_COLS.size()], -10.0, 1])
 		queue_redraw()
@@ -211,7 +211,7 @@ class Crowd extends Node2D:
 		# the track (the back ones lighter: higher, nearer the light), lit lips
 		draw_rect(rect.grow(4), OUTLINE)
 		draw_rect(rect, Color8(150, 106, 72))
-		var wood := [Color8(170, 122, 80), Color8(186, 138, 92), Color8(202, 154, 104), Color8(216, 170, 118)]
+		var wood := [Color8(164, 116, 76), Color8(178, 130, 86), Color8(192, 144, 96), Color8(206, 158, 108), Color8(218, 172, 120)]
 		for tier in TIERS:
 			var at := _tier_at(tier)
 			var r: Rect2
@@ -248,14 +248,15 @@ class Crowd extends Node2D:
 			var u: float = (t - d[2]) / 0.36
 			var up := 0.0
 			if u >= 0.0 and u < float(d[3]):
-				up = sin(fposmod(u, 1.0) * PI) * 16.0
+				up = sin(fposmod(u, 1.0) * PI) * 20.0
 			var p: Vector2 = d[0] - Vector2(0, roundf(up / 4.0) * 4.0)
 			var c: Color = d[1]
-			draw_rect(Rect2(p + Vector2(-8, -4), Vector2(16, 8)), c)
-			draw_rect(Rect2(p + Vector2(-4, -8), Vector2(8, 16)), c)
-			draw_rect(Rect2(p + Vector2(-8, 0), Vector2(16, 4)), c.darkened(0.18))
-			draw_rect(Rect2(p + Vector2(-4, 4), Vector2(8, 4)), c.darkened(0.18))
-			draw_rect(Rect2(p + Vector2(-4, -4), Vector2(4, 4)), c.lightened(0.4))     # its shine
+			# a 20 px round dot on the 4 px grid: a darker lower half, a shine top-left
+			draw_rect(Rect2(p + Vector2(-10, -6), Vector2(20, 12)), c)
+			draw_rect(Rect2(p + Vector2(-6, -10), Vector2(12, 20)), c)
+			draw_rect(Rect2(p + Vector2(-10, 2), Vector2(20, 4)), c.darkened(0.18))
+			draw_rect(Rect2(p + Vector2(-6, 6), Vector2(12, 4)), c.darkened(0.18))
+			draw_rect(Rect2(p + Vector2(-6, -6), Vector2(4, 4)), c.lightened(0.45))     # its shine
 
 
 ## Speed: short light streaks left on the road by the rear wheels, fading fast, and puffs from the
@@ -439,15 +440,15 @@ func _place_crowd() -> void:
 	var horizontal := absf(dir.x) > absf(dir.y)
 	var normal := Vector2(-dir.y, dir.x)
 	# the biggest stand that fits beside the finish line (tight circuits get a smaller one)
-	for long in [340.0, 260.0, 200.0]:
+	for long in [440.0, 340.0, 260.0, 200.0]:
 		if _try_crowd(dir, horizontal, normal, long):
 			return
 	crowd.visible = false
 
 func _try_crowd(dir: Vector2, horizontal: bool, normal: Vector2, long: float) -> bool:
-	var size := Vector2(long, 96) if horizontal else Vector2(96, long)
+	var size := Vector2(long, 136) if horizontal else Vector2(136, long)
 	for side in [1.0, -1.0]:
-		var c: Vector2 = centre[0] + normal * side * (half_w + 30.0 + 48.0)   # (on the finish line)
+		var c: Vector2 = centre[0] + normal * side * (half_w + 30.0 + 68.0)   # (on the finish line)
 		var r := Rect2(c - size / 2.0, size)
 		var ok := r.position.x > EDGE * PX + 8 and r.position.y > EDGE * PX + 8 and r.end.x < mat_size.x - EDGE * PX - 8 and r.end.y < mat_size.y - EDGE * PX - 8
 		if ok:
