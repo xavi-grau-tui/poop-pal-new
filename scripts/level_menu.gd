@@ -241,6 +241,16 @@ func _cell(pos: Vector2, lvl: int) -> Control:
 			p.add_child(s)
 	else:
 		p.add_child(_icon(UiArt.lock(), Vector2(CELL.x / 2.0, 142), 4.0))
+	# its secret (the gate's drink and level) or its finale prize, on the top-right corner;
+	# taken: a little tick instead
+	var sc: Dictionary = game.secret_of(lvl) if game else {}
+	var fin: bool = game != null and lvl in game.finale_prizes()
+	if not sc.is_empty() or fin:
+		var taken: bool = sc.get("taken", false) if not sc.is_empty() else GameData.vault_taken(game_index, -lvl)
+		var tex: Texture2D = UiArt.tick() if taken else (UiArt.gate_badge(sc["gate"], int(sc.get("lvl", 1))) if not sc.is_empty() else UiArt.gift())
+		var badge := _icon(tex, Vector2(CELL.x - 34, 34), 3.0)
+		badge.modulate = Color(1, 1, 1, 0.85 if taken else 1.0)
+		p.add_child(badge)
 	p.set_meta("level", lvl)
 	p.set_meta("open", open)
 	return p
@@ -312,8 +322,9 @@ func _build_card() -> void:
 		var o := _label(Vector2(0, 330 + i * 62), Vector2(card.size.x, 60), 44, Color(0.55, 0.5, 0.45), card)
 		r_options.append(o)
 
-## A level is over: `stars` 1-3 = cleared (0 = time's up), `coins_won` = new coins
-func show_result(level: int, stars: int, coins_won: int) -> void:
+## A level is over: `stars` 1-3 = cleared (0 = time's up), `coins_won` = new coins, `prize` = a
+## finale's prize won ({ name, icon, kind } from Collection.give_prize), shown under the coins
+func show_result(level: int, stars: int, coins_won: int, prize := {}) -> void:
 	mode = Mode.RESULT
 	visible = true
 	select_root.visible = false
@@ -323,7 +334,7 @@ func show_result(level: int, stars: int, coins_won: int) -> void:
 	_result_ready = false
 	var per := GameData.LEVELS_PER_WORLD
 	var lvl_name := "%d-%d" % [(level - 1) / per + 1, (level - 1) % per + 1]
-	r_title.text = ("Level %s clear!" % lvl_name) if stars > 0 else "Time's up!"
+	r_title.text = ("Level %s clear!" % lvl_name) if stars > 0 else (game.fail_title() if game else "Time's up!")
 	r_actions.assign(["next", "retry", "levels"] if stars > 0 and level < levels else ["retry", "levels"])
 	for i in r_options.size():
 		r_options[i].visible = i < r_actions.size()
@@ -346,10 +357,13 @@ func show_result(level: int, stars: int, coins_won: int) -> void:
 			_sfx("res://sounds/fx/gamecoin.wav", -8.0 + k * 1.5))
 		t.tween_property(r_stars[k], "scale", Vector2(1.3, 1.3), 0.08)
 		t.tween_property(r_stars[k], "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	if coins_won > 0:
+	var coin_text := ("+%d coin%s" % [coins_won, "" if coins_won == 1 else "s"]) if coins_won > 0 else ""
+	if not prize.is_empty():
+		coin_text = (coin_text + "  ·  " if coin_text != "" else "") + "+ " + str(prize.get("name", ""))
+	if coin_text != "":
 		t.tween_interval(0.25)
 		t.tween_callback(func():
-			r_coins.text = "+%d coin%s" % [coins_won, "" if coins_won == 1 else "s"]
+			r_coins.text = coin_text
 			_sfx("res://sounds/fx/claw_prize.wav", -10.0))
 	elif stars > 0:
 		t.tween_callback(func(): r_coins.text = "")

@@ -413,30 +413,36 @@ const PICKETS := [
 	[Color8(170, 182, 200), Color8(120, 134, 158)], [Color8(226, 220, 246), Color8(176, 166, 210)],
 ]
 
-static func fence(w: int, vertical: bool, world := 0) -> Texture2D:
-	var key := "fence_%d_%s_%d" % [w, vertical, world]
+## lvl: the fence's height (the gate's level): one striped rail per level, a higher fence needs
+## a stronger fizzy drink
+static func fence(w: int, vertical: bool, world := 0, lvl := 1) -> Texture2D:
+	var key := "fence_%d_%s_%d_%d" % [w, vertical, world, lvl]
 	var pk: Array = PICKETS[world]
 	if key in _cache:
 		return _cache[key]
 	var long := w
-	const SHORT := 9
+	var rails := clampi(lvl, 1, 3)
+	var SHORT := 9 + (rails - 1) * 3
 	var img := _img(SHORT if vertical else long, long if vertical else SHORT)
 	var ink := Color8(58, 34, 30)
+	var top := 1 + (rails - 1) * 3                       # (the pickets start under the last rail)
 	for a in long:
 		for b in SHORT:
 			var col := Color(0, 0, 0, 0)
-			if b == 1:
-				col = ink                                     # the rail's top edge
-			elif b <= 3:
-				col = Color8(236, 76, 76) if (a / 3) % 2 == 0 else Color8(250, 244, 230)   # the striped rail
-				if b == 2:
-					col = col.lightened(0.15)
-			elif b <= 7:
+			if b <= top + 2 and b >= 1:
+				var rb := (b - 1) % 3
+				if rb == 0:
+					col = ink                                 # each rail's top edge
+				else:
+					col = Color8(236, 76, 76) if (a / 3) % 2 == 0 else Color8(250, 244, 230)   # the striped rail
+					if rb == 1:
+						col = col.lightened(0.15)
+			elif b <= top + 6:
 				if a % 4 == 3:
 					col = Color(0, 0, 0, 0)                  # the gaps between the pickets
 				else:
-					col = pk[0] if b < 6 else pk[1]
-			elif b == 8 and a % 4 != 3:
+					col = pk[0] if b < top + 5 else pk[1]
+			elif b == top + 7 and a % 4 != 3:
 				col = ink                                     # the pickets' feet
 			if (a == 0 or a == long - 1) and b >= 1:
 				col = ink                                     # the end posts
@@ -446,6 +452,391 @@ static func fence(w: int, vertical: bool, world := 0) -> Texture2D:
 				else:
 					img.set_pixel(a, b, col)
 	return _tex(key, img)
+
+## A cracked wall across a vault's door (a sturdy pal rams through it): a block of the world's
+## wall, lit on top, its front face darker, split by dark cracks; w x 8 px
+static func cracked_wall(w: int, vertical: bool, world := 0) -> Texture2D:
+	var key := "crack_%d_%s_%d" % [w, vertical, world]
+	if key in _cache:
+		return _cache[key]
+	var th: Dictionary = THEMES[world]
+	var wc: Array = th["wall"]
+	var ink: Color = th["outline"]
+	const SHORT := 8
+	var img := _img(SHORT if vertical else w, w if vertical else SHORT)
+	for a in w:
+		for b in SHORT:
+			var col: Color = wc[1]
+			if b == 0 or b == SHORT - 1 or a == 0 or a == w - 1:
+				col = ink
+			elif b == 1:
+				col = wc[0]                                   # the lit top edge
+			elif b >= SHORT - 3:
+				col = wc[2]                                   # the darker front face
+			# the cracks: a zigzag every 7 px, a branch on the long ones
+			var ca := a % 7
+			if b >= 1 and b < SHORT - 1 and ((ca == 3 and b % 2 == 0) or (ca == 4 and b % 2 == 1)) and a > 1 and a < w - 2:
+				col = ink
+			if b == 3 and (a % 7 == 5 or a % 7 == 6) and a < w - 2:
+				col = ink.lerp(wc[2], 0.3)
+			if vertical:
+				img.set_pixel(b, a, col)
+			else:
+				img.set_pixel(a, b, col)
+	return _tex(key, img)
+
+## A deep water channel across a vault's door (a splashy pal skims over it): dark deep water in
+## the middle, lighter water and foam at its banks, ripples; w x 10 px
+static func channel(w: int, vertical: bool) -> Texture2D:
+	var key := "chan_%d_%s" % [w, vertical]
+	if key in _cache:
+		return _cache[key]
+	const SHORT := 10
+	var img := _img(SHORT if vertical else w, w if vertical else SHORT)
+	for a in w:
+		for b in SHORT:
+			var col := Color8(54, 104, 168)
+			if b == 0 or b == SHORT - 1:
+				col = Color8(36, 52, 84)                      # the banks' edge
+			elif b == 1 or b == SHORT - 2:
+				col = Color8(226, 244, 252) if (a / 2) % 3 != 0 else Color8(150, 200, 236)   # foam
+			elif b == 2 or b == SHORT - 3:
+				col = Color8(96, 156, 214)
+			elif b >= 4 and b <= 5:
+				col = Color8(32, 70, 128)                     # the deep middle
+			if (b == 3 and a % 6 == 2) or (b == 6 and a % 6 == 5):
+				col = Color8(170, 214, 244)                   # ripples
+			if vertical:
+				img.set_pixel(b, a, col)
+			else:
+				img.set_pixel(a, b, col)
+	return _tex(key, img)
+
+## A shutter across a vault's door (it snaps open for an instant: a focused pal times it): metal
+## slats with lit edges, a warning stripe at each end; w x 7 px
+static func shutter(w: int, vertical: bool, world := 0) -> Texture2D:
+	var key := "shut_%d_%s_%d" % [w, vertical, world]
+	if key in _cache:
+		return _cache[key]
+	var ink: Color = THEMES[world]["outline"]
+	const SHORT := 7
+	var img := _img(SHORT if vertical else w, w if vertical else SHORT)
+	for a in w:
+		for b in SHORT:
+			var col := Color8(176, 186, 200)
+			if b == 0 or b == SHORT - 1 or a == 0 or a == w - 1:
+				col = ink
+			elif a % 3 == 0:
+				col = Color8(120, 130, 150)                   # between the slats
+			elif b == 1:
+				col = Color8(222, 230, 240)
+			elif b == SHORT - 2:
+				col = Color8(140, 150, 168)
+			if (a <= 3 or a >= w - 4) and b > 0 and b < SHORT - 1 and a > 0 and a < w - 1:
+				col = Color8(250, 204, 60) if (a + b) % 2 == 0 else Color8(40, 40, 46)   # hazard ends
+			if vertical:
+				img.set_pixel(b, a, col)
+			else:
+				img.set_pixel(a, b, col)
+	return _tex(key, img)
+
+## A treasure chest (a lucky pal finds the key): shut, or open with its lid up; 15 x 14 px
+static func chest(open: bool) -> Texture2D:
+	var key := "chest_%s" % open
+	if key in _cache:
+		return _cache[key]
+	var rows_shut := [
+		"...............",
+		"..###########..",
+		".#WWWWWWWWWWW#.",
+		"#WwwwwGwwwwwwW#",
+		"#wwwwwGwwwwwww#",
+		"###############",
+		"#bbbbbGbbbbbbb#",
+		"#bbbbGKGbbbbbb#",
+		"#bbbbbKbbbbbbb#",
+		"#ddddddddddddd#",
+		"#ddddddddddddd#",
+		"#GdddddddddddG#",
+		"###############",
+		"...............",
+	]
+	var rows_open := [
+		"..###########..",
+		".#WWWWWWWWWWW#.",
+		"#wWWWWWWWWWWWw#",
+		"#####.....#####",
+		"#oooooooooooooo#".substr(0, 15),
+		"#oOOOOOOOOOOOo#",
+		"#bbbbbGbbbbbbb#",
+		"#bbbbbbbbbbbbb#",
+		"#bbbbbbbbbbbbb#",
+		"#ddddddddddddd#",
+		"#ddddddddddddd#",
+		"#GdddddddddddG#",
+		"###############",
+		"...............",
+	]
+	var cols := { "#": Color8(58, 34, 26), "W": Color8(206, 136, 70), "w": Color8(178, 108, 52),
+		"b": Color8(188, 118, 58), "d": Color8(150, 88, 42), "G": Color8(246, 204, 70), "K": Color8(58, 34, 26),
+		"o": Color8(40, 22, 18), "O": Color8(250, 226, 120) }
+	var rows: Array = rows_open if open else rows_shut
+	var img := _img(15, 14)
+	for y in rows.size():
+		for x in mini(15, String(rows[y]).length()):
+			var ch: String = rows[y][x]
+			if ch in cols:
+				img.set_pixel(x, y, cols[ch])
+	return _tex(key, img)
+
+# ---------------------------------------------------------------- BLOCKERS (one kind per world)
+
+## A round thing seen from above, lit from the top-left: fill colours [lit, mid, shade], an outline
+static func _disc(img: Image, c: Vector2, r: float, cols: Array, ink: Color) -> void:
+	for y in img.get_height():
+		for x in img.get_width():
+			var off := Vector2(x + 0.5, y + 0.5) - c
+			var d := off.length()
+			if d > r + 0.5:
+				continue
+			var col: Color = cols[1]
+			if d > r - 0.5:
+				col = ink
+			elif (off.x + off.y) < -r * 0.55:
+				col = cols[0]
+			elif (off.x + off.y) > r * 0.5:
+				col = cols[2]
+			img.set_pixel(x, y, col)
+
+## World 1: a wooden peg that pops up in a doorway. up = its round top (a peg standing up),
+## else the flush disc it sinks into; 17 x 17 px
+static func peg(up: bool) -> Texture2D:
+	var key := "peg_%s" % up
+	if key in _cache:
+		return _cache[key]
+	var img := _img(17, 17)
+	var ink := Color8(74, 44, 32)
+	if up:
+		_disc(img, Vector2(8.5, 8.5), 7.5, [Color8(246, 204, 140), Color8(224, 170, 104), Color8(186, 128, 72)], ink)
+		for x in range(5, 12):                                # the end grain's rings
+			if Vector2(x + 0.5 - 8.5, 0).length() < 3.6:
+				img.set_pixel(x, 8, Color8(196, 140, 84))
+		img.set_pixel(8, 7, Color8(196, 140, 84))
+		img.set_pixel(8, 9, Color8(196, 140, 84))
+	else:
+		# sunk flush with the board: a plug of the floor's own plywood, ringed by its dark seam,
+		# a little dot in the middle (where it pops up from)
+		var c := Vector2(8.5, 8.5)
+		for y in 17:
+			for x in 17:
+				var d := (Vector2(x + 0.5, y + 0.5) - c).length()
+				if d > 7.0:
+					continue
+				var col := Color8(230, 196, 146)
+				if d > 6.2:
+					col = Color8(150, 104, 66)
+				elif d > 5.4:
+					col = Color8(212, 172, 118)
+				elif d < 1.2:
+					col = Color8(150, 104, 66)
+				img.set_pixel(x, y, col)
+	return _tex(key, img)
+
+## The marble tray's empty socket on the HUD rail: a dark round recess with a lit lower lip
+static func socket() -> Texture2D:
+	if "socket" in _cache:
+		return _cache["socket"]
+	var img := _img(15, 15)
+	var c := Vector2(7.5, 7.5)
+	for y in 15:
+		for x in 15:
+			var off := Vector2(x + 0.5, y + 0.5) - c
+			var d := off.length()
+			if d > 7.0:
+				continue
+			var col := Color(0.0, 0.0, 0.0, 0.42)
+			if d > 6.0:
+				col = Color(1.0, 0.95, 0.85, 0.35) if off.y > 0.0 else Color(0.0, 0.0, 0.0, 0.6)
+			img.set_pixel(x, y, col)
+	return _tex("socket", img)
+
+## World 2: a rubber duck seen from above, its head towards +x; 17 x 15 px
+static func duck() -> Texture2D:
+	if "duck" in _cache:
+		return _cache["duck"]
+	var rows := [
+		".................",
+		"....######.......",
+		"...#YYYYYY##.....",
+		"..#YyyyyyyY#####.",
+		".#YyyyyyyyY#YYY#.",
+		".#yyyyyyyyy#yyYY#",
+		"#yyyyyyyyyyyyKyO#",
+		"#yyyyyyyyyyyyyyOO",
+		"#yyyyyyyyyyyyyyOO",
+		"#ssyyyyyyyyyyyyy#",
+		".#ssyyyyyyy#yyy#.",
+		".#sssssyyss#####.",
+		"..##sssssss#.....",
+		"....#######......",
+		".................",
+	]
+	var cols := { "#": Color8(74, 50, 20), "Y": Color8(255, 240, 140), "y": Color8(250, 214, 64), "s": Color8(222, 172, 40),
+		"K": Color8(30, 24, 20), "O": Color8(240, 120, 40) }
+	var img := _img(17, 15)
+	for y in rows.size():
+		for x in 17:
+			var ch: String = rows[y][x]
+			if ch in cols:
+				img.set_pixel(x, y, cols[ch])
+	return _tex("duck", img)
+
+## World 3: one of a gut valve's two fleshy lips (they close in from both sides of a doorway);
+## 9 x 15 px, the lip's round edge on the right
+static func valve_lip() -> Texture2D:
+	if "lip" in _cache:
+		return _cache["lip"]
+	var img := _img(9, 15)
+	var ink := Color8(78, 26, 42)
+	for y in 15:
+		for x in 9:
+			var off := Vector2((x + 0.5) - 1.0, (y + 0.5) - 7.5)
+			var e := Vector2(off.x / 7.6, off.y / 7.2).length()     # an oval bulging to the right
+			if e > 1.0 or off.x < -1.0:
+				continue
+			var col := Color8(222, 112, 128)
+			if e > 0.86:
+				col = ink
+			elif off.y < -3.0 and off.x > 1.0:
+				col = Color8(246, 160, 168)                   # the wet sheen on top
+			elif off.y > 3.0:
+				col = Color8(184, 76, 98)
+			if absi(int(off.y)) % 3 == 0 and off.x > 4.0 and e < 0.86:
+				col = Color8(170, 66, 88)                     # wrinkles
+			img.set_pixel(x, y, col)
+	return _tex("lip", img)
+
+## World 4: a sewer rat seen from above, its nose towards +x; frame 0 / 1 (its legs); 19 x 11 px
+static func rat(frame: int) -> Texture2D:
+	var key := "rat_%d" % frame
+	if key in _cache:
+		return _cache[key]
+	var rows := [
+		"..........#.#......",
+		"....#####.#P#......",
+		"...#ggggg#####.....",
+		"t.#gGGGGGGGgg###...",
+		".t#gGGGGGGGGGgggK#.",
+		"..tgGGGGGGGGGGgggPN",
+		".t#gGGGGGGGGGgggK#.",
+		"t.#gGGGGGGGgg###...",
+		"...#ggggg#####.....",
+		"....#####.#P#......",
+		"..........#.#......",
+	]
+	var cols := { "#": Color8(34, 30, 34), "g": Color8(110, 104, 112), "G": Color8(150, 144, 152), "K": Color8(20, 18, 22),
+		"P": Color8(236, 150, 160), "N": Color8(236, 120, 140), "t": Color8(196, 130, 140) }
+	var img := _img(19, 11)
+	for y in rows.size():
+		for x in 19:
+			var ch: String = rows[y][x]
+			if ch in cols:
+				var yy := y
+				if frame == 1 and ch == "P" and (y <= 1 or y >= 9):
+					continue                                  # (the other step: feet tucked in)
+				img.set_pixel(x, yy, cols[ch])
+	return _tex(key, img)
+
+## World 5: a fire jet's burner plate in the floor (a round grate with a hazard ring); 15 x 15 px
+static func burner() -> Texture2D:
+	if "burner" in _cache:
+		return _cache["burner"]
+	var img := _img(15, 15)
+	var c := Vector2(7.5, 7.5)
+	for y in 15:
+		for x in 15:
+			var off := Vector2(x + 0.5, y + 0.5) - c
+			var d := off.length()
+			if d > 7.0:
+				continue
+			var col := Color8(60, 62, 72)
+			if d > 6.0:
+				col = Color8(30, 34, 46)
+			elif d > 4.6:
+				col = Color8(250, 204, 60) if int(off.angle() * 4.0 / PI + 8.0) % 2 == 0 else Color8(36, 36, 40)
+			elif (x + y) % 3 == 0:
+				col = Color8(34, 34, 40)                      # the grate's holes
+			img.set_pixel(x, y, col)
+	return _tex("burner", img)
+
+## A fire jet's flame (frame 0 / 1 flicker); small = the blue pilot flame before it flares;
+## 15 x 17 px, its base at the bottom middle
+static func flame(frame: int, small: bool) -> Texture2D:
+	var key := "flame_%d_%s" % [frame, small]
+	if key in _cache:
+		return _cache[key]
+	var img := _img(15, 17)
+	var h := 6.0 if small else 15.0
+	var w := 3.0 if small else 6.5
+	for y in 17:
+		for x in 15:
+			var fx := (x + 0.5 - 7.5) / w
+			var fy := (16.5 - (y + 0.5)) / h                # 0 at the base, 1 at the tip
+			if fy < 0.0 or fy > 1.0:
+				continue
+			var wob := sin(fy * 7.0 + frame * 2.2) * 0.12
+			var half := (1.0 - fy) * (0.6 + 0.4 * sin(fy * PI)) + 0.08
+			var dx := absf(fx - wob)
+			if dx > half:
+				continue
+			var t := dx / maxf(half, 0.01)
+			var col: Color
+			if small:
+				col = Color8(120, 190, 255) if t < 0.5 else Color8(60, 110, 220)
+			else:
+				col = Color8(255, 246, 180) if t < 0.35 and fy < 0.7 else (Color8(252, 188, 60) if t < 0.7 else Color8(232, 96, 40))
+			if t > 0.85:
+				col = Color8(120, 40, 24) if not small else Color8(30, 50, 120)
+			img.set_pixel(x, y, col)
+	return _tex(key, img)
+
+## World 6: a meteor (a glowing rock with a trail), 17 x 17 px; its target ring, 19 x 19 px
+static func meteor() -> Texture2D:
+	if "meteor" in _cache:
+		return _cache["meteor"]
+	var img := _img(17, 17)
+	for y in 17:
+		for x in 17:
+			var off := Vector2(x + 0.5 - 10.5, y + 0.5 - 6.5)
+			var d := off.length()
+			if d <= 5.5:
+				var col := Color8(150, 120, 110) if off.x + off.y < 0 else Color8(104, 80, 76)
+				if d > 4.6:
+					col = Color8(40, 24, 30)
+				elif Vector2(off.x + 1.5, off.y + 1.5).length() < 1.2:
+					col = Color8(240, 210, 190)
+				img.set_pixel(x, y, col)
+			else:
+				# the trail, streaming down-left behind it
+				var along := -(off.x - off.y) / 1.414
+				var across := absf(off.x + off.y) / 1.414
+				if along > 4.0 and along < 14.0 and across < (14.0 - along) * 0.32:
+					img.set_pixel(x, y, Color8(255, 220, 120) if across < 1.0 else Color8(240, 140, 80, 200))
+	return _tex("meteor", img)
+
+static func target_ring() -> Texture2D:
+	if "target" in _cache:
+		return _cache["target"]
+	var img := _img(19, 19)
+	var c := Vector2(9.5, 9.5)
+	for y in 19:
+		for x in 19:
+			var d := (Vector2(x + 0.5, y + 0.5) - c).length()
+			if absf(d - 8.0) < 0.7:
+				img.set_pixel(x, y, Color8(255, 110, 110))
+			elif d < 7.0:
+				img.set_pixel(x, y, Color(0.05, 0.02, 0.1, 0.35))
+	return _tex("target", img)
 
 ## A horseshoe magnet on a girder (12 x 12 px)
 static func magnet() -> Texture2D:
@@ -497,15 +888,16 @@ static func goo(r: int) -> Texture2D:
 			img.set_pixel(x, y, col)
 	return _tex(key, img)
 
-## A small sign hung on a vault's fence: the drink type that opens it (its boost icon on a card)
+## A small sign by a vault's gate: the drink type that opens it and its level (UiArt.gate_badge
+## on a card); 15 x 18 px
 static func sign_card() -> Texture2D:
 	if "sign" in _cache:
 		return _cache["sign"]
-	var img := _img(13, 13)
-	for y in 13:
-		for x in 13:
-			var e := mini(mini(x, y), mini(12 - x, 12 - y))
-			if e == 0 and (x == 0 or x == 12) and (y == 0 or y == 12):
+	var img := _img(15, 18)
+	for y in 18:
+		for x in 15:
+			var e := mini(mini(x, y), mini(14 - x, 17 - y))
+			if e == 0 and (x == 0 or x == 14) and (y == 0 or y == 17):
 				continue
 			img.set_pixel(x, y, Color8(58, 38, 30) if e == 0 else Color8(250, 244, 214))
 	return _tex("sign", img)

@@ -112,15 +112,137 @@ func _on_level_chosen(action: String, level: int) -> void:
 		_show_intro()
 
 ## A level is over: `stars` 1-3 = cleared, 0 = not (time's up...). Records the stars (each new
-## one is a coin) and shows the result card.
-func finish_level(level: int, stars: int) -> void:
+## one is a coin), gives a finale's prize on its first clear, and shows the result card.
+## `best`: the level's result for records (a time: lower is better, unless `best_lower` is false).
+func finish_level(level: int, stars: int, best := -1.0, best_lower := true) -> void:
 	is_running = false
 	var idx := _game_index()
 	var won := GameData.record_level(idx, level, stars) if stars > 0 else 0
 	GameData.set_last_level(idx, level)
+	if stars > 0 and best >= 0.0:
+		GameData.record_best(idx, level, best, best_lower)
+	var prize := {}
+	if stars > 0 and level in finale_prizes() and not GameData.vault_taken(idx, -level):
+		GameData.take_vault(idx, -level)            # (finales are kept as minus their level)
+		prize = Collection.give_prize(finale_prizes()[level])
 	game_ended.emit(score)                       # (the game's best score)
 	_ensure_level_menu()
-	level_menu.show_result(level, stars, won)
+	level_menu.show_result(level, stars, won, prize)
+
+## The result card's title when a level isn't cleared (a game's own words: "Match lost!")
+func fail_title() -> String:
+	return "Time's up!"
+
+# --- Secrets and prizes (every game: docs/progression.md, sections 2 and 4) ---
+# A SECRET is a level's hidden prize behind a gate that a drink's boost opens (its type and at
+# least its level: a fence only a fizzy pal hops, a cracked wall only a sturdy one breaks...), or
+# a "skill" one with no gate. A FINALE prize is given on a level's first clear (a boss, a world's
+# last level). Both are taken once (GameData's vaults: secrets by level, finales by -level).
+
+## Override: level -> { "gate": a drink type ("fizzy", "milky"...) or "skill", "lvl": 1-3,
+## "prize": "sticker:<id>" / "food:<name>" / "acc:<id>" / "bg:<id>" / "decor:<id>" / "case:<id>" }
+func secrets() -> Dictionary:
+	return {}
+
+## Override: level -> prize, given the first time the level is cleared
+func finale_prizes() -> Dictionary:
+	return {}
+
+## A level's secret with its state ("taken"), or {} (none)
+func secret_of(level: int) -> Dictionary:
+	var sc: Dictionary = secrets().get(level, {})
+	if sc.is_empty():
+		return {}
+	var d := sc.duplicate()
+	d["taken"] = GameData.vault_taken(_game_index(), level)
+	return d
+
+## Does the pal's boost open this gate? (a skill secret has none)
+func gate_open(gate: String, lvl: int) -> bool:
+	if gate == "skill" or gate == "":
+		return true
+	return PetState.boost_power(DrinkLibrary.boost_of(gate)) >= lvl
+
+## A secret's prize is taken: recorded, given and shown (the gate's boost was spent opening it)
+func take_secret(level: int) -> Dictionary:
+	var sc := secret_of(level)
+	if sc.is_empty() or sc["taken"]:
+		return {}
+	GameData.take_vault(_game_index(), level)
+	var info := Collection.give_prize(sc["prize"])
+	show_prize(info)
+	return info
+
+## The boost icon and its level pips for a gate (on a sign, a level cell): one texture
+func gate_icon(gate: String, lvl: int) -> Texture2D:
+	return UiArt.gate_badge(gate, lvl)
+
+## A prize card that pops in over the game for a moment: its picture and its name
+func show_prize(info: Dictionary, title := "") -> void:
+	if info.is_empty():
+		return
+	var font = load("res://fonts/pixChicago.ttf")
+	var card := Control.new()
+	card.size = Vector2(560, 150)
+	card.position = Vector2((PLAY_WIDTH - card.size.x) / 2.0, 150)
+	card.pivot_offset = card.size / 2.0
+	card.z_index = 7
+	add_child(card)
+	var bg := NinePatchRect.new()
+	bg.texture = _label_frame_texture()
+	bg.patch_margin_left = 4
+	bg.patch_margin_right = 4
+	bg.patch_margin_top = 4
+	bg.patch_margin_bottom = 7
+	bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	bg.scale = Vector2(3, 3)
+	bg.size = card.size / 3.0
+	card.add_child(bg)
+	var icon := TextureRect.new()
+	icon.texture = info.get("icon", null)
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.position = Vector2(26, 22)
+	icon.size = Vector2(96, 96)
+	card.add_child(icon)
+	for line in [[title if title != "" else _prize_title(info), 30, 26.0], [info.get("name", ""), 40, 66.0]]:
+		var l := Label.new()
+		l.text = line[0]
+		l.position = Vector2(140, line[2])
+		l.size = Vector2(card.size.x - 160, 50)
+		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		l.clip_text = true
+		if font:
+			l.add_theme_font_override("font", font)
+		l.add_theme_font_size_override("font_size", line[1])
+		l.add_theme_color_override("font_color", Color8(92, 60, 44))
+		card.add_child(l)
+	_play_prize_sound()
+	Input.vibrate_handheld(50)
+	card.scale = Vector2(0.6, 0.6)
+	card.modulate.a = 0.0
+	var t := card.create_tween()
+	t.tween_property(card, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.parallel().tween_property(card, "modulate:a", 1.0, 0.15)
+	t.tween_interval(1.8)
+	t.tween_property(card, "modulate:a", 0.0, 0.3)
+	t.tween_callback(card.queue_free)
+
+func _prize_title(info: Dictionary) -> String:
+	return { "stickers": "New sticker!", "accessories": "New dress-up!", "backgrounds": "New background!",
+		"decor": "New gut decor!", "cases": "A new case!", "food": "A special food!", "coins": "Coins!" }.get(info.get("kind", ""), "A prize!")
+
+func _play_prize_sound() -> void:
+	var stream = load("res://sounds/fx/claw_prize.wav") as AudioStream
+	if not stream:
+		return
+	var sfx := AudioStreamPlayer.new()
+	sfx.stream = stream
+	sfx.volume_db = -8.0
+	add_child(sfx)
+	sfx.play()
+	sfx.finished.connect(sfx.queue_free)
 
 func _game_index() -> int:
 	var gs = get_node_or_null("/root/PoopPal/Main UI/GameScreen")

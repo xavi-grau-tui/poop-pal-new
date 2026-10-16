@@ -14,13 +14,30 @@ extends BaseMinigame
 ##
 ## No lives: a fall into a hole puts the pal back on the last marble collected (the time keeps
 ## running). Stars: 1 = cleared, +1 = within the par time (from the route's length), +1 = no fall
-## at all. Speed against care: going fast is how you fall.
+## at all. Speed against care: going fast is how you fall. A SPLASH pal (a watery drink) bounces
+## straight back out of its first fall (the boost is spent).
 ##
-## Vaults (VAULTS): a dead end off the route holds a prize, visible from the first visit:
-##   "fizz"  a low fence across its door: only a FIZZY pal (the boost from a fizzy drink) hops
-##           it, knocking it flat (the boost is spent on the hop, never on a level without one)
-##   "skill" no gate, but two holes guard its door: a steady hand gets through
-## Prizes: pal stickers (the case's sticker book) and special foods (the pantry). Taken once.
+## The marbles are the level's progress: each one fills a slot of the tray on the HUD with a
+## higher note (a little scale), and the last one rings out as the trapdoor opens.
+##
+## BLOCKERS (from a world's 4th level, more as it goes on; the finale adds the world before's):
+## one kind per world, each telegraphed before it bites: 1 wooden pegs that pop up in a doorway ·
+## 2 a rubber duck sliding across a corridor · 3 gut valves that squeeze shut · 4 a sewer rat
+## running up and down the route · 5 fire jets that flare up in a doorway (burnt = a fall) · 6
+## meteors that land on the route (a shadow first; hit = a fall).
+##
+## Vaults (VAULTS): a dead end off the route holds a prize, visible from the first visit, behind
+## a gate only the right boost opens (at least the gate's level: worlds 1-2 = 1, 3-4 = 2, 5-6 = 3;
+## the sign on it shows the drink and the level). Every boost has its own gate (the boost is spent
+## opening it, never on a level without one):
+##   fizzy        a low fence across its door: a fizzy pal hops it (the fence falls flat)
+##   milky        a cracked wall: a sturdy pal rams through it
+##   watery       a deep channel: a splashy pal skims across it
+##   caffeinated  a shutter that snaps open for an instant: a focused pal times it
+##   fruity       a locked chest holds the prize: a lucky pal finds the key
+##   skill        no gate, but two holes guard its door: a steady hand gets through
+## Prizes: pal stickers, special foods, world dress-ups (snorkel, headlamp, hard hat), gut decor,
+## backgrounds. Taken once (BaseMinigame.take_secret). The finale of world 6 holds the game's case.
 ##
 ## Tilt: gravity sensor on device. Desktop: arrow keys / WASD / hold mouse to pull.
 ## Tilt is measured from how the phone is held when each level starts (any angle works).
@@ -87,15 +104,25 @@ const THINGS := [1, 2, 2, 3, 3, 3, 4, 4, 5]
 const MIX_FROM := 6
 const SEED_TRIES := 24
 
-## Vaults: level -> [kind, prize]; prize "sticker:<pal id>" or "food:<special food name>"
+## Vaults: level -> [gate (a drink type, or "skill"), prize] (Collection.give_prize's prizes)
 const VAULTS := {
-	3: ["fizz", "sticker:bud"], 6: ["skill", "sticker:peapod"], 8: ["fizz", "sticker:usagi"],
-	12: ["fizz", "sticker:nib"], 15: ["skill", "sticker:fudge"], 17: ["fizz", "sticker:glazy"],
-	21: ["fizz", "sticker:inari"], 24: ["skill", "sticker:kitsune"], 26: ["fizz", "sticker:ember"],
-	30: ["fizz", "food:Microchip"], 33: ["skill", "sticker:daruma"], 35: ["fizz", "sticker:kimchi"],
-	39: ["fizz", "food:Battery"], 42: ["skill", "sticker:kappa_maki"], 44: ["fizz", "sticker:hermit"],
-	48: ["fizz", "food:Moon Rock"], 51: ["skill", "sticker:teru_teru"], 53: ["fizz", "food:Alien Goo"],
+	3: ["fizzy", "sticker:bud"], 6: ["skill", "sticker:peapod"], 8: ["fizzy", "sticker:usagi"],
+	12: ["fizzy", "sticker:nib"], 15: ["skill", "sticker:fudge"], 17: ["milky", "acc:snorkel"],
+	21: ["fizzy", "sticker:inari"], 24: ["skill", "sticker:kitsune"], 26: ["watery", "decor:glow_spores"],
+	30: ["fizzy", "food:Microchip"], 33: ["caffeinated", "bg:sewer_pipes"], 35: ["milky", "acc:headlamp"],
+	39: ["fizzy", "food:Battery"], 42: ["caffeinated", "decor:cog_garland"], 44: ["milky", "acc:hard_hat"],
+	48: ["fruity", "food:Moon Rock"], 51: ["watery", "bg:starfield"], 53: ["fruity", "food:Alien Goo"],
 }
+## The finale of the masters' world (6-9): the game's own case
+const FINALES := { 54: "case:maze" }
+
+## Blockers: one kind per world (see above), how many on each level of a world (from the 4th)
+const BLOCKER_KIND := ["peg", "duck", "valve", "rat", "fire", "meteor"]
+const BLOCKERS := [0, 0, 0, 1, 1, 2, 2, 2, 3]
+const BLOCKER_HINTS := ["pegs pop up!", "watch the duck!", "valves squeeze!", "a rat!", "fire jets!", "meteors!"]
+const PEG_R := 30.0                   # a peg / a valve / a fire jet: its round footprint in a doorway
+const MOVER_R := 26.0                 # the duck, the rat: their round body
+const METEOR_R := 34.0                # a meteor's impact
 
 const TEXT_DARK := Color(0.2, 0.12, 0.08)
 
@@ -126,7 +153,11 @@ var checkpoints: Array[Dictionary] = []   # { pos, node, taken }
 var currents: Array[Dictionary] = []  # { rect, dir }
 var magnets: Array[Vector2] = []
 var goos: Array[Vector2] = []
-var vault := {}                       # { kind, prize, cell, door (Rect2), fence (Rect2 or empty), flat, prize_pos, taken, node }
+var vault := {}                       # { kind (its gate), lvl, prize, cell, door (Rect2), flat (gate open), prize_pos, taken, node }
+var blockers: Array[Dictionary] = []  # { kind, pos, a, b, t (its clock), period, offset, node, ... } (see _place_blockers)
+var tray: Array[TextureRect] = []     # the HUD's marble tray: one slot per marble
+var marbles_taken := 0
+var splash_used := false              # (a splashy pal's one bounce out of a fall, this level)
 var start_pos := Vector2.ZERO
 var finish_pos := Vector2.ZERO
 var respawn_pos := Vector2.ZERO
@@ -151,7 +182,7 @@ var current_layer: CurrentLayer
 var hud_level: Label
 var hud_time: Label
 var hud_stars: Array[TextureRect] = []
-var coin_label: Label
+var blocker_layer: Node2D
 var banner: Label
 var ball_texture: Texture2D
 var lcd_font: Font
@@ -215,6 +246,20 @@ func level_backdrop() -> Color:
 func world_backdrop(w: int) -> Color:
 	return TiltMazeArt.THEMES[clampi(w, 0, TiltMazeArt.THEMES.size() - 1)]["menu"]
 
+## The vaults as BaseMinigame secrets (the level menu shows their gates), and the finale's prize
+func secrets() -> Dictionary:
+	var out := {}
+	for lvl in VAULTS:
+		out[lvl] = { "gate": VAULTS[lvl][0], "lvl": _gate_level((lvl - 1) / GameData.LEVELS_PER_WORLD), "prize": VAULTS[lvl][1] }
+	return out
+
+func finale_prizes() -> Dictionary:
+	return FINALES
+
+## A gate's level by world: worlds 1-2 = 1, 3-4 = 2, 5-6 = 3
+func _gate_level(w: int) -> int:
+	return 1 + clampi(w, 0, 5) / 2
+
 func start_game() -> void:
 	super.start_game()
 	_begin(1)
@@ -234,6 +279,11 @@ func _begin(n: int) -> void:
 			get_tree().create_timer(2.0).timeout.connect(func():
 				if is_running and level == n:
 					_show_banner(WORLD_HINTS[world], 1.4))
+	elif k == 3:
+		_show_banner("%d-%d" % [world + 1, k + 1], 1.0)
+		get_tree().create_timer(1.3).timeout.connect(func():
+			if is_running and level == n:
+				_show_banner(BLOCKER_HINTS[world], 1.4))
 	else:
 		_show_banner("%d-%d" % [world + 1, k + 1], 1.0)
 
@@ -269,6 +319,7 @@ func _build_level() -> void:
 	_place_vault()
 	_place_holes(rng2, k)
 	_place_things(rng2, k)
+	_place_blockers(rng2, k)
 	par = ceilf(PAR_BASE + path_cells.size() * PAR_PER_CELL[world])
 	board.texture = ImageTexture.create_from_image(_paint_board())
 	bg_rect.color = theme["outline"]
@@ -279,6 +330,8 @@ func _build_level() -> void:
 	vel = Vector2.ZERO
 	level_time = 0.0
 	falls = 0
+	marbles_taken = 0
+	splash_used = false
 	state = State.PLAY
 	# (drawn right away, also while the how-to card waits)
 	ball.position = ball_pos
@@ -286,6 +339,7 @@ func _build_level() -> void:
 	ball.modulate = Color(1, 1, 1, 1)
 	shadow.position = ball.position + Vector2(8, 20)
 	hud_level.text = "%d-%d" % [world + 1, k + 1]
+	_build_tray()
 	_stars_shown = 3
 	for s in hud_stars:
 		s.texture = UiArt.star(true)
@@ -491,8 +545,8 @@ func _place_vault() -> void:
 	var door_cell: Vector2i = _cell_neighbors(best)[0]
 	var v: Array = VAULTS[level]
 	var dir := Vector2(door_cell - best)
-	vault = { "kind": v[0], "prize": v[1], "cell": best, "dir": dir, "door": _door_rect(best, door_cell),
-		"flat": false, "taken": GameData.vault_taken(_game_index(), level),
+	vault = { "kind": v[0], "lvl": _gate_level(world), "prize": v[1], "cell": best, "dir": dir, "door": _door_rect(best, door_cell),
+		"flat": false, "taken": GameData.vault_taken(_game_index(), level), "open": false,
 		"prize_pos": _cell_center(best) - dir * TILE * 0.45 }
 
 func _place_holes(rng: RandomNumberGenerator, k: int) -> void:
@@ -826,24 +880,10 @@ func _create_static_nodes() -> void:
 		add_child(st)
 		hud_stars.append(st)
 
-	var frame := ColorRect.new()
-	frame.color = Color(0, 0, 0)
-	frame.size = Vector2(176, 66)                 # (taller downwards so the digits sit comfortably)
-	frame.position = Vector2(ORIGIN.x + BOARD_PX * PX - 20 - frame.size.x, ORIGIN.y + 3)
-	add_child(frame)
-	var box := ColorRect.new()
-	box.color = Color(0.65, 0.72, 0.6)   # LCD green, like the other games
-	box.position = frame.position + Vector2(5, 5)
-	box.size = frame.size - Vector2(10, 10)
-	add_child(box)
-	var coin := TextureRect.new()
-	coin.texture = UiArt.coin()
-	coin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	coin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	coin.size = Vector2(36, 36)
-	coin.position = box.position + Vector2(8, (box.size.y - 36) / 2.0)
-	add_child(coin)
-	coin_label = _make_label(box.position + Vector2(46, 0), box.size - Vector2(56, 0), 32, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
+	# (the marble tray goes on the rail's right: _build_tray, per level)
+	blocker_layer = Node2D.new()
+	add_child(blocker_layer)
+	move_child(blocker_layer, level_nodes.get_index() + 1)
 
 	banner = _make_label(Vector2(0, PLAY_HEIGHT / 2 - 60), Vector2(PLAY_WIDTH, 120), 54, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
 	banner.add_theme_color_override("font_outline_color", Color8(74, 44, 32))
@@ -895,24 +935,39 @@ func _spawn_level_nodes() -> void:
 		cp["node"] = _sprite(pick, cp["pos"])
 	if not vault.is_empty():
 		_spawn_vault()
+	_spawn_blockers()
 
-## A vault: its fence (Fizzy) with the drink's sign, its prize glinting inside
+## A vault: its gate (the drink's own: fence, cracked wall, channel, shutter; a chest holds the
+## prize) with the drink's sign and level, its prize glinting inside
 func _spawn_vault() -> void:
 	var door: Rect2 = vault["door"]
 	var dir: Vector2 = vault["dir"]
-	if vault["kind"] == "fizz":
-		var vertical := dir.x != 0.0
-		var long := int((door.size.y if vertical else door.size.x) / DETAIL)
-		var f := _sprite(TiltMazeArt.fence(long, vertical, world), door.get_center())
-		vault["fence_node"] = f
-		# the sign: which drink hops it (the fizzy boost's icon on a little card)
-		var sign := _sprite(TiltMazeArt.sign_card(), door.get_center() + dir * TILE * 0.62)   # (outside the fence)
+	var vertical := dir.x != 0.0
+	var long := int((door.size.y if vertical else door.size.x) / DETAIL)
+	var kind: String = vault["kind"]
+	var gate: Sprite2D = null
+	match kind:
+		"fizzy":
+			gate = _sprite(TiltMazeArt.fence(long, vertical, world, vault["lvl"]), door.get_center())
+		"milky":
+			gate = _sprite(TiltMazeArt.cracked_wall(long, vertical, world), door.get_center())
+		"watery":
+			gate = _sprite(TiltMazeArt.channel(long, vertical), door.get_center())
+		"caffeinated":
+			gate = _sprite(TiltMazeArt.shutter(long, vertical, world), door.get_center())
+	if gate:
+		vault["fence_node"] = gate
+	if kind != "skill":
+		# the sign: which drink opens it, and its level (outside the gate)
+		var sign := _sprite(TiltMazeArt.sign_card(), door.get_center() + dir * TILE * 0.66)
 		var icon := Sprite2D.new()
-		icon.texture = PetState.boost_icon("fizz")
+		icon.texture = gate_icon(kind, vault["lvl"])
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		sign.add_child(icon)
 		vault["sign_node"] = sign
 	if vault["taken"]:
+		if kind == "fruity":
+			_sprite(TiltMazeArt.chest(true), vault["prize_pos"])      # (opened and emptied)
 		return
 	var prize := Node2D.new()
 	prize.position = vault["prize_pos"]
@@ -920,15 +975,21 @@ func _spawn_vault() -> void:
 	var p: String = vault["prize"]
 	var art := Sprite2D.new()
 	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	if p.begins_with("sticker:"):
-		art.texture = load("res://textures/cases/stickers/book/%s.png" % p.substr(8))
-	else:
-		var food := _special(p.substr(5))
-		art.texture = load(food.get("icon", "")) if food else null
+	art.texture = Collection.prize_icon(p)
 	if art.texture:
 		var big := maxf(art.texture.get_width(), art.texture.get_height())
-		art.scale = Vector2.ONE * (76.0 / big) if p.begins_with("sticker:") else Vector2.ONE * (64.0 / big)
+		art.scale = Vector2.ONE * ((76.0 if p.begins_with("sticker:") else 64.0) / big)
 	prize.add_child(art)
+	if kind == "fruity":
+		# locked in a chest: the prize shows only once it's open
+		art.visible = false
+		var ch := Sprite2D.new()
+		ch.texture = TiltMazeArt.chest(false)
+		ch.scale = Vector2(DETAIL, DETAIL)
+		ch.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		prize.add_child(ch)
+		vault["chest_node"] = ch
+		vault["art_node"] = art
 	var bob := art.create_tween().set_loops()       # (dies with the prize)
 	bob.tween_property(art, "position:y", -6.0, 0.6).set_trans(Tween.TRANS_SINE)
 	bob.tween_property(art, "position:y", 0.0, 0.6).set_trans(Tween.TRANS_SINE)
@@ -955,7 +1016,6 @@ func _refresh_hud() -> void:
 	var pt := "%d:%02d" % [int(par) / 60, int(par) % 60]
 	hud_time.text = "%s/%s" % [tm, pt]
 	hud_time.add_theme_color_override("font_color", Color(0.98, 0.93, 0.84) if level_time <= par else Color(0.95, 0.55, 0.45))
-	coin_label.text = str(GameData.coins)
 	var now := _stars_now()
 	if now < _stars_shown:
 		for i in range(now, _stars_shown):
@@ -1049,6 +1109,8 @@ func _process(delta: float) -> void:
 	fence_hint_cd = maxf(0.0, fence_hint_cd - delta)
 	bump_cooldown = maxf(0.0, bump_cooldown - delta)
 	_move_holes(delta)
+	_update_blockers(delta)
+	_update_gate(delta)
 
 	if state == State.PLAY:
 		level_time += delta
@@ -1063,7 +1125,8 @@ func _process(delta: float) -> void:
 			vel = vel.limit_length(max_speed)
 			ball_pos += vel * dt
 			_collide_walls()
-			_collide_fence()
+			_collide_blockers()
+			_collide_gate()
 			if state != State.PLAY:
 				break
 		var speed := vel.length()
@@ -1076,6 +1139,7 @@ func _process(delta: float) -> void:
 			_check_prize()
 			_check_finish()
 			_check_holes()
+			_check_hazards()
 		_refresh_hud()
 
 	if state == State.PLAY:                 # (falling / hopping / flushed: the tweens move the ball)
@@ -1147,26 +1211,128 @@ func _push_out(rect: Rect2, b: float) -> bool:
 			Input.vibrate_handheld(12)
 	return true
 
-## A Fizzy vault's fence: a wall until a fizzy pal hops it (then it lies flat)
-func _collide_fence() -> void:
-	if vault.is_empty() or vault["kind"] != "fizz" or vault["flat"]:
-		return
+## The gate's solid part in the vault's door: a thin bar across it (the fence) or a thicker one
+## (the cracked wall, the channel, the shutter)
+func _gate_bar() -> Rect2:
 	var door: Rect2 = vault["door"]
-	# the fence is a thin bar across the middle of the door
-	var dir: Vector2 = vault["dir"]
-	var bar := door.grow_individual(-door.size.x * 0.32, 0, -door.size.x * 0.32, 0) if dir.x != 0.0 else door.grow_individual(0, -door.size.y * 0.32, 0, -door.size.y * 0.32)
+	var k := 0.32 if vault["kind"] == "fizzy" else 0.26
+	if vault["dir"].x != 0.0:
+		return door.grow_individual(-door.size.x * k, 0, -door.size.x * k, 0)
+	return door.grow_individual(0, -door.size.y * k, 0, -door.size.y * k)
+
+## A vault's gate: solid until the right boost opens it (fence hopped, wall broken, channel
+## skimmed, shutter timed); the chest is the prize's own (see _check_prize)
+func _collide_gate() -> void:
+	if vault.is_empty() or vault["flat"] or vault["kind"] in ["skill", "fruity"]:
+		return
+	if vault["kind"] == "caffeinated" and _shutter_open():
+		return                                         # (open this instant: a way through)
+	var hit_speed := vel.length()
+	var bar := _gate_bar()
 	if not _push_out(bar, BOUNCE):
 		return
-	if PetState.boost == "fizz":
-		_hop(bar)
-	elif fence_hint_cd <= 0.0:
-		fence_hint_cd = 2.5
+	var lvl: int = vault["lvl"]
+	var kind: String = vault["kind"]
+	var ok := gate_open(kind, lvl)
+	match kind:
+		"fizzy":
+			if ok:
+				_hop(bar)
+			else:
+				_gate_hint("A fizzy pal could hop it!" if PetState.boost_power("fizz") == 0 else "A higher fence: a stronger fizzy drink!")
+		"milky":
+			if ok and hit_speed > 180.0:
+				_break_wall()
+			elif ok:
+				_gate_hint("Ram it harder!")
+			else:
+				_gate_hint("A sturdy pal could break it!" if PetState.boost_power("sturdy") == 0 else "Too thick: a stronger milky drink!")
+		"watery":
+			if ok:
+				_skim()
+			else:
+				_gate_hint("Too deep! A splashy pal could skim it." if PetState.boost_power("splash") == 0 else "Too wide: a stronger watery drink!")
+		"caffeinated":
+			_gate_hint("Wait for it..." if ok else ("Too quick! A focused pal could time it." if PetState.boost_power("focus") == 0 else "Too quick: a stronger energy drink!"))
+
+func _gate_hint(text: String) -> void:
+	if fence_hint_cd > 0.0:
+		return
+	fence_hint_cd = 2.5
+	var sign: Node2D = vault.get("sign_node")
+	if sign:
+		var t := create_tween()
+		t.tween_property(sign, "scale", Vector2(DETAIL, DETAIL) * 1.35, 0.1)
+		t.tween_property(sign, "scale", Vector2(DETAIL, DETAIL), 0.2)
+	_float_text(text, vault["door"].get_center())
+
+## The shutter's clock: it snaps open for an instant every SHUTTER_PERIOD (a focused pal sees it
+## open long enough to roll through)
+const SHUTTER_PERIOD := 2.6
+var _gate_t := 0.0
+
+func _shutter_open() -> bool:
+	var window := 1.3 if gate_open("caffeinated", vault.get("lvl", 1)) else 0.14
+	return fposmod(_gate_t, SHUTTER_PERIOD) < window
+
+func _update_gate(delta: float) -> void:
+	_gate_t += delta
+	if vault.is_empty() or vault["kind"] != "caffeinated":
+		return
+	var f: Sprite2D = vault.get("fence_node")
+	if not f:
+		return
+	var open: bool = vault["flat"] or _shutter_open()
+	f.visible = not open
+	# a focused pal: the shutter stays open behind it once through (the boost is spent)
+	if not vault["flat"] and gate_open("caffeinated", vault["lvl"]) and _cell_of(ball_pos) == vault["cell"]:
+		vault["flat"] = true
+		PetState.use_boost()
+		_sfx("res://sounds/fx/clack.mp3", -10.0, 0.0, 1.3)
 		var sign: Node2D = vault.get("sign_node")
 		if sign:
-			var t := create_tween()
-			t.tween_property(sign, "scale", Vector2(DETAIL, DETAIL) * 1.35, 0.1)
-			t.tween_property(sign, "scale", Vector2(DETAIL, DETAIL), 0.2)
-		_float_text("A fizzy pal could hop it!", door.get_center())
+			sign.visible = false
+
+## The sturdy ram: the cracked wall crumbles (the boost is spent)
+func _break_wall() -> void:
+	vault["flat"] = true
+	PetState.use_boost()
+	_sfx("res://sounds/fx/wood_tap.wav", -6.0, 0.0, 0.6)
+	_sfx("res://sounds/fx/clack.mp3", -8.0, 0.0, 0.7)
+	Input.vibrate_handheld(60)
+	var f: Sprite2D = vault.get("fence_node")
+	if f:
+		var t := create_tween()
+		t.tween_property(f, "modulate", Color(1, 1, 1, 0.0), 0.35)
+	_debris(vault["door"].get_center(), TiltMazeArt.THEMES[world]["wall"][1])
+	var sign: Node2D = vault.get("sign_node")
+	if sign:
+		sign.visible = false
+
+## The splashy skim: across the deep channel with a splash (the boost is spent; the water stays)
+func _skim() -> void:
+	vault["flat"] = true
+	PetState.use_boost()
+	_sfx("res://sounds/fx/water_boing.wav", -10.0, 0.0, 1.2)
+	Input.vibrate_handheld(30)
+	_debris(vault["door"].get_center(), Color8(196, 232, 250))
+	var sign: Node2D = vault.get("sign_node")
+	if sign:
+		sign.visible = false
+
+## A burst of little squares (crumbs of wall, drops of water)
+func _debris(at: Vector2, col: Color) -> void:
+	for i in 10:
+		var d := ColorRect.new()
+		d.size = Vector2(DETAIL * 2, DETAIL * 2)
+		d.color = col
+		d.position = at - d.size / 2.0
+		level_nodes.add_child(d)
+		var to := at + Vector2.from_angle(TAU * i / 10.0 + randf() * 0.4) * randf_range(40, 90)
+		var t := create_tween()
+		t.tween_property(d, "position", to.snapped(Vector2(DETAIL, DETAIL)), 0.35).set_ease(Tween.EASE_OUT)
+		t.parallel().tween_property(d, "modulate:a", 0.0, 0.45)
+		t.tween_callback(d.queue_free)
 
 ## The fizzy hop: up and over the fence, which falls flat behind; the boost is spent
 func _hop(bar: Rect2) -> void:
@@ -1209,8 +1375,11 @@ func _check_checkpoints() -> void:
 			continue
 		cp["taken"] = true
 		respawn_pos = cp["pos"]
-		add_score(10)
-		_sfx("res://sounds/fx/gamecoin.wav", -10.0)
+		# each marble a note higher (a little scale), into its slot on the tray
+		const SCALE := [1.0, 1.12, 1.26, 1.33, 1.5, 1.68]
+		_sfx("res://sounds/fx/gamecoin.wav", -10.0, 0.0, SCALE[mini(marbles_taken, SCALE.size() - 1)])
+		_fill_tray_slot(marbles_taken)
+		marbles_taken += 1
 		Input.vibrate_handheld(20)
 		var s: Sprite2D = cp["node"]
 		var t := create_tween()
@@ -1220,31 +1389,29 @@ func _check_checkpoints() -> void:
 		if not exit_open and checkpoints.all(func(c): return c["taken"]):
 			_open_exit()
 
-## A vault's prize: a sticker for the case's book, or a special food for the pantry
+## A vault's prize (a sticker, a special food, a dress-up...): taken once; a chest opens for a
+## lucky pal only (its boost is spent on it)
 func _check_prize() -> void:
 	if vault.is_empty() or vault["taken"] or not vault.has("node"):
 		return
 	if ball_pos.distance_to(vault["prize_pos"]) > PRIZE_R:
 		return
+	if vault["kind"] == "fruity" and not vault["open"]:
+		if not gate_open("fruity", vault["lvl"]):
+			_gate_hint("Locked! A lucky pal would find the key." if PetState.boost_power("lucky") == 0 else "A tricky lock: a stronger fruity drink!")
+			return
+		vault["open"] = true
+		PetState.use_boost()
+		(vault["chest_node"] as Sprite2D).texture = TiltMazeArt.chest(true)
+		(vault["art_node"] as Sprite2D).visible = true
 	vault["taken"] = true
-	GameData.take_vault(_game_index(), level)
-	var p: String = vault["prize"]
-	var text := ""
-	if p.begins_with("sticker:"):
-		var id := p.substr(8)
-		Collection.unlock("stickers", id)
-		text = "New sticker!\n%s" % PetState.FORMS.get(id, {}).get("name", id)
-	else:
-		Shop.give_special(p.substr(5))
-		text = "%s!" % p.substr(5)
-	_sfx("res://sounds/fx/claw_prize.wav", -8.0)
-	Input.vibrate_handheld(50)
+	take_secret(level)
 	var node: Node2D = vault["node"]
+	var art: Node2D = vault.get("art_node", node)
 	var t := create_tween()
-	t.tween_property(node, "scale", Vector2(1.6, 1.6), 0.15)
-	t.tween_property(node, "scale", Vector2(0.0, 0.0), 0.25).set_ease(Tween.EASE_IN)
-	t.tween_callback(node.queue_free)
-	_show_banner(text, 1.4)
+	t.tween_property(art, "scale", art.scale * 1.6, 0.15)
+	t.tween_property(art, "scale", Vector2.ZERO, 0.25).set_ease(Tween.EASE_IN)
+	t.tween_callback(art.queue_free)
 
 func _check_finish() -> void:
 	if ball_pos.distance_to(finish_pos) > FINISH_R:
@@ -1269,11 +1436,13 @@ func _check_finish() -> void:
 	t.tween_interval(0.3)
 	t.tween_callback(func():
 		if is_running:
-			finish_level(level, stars))
+			finish_level(level, stars, level_time))
 
 ## Into a hole: back on the last marble taken (no lives; the clock keeps going, the
 ## no-fall star is gone)
 func _fall_into(h: Vector2) -> void:
+	if _splash_save(h):
+		return
 	state = State.FALLING
 	vel = Vector2.ZERO
 	falls += 1
@@ -1283,16 +1452,355 @@ func _fall_into(h: Vector2) -> void:
 	t.tween_property(ball, "position", h, 0.12)
 	t.tween_property(ball, "scale", Vector2(0.15, 0.15) * BALL_SCALE, 0.45).set_ease(Tween.EASE_IN)
 	t.parallel().tween_property(ball, "modulate", Color(0.2, 0.15, 0.1, 1), 0.45)
-	t.tween_callback(func():
-		ball_pos = respawn_pos
-		ball.position = ball_pos
-		ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
-		ball.modulate = Color(1, 1, 1, 1)
-		state = State.PLAY
-		var blink := create_tween()
-		for i in 4:
-			blink.tween_property(ball, "modulate:a", 0.2, 0.08)
-			blink.tween_property(ball, "modulate:a", 1.0, 0.08))
+	t.tween_callback(_respawn)
+
+# ================================================================== BLOCKERS
+
+## The level's blockers: on the route's doorways (pegs, valves, fire jets), across a corridor (the
+## duck), along the route (the rat), on a route cell (meteors); spread out, away from the start,
+## the marbles, the finish and the holes. Their clocks are offset per level (the same every time).
+func _place_blockers(rng: RandomNumberGenerator, k: int) -> void:
+	blockers.clear()
+	var n: int = BLOCKERS[k]
+	if n == 0:
+		return
+	var kinds: Array[String] = []
+	for i in n:
+		kinds.append(BLOCKER_KIND[world])
+	if k == GameData.LEVELS_PER_WORLD - 1 and world > 0:
+		kinds.append(BLOCKER_KIND[world - 1])            # the finale: the world before's too
+	var steps: Array[int] = []
+	for i in range(2, path_cells.size() - 2):
+		var a: Vector2i = path_cells[i]
+		var b: Vector2i = path_cells[i + 1]
+		if a == b or (a - b).length_squared() != 1 or _check_cells.has(a) or _check_cells.has(b) or b == _finish_cell:
+			continue
+		var c := _door_rect(a, b).get_center()
+		var clear := true
+		for h in holes:
+			if (h["pos"] as Vector2).distance_to(c) < TILE * 1.4:
+				clear = false
+		if not vault.is_empty() and (vault["door"] as Rect2).get_center().distance_to(c) < TILE * 2.0:
+			clear = false
+		if clear:
+			steps.append(i)
+	_shuffle(steps, rng)
+	var used: Array[int] = []
+	for kind in kinds:
+		var pick := -1
+		for i in steps:
+			var ok := true
+			for u in used:
+				if absi(u - i) < 3:
+					ok = false
+			if ok:
+				pick = i
+				break
+		if pick < 0:
+			break
+		used.append(pick)
+		var a: Vector2i = path_cells[pick]
+		var b: Vector2i = path_cells[pick + 1]
+		var door := _door_rect(a, b)
+		var dir := Vector2(b - a)
+		var bl := { "kind": kind, "door": door, "pos": door.get_center(), "dir": dir, "t": rng.randf() * 3.0, "solid": false, "hot": false }
+		match kind:
+			"duck":                                     # slides across the corridor of cell b
+				var side := Vector2(dir.y, dir.x)
+				var c := _cell_center(b)
+				bl["a"] = c - side * TILE * 0.5
+				bl["b"] = c + side * TILE * 0.5
+				bl["pos"] = c
+			"rat":                                      # runs along the route, up to 2 cells
+				var to: Vector2i = b
+				if pick + 2 < path_cells.size() and path_cells[pick + 2] - b == b - a and not _check_cells.has(path_cells[pick + 2]):
+					to = path_cells[pick + 2]
+				bl["a"] = _cell_center(a)
+				bl["b"] = _cell_center(to)
+				bl["pos"] = bl["a"]
+			"meteor":                                   # lands on cell b
+				bl["pos"] = _cell_center(b)
+		blockers.append(bl)
+
+func _spawn_blockers() -> void:
+	for n in blocker_layer.get_children():
+		n.queue_free()
+	for bl in blockers:
+		var node := Node2D.new()
+		node.position = bl["pos"]
+		blocker_layer.add_child(node)
+		bl["node"] = node
+		match bl["kind"]:
+			"peg":
+				bl["sprite"] = _sprite(TiltMazeArt.peg(false), Vector2.ZERO, node)
+			"duck":
+				var sh := _sprite(shadow.texture, Vector2(6, 16), node)
+				sh.modulate = Color(1, 1, 1, 0.8)
+				bl["sprite"] = _sprite(TiltMazeArt.duck(), Vector2.ZERO, node)
+			"valve":
+				var vertical: bool = (bl["dir"] as Vector2).x != 0.0      # the door runs along y
+				var lips: Array = []
+				for side in [-1.0, 1.0]:
+					var lip := _sprite(TiltMazeArt.valve_lip(), Vector2.ZERO, node)
+					lip.scale = Vector2(DETAIL * -side, DETAIL)
+					lip.rotation = PI / 2.0 if vertical else 0.0
+					lips.append(lip)
+				bl["lips"] = lips
+			"rat":
+				bl["sprite"] = _sprite(TiltMazeArt.rat(0), Vector2.ZERO, node)
+			"fire":
+				_sprite(TiltMazeArt.burner(), Vector2.ZERO, node)
+				var f := _sprite(TiltMazeArt.flame(0, true), Vector2(0, -24), node)
+				f.visible = false
+				bl["sprite"] = f
+			"meteor":
+				var ring := _sprite(TiltMazeArt.target_ring(), Vector2.ZERO, node)
+				ring.visible = false
+				bl["ring"] = ring
+				var m := _sprite(TiltMazeArt.meteor(), Vector2.ZERO, node)
+				m.visible = false
+				bl["sprite"] = m
+				var crater := _sprite(TiltMazeArt.hole(world), Vector2.ZERO, node)
+				crater.visible = false
+				crater.modulate = Color(1, 1, 1, 0.7)
+				bl["crater"] = crater
+
+## Each blocker's clock: what it does at this moment (telegraphed before it bites)
+const PEG_CYCLE := 3.2                # up for 1.2 s, then down; it wobbles 0.4 s before popping up
+const VALVE_CYCLE := 3.0              # closing 0.3, shut 1.2, opening 0.3, open 1.2 (pulses before)
+const FIRE_CYCLE := 3.4               # pilot flame 0.6 s (the warning), flame 1.0 s, off
+const METEOR_CYCLE := 3.6             # the shadow and the ring 0.9 s, the hit 0.25 s, the crater
+
+func _update_blockers(delta: float) -> void:
+	for bl in blockers:
+		bl["t"] += delta
+		var t: float = bl["t"]
+		match bl["kind"]:
+			"peg":
+				var ph := fposmod(t, PEG_CYCLE)
+				var up := ph < 1.2
+				bl["solid"] = up
+				var sp: Sprite2D = bl["sprite"]
+				sp.texture = TiltMazeArt.peg(up)
+				sp.rotation = sin(t * 40.0) * 0.12 if ph > PEG_CYCLE - 0.4 else 0.0
+				sp.scale = Vector2(DETAIL, DETAIL) * (1.12 if up and ph < 0.08 else 1.0)
+				if up and ph < delta * 1.5:
+					_sfx("res://sounds/fx/wood_tap.wav", -24.0, 0.0, 1.5)
+			"duck":
+				var f := (sin(t * 1.5) + 1.0) / 2.0
+				var p: Vector2 = (bl["a"] as Vector2).lerp(bl["b"], f)
+				bl["vel"] = ((bl["b"] as Vector2) - (bl["a"] as Vector2)) * cos(t * 1.5) * 0.75
+				bl["pos"] = p
+				bl["node"].position = p.snapped(Vector2(DETAIL, DETAIL))
+				(bl["sprite"] as Sprite2D).scale.x = DETAIL * (1.0 if (bl["vel"] as Vector2).dot(Vector2(1, 1)) >= 0.0 else -1.0)
+				bl["solid"] = true
+			"valve":
+				var ph := fposmod(t, VALVE_CYCLE)
+				var shut := 0.0                           # 0 = open, 1 = shut
+				if ph < 0.3:
+					shut = ph / 0.3
+				elif ph < 1.5:
+					shut = 1.0
+				elif ph < 1.8:
+					shut = 1.0 - (ph - 1.5) / 0.3
+				var pulse := 0.06 * sin(t * 20.0) if ph > VALVE_CYCLE - 0.4 else 0.0
+				bl["solid"] = shut > 0.6
+				var door: Rect2 = bl["door"]
+				var vertical: bool = (bl["dir"] as Vector2).x != 0.0
+				var half := (door.size.y if vertical else door.size.x) / 2.0
+				var lips: Array = bl["lips"]
+				for i in 2:
+					var side := -1.0 if i == 0 else 1.0
+					var off := side * (half - 4.0 * DETAIL * (shut + pulse) - 2.0 * DETAIL)
+					(lips[i] as Sprite2D).position = (Vector2(0, off) if vertical else Vector2(off, 0)).snapped(Vector2(DETAIL, DETAIL))
+			"rat":
+				var a: Vector2 = bl["a"]
+				var b: Vector2 = bl["b"]
+				var run := a.distance_to(b)
+				var leg := run / 170.0                   # seconds a way
+				var cyc := fposmod(t, (leg + 0.4) * 2.0)
+				var f := 0.0
+				var dir_sign := 1.0
+				if cyc < leg:
+					f = cyc / leg
+				elif cyc < leg + 0.4:
+					f = 1.0                              # (a sniff at the end)
+				elif cyc < leg * 2.0 + 0.4:
+					f = 1.0 - (cyc - leg - 0.4) / leg
+					dir_sign = -1.0
+				else:
+					f = 0.0
+				var p := a.lerp(b, f)
+				bl["vel"] = (b - a).normalized() * 170.0 * dir_sign if (f > 0.0 and f < 1.0) else Vector2.ZERO
+				bl["pos"] = p
+				bl["node"].position = p.snapped(Vector2(DETAIL, DETAIL))
+				var sp: Sprite2D = bl["sprite"]
+				sp.texture = TiltMazeArt.rat(int(t * 8.0) % 2)
+				var face := (b - a) * dir_sign
+				sp.rotation = snappedf(face.angle(), PI / 2.0)
+				bl["solid"] = true
+			"fire":
+				var ph := fposmod(t, FIRE_CYCLE)
+				var sp: Sprite2D = bl["sprite"]
+				var frame := int(t * 10.0) % 2
+				if ph < 0.6:
+					sp.visible = true
+					sp.texture = TiltMazeArt.flame(frame, true)
+					bl["hot"] = false
+				elif ph < 1.6:
+					sp.visible = true
+					sp.texture = TiltMazeArt.flame(frame, false)
+					bl["hot"] = true
+					if ph - delta < 0.6:
+						_sfx("res://sounds/fx/water-pouring-98795.mp3", -26.0, 0.35, 0.5)
+				else:
+					sp.visible = false
+					bl["hot"] = false
+			"meteor":
+				var ph := fposmod(t, METEOR_CYCLE)
+				var ring: Sprite2D = bl["ring"]
+				var m: Sprite2D = bl["sprite"]
+				var crater: Sprite2D = bl["crater"]
+				ring.visible = ph < 0.9
+				ring.modulate.a = 0.5 + 0.5 * sin(t * 14.0)
+				ring.scale = Vector2(DETAIL, DETAIL) * (0.7 + 0.3 * minf(1.0, ph / 0.9))
+				m.visible = ph > 0.55 and ph < 0.95
+				if m.visible:
+					var f := (ph - 0.55) / 0.4
+					m.position = (Vector2(220, -260) * (1.0 - f)).snapped(Vector2(DETAIL, DETAIL))
+				bl["hot"] = ph >= 0.9 and ph < 1.15
+				crater.visible = ph >= 0.9 and ph < 1.9
+				if ph >= 0.9 and ph - delta < 0.9:
+					_sfx("res://sounds/fx/hole_plop.wav", -14.0, 0.0, 0.6)
+					Input.vibrate_handheld(20)
+
+## The solid ones push the ball (pegs up, valves shut, the duck, the rat); the moving ones shove it
+func _collide_blockers() -> void:
+	for bl in blockers:
+		if not bl["solid"]:
+			continue
+		match bl["kind"]:
+			"peg":
+				_push_out_circle(bl["pos"], PEG_R, BOUNCE)
+			"valve":
+				var door: Rect2 = bl["door"]
+				var k := 0.3
+				var bar := door.grow_individual(-door.size.x * k, 0, -door.size.x * k, 0) if (bl["dir"] as Vector2).x != 0.0 else door.grow_individual(0, -door.size.y * k, 0, -door.size.y * k)
+				_push_out(bar, BOUNCE * 1.6)
+			"duck", "rat":
+				if _push_out_circle(bl["pos"], MOVER_R, 0.6 if bl["kind"] == "duck" else 1.0):
+					vel += bl.get("vel", Vector2.ZERO) * (0.6 if bl["kind"] == "duck" else 1.4)
+					if bl["kind"] == "rat" and bump_cooldown <= 0.0:
+						bump_cooldown = 0.3
+						_sfx("res://sounds/fx/water_boing.wav", -18.0, 0.0, 2.2)
+
+## Fire and meteors: touching one at its moment is a fall (back on the last marble)
+func _check_hazards() -> void:
+	for bl in blockers:
+		if not bl["hot"]:
+			continue
+		var r := PEG_R if bl["kind"] == "fire" else METEOR_R
+		if ball_pos.distance_to(bl["pos"]) < r + BALL_R * 0.4:
+			_hurt(bl["pos"], bl["kind"])
+			return
+
+## Pushes the ball out of a circle (a peg, the duck...); true if they touched
+func _push_out_circle(c: Vector2, r: float, b: float) -> bool:
+	var d := ball_pos - c
+	var dist := d.length()
+	if dist >= BALL_R + r or dist <= 0.0001:
+		return false
+	var n := d / dist
+	ball_pos += n * (BALL_R + r - dist)
+	var vn := vel.dot(n)
+	if vn < 0.0:
+		vel -= (1.0 + b) * vn * n
+		if -vn > 220.0 and bump_cooldown <= 0.0:
+			bump_cooldown = 0.12
+			_sfx("res://sounds/fx/wood_tap.wav", clampf(-34.0 + (-vn) / 50.0, -30.0, -16.0), 0.0, randf_range(0.92, 1.08))
+			Input.vibrate_handheld(12)
+	return true
+
+## Burnt by a fire jet / hit by a meteor: like a fall (back on the last marble, no-fall star gone)
+func _hurt(at: Vector2, kind: String) -> void:
+	if _splash_save(at):
+		return
+	state = State.FALLING
+	vel = Vector2.ZERO
+	falls += 1
+	_sfx("res://sounds/fx/hole_plop.wav", -12.0, 0.0, 0.8)
+	Input.vibrate_handheld(90)
+	var t := create_tween()
+	if kind == "fire":
+		t.tween_property(ball, "modulate", Color(0.25, 0.15, 0.1, 1), 0.15)
+		t.tween_property(ball, "scale", Vector2(1.2, 0.8) * BALL_SCALE, 0.12)
+	else:
+		t.tween_property(ball, "scale", Vector2(1.4, 0.6) * BALL_SCALE, 0.1)
+		t.tween_property(ball, "modulate:a", 0.2, 0.2)
+	t.tween_interval(0.25)
+	t.tween_callback(_respawn)
+
+## A splashy pal's one bounce back out of a fall (a hole, a fire jet, a meteor): no fall counted,
+## the boost is spent. True if it saved the pal.
+func _splash_save(at: Vector2) -> bool:
+	if splash_used or PetState.boost_power("splash") <= 0:
+		return false
+	splash_used = true
+	PetState.use_boost()
+	var away := (ball_pos - at)
+	if away.length() < 1.0:
+		away = -vel if vel.length() > 1.0 else Vector2.UP
+	ball_pos = at + away.normalized() * (HOLE_R + BALL_R + 6.0)
+	vel = away.normalized() * 260.0
+	_sfx("res://sounds/fx/water_boing.wav", -8.0, 0.0, 1.0)
+	Input.vibrate_handheld(40)
+	_debris(at, Color8(150, 210, 250))
+	_float_text("Splash!", at)
+	return true
+
+## Back on the last marble taken, blinking
+func _respawn() -> void:
+	ball_pos = respawn_pos
+	ball.position = ball_pos
+	ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
+	ball.modulate = Color(1, 1, 1, 1)
+	vel = Vector2.ZERO
+	state = State.PLAY
+	var blink := create_tween()
+	for i in 4:
+		blink.tween_property(ball, "modulate:a", 0.2, 0.08)
+		blink.tween_property(ball, "modulate:a", 1.0, 0.08)
+
+# ================================================================== THE MARBLE TRAY
+
+## The HUD's tray, on the rail's right: an empty socket per marble of the level
+func _build_tray() -> void:
+	for t in tray:
+		t.queue_free()
+	tray.clear()
+	var n := checkpoints.size()
+	var step := 40.0
+	var right := ORIGIN.x + BOARD_PX * PX - 26.0
+	for i in n:
+		var r := TextureRect.new()
+		r.texture = TiltMazeArt.socket()
+		r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		r.size = Vector2(36, 36)
+		r.pivot_offset = r.size / 2.0
+		r.position = Vector2(right - (n - i) * step, ORIGIN.y + 9)
+		add_child(r)
+		tray.append(r)
+
+## A marble lands in its slot (a little pop)
+func _fill_tray_slot(i: int) -> void:
+	if i >= tray.size():
+		return
+	var r := tray[i]
+	r.texture = TiltMazeArt.pickup(world)
+	var t := create_tween()
+	t.tween_property(r, "scale", Vector2(1.5, 1.5), 0.08)
+	t.tween_property(r, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 # ================================================================== INPUT
 

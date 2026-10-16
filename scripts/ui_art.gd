@@ -200,3 +200,82 @@ static func place_tier_icons(parent: Node, tag: Sprite2D, family: String, level:
 	var tag_size: Vector2 = tag.texture.get_size() * tag.scale
 	icons.position = tag.position + Vector2(tag_size.x - tex.get_width() * k + 4.0 * k, -tex.get_height() * k * 0.5 - 1.0 * k)
 	icons.visible = true
+
+## A gate's badge (a level menu's cell, a vault's sign): the boost icon of the drink type that
+## opens it, with its level as 1-3 pips under it; a "skill" secret: a sparkle. 11 x 14 px
+static func gate_badge(gate: String, lvl: int) -> Texture2D:
+	var key := "gate_%s_%d" % [gate, lvl]
+	if key in _cache:
+		return _cache[key]
+	var img := Image.create(11, 14, false, Image.FORMAT_RGBA8)
+	var boost := DrinkLibrary.boost_of(gate)
+	if boost != "":
+		var icon := PetState.boost_icon(boost)
+		if icon:
+			var im := icon.get_image()
+			img.blit_rect(im, Rect2i(Vector2i.ZERO, im.get_size()), Vector2i(2, 0))
+		for i in clampi(lvl, 1, 3):
+			var x := 5 - (clampi(lvl, 1, 3) - 1) * 2 + i * 4
+			for d in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
+				img.set_pixel(x - 1 + d.x, 11 + d.y, GOLD)
+			for d in [Vector2i(-1, 0), Vector2i(-1, 1), Vector2i(2, 0), Vector2i(2, 1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(0, 2), Vector2i(1, 2)]:
+				var q: Vector2i = Vector2i(x - 1, 11) + d
+				if q.x >= 0 and q.x < 11 and q.y >= 0 and q.y < 14 and img.get_pixel(q.x, q.y).a == 0.0:
+					img.set_pixel(q.x, q.y, OUTLINE)
+	else:
+		var rows := ["....#....", "...#w#...", "..#www#..", "##wwwww##", "#wwwwwwww", "##wwwww##", "..#www#..", "...#w#...", "....#...."]
+		for y in rows.size():
+			for x in rows[y].length():
+				var ch: String = rows[y][x]
+				if ch == "#":
+					img.set_pixel(x + 1, y + 2, OUTLINE)
+				elif ch == "w":
+					img.set_pixel(x + 1, y + 2, GOLD_LIGHT)
+	var tex := ImageTexture.create_from_image(img)
+	_cache[key] = tex
+	return tex
+
+## A small green tick (a secret or a finale's prize already taken), 9 x 8 px
+static func tick() -> Texture2D:
+	if "tick" in _cache:
+		return _cache["tick"]
+	var rows := [".......##", "......#g#", "##...#g#.", "#g#.#g#..", ".#g#g#...", "..#g#....", "...#.....", "........."]
+	var img := Image.create(9, 8, false, Image.FORMAT_RGBA8)
+	for y in rows.size():
+		for x in 9:
+			var ch: String = rows[y][x]
+			if ch == "#":
+				img.set_pixel(x, y, OUTLINE)
+			elif ch == "g":
+				img.set_pixel(x, y, Color8(120, 196, 96))
+	var tex := ImageTexture.create_from_image(img)
+	_cache["tick"] = tex
+	return tex
+
+## A little present (a finale's prize still to win), 11 x 11 px
+static func gift() -> Texture2D:
+	if "gift" in _cache:
+		return _cache["gift"]
+	var rows := [
+		"..##...##..",
+		".#rr#.#rr#.",
+		"..##r#r##..",
+		"###########",
+		"#bbbbrbbbb#",
+		"###########",
+		".#bbbrbbb#.",
+		".#bbbrbbb#.",
+		".#dddrddd#.",
+		".#dddrddd#.",
+		".#########.",
+	]
+	var cols := { "#": OUTLINE, "r": Color8(236, 92, 96), "b": Color8(120, 196, 214), "d": Color8(90, 162, 186) }
+	var img := Image.create(11, 11, false, Image.FORMAT_RGBA8)
+	for y in rows.size():
+		for x in 11:
+			var ch: String = rows[y][x]
+			if ch in cols:
+				img.set_pixel(x, y, cols[ch])
+	var tex := ImageTexture.create_from_image(img)
+	_cache["gift"] = tex
+	return tex
