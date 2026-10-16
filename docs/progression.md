@@ -98,25 +98,33 @@ next; stars pay in coins and gifts instead. Tune on the phone so the measured fa
 this table (TestFlight: log tries and stars per level).
 
 ### Each game's worlds (one new thing each)
-- Splash Hoops (5 BUILT): 1 Morning Lagoon (the pumps one by one) · 2 Sunset Drift (drifting
+(All five BUILT on `complete-games`, 2026-10-16: every world, its new thing, its look, its secret
+and its finale; the details are in each game's script header.)
+- Splash Hoops (BUILT): 1 Morning Lagoon (the pumps one by one) · 2 Sunset Drift (drifting
   baskets) · 3 Pufferfish Reef (the pufferfish) · 4 Night Lights (baskets going round) · 5 Storm
   (gusts; finale 5-9: Kraken Brine) · 6 Deep Sea (dark water: you see what the anglerfish's lure
   lights).
-- Tilt Maze (BUILT, 6 worlds): 1 Wooden Toy · 2 Bath Tiles (slippery) · 3 The Gut (bouncy walls,
-  drifting holes) · 4 Sewer (currents) · 5 Factory (magnets) · 6 Space (low gravity, goo). To add:
-  moving things that block the route for a moment (one kind per world), the other vault kinds.
-- Pal Prix (2 BUILT): 1 Garden (the basics) · 2 Kitchen (speed pads) · 3 Sky (jumps over gaps) ·
-  4 Lagoon (crossovers, figure-8s) · 5 Rain (puddles that slip, spray off the wheels) · 6 Grand
-  Prix, night (rivals; finale 6-9: the Phoenix Cup, a trophy). Phoenix Pepper on 5-9. SLIP
-  obstacles join from world 3 as the mix element.
-- Paper Sumo (rivals are paper toys, not pals: your pal is the only pal in the ring): 1 Shoebox
-  (paper dolls: hop, lean, push out) · 2 Cereal Box (the cereal mascots, heavy: lean in, but you
-  fall easier) · 3 Gift Box (origami, slick: they pull down; lean back to do it yourself) · 4 Tin
-  Toy Box (wind-up robots marching on a fixed beat: drum their off-beat; finale: the big robot ->
-  Microchip) · 5 Beetle Box (paper beetles: mushi-zumo; the horn lifts you; finale -> Golden Seed)
-  · 6 Shrine Festival (a tournament; finale: the harvest yokozuna: sumo began as a prayer for good
-  harvests). A level = one match, best of 3 bouts.
-- Top Spin (rivals are tops with styles): 1 Wooden Bowl (wind, drop, dash) · 2 Bumper Bowl
+- Tilt Maze (BUILT): 1 Wooden Toy · 2 Bath Tiles (slippery) · 3 The Gut (bouncy walls, drifting
+  holes) · 4 Sewer (currents) · 5 Factory (magnets) · 6 Space (low gravity, goo). From each world's
+  4th level a blocker, telegraphed (pegs that pop up, a rubber duck, gut valves, a sewer rat, fire
+  jets, meteors); a vault gate for every drink (fence, cracked wall, channel, shutter, chest).
+- Pal Prix (BUILT): 1 Garden (the basics) · 2 Kitchen (speed pads) · 3 Sky (jumps over gaps, a
+  ramp before each) · 4 Lagoon (figure-8s: the road over itself on a bridge) · 5 Rain (puddles that
+  spin the car, spray off the wheels) · 6 Grand Prix, night (lamps and headlights, up to three
+  rivals: 1st place for the 2nd star). Oil slicks from the Sky's 7th level on. Phoenix Pepper on
+  5-9, the Grand Prix case on 6-9.
+- Paper Sumo (BUILT; the rivals are critters of the pals' world, not pals, drawn by the pal
+  renderer: tools/art/sumo_rivals.py, after the user's note that the first paper dolls, cereal
+  mascots and origami didn't fit): 1 Wooden Box (frogs: hop, lean, push out) · 2 Pond Garden, a
+  rock in a spring koi pond (turtles, heavy: lean in) · 3 Autumn Stream, a log raft under maples
+  (otters, the tricksters: they pull you down) · 4 Moon Base, a landing pad (wind-up tin robots:
+  they march on their own beat, drum your side and run down; the big robot -> Microchip) · 5 Tree
+  Stump, a summer forest (beetles, mushi-zumo: the horn lifts you; the beetle king -> Golden Seed)
+  · 6 Shrine Festival, night (the sumo ranks up to the yokozuna; the harvest yokozuna -> the
+  Dohyo case). A level = one match, best of 3 bouts; a mystery challenger after each world's 6th
+  level for a sturdy or focused pal. An autopilot (tools/qa, FAST=1) tuned every level: worlds 1-4
+  are won by a decent player, the late masters' champions want a sturdy pal.
+- Top Spin (BUILT; rivals are tops with styles): 1 Wooden Bowl (wind, drop, dash) · 2 Bumper Bowl
   (bumpers; the guard and the perfect guard) · 3 Lacquer Tray (rim gaps: ring-outs) · 4 Toilet
   Bowl (it flushes halfway: a whirlpool pulls every top to the middle) · 5 Clockwork Bowl (a floor
   of turning gears; finale -> Dragon Oil) · 6 Dragon Festival (three tops at once; finale: the
@@ -219,7 +227,7 @@ and each family's legendary food on its ULTRA Dai (5 legends).
 | Alien Goo      | cosmic    | Tilt Maze 6-8 (Space)                                         |
 | Kraken Brine   | legendary | Splash Hoops 5-9 (the Storm)                                  |
 | Phoenix Pepper | legendary | Pal Prix 5-9 (the Phoenix Cup)                                |
-| Golden Seed    | legendary | Paper Sumo 5-9 (the harvest yokozuna)                         |
+| Golden Seed    | legendary | Paper Sumo 5-9 (the beetle king)                              |
 | Dragon Oil     | legendary | Top Spin 5-9 (the dragon top)                                 |
 | Stardust Sugar | legendary | Tummy Tunes 5-9 (the star song)                               |
 
@@ -367,7 +375,7 @@ pals to a sparkle -> a NEW pal (30 min to the next meal) -> drink: the type of a
 day's special, a drink level) -> leave with a hook: the next meal's countdown, a gate that needs a
 level 3, the next game's price.
 
-## 7. Building it (the `complete-games` branch, 2026-10-16)
+## 7. Building it (the `complete-games` branch, 2026-10-16: ALL BUILT, for the user to review)
 The user asked for the first five games as complete as possible, then to decide what stays:
 1. The systems: the meal clock by what the meal did · the LCD's coins (points off the HUDs) ·
    prices · special foods found first + the daily shelf + spares to coins · drink levels and the
@@ -379,7 +387,12 @@ The user asked for the first five games as complete as possible, then to decide 
    rain spray off the wheels), Paper Sumo (levels and worlds, paper-toy rivals), Top Spin (levels
    and worlds, a background).
 3. The catalogue: every gift-track item, the secrets' prizes, pal stickers, cases (new designs
-   after the Melon Soda rules).
+   after the Melon Soda rules). BUILT: 18 themed stickers (the secrets' and the gift tracks' gold
+   ones; a games page in the sticker book), 9 new dress-ups fitted to every pal (tools/art/hats.py),
+   9 gut add-ons + 4 gut colours, 6 sky scenes + 4 sky colours, 9 new cases (5 games' + 4 sold in
+   the Shop for 40: tools/art/cases_games.py) and a CASES page in the gear menu; every game's gift
+   track (5 / 15 / 30 / 60 / 100 / 150 stars; Tummy Tunes' later). Still to make: the Pal Pedia's
+   milestones past 10 pals, Lucky Pinch's own exclusives.
 4. The dev launcher: BOOT + PROGRESSION starts from zero with everything in it; STRAIGHT TO GAMES
    becomes ALL UNLOCKED (a random pal, every game, level, item, sticker and case, the whole Shop).
 Then measure on the phone and replace the model's ASSUMED numbers.

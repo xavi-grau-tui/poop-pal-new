@@ -16,18 +16,25 @@ minigames. The minigames are digital versions of real physical toys living insid
 come back to, and each feeding the rest (rewards, foods, drinks, secrets). Everything must feel
 light, playful and visually intuitive: icons over text, learn by doing. Asia first (Japan above all).
 
-## Where things stand (2026-10-16)
-- Branches (2026-10-16): `main` holds everything: Progression v2, the shop, the 120 sheet-4 pals,
-  CASE mode (Melon Soda case + the sticker book), Tilt Maze's 6 worlds x 9 levels with vaults and
-  the fizz boost, Pal Prix's Garden and Kitchen (from `pipe-dream`), the skeleton
-  (docs/progression.md). Next: `complete-games` (the first five games to 6 worlds, the catalogue,
-  the Shop, the boosts, the ALL UNLOCKED mode).
+## Where things stand (2026-10-16, late)
+- Branch `complete-games` (not merged, for the user to review: what stays, what changes): the
+  skeleton's systems (meal clock, coins on the LCD, every boost, drink levels, the daily special
+  shelf, Lucky Pinch every 4th new pal); the first five games each at 6 worlds x 9 levels with a
+  new thing per world, secrets and finale prizes (Splash Hoops, Tilt Maze, Pal Prix, Paper Sumo,
+  Top Spin: docs/progression.md section 2); Paper Sumo's rivals redrawn in the pals' style and
+  three new places (user's note); the catalogue (stickers, dress-ups, gut decor, skies, 10 cases, a
+  CASES page, every game's gift track); ALL UNLOCKED in the dev launcher; QA tools (tools/qa:
+  screenshots, headless checks, FAST autopilot runs, unlock=all, case=, boost=).
+- `main` holds what came before: Progression v2, the shop, the 120 sheet-4 pals, CASE mode,
+  Tilt Maze's worlds, Pal Prix's Garden and Kitchen, the skeleton (docs/progression.md).
 - Saving: BOOT + PROGRESSION in the dev launcher is the real game with real saves (user://progress/);
   the other launches use the testing save (wiped each launch). Release builds still use the testing
   save: switch them to the real one before TestFlight.
-- Levels: Splash Hoops (45) and Tilt Maze (54) have level menus and stars; the other launch games
-  don't yet. STRAIGHT TO GAMES opens every level of every game (testing).
-- Boosts: Splash (watery) and Fizz (fizzy, Tilt Maze's fences) work; Focus, Sturdy, Lucky don't yet.
+- Levels (complete-games): Splash Hoops, Tilt Maze, Pal Prix, Paper Sumo and Top Spin all have
+  54 levels with the level menu and stars; Tummy Tunes waits for its songs. ALL UNLOCKED opens
+  every level of every game.
+- Boosts (complete-games): all five work in the games they matter in (docs/progression.md
+  section 4's table); Lucky also grips firmer in Lucky Pinch.
 
 ## Where things stood (2026-10-07)
 - Built and playable: the pet (feeding, drinks, evolution tree of 120 pals, Pal Pedia, flush),
