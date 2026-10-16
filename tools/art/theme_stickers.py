@@ -38,6 +38,12 @@ THEMED = {
  'koi': ('kid', 'Koi | fish | white/orange | spots:orange fins:orange tail_fish:orange | gloss o'),
  'wind_up_key': os.path.join(ROOT, 'textures', 'minigames', 'sumo', 'key_gold.png'),
  'kabuto': os.path.join(ROOT, 'textures', 'minigames', 'sumo', 'rivals', 'beetle_0.png'),
+ # each game's gift track at 150 stars: a gold sticker
+ 'gold_shell': ('kid', 'Gold Shell | clam | gold | clamridges sparkles | happy w'),
+ 'gold_marble': ('kid', 'Gold Marble | ball | gold | swirlband:lemon sparkles | gloss w'),
+ 'gold_car': ('kid', 'Gold Car | bun sx=1.25 | gold/char | wheels:char mask:sky | dot w sparkles'),
+ 'gold_yokozuna': os.path.join(ROOT, 'textures', 'minigames', 'sumo', 'rivals', 'sumo_champ.png'),
+ 'gold_top': ('kid', 'Gold Top | slice | gold/lemon | hstripes:lemon stem sparkles | gloss w'),
 }
 
 

@@ -8,6 +8,11 @@ the form sprite's alpha, the face from tools/art/pal_faces.json.
     snorkel       a diving mask round the eyes, a snorkel      (Tilt Maze 2-8)
     hachimaki     a white headband with the red sun, knotted   (Top Spin 5-6)
     sumo_topknot  oiled hair and a topknot (a chonmage)        (Paper Sumo 6-6)
+  the games' gift tracks, at 30 stars:
+    explorer_hat  a khaki pith helmet with a band              (Tilt Maze)
+    racing_helmet a red helmet, a white stripe, its visor up    (Pal Prix)
+    gyoji_hat     the sumo referee's black lacquered eboshi    (Paper Sumo)
+    propeller_cap a four-colour beanie with a propeller        (Top Spin)
 
     <venv>/bin/python tools/art/hats.py [ids]   -> textures/pet/accessories/<id>/<form>-<n>.png
                                                    textures/pet/accessories/icons/<id>.png
@@ -191,7 +196,81 @@ def sumo_topknot(c, m, f):
     return im
 
 
-ITEMS = {'hard_hat': hard_hat, 'headlamp': headlamp, 'snorkel': snorkel, 'hachimaki': hachimaki, 'sumo_topknot': sumo_topknot}
+def _dome(c, m, f, hw_k=.4, brim_dy=10.0, dh_k=.82):
+    """(mid, brim, hw, dh, top): where a dome-shaped hat sits on this head"""
+    cx, cy, sp, er = f
+    left, right, top, mid = geo(head(m))
+    hw = max(13.0, (right - left) * hw_k)
+    brim = min(top + brim_dy, cy - er * 1.35 - 2.5)
+    dh = min(max(12.0, hw * dh_k), brim - 1.0)
+    return mid, brim, hw, dh, top
+
+
+def explorer_hat(c, m, f):
+    mid, brim, hw, dh, top = _dome(c, m, f)
+    im, d = layer(c)
+    khaki, shade, light, band = (226, 204, 148, 255), (190, 166, 112, 255), (246, 232, 190, 255), (138, 100, 60, 255)
+    d.chord([*c.P(mid - hw, brim - dh), *c.P(mid + hw, brim + dh)], 180, 360, fill=khaki, outline=INK, width=int(2.0 * K))
+    d.arc([*c.P(mid - hw + 3, brim - dh + 2.5), *c.P(mid + hw - 3, brim + dh - 2)], 200, 245, fill=light, width=int(1.6 * K))
+    d.rectangle([*c.P(mid - hw + 1.2, brim - 4.2), *c.P(mid + hw - 1.2, brim - .8)], fill=band)
+    d.ellipse([*c.P(mid - 2.2, brim - dh - 1.6), *c.P(mid + 2.2, brim - dh + 1.8)], fill=shade, outline=INK, width=int(1.2 * K))
+    d.chord([*c.P(mid - hw * 1.32, brim - 3.2), *c.P(mid + hw * 1.32, brim + 4.4)], 0, 360, fill=shade, outline=INK, width=int(2.0 * K))
+    return im
+
+
+def racing_helmet(c, m, f):
+    cx, cy, sp, er = f
+    mid, brim, hw, dh, top = _dome(c, m, f, hw_k=.5, brim_dy=13.0, dh_k=.9)
+    im, d = layer(c)
+    red, light = (218, 60, 54, 255), (250, 140, 120, 255)
+    d.chord([*c.P(mid - hw, brim - dh), *c.P(mid + hw, brim + dh * .55)], 180, 360, fill=red, outline=INK, width=int(2.0 * K))
+    d.rectangle([*c.P(mid - 2.6, brim - dh + 1.0), *c.P(mid + 2.6, brim - .5)], fill=(250, 248, 240, 255))      # the stripe
+    d.arc([*c.P(mid - hw + 3, brim - dh + 2.5), *c.P(mid + hw - 3, brim + dh - 2)], 200, 240, fill=light, width=int(1.6 * K))
+    d.rounded_rectangle([*c.P(mid - hw * .78, brim - 3.6), *c.P(mid + hw * .78, brim + .6)], radius=int(1.6 * K), fill=(40, 44, 64, 255), outline=INK, width=int(1.6 * K))   # the visor, up
+    d.line([c.P(mid - hw * .6, brim - 2.6), c.P(mid - hw * .25, brim - 2.6)], fill=(140, 160, 210, 255), width=int(1.2 * K))
+    return im
+
+
+def gyoji_hat(c, m, f):
+    """the eboshi: tall, rounded, black lacquer, leaning a little forward; purple cords round it"""
+    cx, cy, sp, er = f
+    left, right, top, mid = geo(head(m))
+    w = max(9.0, (right - left) * .26)
+    base = min(top + 3.0, cy - er * 1.4 - 2.0)
+    im, d = layer(c)
+    lac, sheen = (36, 30, 38, 255), (120, 112, 132, 255)
+    tall = min(31.0, base - 2.0)
+    pts = [c.P(mid - w, base), c.P(mid - w * 1.08, base - tall * .38), c.P(mid - w * .78, base - tall * .8), c.P(mid - w * .1, base - tall),
+           c.P(mid + w * .62, base - tall * .9), c.P(mid + w * .98, base - tall * .55), c.P(mid + w, base)]
+    d.polygon(pts, fill=INK)
+    d.polygon(pts, fill=lac)
+    d.line(pts + [pts[0]], fill=INK, width=int(2.0 * K))
+    d.line([c.P(mid - w * .55, base - 4), c.P(mid - w * .62, base - tall * .7)], fill=sheen, width=int(1.6 * K))
+    purple = (150, 90, 180, 255)
+    d.line([c.P(mid - w - 1, base - 2.5), c.P(mid + w + 1, base - 2.5)], fill=purple, width=int(2.0 * K))
+    return im
+
+
+def propeller_cap(c, m, f):
+    mid, brim, hw, dh, top = _dome(c, m, f, hw_k=.42, brim_dy=9.0, dh_k=.75)
+    im, d = layer(c)
+    cols = [(226, 64, 58, 255), (246, 204, 70, 255), (70, 120, 210, 255), (96, 180, 96, 255)]
+    box = [*c.P(mid - hw, brim - dh), *c.P(mid + hw, brim + dh)]
+    for i in range(4):                                   # four panels round the cap
+        d.pieslice(box, 180 + i * 45, 180 + (i + 1) * 45, fill=cols[i])
+    d.arc(box, 180, 360, fill=INK, width=int(2.0 * K))
+    d.line([c.P(mid - hw, brim), c.P(mid + hw, brim)], fill=INK, width=int(2.0 * K))
+    d.chord([*c.P(mid + hw * .1, brim - 2.6), *c.P(mid + hw * 1.25, brim + 3.0)], 0, 360, fill=cols[2], outline=INK, width=int(1.6 * K))   # the peak
+    py = brim - dh
+    d.line([c.P(mid, py), c.P(mid, py - 4.0)], fill=INK, width=int(2.4 * K))           # the propeller
+    for sd in (-1, 1):
+        d.ellipse([*c.P(mid + sd * 1.0 - (7.5 if sd < 0 else 0), py - 6.2), *c.P(mid + sd * 1.0 + (7.5 if sd > 0 else 0), py - 3.0)], fill=(250, 210, 80, 255), outline=INK, width=int(1.4 * K))
+    d.ellipse([*c.P(mid - 1.4, py - 5.8), *c.P(mid + 1.4, py - 3.2)], fill=(226, 64, 58, 255), outline=INK, width=int(1.0 * K))
+    return im
+
+
+ITEMS = {'explorer_hat': explorer_hat, 'racing_helmet': racing_helmet, 'gyoji_hat': gyoji_hat, 'propeller_cap': propeller_cap,
+         'hard_hat': hard_hat, 'headlamp': headlamp, 'snorkel': snorkel, 'hachimaki': hachimaki, 'sumo_topknot': sumo_topknot}
 ICON_PAL = 'bud'                                         # (the icon: the item as it sits on Bud)
 
 

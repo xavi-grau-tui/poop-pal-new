@@ -4,6 +4,11 @@ outline, a few at the top and the bottom of the sky.
 
     sewer_pipes   pipes: elbows with flanges, straight runs with a valve wheel   (Tilt Maze 4-6)
     starfield     stars, twinkles, a ringed planet, a crescent moon              (Tilt Maze 6-6)
+  the games' gift tracks, at 5 stars:
+    marbles       glass marbles with a swirl inside                              (Tilt Maze)
+    balloons      hot-air balloons with their baskets                            (Pal Prix)
+    paper_cranes  origami cranes flying                                          (Paper Sumo)
+    spin_tops     spinning tops, a swish round each                              (Top Spin)
 
     <venv>/bin/python tools/art/bg_games.py   -> textures/pet-background/<id>_far.png, <id>_near.png
                                                  textures/pet-background/icons/<id>.png (the prize card)
@@ -119,6 +124,63 @@ def sparkle(r, pal):
     return done(im)
 
 
+def marble(r, pal):
+    body, shade, dark = pal
+    im, d = canvas(r * 2.4, r * 2.4)
+    c = r * 1.2 * S
+    d.ellipse([c - r * S, c - r * S, c + r * S, c + r * S], fill=body)
+    d.arc([c - r * .55 * S, c - r * .55 * S, c + r * .55 * S, c + r * .55 * S], 200, 360, fill=shade, width=int(r * .26 * S))
+    d.arc([c - r * .3 * S, c - r * .2 * S, c + r * .75 * S, c + r * .8 * S], 20, 170, fill=shade, width=int(r * .2 * S))
+    d.ellipse([c - r * .62 * S, c - r * .7 * S, c - r * .2 * S, c - r * .3 * S], fill=(255, 255, 250, 255))
+    return done(im)
+
+
+def balloon(r, pal):
+    """a hot-air balloon: the envelope with stripes, ropes, a little basket"""
+    body, shade, dark = pal
+    im, d = canvas(r * 2.4, r * 3.4)
+    c = r * 1.2 * S
+    top = r * .2 * S
+    d.ellipse([c - r * S, top, c + r * S, top + r * 2.1 * S], fill=body)
+    d.polygon([(c - r * .78 * S, top + r * 1.5 * S), (c + r * .78 * S, top + r * 1.5 * S), (c + r * .3 * S, top + r * 2.45 * S), (c - r * .3 * S, top + r * 2.45 * S)], fill=body)
+    for k in (-.45, .45):                                  # stripes
+        d.arc([c + (k - .25) * r * S, top, c + (k + .25) * r * S, top + r * 2.1 * S], 270, 90 if k > 0 else 90, fill=shade, width=int(r * .14 * S))
+    d.ellipse([c - r * .18 * S, top, c + r * .18 * S, top + r * 2.1 * S], outline=shade, width=int(r * .14 * S))
+    by = top + r * 2.7 * S
+    for sx in (-.28, .28):
+        d.line([(c + sx * r * S, top + r * 2.4 * S), (c + sx * .8 * r * S, by)], fill=shade, width=int(r * .06 * S) + 1)
+    d.rectangle([c - r * .26 * S, by, c + r * .26 * S, by + r * .38 * S], fill=shade)
+    return done(im)
+
+
+def crane(r, pal):
+    """an origami crane in flight: wings up, neck and tail out"""
+    body, shade, dark = pal
+    im, d = canvas(r * 3.0, r * 2.4)
+    cx, cy = r * 1.5 * S, r * 1.4 * S
+    P = lambda x, y: (cx + x * r * S, cy + y * r * S)
+    d.polygon([P(-.2, 0), P(.35, -.05), P(.05, .3)], fill=shade)                    # the body
+    d.polygon([P(-.15, -.05), P(.3, -.08), P(-.25, -1.0)], fill=body)               # the near wing
+    d.polygon([P(0, -.05), P(.3, -.08), P(.55, -.85)], fill=shade)                  # the far wing
+    d.polygon([P(.3, 0), P(.42, .05), P(1.2, -.55)], fill=body)                     # the neck
+    d.polygon([P(1.2, -.55), P(1.08, -.48), P(1.32, -.35)], fill=shade)             # the head
+    d.polygon([P(-.2, 0), P(-.08, .08), P(-1.15, -.45)], fill=body)                 # the tail
+    return done(im)
+
+
+def spin_top(r, pal):
+    """a spinning top: a cone on its point, a band, the handle, a swish round it"""
+    body, shade, dark = pal
+    im, d = canvas(r * 3.2, r * 2.6)
+    cx, cy = r * 1.6 * S, r * 1.2 * S
+    d.arc([cx - r * 1.5 * S, cy - r * .2 * S, cx + r * 1.5 * S, cy + r * .75 * S], 20, 160, fill=shade, width=int(r * .12 * S))
+    d.polygon([(cx - r * S, cy - r * .1 * S), (cx + r * S, cy - r * .1 * S), (cx, cy + r * 1.0 * S)], fill=body)
+    d.ellipse([cx - r * S, cy - r * .45 * S, cx + r * S, cy + r * .25 * S], fill=body)
+    d.ellipse([cx - r * .9 * S, cy - r * .3 * S, cx + r * .9 * S, cy + r * .05 * S], fill=shade)
+    d.rectangle([cx - r * .12 * S, cy - r * .9 * S, cx + r * .12 * S, cy - r * .3 * S], fill=body)
+    return done(im)
+
+
 def layer(items, out):
     cv = Image.new('RGBA', (925, 924), (0, 0, 0, 0))
     for (x, y, im, ang) in items:
@@ -155,11 +217,31 @@ if __name__ == '__main__':
     a = layer(far, 'starfield_far.png')
     b = layer(near, 'starfield_near.png')
     icon(a, b, os.path.join(DEST, 'icons', 'starfield.png'))
+    # the gift tracks' (5 stars)
+    sets = {
+        'marbles': ([(310, 50, marble(9, PINKY), 0), (450, 80, marble(7, PINKY), 0), (80, 150, marble(8, PINKY), 0), (835, 115, marble(9, PINKY), 0),
+                     (70, 700, marble(8, PINKY), 0), (860, 670, marble(9, PINKY), 0)],
+                    [(280, 170, marble(22, CREAM), 20), (700, 70, marble(18, CREAM), -30), (200, 790, marble(24, CREAM), 50), (800, 800, marble(20, CREAM), 0)]),
+        'balloons': ([(310, 60, balloon(8, PINKY), 0), (470, 110, balloon(6, PINKY), 0), (90, 160, balloon(7, PINKY), 0), (840, 100, balloon(8, PINKY), 0),
+                      (80, 690, balloon(7, PINKY), 0), (860, 680, balloon(8, PINKY), 0)],
+                     [(270, 150, balloon(22, CREAM), 4), (700, 70, balloon(18, CREAM), -6), (200, 770, balloon(20, CREAM), -4), (790, 790, balloon(22, CREAM), 6)]),
+        'paper_cranes': ([(310, 60, crane(10, PINKY), 0), (470, 110, crane(8, PINKY), 8), (90, 160, crane(9, PINKY), -6), (840, 100, crane(10, PINKY), 5),
+                          (80, 690, crane(9, PINKY), 0), (860, 680, crane(10, PINKY), -8)],
+                         [(270, 160, crane(26, CREAM), 6), (700, 70, crane(22, CREAM), -8), (200, 790, crane(24, CREAM), 4), (790, 800, crane(26, CREAM), -4)]),
+        'spin_tops': ([(310, 60, spin_top(9, PINKY), 0), (470, 110, spin_top(7, PINKY), 10), (90, 160, spin_top(8, PINKY), -8), (840, 100, spin_top(9, PINKY), 6),
+                       (80, 690, spin_top(8, PINKY), 0), (860, 680, spin_top(9, PINKY), -6)],
+                      [(270, 160, spin_top(22, CREAM), 8), (700, 70, spin_top(18, CREAM), -10), (200, 790, spin_top(20, CREAM), 6), (790, 800, spin_top(22, CREAM), -8)]),
+    }
+    for sid, (far, near) in sets.items():
+        a = layer(far, sid + '_far.png')
+        b = layer(near, sid + '_near.png')
+        icon(a, b, os.path.join(DEST, 'icons', sid + '.png'))
     out = os.path.join(HERE, 'out')
     os.makedirs(out, exist_ok=True)
-    prev = Image.new('RGBA', (925 * 2, 924), (229, 165, 166, 255))
-    for i, n in enumerate(['sewer_pipes', 'starfield']):
+    names = ['sewer_pipes', 'starfield'] + list(sets)
+    prev = Image.new('RGBA', (925 * len(names), 924), (229, 165, 166, 255))
+    for i, n in enumerate(names):
         prev.alpha_composite(Image.open(os.path.join(DEST, n + '_far.png')), (i * 925, 0))
         prev.alpha_composite(Image.open(os.path.join(DEST, n + '_near.png')), (i * 925, 0))
-    prev.resize((925, 462)).save(os.path.join(out, 'bg_games_preview.png'))
+    prev.resize((prev.width // 2, 462)).save(os.path.join(out, 'bg_games_preview.png'))
     print('ok')

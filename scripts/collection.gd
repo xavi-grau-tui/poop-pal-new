@@ -33,6 +33,33 @@ const REWARDS := [
 	{ "game": 2, "stars": 30, "category": "accessories", "id": "sunglasses" },
 	{ "game": 2, "stars": 60, "category": "decor", "id": "purple_gut" },
 	{ "game": 2, "stars": 100, "category": "backgrounds", "id": "pastel_yellow" },
+	{ "game": 2, "stars": 150, "category": "stickers", "id": "gold_shell" },
+	# the other games' tracks: a scene at 5, an add-on at 15, a dress-up at 30, a gut colour at 60, a
+	# sky colour at 100, a gold sticker at 150 (the masters' world)
+	{ "game": 1, "stars": 5, "category": "backgrounds", "id": "marbles" },
+	{ "game": 1, "stars": 15, "category": "decor", "id": "bead_garland" },
+	{ "game": 1, "stars": 30, "category": "accessories", "id": "explorer_hat" },
+	{ "game": 1, "stars": 60, "category": "decor", "id": "lime_gut" },
+	{ "game": 1, "stars": 100, "category": "backgrounds", "id": "mint_sky" },
+	{ "game": 1, "stars": 150, "category": "stickers", "id": "gold_marble" },
+	{ "game": 0, "stars": 5, "category": "backgrounds", "id": "balloons" },
+	{ "game": 0, "stars": 15, "category": "decor", "id": "checker_bunting" },
+	{ "game": 0, "stars": 30, "category": "accessories", "id": "racing_helmet" },
+	{ "game": 0, "stars": 60, "category": "decor", "id": "amber_gut" },
+	{ "game": 0, "stars": 100, "category": "backgrounds", "id": "peach_sky" },
+	{ "game": 0, "stars": 150, "category": "stickers", "id": "gold_car" },
+	{ "game": 9, "stars": 5, "category": "backgrounds", "id": "paper_cranes" },
+	{ "game": 9, "stars": 15, "category": "decor", "id": "shimenawa" },
+	{ "game": 9, "stars": 30, "category": "accessories", "id": "gyoji_hat" },
+	{ "game": 9, "stars": 60, "category": "decor", "id": "blue_gut" },
+	{ "game": 9, "stars": 100, "category": "backgrounds", "id": "teal_sky" },
+	{ "game": 9, "stars": 150, "category": "stickers", "id": "gold_yokozuna" },
+	{ "game": 8, "stars": 5, "category": "backgrounds", "id": "spin_tops" },
+	{ "game": 8, "stars": 15, "category": "decor", "id": "pinwheels" },
+	{ "game": 8, "stars": 30, "category": "accessories", "id": "propeller_cap" },
+	{ "game": 8, "stars": 60, "category": "decor", "id": "berry_gut" },
+	{ "game": 8, "stars": 100, "category": "backgrounds", "id": "blue_sky" },
+	{ "game": 8, "stars": 150, "category": "stickers", "id": "gold_top" },
 	# the Pal Pedia: every 10 pals found
 	{ "pedia": 10, "category": "accessories", "id": "round_glasses" },
 	# the device: its first case, a present (it opens the Shop's CASES)
@@ -74,9 +101,15 @@ const STICKERS := {
 	"koma": { "name": "Koma", "unlock": "Top Spin: 2-6" },
 	"soap": { "name": "Soap", "unlock": "Top Spin: 4-6" },
 	"dragon": { "name": "Dragon", "unlock": "Top Spin: 6-6" },
+	# the gift tracks' gold stickers (150 stars)
+	"gold_shell": { "name": "Gold Shell", "unlock": "Splash Hoops: 150 stars" },
+	"gold_marble": { "name": "Gold Marble", "unlock": "Tilt Maze: 150 stars" },
+	"gold_car": { "name": "Gold Car", "unlock": "Pal Prix: 150 stars" },
+	"gold_yokozuna": { "name": "Gold Yokozuna", "unlock": "Paper Sumo: 150 stars" },
+	"gold_top": { "name": "Gold Top", "unlock": "Top Spin: 150 stars" },
 }
 const STICKER_ORDER := ["starfish", "pufferfish", "seashell", "anglerfish", "traffic_cone", "rubber_duck", "gold_cup",
-	"koi", "wind_up_key", "kabuto", "koma", "soap", "dragon"]
+	"koi", "wind_up_key", "kabuto", "koma", "soap", "dragon", "gold_shell", "gold_marble", "gold_car", "gold_yokozuna", "gold_top"]
 ## Every pal with a sticker (the Sho and the Chu: the sticker book's family pages), set at start
 var PAL_STICKERS: Array = []
 
@@ -125,13 +158,51 @@ const BACKGROUNDS := {
 		"unlocked": false,
 		"unlock": "Tilt Maze: 6-6",
 	},
+	# the gift tracks' (5 stars: a scene; 100: a sky colour)
+	"marbles": {
+		"name": "Marbles",
+		"kind": "complement",
+		"layers": ["res://textures/pet-background/marbles_far.png", "res://textures/pet-background/marbles_near.png"],
+		"icon": "res://textures/pet-background/icons/marbles.png",
+		"unlocked": false,
+		"unlock": "Tilt Maze: 5 stars",
+	},
+	"balloons": {
+		"name": "Balloons",
+		"kind": "complement",
+		"layers": ["res://textures/pet-background/balloons_far.png", "res://textures/pet-background/balloons_near.png"],
+		"icon": "res://textures/pet-background/icons/balloons.png",
+		"unlocked": false,
+		"unlock": "Pal Prix: 5 stars",
+	},
+	"paper_cranes": {
+		"name": "Paper Cranes",
+		"kind": "complement",
+		"layers": ["res://textures/pet-background/paper_cranes_far.png", "res://textures/pet-background/paper_cranes_near.png"],
+		"icon": "res://textures/pet-background/icons/paper_cranes.png",
+		"unlocked": false,
+		"unlock": "Paper Sumo: 5 stars",
+	},
+	"spin_tops": {
+		"name": "Spinning Tops",
+		"kind": "complement",
+		"layers": ["res://textures/pet-background/spin_tops_far.png", "res://textures/pet-background/spin_tops_near.png"],
+		"icon": "res://textures/pet-background/icons/spin_tops.png",
+		"unlocked": false,
+		"unlock": "Top Spin: 5 stars",
+	},
+	"mint_sky": { "name": "Mint", "kind": "color", "hue": 0.36, "layers": [], "unlocked": false, "unlock": "Tilt Maze: 100 stars" },
+	"peach_sky": { "name": "Peach", "kind": "color", "hue": 0.05, "layers": [], "unlocked": false, "unlock": "Pal Prix: 100 stars" },
+	"teal_sky": { "name": "Teal", "kind": "color", "hue": 0.5, "layers": [], "unlocked": false, "unlock": "Paper Sumo: 100 stars" },
+	"blue_sky": { "name": "Blue", "kind": "color", "hue": 0.58, "layers": [], "unlocked": false, "unlock": "Top Spin: 100 stars" },
 	"pink": { "name": "Pink", "kind": "color", "hue": 0.0, "layers": [], "unlocked": true, "unlock": "" },
 	"pastel_yellow": { "name": "Yellow", "kind": "color", "hue": 0.145, "layers": [], "unlocked": false, "unlock": "Splash Hoops: 100 stars" },
 	"lilac": { "name": "Lilac", "kind": "color", "hue": -0.12, "layers": [], "unlocked": false, "unlock": "Lucky Pinch" },
 	"mystery_3": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 	"mystery_4": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 }
-const BACKGROUND_ORDER := ["clouds", "pink", "tp_rolls", "pastel_yellow", "bubbles", "lilac", "sewer_pipes", "starfield", "mystery_3", "mystery_4"]
+const BACKGROUND_ORDER := ["clouds", "pink", "tp_rolls", "pastel_yellow", "bubbles", "lilac", "sewer_pipes", "starfield",
+	"marbles", "mint_sky", "balloons", "peach_sky", "paper_cranes", "teal_sky", "spin_tops", "blue_sky", "mystery_3", "mystery_4"]
 
 ## Pal accessories. "dir" holds one texture per form and frame: <form>-1.png, <form>-2.png,
 ## drawn on the form's own canvas (see tools/art/accessories.py).
@@ -147,10 +218,15 @@ const ACCESSORIES := {
 	"hard_hat": { "name": "Hard Hat", "dir": "res://textures/pet/accessories/hard_hat/", "unlocked": false, "unlock": "Tilt Maze: 5-8" },
 	"hachimaki": { "name": "Hachimaki", "dir": "res://textures/pet/accessories/hachimaki/", "unlocked": false, "unlock": "Top Spin: 5-6" },
 	"sumo_topknot": { "name": "Sumo Topknot", "dir": "res://textures/pet/accessories/sumo_topknot/", "unlocked": false, "unlock": "Paper Sumo: 6-6" },
+	# the gift tracks' (30 stars)
+	"explorer_hat": { "name": "Explorer Hat", "dir": "res://textures/pet/accessories/explorer_hat/", "unlocked": false, "unlock": "Tilt Maze: 30 stars" },
+	"racing_helmet": { "name": "Racing Helmet", "dir": "res://textures/pet/accessories/racing_helmet/", "unlocked": false, "unlock": "Pal Prix: 30 stars" },
+	"gyoji_hat": { "name": "Gyoji Hat", "dir": "res://textures/pet/accessories/gyoji_hat/", "unlocked": false, "unlock": "Paper Sumo: 30 stars" },
+	"propeller_cap": { "name": "Propeller Cap", "dir": "res://textures/pet/accessories/propeller_cap/", "unlocked": false, "unlock": "Top Spin: 30 stars" },
 	"mystery_acc_4": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
 }
 const ACCESSORY_ORDER := ["none", "sunglasses", "round_glasses", "scarf", "headphones", "snorkel", "headlamp", "hard_hat",
-	"hachimaki", "sumo_topknot", "mystery_acc_4"]
+	"hachimaki", "sumo_topknot", "explorer_hat", "racing_helmet", "gyoji_hat", "propeller_cap", "mystery_acc_4"]
 
 ## Gut decor, two kinds that combine: one "complement" (an overlay hung on the gut; "frames"
 ## are the size of intestine-front.png, cycled to animate) and one "color" (a hue shift of
@@ -168,11 +244,21 @@ const DECOR := {
 	"seaweed": { "name": "Seaweed", "kind": "complement", "frames": ["res://textures/pet/decor/seaweed-1.png", "res://textures/pet/decor/seaweed-2.png"], "icon": "res://textures/pet/decor/icons/seaweed.png", "unlocked": false, "unlock": "Splash Hoops: 3-6" },
 	"koma_lanterns": { "name": "Lanterns", "kind": "complement", "frames": ["res://textures/pet/decor/koma_lanterns-1.png", "res://textures/pet/decor/koma_lanterns-2.png"], "icon": "res://textures/pet/decor/icons/koma_lanterns.png", "unlocked": false, "unlock": "Top Spin: 3-6" },
 	"maple_leaves": { "name": "Maple Leaves", "kind": "complement", "frames": ["res://textures/pet/decor/maple_leaves-1.png", "res://textures/pet/decor/maple_leaves-2.png"], "icon": "res://textures/pet/decor/icons/maple_leaves.png", "unlocked": false, "unlock": "Paper Sumo: 3-6" },
+	# the gift tracks' (15 stars: an add-on; 60: a gut colour)
+	"bead_garland": { "name": "Bead Garland", "kind": "complement", "frames": ["res://textures/pet/decor/bead_garland-1.png", "res://textures/pet/decor/bead_garland-2.png"], "icon": "res://textures/pet/decor/icons/bead_garland.png", "unlocked": false, "unlock": "Tilt Maze: 15 stars" },
+	"checker_bunting": { "name": "Checker Flags", "kind": "complement", "frames": ["res://textures/pet/decor/checker_bunting-1.png", "res://textures/pet/decor/checker_bunting-2.png"], "icon": "res://textures/pet/decor/icons/checker_bunting.png", "unlocked": false, "unlock": "Pal Prix: 15 stars" },
+	"shimenawa": { "name": "Shimenawa", "kind": "complement", "frames": ["res://textures/pet/decor/shimenawa-1.png", "res://textures/pet/decor/shimenawa-2.png"], "icon": "res://textures/pet/decor/icons/shimenawa.png", "unlocked": false, "unlock": "Paper Sumo: 15 stars" },
+	"pinwheels": { "name": "Pinwheels", "kind": "complement", "frames": ["res://textures/pet/decor/pinwheels-1.png", "res://textures/pet/decor/pinwheels-2.png"], "icon": "res://textures/pet/decor/icons/pinwheels.png", "unlocked": false, "unlock": "Top Spin: 15 stars" },
+	"lime_gut": { "name": "Lime Gut", "kind": "color", "hue": 0.25, "frames": [], "unlocked": false, "unlock": "Tilt Maze: 60 stars" },
+	"amber_gut": { "name": "Amber Gut", "kind": "color", "hue": 0.07, "frames": [], "unlocked": false, "unlock": "Pal Prix: 60 stars" },
+	"blue_gut": { "name": "Blue Gut", "kind": "color", "hue": 0.6, "frames": [], "unlocked": false, "unlock": "Paper Sumo: 60 stars" },
+	"berry_gut": { "name": "Berry Gut", "kind": "color", "hue": -0.06, "frames": [], "unlocked": false, "unlock": "Top Spin: 60 stars" },
 	"mystery_decor_3": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 	"mystery_decor_4": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 }
 const DECOR_ORDER := ["none", "fairy_lights", "purple_gut", "bunting", "golden_gut", "mint_gut", "glow_spores", "cog_garland",
-	"seaweed", "koma_lanterns", "maple_leaves", "mystery_decor_3", "mystery_decor_4"]
+	"seaweed", "koma_lanterns", "maple_leaves", "bead_garland", "lime_gut", "checker_bunting", "amber_gut", "shimenawa", "blue_gut",
+	"pinwheels", "berry_gut", "mystery_decor_3", "mystery_decor_4"]
 
 ## Only won from the LUCKY PINCH claw machine: one capsule each
 const LUCKY_ITEMS := [

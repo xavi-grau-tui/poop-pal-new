@@ -446,7 +446,7 @@ BACK = {'frogeyes', 'kabuto', 'pincers', 'atlashorns', 'herculeshorn', 'buglegs'
         'fins', 'fin', 'spikes', 'crest', 'quills', 'petals', 'tentacles', 'legs', 'claws', 'roots', 'bow', 'wrapper', 'cherry',
         'stick', 'mane', 'frills', 'whiskers_b', 'topknot', 'tuft', 'curl', 'umbrella', 'halo_b', 'shell', 'pinwheel', 'feather',
         'cap_leaf', 'vines', 'mushcap', 'flower', 'hat', 'tassel', 'bubbles_b', 'crown_b'}
-FRONT = {'muzzle', 'clamshell', 'turtlehead', 'arms', 'feet', 'nose', 'snout', 'beak_f', 'cheeks', 'paws', 'bib', 'tie', 'scarf', 'pin', 'mitts', 'longnose', 'longbeak',
+FRONT = {'wheels', 'muzzle', 'clamshell', 'turtlehead', 'arms', 'feet', 'nose', 'snout', 'beak_f', 'cheeks', 'paws', 'bib', 'tie', 'scarf', 'pin', 'mitts', 'longnose', 'longbeak',
          'tusks', 'pawup', 'collar', 'leg'}
 REGION = {'tsuna', 'pronotum', 'split', 'hexes', 'shellrim', 'cap', 'drip', 'base', 'band', 'belly', 'half', 'diag', 'spots', 'stripes', 'hstripes', 'tip', 'mask', 'nori',
           'crust', 'glaze', 'warts', 'seeds', 'scales', 'socks', 'patch', 'dapple', 'blaze', 'tiers', 'sugar', 'grill',
@@ -849,6 +849,12 @@ def render(spec, stage, seed_name='', _lift=0.0, _fit=1.0, _pass=0, squash=(1.0,
             sp_, er_ = face_size(g, fx, fy, stage, mods.get('fs', plan.get('fs', 1.0)), plan['fhw'] * s if plan.get('fhw') else None)
             for sd in (-1, 1):
                 add_back(sfield(c, [(fx + sd * sp_, fy - .6 * u, er_ + 2.6 * u, er_ + 2.3 * u)]), colr(tok, pal))
+        elif name == 'wheels':                # a car's: two wheels at the bottom corners, a light hub each
+            hw = g.half_w(g.bot - 3 * u)
+            for sd in (-1, 1):
+                x = cxp + sd * max(hw * .62, 6 * u)
+                front.append((sfield(c, [(x, g.bot - 1.5 * u, 4.6 * u, 4.6 * u)]), colr(tok, P['char']), {}))
+                front.append((sfield(c, [(x, g.bot - 1.5 * u, 1.8 * u, 1.8 * u)]), P['stone'], {}))
         elif name == 'muzzle':                # a whiskered muzzle (an otter's): light, with a dark nose on top
             front.append((sfield(c, [(fx, fy + 4.4 * u, 5.6 * u, 3.7 * u)]), colr(tok, P['cream']), {}))
             def nose_(d):

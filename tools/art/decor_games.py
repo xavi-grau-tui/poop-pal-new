@@ -7,6 +7,11 @@ the colon's centre line, snapped to the intestine's chunky pixels; two frames th
     seaweed        fronds of seaweed growing out from the tube, swaying   (Splash Hoops 3-6)
     koma_lanterns  paper lanterns on a string, flickering                 (Top Spin 3-6)
     maple_leaves   autumn maple leaves caught round the tube, fluttering  (Paper Sumo 3-6)
+  the games' gift tracks, at 15 stars:
+    bead_garland   wooden beads on a string, like a toy's                 (Tilt Maze)
+    checker_bunting checkered racing flags along the tube                 (Pal Prix)
+    shimenawa      the sacred straw rope with its zigzag paper strips     (Paper Sumo)
+    pinwheels      little pinwheels stuck round the tube, spinning        (Top Spin)
 
     <venv>/bin/python tools/art/decor_games.py [ids]  -> textures/pet/decor/<id>-1.png, -2.png
                                                          textures/pet/decor/icons/<id>.png (the prize card)
@@ -199,7 +204,114 @@ def maple_leaves(line, s, radius, frame, size):
     return snap(im, size)
 
 
-ITEMS = {'glow_spores': glow_spores, 'cog_garland': cog_garland, 'seaweed': seaweed,
+def _string(d, line, s, radius, nrm, gap, sag, width=9):
+    droop = sag * np.abs(np.sin(math.pi * s / gap))
+    path = line + nrm * (radius * .55 + droop)[:, None]
+    for i in range(len(path) - 1):
+        d.line([tuple(path[i] * K), tuple(path[i + 1] * K)], fill=INK, width=int(width * K))
+    return path
+
+
+def bead_garland(line, s, radius, frame, size):
+    W, H = size
+    im = Image.new('RGBA', (W * K, H * K), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    tang, nrm = frame_basis(line)
+    path = _string(d, line, s, radius, nrm, 150.0, 14.0, 7)
+    cols = [(206, 150, 92), (226, 186, 120), (170, 112, 70), (196, 96, 76)]
+    for n, i in enumerate(every(s, 36.0, (frame * 18.0))):
+        x, y = path[i] * K
+        r = (15 if n % 3 else 18) * K
+        col = cols[n % len(cols)]
+        d.ellipse([x - r - 3 * K, y - r - 3 * K, x + r + 3 * K, y + r + 3 * K], fill=INK)
+        d.ellipse([x - r, y - r, x + r, y + r], fill=col + (255,))
+        d.ellipse([x - r * .55, y - r * .6, x - r * .05, y - r * .15], fill=tuple(min(255, int(v * 1.25)) for v in col) + (255,))
+    return snap(im, size)
+
+
+def checker_bunting(line, s, radius, frame, size):
+    W, H = size
+    im = Image.new('RGBA', (W * K, H * K), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    tang, nrm = frame_basis(line)
+    path = _string(d, line, s, radius, nrm, 184.0, 10.0, 10)
+    for n, i in enumerate(every(s, 92.0, 46.0)):
+        p, t = path[i], tang[i]
+        ang = math.atan2(nrm[i][1], nrm[i][0]) + (0.18 if (n + frame) % 2 == 0 else -0.18)
+        out = np.array([math.cos(ang), math.sin(ang)])
+        a, b, tip = p - t * 28, p + t * 28, p + out * 74
+        d.polygon([tuple(a * K), tuple(b * K), tuple(tip * K)], fill=INK)
+        inset = lambda q: p + (q - p) * .82 + out * 3
+        ia, ib, it = inset(a), inset(b), inset(tip)
+        d.polygon([tuple(ia * K), tuple(ib * K), tuple(it * K)], fill=(250, 248, 240, 255))
+        for u in range(4):                                # the checks: rows of squares down the flag
+            for v in range(4):
+                if (u + v) % 2:
+                    continue
+                q0 = ia + (ib - ia) * (u / 4) + (it - ia) * 0
+                c0 = p + t * (-24 + u * 12) + out * (6 + v * 15)
+                cw = 12 * (1 - v * .22)
+                quad = [c0, c0 + t * cw, c0 + t * cw + out * 15, c0 + out * 15]
+                d.polygon([tuple(q * K) for q in quad], fill=INK)
+        d.polygon([tuple(a * K), tuple(ia * K), tuple(it * K), tuple(tip * K)], fill=INK)      # (the left edge, tidy)
+    return snap(im, size)
+
+
+def shimenawa(line, s, radius, frame, size):
+    W, H = size
+    im = Image.new('RGBA', (W * K, H * K), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    tang, nrm = frame_basis(line)
+    path = line + nrm * (radius * .5)[:, None]
+    for i in range(len(path) - 1):                          # the rope: thick, twisted straw
+        d.line([tuple(path[i] * K), tuple(path[i + 1] * K)], fill=INK, width=int(34 * K))
+    for i in range(len(path) - 1):
+        d.line([tuple(path[i] * K), tuple(path[i + 1] * K)], fill=(220, 192, 116, 255), width=int(26 * K))
+    for i in every(s, 22.0):
+        p = path[i]
+        a, b = p - nrm[i] * 11 - tang[i] * 5, p + nrm[i] * 11 + tang[i] * 5
+        d.line([tuple(a * K), tuple(b * K)], fill=(168, 136, 64, 255), width=int(5 * K))
+    for n, i in enumerate(every(s, 120.0, 60.0)):            # the shide: zigzag paper, swaying
+        p = path[i] + nrm[i] * 14
+        sway = (5 if (n + frame) % 2 == 0 else -5)
+        o, t = nrm[i], tang[i] + nrm[i] * (sway / 60)
+        st, w_ = 16.0, 9.0
+        pts = [p - t * w_, p + t * w_, p + t * w_ + o * st, p + t * (w_ * 3) + o * st, p + t * (w_ * 3) + o * st * 2,
+               p + t * w_ + o * st * 2, p + t * w_ + o * st * 3, p - t * w_ + o * st * 3, p - t * w_ + o * st * 2,
+               p + t * w_ * .9 + o * st * 2, p + t * w_ * .9 + o * st, p - t * w_ + o * st]
+        d.polygon([tuple(q * K) for q in pts], fill=INK)
+        inner = [p + (q - p) * .86 + o * 2 for q in pts]
+        d.polygon([tuple(q * K) for q in inner], fill=(252, 250, 244, 255))
+    return snap(im, size)
+
+
+def pinwheels(line, s, radius, frame, size):
+    W, H = size
+    im = Image.new('RGBA', (W * K, H * K), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    tang, nrm = frame_basis(line)
+    cols = [(226, 64, 58), (246, 204, 70), (70, 130, 214), (96, 184, 96)]
+    for n, i in enumerate(every(s, 140.0, 50.0)):
+        side = 1 if n % 2 == 0 else -1
+        base = line[i] + nrm[i] * side * radius[i] * .55
+        hub = base + nrm[i] * side * 72
+        d.line([tuple(base * K), tuple(hub * K)], fill=INK, width=int(9 * K))
+        d.line([tuple(base * K), tuple(hub * K)], fill=(200, 160, 110, 255), width=int(4 * K))
+        spin = frame * math.pi / 4 + n * .7
+        for j in range(4):                                  # four blades, each a curled triangle
+            a = spin + j * math.pi / 2
+            p1 = hub + np.array([math.cos(a), math.sin(a)]) * 48
+            p2 = hub + np.array([math.cos(a + .9), math.sin(a + .9)]) * 28
+            d.polygon([tuple(hub * K), tuple(p1 * K), tuple(p2 * K)], fill=INK)
+            q1 = hub + (p1 - hub) * .86
+            q2 = hub + (p2 - hub) * .8
+            d.polygon([tuple(hub * K), tuple(q1 * K), tuple(q2 * K)], fill=cols[(j + n) % 4] + (255,))
+        d.ellipse([hub[0] * K - 6 * K, hub[1] * K - 6 * K, hub[0] * K + 6 * K, hub[1] * K + 6 * K], fill=INK)
+    return snap(im, size)
+
+
+ITEMS = {'bead_garland': bead_garland, 'checker_bunting': checker_bunting, 'shimenawa': shimenawa, 'pinwheels': pinwheels,
+         'glow_spores': glow_spores, 'cog_garland': cog_garland, 'seaweed': seaweed,
          'koma_lanterns': koma_lanterns, 'maple_leaves': maple_leaves}
 
 
