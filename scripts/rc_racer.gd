@@ -126,6 +126,7 @@ var _cheer_cd := 0.0
 var look_k := 0.0                      # how much the view looks ahead (0 at the start)
 var behind: Node2D                     # under the track: where a car falling off its far side goes
 var front: Node2D                      # over the track: the car
+var canopy: Sprite2D                   # the Garden's branches over everything
 var car: Node2D
 var slices: Array[Sprite2D] = []       # the car, bottom slice first
 var driver: Sprite2D
@@ -333,6 +334,9 @@ func _begin(n: int) -> void:
 	_place_crowd()
 	board.texture = ImageTexture.create_from_image(_paint())
 	track.texture = ImageTexture.create_from_image(track_image)
+	canopy.visible = world_no == 0 and not _trees.is_empty()
+	if canopy.visible:
+		canopy.texture = ImageTexture.create_from_image(_paint_canopy(int(mat_size.x / PX), int(mat_size.y / PX)))
 	car_pos = centre[0]
 	heading = (centre[2] - centre[0]).angle()
 	near = 0
@@ -742,6 +746,9 @@ var _bh := 1
 var _grass_noise: FastNoiseLite
 var _cloud_noise: FastNoiseLite
 var _decor := {}                       # board px index -> colour: the Garden's flowers and bushes
+var _trees: Array = []                 # the Garden's overhanging branches: [centre (board px), radius]
+var _tree_light := PackedByteArray()   # under them: 0 open, 1 shade, 2 a fleck of sun through the leaves
+const CANOPY := [Color8(34, 78, 44), Color8(48, 98, 50), Color8(66, 120, 58), Color8(88, 142, 66)]
 
 func _floor_px(x: int, y: int) -> Color:
 	if _decor.has(y * _bw + x):
@@ -766,7 +773,16 @@ func _floor_px(x: int, y: int) -> Color:
 ## The world's light over everything, the track too
 func _lit(c: Color, x: int, y: int) -> Color:
 	if world_no == 0:
-		# a bright morning, soft cloud shadows drifting over the garden (dithered edges)
+		# a bright morning: the trees' shade with flecks of sun through the leaves, a few soft sun
+		# shafts across, soft cloud shadows drifting over the garden (dithered edges)
+		var t := _tree_light[y * _bw + x] if _tree_light.size() == _bw * _bh else 0
+		if t == 2:
+			return Color(minf(1.0, c.r * 1.12 + 0.06), minf(1.0, c.g * 1.12 + 0.05), minf(1.0, c.b * 1.05 + 0.01))
+		if t == 1:
+			return c.lerp(Color8(34, 62, 62), 0.2)
+		var sh := fposmod(x + y * 0.7 + _cloud_noise.seed * 37.0, 520.0)
+		if (sh > 40.0 and sh < 150.0) or (sh > 32.0 and sh < 158.0 and DITHER[y % 2][x % 2] < 0.5):
+			c = Color(minf(1.0, c.r * 1.09 + 0.045), minf(1.0, c.g * 1.09 + 0.035), minf(1.0, c.b * 1.04))
 		var n := _cloud_noise.get_noise_2d(x, y)
 		var shade: bool = n > 0.32 or (n > 0.26 and DITHER[y % 2][x % 2] < 0.5)
 		if shade:
@@ -782,11 +798,82 @@ func _lit(c: Color, x: int, y: int) -> Color:
 		return Color(minf(1.0, c.r * 1.03 + 0.02), minf(1.0, c.g * 1.03 + 0.02), minf(1.0, c.b * 1.03 + 0.01))
 	return c.lerp(Color8(96, 108, 140), 0.12)
 
+## The Garden's trees, just outside the mat: their branches hang over its edges (drawn in front of
+## the car), and under them the shade, with flecks of sun through the leaves
+func _plant_trees(w: int, h: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 53 * level + 9
+	var spots: Array = []
+	var x := rng.randi_range(20, 120)
+	while x < w - 20:
+		spots.append(Vector2(x, rng.randi_range(-10, 2)))                 # along the top
+		spots.append(Vector2(x + rng.randi_range(-60, 60), h - 1 + rng.randi_range(-2, 10)))   # the bottom
+		x += rng.randi_range(170, 300)
+	var y := rng.randi_range(40, 140)
+	while y < h - 40:
+		spots.append(Vector2(rng.randi_range(-10, 2), y))                  # the left
+		spots.append(Vector2(w - 1 + rng.randi_range(-2, 10), y + rng.randi_range(-50, 50)))   # the right
+		y += rng.randi_range(170, 300)
+	for p in spots:
+		if rng.randf() < 0.25:
+			continue                                       # (gaps between the trees)
+		_trees.append([p, float(rng.randi_range(30, 48))])
+	_tree_light.resize(w * h)
+	_tree_light.fill(0)
+	for tr in _trees:
+		var c: Vector2 = tr[0]
+		var r: float = tr[1]
+		var reach := r + 34.0
+		for yy in range(maxi(0, int(c.y - reach)), mini(h, int(c.y + reach) + 1)):
+			for xx in range(maxi(0, int(c.x - reach)), mini(w, int(c.x + reach) + 1)):
+				var d := Vector2(xx - c.x, yy - c.y).length()
+				if d > reach or (d > reach - 4.0 and DITHER[yy % 2][xx % 2] < 0.5):
+					continue
+				var i := yy * w + xx
+				# flecks of sun: little 2 px spots, more of them towards the shade's edge
+				var fleck := ((xx / 2 * 73856093) ^ (yy / 2 * 19349663)) & 63
+				_tree_light[i] = 2 if fleck < (3 + int(6.0 * d / reach)) else 1
+
+## The overhanging branches, in front of everything: chunky clusters in four dark greens, lit
+## top-left, a few light sparkles; no outlines
+func _paint_canopy(w: int, h: int) -> Image:
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 17 * level + 2
+	for tr in _trees:
+		var c: Vector2 = tr[0]
+		var r: float = tr[1]
+		# a few clumps per tree, overlapping
+		for k in 4:
+			var cc := c + Vector2(rng.randf_range(-r * 0.6, r * 0.6), rng.randf_range(-r * 0.6, r * 0.6))
+			var rr := r * rng.randf_range(0.55, 0.85)
+			var ph := rng.randf() * TAU
+			for yy in range(maxi(0, int(cc.y - rr - 3)), mini(h, int(cc.y + rr + 4))):
+				for xx in range(maxi(0, int(cc.x - rr - 3)), mini(w, int(cc.x + rr + 4))):
+					var a := atan2(yy - cc.y, xx - cc.x)
+					var d := Vector2(xx - cc.x, yy - cc.y).length()
+					var lump := rr * (1.0 + 0.22 * sin(a * 6.0 + ph) + 0.12 * sin(a * 11.0 + ph * 2.0))
+					if d > lump or (d > lump - 2.0 and (xx / 2 + yy / 2) % 3 == 0):
+						continue
+					var light := (-(xx - cc.x) - (yy - cc.y)) / (rr * 1.6)
+					var v := clampf(0.45 + light * 0.6, 0.0, 0.999) * CANOPY.size()
+					var b := int(v)
+					if v - b > 0.75 and DITHER[yy % 2][xx % 2] < (v - b - 0.75) * 4.0:
+						b += 1
+					var col: Color = CANOPY[clampi(b, 0, CANOPY.size() - 1)]
+					if light > 0.0 and rng.randf() < 0.01:
+						col = Color8(150, 200, 120)                 # a leaf catching the sun
+					img.set_pixel(xx, yy, col)
+	return img
+
 ## The Garden's flowers and bushes, away from the track (and the stand): chunky, no outlines
 func _garden_decor(w: int, h: int, dist: PackedFloat32Array, hw: float) -> void:
 	_decor.clear()
+	_trees.clear()
+	_tree_light = PackedByteArray()
 	if world_no != 0:
 		return
+	_plant_trees(w, h)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 91 * level + 3
 	var stand := Rect2(crowd.rect.position / PX, crowd.rect.size / PX).grow(4.0) if crowd.visible else Rect2()
@@ -942,6 +1029,11 @@ func _create_nodes() -> void:
 	world.add_child(trail)
 	front = Node2D.new()
 	world.add_child(front)
+	canopy = Sprite2D.new()
+	canopy.centered = false
+	canopy.scale = Vector2(PX, PX)
+	canopy.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	world.add_child(canopy)                         # (over the car: the branches hang above it)
 	world.scale = Vector2(ZOOM, ZOOM)
 	var layers := car_slices()
 	shadow = Sprite2D.new()
