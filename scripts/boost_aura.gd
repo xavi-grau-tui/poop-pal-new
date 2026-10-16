@@ -9,6 +9,10 @@ class_name BoostAura
 
 const COLORS := {
 	"splash": [Color8(96, 176, 236), Color8(150, 210, 250)],    # glow, drips
+	"fizz": [Color8(236, 120, 80), Color8(255, 196, 170)],
+	"focus": [Color8(246, 204, 70), Color8(255, 238, 160)],
+	"sturdy": [Color8(236, 232, 224), Color8(255, 255, 255)],
+	"lucky": [Color8(250, 164, 70), Color8(255, 214, 150)],
 }
 const GLOW_W := 24
 const GLOW_H := 18

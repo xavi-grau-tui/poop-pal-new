@@ -384,8 +384,8 @@ func _reveal_prize(capsule_tex: Texture2D) -> void:
 func _open_prize() -> void:
 	var p := LuckyPinch.win(_won)
 	_won = {}
-	if p.has("points"):
-		add_score(p["points"])
+	if p.has("coins"):
+		GameData.add_coins(p["coins"])
 	_sfx("res://sounds/fx/claw_prize.wav", -8.0)
 	for i in 10:
 		_spark(CHUTE_WINDOW.get_center())
@@ -443,8 +443,8 @@ func _show_prize_card(p: Dictionary) -> void:
 		name_l.text = p["name"]
 		kind_l.text = LuckyPinch.kind_label(p["category"], p["id"])
 	else:
-		name_l.text = "+%d pts" % p.get("points", 0)
-		kind_l.text = "Bonus points"
+		name_l.text = "+%d coins" % p.get("coins", 0)
+		kind_l.text = "Bonus coins"
 		pic.texture = tex["capsule_yellow"]
 	card.scale = Vector2(0.2, 0.2)
 	var t := create_tween()
@@ -477,7 +477,7 @@ func _next_try() -> void:
 		_finish()
 
 func _finish() -> void:
-	var won: Array = LuckyPinch.prizes.map(func(p): return p["name"] if p.has("name") else "+%d pts" % p.get("points", 0))
+	var won: Array = LuckyPinch.prizes.map(func(p): return p["name"] if p.has("name") else "+%d coins" % p.get("coins", 0))
 	LuckyPinch.finish()
 	end_game()
 	if game_over_overlay:

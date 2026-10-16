@@ -4,8 +4,14 @@ extends Node
 @export var drink_timer_label: Label
 @export var score_counter_label: Label
 
-var food_duration := 1800  # 30 minutes after each meal
+var food_duration := 1800  # (the longest meal wait: the meal clock is PetState.WAIT_NEW / WAIT_KNOWN)
 var drink_duration := 900  # 15 minutes after each drink (the first meal starts it too)
+
+## The LCD's number is the COINS (the skeleton, docs/progression.md 5c): where the score was, the
+## same 6 digits. New coins tick up one by one with a soft blip; buying ticks it down.
+var shown_coins := 0
+var _coin_tick := 0.0
+const COIN_TICK := 0.05            # seconds per coin while it counts (at most ~1.5 s in all)
 
 # No pal yet: both at 00:00:00 and the food one blinks (it's time to eat)
 var food_time_left := 0
@@ -24,8 +30,12 @@ var _msg_tween: Tween
 var _msg_hidden: Array[CanvasItem] = []
 
 func _ready():
+	shown_coins = GameData.coins
+	var word := get_node_or_null("StaticLabels/ScoreTextLabel") as Label
+	if word:
+		word.text = "COINS"
 	_update_score_display()
-	PetState.score_changed.connect(func(_total): _update_score_display())
+	GameData.coins_changed.connect(func(_c): _coin_tick = 0.0)
 	PetState.fed.connect(_on_fed)
 	PetState.drank.connect(_on_drank)
 	PetState.form_changed.connect(_on_form_changed)
@@ -42,6 +52,8 @@ func _ready():
 	Collection.unlocked.connect(func(_c, _id):
 		show_message("ITEM\nUNLOCKED!", UNLOCK_BLINKS * UNLOCK_STEP * 2.0, UNLOCK_BLINKS, UNLOCK_STEP)
 		_ding())
+	GameData.daily_bonus.connect(func(n):
+		show_message("DAILY\n+%d COINS" % n, UNLOCK_BLINKS * UNLOCK_STEP * 2.0, UNLOCK_BLINKS, UNLOCK_STEP))
 	GameData.game_unlocked.connect(func(_idx):
 		show_message("GAME\nUNLOCKED!", UNLOCK_BLINKS * UNLOCK_STEP * 2.0, UNLOCK_BLINKS, UNLOCK_STEP)
 		_ding())
@@ -133,7 +145,28 @@ func _end_message() -> void:
 
 func _update_score_display() -> void:
 	if score_counter_label:
-		score_counter_label.text = "%06d" % PetState.score
+		score_counter_label.text = "%06d" % shown_coins
+
+## The shown coins walk to the real ones, a coin at a time (faster when far)
+func _tick_coins(delta: float) -> void:
+	if shown_coins == GameData.coins:
+		return
+	_coin_tick -= delta
+	if _coin_tick > 0.0:
+		return
+	var gap := GameData.coins - shown_coins
+	var step := maxi(1, absi(gap) / 30)
+	shown_coins += step * signi(gap)
+	_coin_tick = COIN_TICK
+	_update_score_display()
+	if gap > 0 and shown_coins % 2 == 0:
+		var sfx := AudioStreamPlayer.new()
+		sfx.stream = load("res://sounds/fx/gamecoin.wav")
+		sfx.volume_db = -22.0
+		sfx.pitch_scale = 1.4
+		add_child(sfx)
+		sfx.play()
+		sfx.finished.connect(sfx.queue_free)
 
 ## The countdowns are real times saved with the pal (PetState.food_ready_at / drink_ready_at):
 ## they keep running while the app is closed
@@ -141,7 +174,9 @@ func _now() -> float:
 	return Time.get_unix_time_from_system()
 
 func _on_fed(_food: Dictionary) -> void:
-	PetState.food_ready_at = _now() + (0.0 if DevLaunch.all_open else food_duration)   # (STRAIGHT TO GAMES: no wait)
+	# the meal clock: by what this meal did (PetState.last_meal_wait: a new pal settles in, a known
+	# one is hungry again straight away)
+	PetState.food_ready_at = _now() + (0.0 if DevLaunch.all_open else float(PetState.last_meal_wait))   # (ALL UNLOCKED: no wait)
 	if not running:
 		PetState.drink_ready_at = _now() + (0.0 if DevLaunch.all_open else drink_duration)      # the first meal starts the drink countdown too
 	running = true
@@ -163,6 +198,7 @@ func _on_form_changed(_form_id: String, reason: String) -> void:
 		_update_labels()
 
 func _process(delta):
+	_tick_coins(delta)
 	tick_timer += delta
 	if tick_timer >= 0.5:
 		tick_timer = 0.0

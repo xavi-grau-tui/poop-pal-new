@@ -1,7 +1,11 @@
 extends Node
 ## Autoload singleton — cosmetics and collectables the player owns.
-## Categories: backgrounds, accessories (worn by the pal), decor (hung on the gut).
+## Categories: backgrounds, accessories (worn by the pal), decor (hung on the gut), stickers (for
+## the device's back / its case) and cases (the device's shell).
 ## Not affected by PetState's fresh start: collectables are kept forever.
+## The rule (docs/progression.md 5b): what the PAL wears or lives in is only ever WON (gift tracks,
+## Pal Pedia milestones, Lucky Pinch, the games' secrets); the device's stickers and cases can be
+## won or bought (Shop: a sticker of every pal you've found, plain cases).
 
 signal unlocked(category: String, id: String)
 signal background_changed(id: String)
@@ -17,21 +21,36 @@ const RESET_EQUIPPED_ON_LAUNCH := true
 ## Prototype: every launch forgets earned unlocks (so the unlock flow can be tried again)
 const RESET_UNLOCKS_ON_LAUNCH := true
 
-## Rewards earned in minigames: each game's GIFT TRACK (Progression v2: cosmetics are gifts for
-## playing, never sold). `stars` = that game's star total reaches it; `levels` = levels cleared in
-## one run (Tilt Maze, until it has a level menu too); `score` = one round's score.
-## (game = Games menu page index: 0 Pipe Dream, 1 Tilt Maze, 2 Splash Hoops, 3 Pal Dash, 4 Tile Break, 5 Germ Zap)
-## (Splash Hoops carries the items that were Pipe Dream's score rewards; every game gets its own
-## themed set in the art pass)
+## Gifts for playing (Progression v2: cosmetics are gifts, never sold). Three kinds of source:
+##   "game" + "stars"   each game's GIFT TRACK: that game's star total reaches it
+##   "pedia"            Pal Pedia milestones: that many pals found
+##   "total_stars"      the stars of every game together (the device's own milestones: its cases)
+## (game = Games menu page index: 0 Pal Prix, 1 Tilt Maze, 2 Splash Hoops, 8 Top Spin, 9 Paper Sumo)
+## (Splash Hoops carries the items that were Pipe Dream's score rewards)
 const REWARDS := [
 	{ "game": 2, "stars": 5, "category": "backgrounds", "id": "tp_rolls" },
 	{ "game": 2, "stars": 15, "category": "decor", "id": "fairy_lights" },
 	{ "game": 2, "stars": 30, "category": "accessories", "id": "sunglasses" },
 	{ "game": 2, "stars": 60, "category": "decor", "id": "purple_gut" },
 	{ "game": 2, "stars": 100, "category": "backgrounds", "id": "pastel_yellow" },
-	# Tilt Maze: its stars (its vaults hold stickers and special foods)
-	{ "game": 1, "stars": 6, "category": "accessories", "id": "round_glasses" },
+	# the Pal Pedia: every 10 pals found
+	{ "pedia": 10, "category": "accessories", "id": "round_glasses" },
+	# the device: its first case, a present (it opens the Shop's CASES)
+	{ "total_stars": 100, "category": "cases", "id": "melon" },
 ]
+
+## The device's cases (the shell, front and back: textures/cases/<id>_*.png). "price": sold in the
+## Shop (the plain ones); the others are only won.
+const CASES := {
+	"melon": { "name": "Melon Soda", "unlock": "100 stars in all" },
+}
+const CASE_ORDER := ["melon"]
+
+## Themed stickers (won only: secrets, gift tracks, Lucky Pinch): textures/cases/stickers/<id>.png
+## (+ book/<id>.png). The pal stickers (one per Sho and Chu) are PAL_STICKERS.
+const STICKERS := {}
+## Every pal with a sticker (the Sho and the Chu: the sticker book's family pages), set at start
+var PAL_STICKERS: Array = []
 
 ## "layers": [far layer (CloudA), near layer (CloudB)] — drop-in replacements for the cloud textures.
 ## "unlock": how it is obtained (shown on the locked card). Default unlocked = true/false.
@@ -76,7 +95,7 @@ const ACCESSORIES := {
 	"sunglasses": { "name": "Sunglasses", "dir": "res://textures/pet/accessories/sunglasses/", "unlocked": false, "unlock": "Splash Hoops: 30 stars" },
 	"scarf": { "name": "Scarf", "dir": "res://textures/pet/accessories/scarf/", "unlocked": false, "unlock": "Lucky Pinch" },
 	"headphones": { "name": "Headphones", "dir": "res://textures/pet/accessories/headphones/", "unlocked": false, "unlock": "Lucky Pinch" },
-	"round_glasses": { "name": "Round Glasses", "dir": "res://textures/pet/accessories/round_glasses/", "unlocked": false, "unlock": "Tilt Maze: 6 stars" },
+	"round_glasses": { "name": "Round Glasses", "dir": "res://textures/pet/accessories/round_glasses/", "unlocked": false, "unlock": "10 pals found" },
 	"mystery_acc_4": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
 }
 const ACCESSORY_ORDER := ["none", "sunglasses", "round_glasses", "scarf", "headphones", "mystery_acc_4"]
@@ -103,7 +122,8 @@ const LUCKY_ITEMS := [
 	["decor", "bunting"], ["decor", "golden_gut"], ["decor", "mint_gut"],
 ]
 
-var owned := { "backgrounds": [], "accessories": [], "decor": [] }
+var owned := { "backgrounds": [], "accessories": [], "decor": [], "stickers": [], "cases": [] }
+var equipped_case := ""                 # the case on the device ("" = none, the bare device)
 var equipped_background := DEFAULT_BACKGROUND
 const DEFAULT_BG_COLOR := "pink"
 var equipped_bg_color := DEFAULT_BG_COLOR   # sky colour in use (pink = the natural sky)
@@ -113,7 +133,12 @@ var equipped_gut_color := ""           # the gut colour in use ("" = the natural
 var new_items := {}                     # "category/id" -> true: unlocked but not looked at yet
 
 func _ready() -> void:
+	for id in PetState.FORMS:
+		if int(PetState.FORMS[id]["stage"]) <= 2 and ResourceLoader.exists("res://textures/cases/stickers/%s.png" % id):
+			PAL_STICKERS.append(id)
+	PAL_STICKERS.sort_custom(func(a, b): return PetState.FORMS[a]["no"] < PetState.FORMS[b]["no"])
 	_start()
+	PetState.pal_discovered.connect(func(_id): _check_pedia())
 	# what the pal wears goes down the drain with it
 	PetState.form_changed.connect(func(_id, reason):
 		if reason == "flush" and equipped_accessory != "none":
@@ -124,7 +149,8 @@ func reload() -> void:
 	_start()
 
 func _start() -> void:
-	owned = { "backgrounds": [], "accessories": [], "decor": [] }
+	owned = { "backgrounds": [], "accessories": [], "decor": [], "stickers": [], "cases": [] }
+	equipped_case = ""
 	equipped_background = DEFAULT_BACKGROUND
 	equipped_bg_color = DEFAULT_BG_COLOR
 	equipped_accessory = "none"
@@ -167,19 +193,98 @@ func unlock(category: String, id: String) -> void:
 ## Called by every minigame as points come in (live, mid-round)
 func report_game_score(game: int, score: int) -> void:
 	for r in REWARDS:
-		if r["game"] == game and r.has("score") and score >= r["score"] and not is_owned(r["category"], r["id"]):
+		if r.get("game", -1) == game and r.has("score") and score >= r["score"] and not is_owned(r["category"], r["id"]):
 			unlock(r["category"], r["id"])
 
-## A game's star total changed (GameData.record_level): its gift track
+## A game's star total changed (GameData.record_level): its gift track, and the device's own
+## milestones (every game's stars together)
 func report_game_stars(game: int, stars: int) -> void:
+	var total := 0
+	for idx in GameData.games:
+		total += GameData.game_stars(idx)
 	for r in REWARDS:
-		if r["game"] == game and r.has("stars") and stars >= r["stars"] and not is_owned(r["category"], r["id"]):
+		if is_owned(r["category"], r["id"]):
+			continue
+		if r.get("game", -1) == game and r.has("stars") and stars >= r["stars"]:
 			unlock(r["category"], r["id"])
+		elif r.has("total_stars") and total >= r["total_stars"]:
+			unlock(r["category"], r["id"])
+
+## A new pal was found: the Pal Pedia's milestones
+func _check_pedia() -> void:
+	var found := PetState.discovered.size()
+	for r in REWARDS:
+		if r.has("pedia") and found >= r["pedia"] and not is_owned(r["category"], r["id"]):
+			unlock(r["category"], r["id"])
+
+## Where an item comes from, for its locked card ("Tilt Maze: 30 stars", "40 pals found"...)
+func source_text(category: String, id: String) -> String:
+	for r in REWARDS:
+		if r["category"] == category and r["id"] == id:
+			if r.has("pedia"):
+				return "%d pals found" % r["pedia"]
+			if r.has("total_stars"):
+				return "%d stars in all" % r["total_stars"]
+			return "%s: %d stars" % [GAME_NAMES.get(r.get("game", -1), "A game"), r["stars"]]
+	return catalog(category).get(id, {}).get("unlock", "")
+
+const GAME_NAMES := { 0: "Pal Prix", 1: "Tilt Maze", 2: "Splash Hoops", 6: "Tummy Tunes", 8: "Top Spin", 9: "Paper Sumo" }
+
+## A prize from a game (a vault, a secret, a finale): "sticker:<id>", "food:<special food>",
+## "acc:<id>", "bg:<id>", "decor:<id>", "case:<id>" or "coins:<n>". Gives it and says what it was:
+## { "name", "icon" (Texture2D), "kind" } (the game shows it as it's taken).
+func give_prize(prize: String) -> Dictionary:
+	var kind := prize.get_slice(":", 0)
+	var id := prize.get_slice(":", 1)
+	match kind:
+		"food":
+			var coins := Shop.give_special(id)
+			var icon: Texture2D = null
+			for f in FoodLibrary.SPECIALS:
+				if f["name"] == id:
+					icon = load(f["icon"])
+			return { "name": id if coins == 0 else "+%d coins" % coins, "icon": icon, "kind": "food" }
+		"coins":
+			GameData.add_coins(int(id))
+			return { "name": "+%s coins" % id, "icon": UiArt.coin(), "kind": "coins" }
+	var cat: String = { "sticker": "stickers", "acc": "accessories", "bg": "backgrounds", "decor": "decor", "case": "cases" }.get(kind, "")
+	if cat == "":
+		return {}
+	unlock(cat, id)
+	return { "name": item_name(cat, id), "icon": prize_icon(prize), "kind": cat }
+
+## An item's name, any category (a pal sticker: the pal's name)
+func item_name(category: String, id: String) -> String:
+	if category == "stickers" and id in PetState.FORMS:
+		return PetState.FORMS[id]["name"]
+	return catalog(category).get(id, {}).get("name", id)
+
+## A prize's picture (for the game's prize reveal and the vault's window)
+func prize_icon(prize: String) -> Texture2D:
+	var kind := prize.get_slice(":", 0)
+	var id := prize.get_slice(":", 1)
+	var path := ""
+	match kind:
+		"sticker":
+			path = "res://textures/cases/stickers/book/%s.png" % id
+		"food":
+			for f in FoodLibrary.SPECIALS:
+				if f["name"] == id:
+					path = f["icon"]
+		"acc":
+			path = "res://textures/pet/accessories/icons/%s.png" % id
+		"case":
+			path = "res://textures/cases/icons/%s.png" % id
+		"bg", "decor":
+			path = catalog("backgrounds" if kind == "bg" else "decor").get(id, {}).get("icon", "")
+	if path != "" and ResourceLoader.exists(path):
+		return load(path)
+	return UiArt.question()
 
 ## Level-based rewards (Tilt Maze): `levels` = levels cleared in this run
 func report_game_levels(game: int, levels: int) -> void:
 	for r in REWARDS:
-		if r["game"] == game and r.has("levels") and levels >= r["levels"] and not is_owned(r["category"], r["id"]):
+		if r.get("game", -1) == game and r.has("levels") and levels >= r["levels"] and not is_owned(r["category"], r["id"]):
 			unlock(r["category"], r["id"])
 
 func has_new(category: String) -> bool:
@@ -206,12 +311,16 @@ func catalog(category: String) -> Dictionary:
 	match category:
 		"accessories": return ACCESSORIES
 		"decor": return DECOR
+		"cases": return CASES
+		"stickers": return STICKERS
 	return BACKGROUNDS
 
 func order(category: String) -> Array:
 	match category:
 		"accessories": return ACCESSORY_ORDER
 		"decor": return DECOR_ORDER
+		"cases": return CASE_ORDER
+		"stickers": return PAL_STICKERS + STICKERS.keys()
 	return BACKGROUND_ORDER
 
 func equipped(category: String) -> String:
@@ -224,6 +333,13 @@ func equipped(category: String) -> String:
 func equip(category: String, id: String) -> bool:
 	if category == "backgrounds":
 		return equip_background(id)
+	if category == "cases":
+		if id != "" and not is_owned("cases", id):
+			return false
+		equipped_case = id
+		save_data()
+		equipped_changed.emit(category, id)
+		return true
 	if not is_owned(category, id) or id not in catalog(category):
 		return false
 	if category == "accessories":
@@ -285,7 +401,8 @@ func save_data() -> void:
 	var file = FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify({ "owned": owned, "equipped_background": equipped_background, "equipped_bg_color": equipped_bg_color,
-			"equipped_accessory": equipped_accessory, "equipped_decor": equipped_decor, "equipped_gut_color": equipped_gut_color, "new_items": new_items.keys() }))
+			"equipped_accessory": equipped_accessory, "equipped_decor": equipped_decor, "equipped_gut_color": equipped_gut_color, "new_items": new_items.keys(),
+			"equipped_case": equipped_case }))
 
 func load_data() -> void:
 	if not FileAccess.file_exists(SaveSlot.path(SAVE_FILE)):
@@ -319,3 +436,6 @@ func load_data() -> void:
 		var dec := str(parsed.get("equipped_decor", "none"))
 		if dec in DECOR and is_owned("decor", dec):
 			equipped_decor = dec
+		var cs := str(parsed.get("equipped_case", ""))
+		if cs in CASES and is_owned("cases", cs):
+			equipped_case = cs

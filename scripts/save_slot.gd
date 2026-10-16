@@ -9,7 +9,7 @@ class_name SaveSlot
 ## and calls their reload() before the main scene loads.
 
 const PROGRESS := "progress/"
-const FILES := ["game_data.json", "pet_state.json", "collection.json", "shop.json", "device.json"]
+const FILES := ["game_data.json", "pet_state.json", "collection.json", "shop.json", "device.json", "lucky_pinch.json"]
 
 static var folder := ""
 

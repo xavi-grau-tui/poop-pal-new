@@ -783,13 +783,28 @@ func _build_shop() -> void:
 		if i >= items.size():
 			break
 		var it: Dictionary = items[i]
-		var food: bool = it["kind"] == "food"
-		# no food picture: the foods themselves are discovered in the food menu
+		var kind: String = it["kind"]
+		var food: bool = kind == "food"
+		# no food picture: the foods themselves are discovered in the food menu; a drink level,
+		# a sticker and a case show what they are (the price is in the picture square otherwise)
 		var row := _food_card(slot, null)
 		var name_l: Label = row.get_meta("name_label")
-		name_l.text = (str(it["family"]).capitalize() + " " + SIZE_NAME[it["tier"]]) if food else it["name"]
+		match kind:
+			"food":
+				name_l.text = str(it["family"]).capitalize() + " " + SIZE_NAME[it["tier"]]
+			_:
+				name_l.text = it["name"]
+		_fit_own_font(name_l, 24)
 		var fam: String = it["family"] if food else _special_family(it)
-		_card_tag(row, UiArt.TYPE_TAGS.get(fam, [fam.capitalize(), Color8(220, 196, 150)]))
+		match kind:
+			"drink":
+				_card_tag(row, UiArt.TYPE_TAGS.get(it["type"], ["Drink", Color8(220, 196, 150)]))
+			"sticker":
+				_card_tag(row, ["Sticker", Color8(240, 222, 196)])
+			"case":
+				_card_tag(row, ["Case", Color8(200, 222, 210)])
+			_:
+				_card_tag(row, UiArt.TYPE_TAGS.get(fam, [fam.capitalize(), Color8(220, 196, 150)]))
 		var tag: Sprite2D = row.get_child(row.get_child_count() - 2)
 		if food:
 			UiArt.place_tier_icons(row, tag, fam, { "baby": 1, "kid": 2, "adult": 3 }[it["tier"]])
@@ -797,19 +812,26 @@ func _build_shop() -> void:
 				var nb := _new_badge(30)
 				nb.position = Vector2(row.size.x * 0.3, -6)
 				row.add_child(nb)
+		elif kind == "drink":
+			UiArt.place_tier_icons(row, tag, it["type"], int(it["level"]))
 		var state := Shop.state(it)
-		if state != "owned":
-			_price_box(row, Shop.price(it), state == "ok")
 		var st: Label = row.get_meta("status_label")
+		if state == "owned" and kind in ["sticker", "case", "drink"]:
+			# what it is, in the picture square (a sticker, a case's corner, the drink)
+			(row.get_meta("icon_rect") as TextureRect).texture = _shop_picture(it)
+		elif state != "owned":
+			_price_box(row, Shop.price(it), state == "ok")
 		match state:
 			"owned":
 				st.text = "Yours"
 				st.add_theme_color_override("font_color", IN_USE)
 			"poor":
 				st.text = "Need %d more" % (Shop.price(it) - GameData.coins)
+			"out":
+				st.text = "More tomorrow"
 			_:
 				var have := Shop.pantry_count(it.get("food", ""))
-				st.text = ("Have %d · hold: buy" % have) if not food and have > 0 else "Hold: buy"
+				st.text = ("Have %d · hold: buy" % have) if kind == "special" and have > 0 else "Hold: buy"
 		row.set_meta("action", { "type": "buy", "id": it["id"] } if state == "ok" else { "type": "locked" })
 		_add_item(row)
 
@@ -833,6 +855,17 @@ func _price_box(row: Control, price: int, affordable: bool) -> void:
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.text = str(price)
 	l.z_index = 0
+
+## A Shop card's picture once it's yours: the drink, the sticker, the case
+func _shop_picture(it: Dictionary) -> Texture2D:
+	match it["kind"]:
+		"drink":
+			return DrinkLibrary.drink_of(it["type"], int(it["level"])).get("icon", null)
+		"sticker":
+			return Collection.prize_icon("sticker:" + it["sticker"])
+		"case":
+			return Collection.prize_icon("case:" + it["case"])
+	return null
 
 func _special_family(it: Dictionary) -> String:
 	for f in FoodLibrary.SPECIALS:
@@ -1099,6 +1132,15 @@ func _coin_before(label: Label) -> void:
 	var fs := label.get_theme_font_size("font_size")
 	var w := font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	icon.position = Vector2(label.size.x - w - icon.size.x - 4, (font.get_height(fs) - icon.size.y) / 2.0)
+
+## The same, measured with the label's own font (the food cards' names use the food menu's font)
+func _fit_own_font(l: Label, min_size: int) -> void:
+	var f: Font = l.get_theme_font("font")
+	var size := l.get_theme_font_size("font_size")
+	var room := l.size.x if l.size.x > 0.0 else 330.0
+	while size > min_size and f.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > room:
+		size -= 1
+	l.add_theme_font_size_override("font_size", size)
 
 ## Keeps a label on one line: if the text is too wide, shrink the font until it fits.
 func _fit_one_line(l: Label, max_size: int, min_size := 16) -> void:

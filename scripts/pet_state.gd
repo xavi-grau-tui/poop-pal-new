@@ -58,6 +58,10 @@ var meals_total := 0       # every meal ever eaten (the food menu's two foods of
 
 ## Drink boosts: the last drink gives the pal one boost, used up in the next minigame that
 ## has a use for it (each game decides what a boost does; players find out which is best).
+## One meaning each, in every game (docs/progression.md, section 4): Splash = a second chance,
+## Fizz = lift / power, Focus = more time to react, Sturdy = weight, Lucky = finding. A boost has
+## the LEVEL (1-3) of the drink that gave it: the same effect, stronger, and it opens the gates
+## that ask for that level (boost_level).
 const BOOSTS := {
 	"splash": {
 		"name": "Splash",
@@ -73,8 +77,38 @@ const BOOSTS := {
 		"icon": ["....###", "...#bw#", "...#bb#", "##..###", "#w#....", "###.###", "...#bw#", "...#bb#", "....###"],
 		"colors": { "#": Color8(60, 34, 30), "b": Color8(236, 120, 80), "w": Color8(255, 236, 214) },
 	},
+	"focus": {
+		"name": "Focus",
+		"desc": "More time to react",
+		# pixel icon: a lightning bolt (# outline, b fill, w shine)
+		"icon": ["...####", "..#wbb#", "..#bb#.", ".#bb###", ".#bbbb#", "###bb#.", "..#b#..", ".#b#...", ".##...."],
+		"colors": { "#": Color8(60, 40, 28), "b": Color8(246, 204, 70), "w": Color8(255, 246, 200) },
+	},
+	"sturdy": {
+		"name": "Sturdy",
+		"desc": "Heavier: hard to push about",
+		# pixel icon: a milk drop (# outline, b fill, w shine, s shade)
+		"icon": ["...#...", "..#w#..", "..#w#..", ".#wbb#.", "#wbbbb#", "#wbbbs#", "#bbbss#", ".#bss#.", "..###.."],
+		"colors": { "#": Color8(60, 48, 46), "b": Color8(244, 242, 236), "w": Color8(255, 255, 255), "s": Color8(206, 202, 196) },
+	},
+	"lucky": {
+		"name": "Lucky",
+		"desc": "Finds hidden things",
+		# pixel icon: a star (# outline, b fill, w shine, s shade)
+		"icon": ["...#...", "..#w#..", "###b###", "#wbbbs#", ".#bbs#.", ".#bbs#.", "#bs#ss#", "#s#.#s#", "##...##"],
+		"colors": { "#": Color8(70, 40, 28), "b": Color8(250, 164, 70), "w": Color8(255, 222, 160), "s": Color8(218, 120, 44) },
+	},
 }
 var boost := ""
+var boost_level := 1        # the level (1-3) of the drink that gave the boost
+
+## The meal clock (the skeleton, docs/progression.md section 3): how long until the next meal,
+## by what the meal did. A NEW pal needs time to settle in, the bigger the longer (Sho 3 min,
+## Chu 10, Dai / mutant / legend 30); a pal met before, or no change, is hungry again straight away
+## (known steps are a quick montage where the player still picks the path).
+const WAIT_NEW := { 1: 180, 2: 600, 3: 1800, 4: 1800, 5: 1800 }
+const WAIT_KNOWN := 0
+var last_meal_wait := 0         # seconds: what the last meal set the meal countdown to (LcdScreen)
 
 ## When the next meal / drink is allowed (Unix seconds; 0 = now). Saved, so the LCD's countdowns
 ## keep running while the app is closed (LcdScreen sets them).
@@ -152,10 +186,13 @@ func feed(food: Dictionary) -> void:
 	var family: String = food.get("family", "")
 	if family == "":
 		return
+	var to := evolution_for(food)
+	last_meal_wait = WAIT_KNOWN
+	if to != "" and to not in discovered:
+		last_meal_wait = int(WAIT_NEW.get(int(FORMS.get(to, {}).get("stage", 3)), 1800))
 	meals.append(family)
 	meals_total += 1
 	fed.emit(food)
-	var to := evolution_for(food)
 	if to == "":
 		save_data()
 	elif form_id == "":
@@ -189,8 +226,14 @@ func drink(drink_data: Dictionary) -> void:
 	var b: String = drink_data.get("boost", "")
 	if b != "" and b in BOOSTS:
 		boost = b                         # one boost at a time: the last drink counts
+		boost_level = clampi(int(drink_data.get("level", 1)), 1, 3)
 		save_data()
 		boost_changed.emit(boost)
+
+## The level (1-3) of the boost if the pal has this one, else 0 (a game asks: "is my pal fizzy,
+## and how much?")
+func boost_power(id: String) -> int:
+	return boost_level if boost == id else 0
 
 func use_boost() -> void:
 	if boost == "":
@@ -252,7 +295,7 @@ func _set_form(id: String, reason: String) -> void:
 func save_data() -> void:
 	var file = FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({ "form_id": form_id, "meals": meals, "discovered": discovered, "score": score, "boost": boost,
+		file.store_string(JSON.stringify({ "form_id": form_id, "meals": meals, "discovered": discovered, "score": score, "boost": boost, "boost_level": boost_level,
 			"meals_total": meals_total, "food_ready_at": food_ready_at, "drink_ready_at": drink_ready_at, "shutters": shutters }))
 
 func load_data() -> void:
@@ -271,6 +314,7 @@ func load_data() -> void:
 		score = int(parsed.get("score", 0))
 		meals_total = int(parsed.get("meals_total", 0))
 		boost = str(parsed.get("boost", ""))
+		boost_level = clampi(int(parsed.get("boost_level", 1)), 1, 3)
 		food_ready_at = float(parsed.get("food_ready_at", 0.0))
 		drink_ready_at = float(parsed.get("drink_ready_at", 0.0))
 		shutters = parsed.get("shutters", {})

@@ -6,26 +6,27 @@ class_name DevLaunch
 ## so the unboxing and the boot run untouched).
 ##
 ##   FULL BOOT          the real start: unboxing, logo, welcome, as in the final game
-##   STRAIGHT TO GAMES  no unboxing or boot; the pal is already the sour baby (Picklet), the Games
-##                      menu opens by itself and EVERY game is open (to work on any game, any time)
-##   ... + 999 COINS    the same, with 999 coins to try buying games and Shop items
-##   BOOT + PROGRESSION the real game as a player gets it, KEPT between launches (its own save,
-##                      user://progress/, see SaveSlot): every testing switch off, only the six
-##                      launch games, the unboxing only the first time, the meal and drink clocks
-##                      running in real time. START OVER (two taps) wipes that save.
-## The last choice is remembered and shown highlighted. The three testing starts never touch the
+##   ALL UNLOCKED       no unboxing or boot; a random pal, the Games menu opens by itself and
+##                      EVERYTHING is open: every game and level, every pal in the Pal Pedia, every
+##                      food and drink level, special foods in the pantry, every dress-up item, gut
+##                      decor, background, sticker and case (to put on: flip the device), the whole
+##                      Shop to look through and 999 coins (no meal / drink wait either)
+##   BOOT + PROGRESSION the real game as a player gets it, from the very start, KEPT between
+##                      launches (its own save, user://progress/, see SaveSlot): every testing switch
+##                      off, only the six launch games, the unboxing only the first time, the meal
+##                      and drink clocks running in real time. START OVER (two taps) wipes that save.
+## The last choice is remembered and shown highlighted. The testing starts never touch the
 ## progression save.
 
 const MAIN_SCENE := "res://scenes/main.tscn"
 const PREFS := "user://dev_launch.json"
-const QUICK_PAL := "picklet"           # the sour baby
 
-## Read by Unboxing and BootSequence: true only after STRAIGHT TO GAMES was picked here
+## Read by Unboxing and BootSequence: true only after ALL UNLOCKED was picked here
 static var skip_boot := false
-## STRAIGHT TO GAMES: every game and every food open, special foods in the pantry, no meal / drink
-## wait, so every evolution can be tried in a row (the testing save only)
+## ALL UNLOCKED: everything open (see above), no meal / drink wait, so every evolution, item and
+## level can be tried in a row (the testing save only)
 static var all_open := false
-## CASE: STRAIGHT TO GAMES + the Melon Soda case to try on the device's back (DeviceFlip)
+## (kept for the cases' code: on in ALL UNLOCKED)
 static var case_demo := false
 
 func _ready() -> void:
@@ -45,12 +46,10 @@ func _ready() -> void:
 	title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
 	add_child(title)
 	var last := _last_choice()
-	_button("FULL BOOT", "unboxing + boot", 430, last == "full", _full)
-	_button("STRAIGHT TO GAMES", "every game and food open, no waiting", 680, last == "games", _games)
-	_button("CASE", "games mode, Kitsune, a case to put on (flip it)", 930, last == "case", _case)
-	_button("GAMES + 999 COINS", "to try the Shop and buying games", 1180, last == "rich", _rich)
-	_button("BOOT + PROGRESSION", _progress_summary(), 1430, last == "progress", _progress)
-	_start_over_button(1690)
+	_button("FULL BOOT", "unboxing + boot", 480, last == "full", _full)
+	_button("ALL UNLOCKED", "every game, level, item, sticker and case; a random pal", 760, last in ["games", "case", "rich"], _games)
+	_button("BOOT + PROGRESSION", _progress_summary(), 1040, last == "progress", _progress)
+	_start_over_button(1320)
 
 func _button(text: String, sub: String, y: float, highlighted: bool, action: Callable) -> void:
 	var font = load("res://fonts/pixChicago.ttf")
@@ -97,7 +96,7 @@ func _progress() -> void:
 	case_demo = false
 	SaveSlot.use_progress()
 	# the autoloads loaded (and wiped) the testing save at launch: now the progression one
-	for n in [GameData, PetState, Collection, Shop]:
+	for n in [GameData, PetState, Collection, Shop, LuckyPinch]:
 		n.reload()
 	get_tree().change_scene_to_file(MAIN_SCENE)
 
@@ -149,46 +148,43 @@ func _start_over_button(y: float) -> void:
 		get_tree().reload_current_scene())
 	add_child(b)
 
-func _case() -> void:
-	# the yellow fox, Kitsune (an Inari + a greasy Chu food), wears the case
-	PetState.form_id = "kitsune"
-	PetState.meals = ["greasy", "greasy"]
-	for id in ["inari", "kitsune"]:
-		if id not in PetState.discovered:
-			PetState.discovered.append(id)
-	PetState.save_data()
-	_games("games")
-	case_demo = true
-	_save_choice("case")
-
-func _rich() -> void:
-	GameData.add_coins(999 - GameData.coins)
-	_games("rich")
-
 func _games(choice := "games") -> void:
 	_save_choice(choice)
-	case_demo = false
 	skip_boot = true
-	all_open = choice == "games"
-	if all_open:                         # every game open, no coins needed (the testing save only)
-		for idx in GameData.games:
-			GameData.games[idx]["unlocked"] = true
-		# ...and every food: all types of every size, 9 of each special food
-		for size in ["baby", "kid", "adult"]:
-			Shop.foods[size] = FoodLibrary.FAMILIES.duplicate()
-		for f in FoodLibrary.SPECIALS:
-			Shop.pantry[f["name"]] = 9
-		Shop.save_data()
-		PetState.food_ready_at = 1.0               # (no waiting: see LcdScreen)
-		PetState.drink_ready_at = 1.0
-	# the pal is already there (as if its first meal was a sour one), before the scene loads
-	if not PetState.has_poop():
-		PetState.form_id = QUICK_PAL
-		PetState.meals = [PetState.FORMS[QUICK_PAL]["family"]]
-		if QUICK_PAL not in PetState.discovered:
-			PetState.discovered.append(QUICK_PAL)
-		PetState.save_data()
+	all_open = true
+	case_demo = true
+	unlock_everything()
 	get_tree().change_scene_to_file(MAIN_SCENE)
+
+## ALL UNLOCKED: every game, every pal found, every food and drink level, the special foods,
+## every collectable of every kind, 999 coins, and a random pal (the testing save only)
+static func unlock_everything() -> void:
+	for idx in GameData.games:
+		GameData.games[idx]["unlocked"] = true
+	for size in ["baby", "kid", "adult"]:
+		Shop.foods[size] = FoodLibrary.FAMILIES.duplicate()
+	for f in FoodLibrary.SPECIALS:
+		Shop.pantry[f["name"]] = 9
+		if f["name"] not in Shop.met:
+			Shop.met.append(f["name"])
+	for t in DrinkLibrary.TYPES:
+		Shop.drink_lvl[t] = 3
+	Shop.save_data()
+	for cat in ["backgrounds", "accessories", "decor", "cases"]:
+		Collection.owned[cat] = Collection.order(cat).filter(func(id): return not String(id).begins_with("mystery"))
+	Collection.owned["stickers"] = Collection.order("stickers").duplicate()
+	Collection.save_data()
+	PetState.discovered = PetState.FORMS.keys()
+	var ids: Array = PetState.FORMS.keys()
+	var pal: String = ids[randi() % ids.size()]
+	PetState.form_id = pal
+	PetState.meals = []
+	for i in mini(3, int(PetState.FORMS[pal]["stage"])):
+		PetState.meals.append(PetState.FORMS[pal]["family"])
+	PetState.food_ready_at = 1.0               # (no waiting: see LcdScreen)
+	PetState.drink_ready_at = 1.0
+	PetState.save_data()
+	GameData.add_coins(999 - GameData.coins)
 
 ## Called by BootSequence when it's skipped: open the Games menu like a tap on its button
 static func open_games(tree: SceneTree) -> void:

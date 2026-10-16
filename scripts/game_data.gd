@@ -11,6 +11,12 @@ signal progress_changed(game_index: int)
 signal game_unlocked(game_index: int)
 signal coins_changed(coins: int)
 signal stars_changed(game_index: int)
+signal daily_bonus(coins: int)                    # the day's first new star: a little extra
+
+## The pal's daily treat (the skeleton, docs/progression.md section 5): the first new star of each
+## day gives DAILY_BONUS coins more (a reason to come back tomorrow; never a chore)
+const DAILY_BONUS := 2
+var daily_day := ""                               # the last day it was given ("2026-10-16")
 
 const SAVE_FILE := "game_data.json"     # (in SaveSlot.path: the testing save or BOOT + PROGRESSION's)
 
@@ -28,14 +34,16 @@ const FIRST_GAME := 2   # Splash Hoops
 const LAUNCH_GAMES := [2, 1, 0, 9, 8, 6]
 ## Every locked launch game can be bought from the start, each at its own price (user, 2026-10-10:
 ## no "opens after Tilt Maze" gate). The prices follow the menu's easy -> hard order, so Tilt Maze
-## (5) is the natural 2nd game and the last ones take a while (tools/design/pacing.py: about a new
-## game a day in the first week for a regular player).
-const GAME_PRICE := { 1: 5, 0: 40, 9: 60, 8: 90, 6: 135 }   # Tilt Maze, Pal Prix (was Pipe Dream), Paper Sumo, Top Spin, Tummy Tunes
+## (5) is the natural 2nd game and the last ones take a while (docs/progression.md, the skeleton:
+## 5 / 30 / 50 / 70 / 100, from tools/design/pacing.py).
+const GAME_PRICE := { 1: 5, 0: 30, 9: 50, 8: 70, 6: 100 }   # Tilt Maze, Pal Prix (was Pipe Dream), Paper Sumo, Top Spin, Tummy Tunes
 
 ## Every game: worlds of LEVELS_PER_WORLD levels (one page of its level menu)
 const LEVELS_PER_WORLD := 9
-## The games that already have their level menu, and how many levels (5 worlds = 45 at launch)
-const LEVEL_COUNTS := { 2: 45, 1: 54, 0: 18 }
+## The games with a level menu, and how many levels: 6 worlds of 9 in every game (the skeleton,
+## 2026-10-16; world 6 = the masters' world). Tummy Tunes waits for its songs.
+const WORLDS_PER_GAME := 6
+const LEVEL_COUNTS := { 2: 54, 1: 54, 0: 54, 9: 54, 8: 54 }
 
 var coins := 0
 
@@ -72,6 +80,7 @@ func reload() -> void:
 func _start() -> void:
 	games = {}
 	coins = 0
+	daily_day = ""
 	for idx in 11:
 		_init_game(idx, idx == FIRST_GAME)   # Splash Hoops — unlocked by default (FIRST_GAME)
 	load_data()
@@ -86,14 +95,16 @@ func _start() -> void:
 			games[idx]["levels"] = {}
 			games[idx]["last"] = 0
 			games[idx]["vaults"] = []
+			games[idx]["best"] = {}
 		coins = 0
+		daily_day = ""
 		save_data()
 	for idx in DEBUG_UNLOCKED:
 		games[idx]["unlocked"] = true
 
 func _init_game(index: int, unlocked: bool) -> void:
 	if index not in games:
-		games[index] = { "max_score": 0, "progress": 0.0, "unlocked": unlocked, "intro": false, "levels": {}, "last": 0, "vaults": [] }
+		games[index] = { "max_score": 0, "progress": 0.0, "unlocked": unlocked, "intro": false, "levels": {}, "last": 0, "vaults": [], "best": {} }
 
 ## The "how to play" card is shown the first time a game is played
 func intro_seen(game_index: int) -> bool:
@@ -177,6 +188,11 @@ func record_level(game_index: int, level: int, stars: int) -> int:
 		return 0
 	games[game_index]["levels"][level] = stars
 	var earned := stars - before
+	var today := Time.get_date_string_from_system()
+	if daily_day != today:
+		daily_day = today
+		earned += DAILY_BONUS
+		daily_bonus.emit.call_deferred(DAILY_BONUS)
 	coins += earned
 	coins_changed.emit(coins)
 	stars_changed.emit(game_index)
@@ -190,7 +206,30 @@ func set_last_level(game_index: int, level: int) -> void:
 		games[game_index]["last"] = level
 		save_data()
 
-## Vaults (Tilt Maze): a level's vault prize, once taken, is gone for good
+## A level's best result (for records and, later, rankings: docs/progression.md 5c): a time in
+## seconds (lower is better: `lower` true) or an accuracy / a margin (higher is better). Returns
+## true when it's a new best.
+func record_best(game_index: int, level: int, value: float, lower := true) -> bool:
+	if game_index not in games:
+		return false
+	if not games[game_index].has("best"):
+		games[game_index]["best"] = {}
+	var b: Dictionary = games[game_index]["best"]
+	var old = b.get(level, null)
+	if old != null and (value >= float(old) if lower else value <= float(old)):
+		return false
+	b[level] = snappedf(value, 0.01)
+	save_data()
+	return true
+
+## The best result on a level (null = none yet)
+func level_best(game_index: int, level: int):
+	if game_index not in games:
+		return null
+	return games[game_index].get("best", {}).get(level, null)
+
+## Secrets (every game; Tilt Maze calls them vaults): a level's secret prize, once taken, is gone
+## for good
 func vault_taken(game_index: int, level: int) -> bool:
 	return game_index in games and level in games[game_index].get("vaults", [])
 
@@ -279,7 +318,7 @@ func _check_unlocks(source_game: int) -> void:
 func save_data() -> void:
 	var file = FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({ "games": games, "coins": coins }))
+		file.store_string(JSON.stringify({ "games": games, "coins": coins, "daily_day": daily_day }))
 
 func load_data() -> void:
 	if not FileAccess.file_exists(SaveSlot.path(SAVE_FILE)):
@@ -292,6 +331,7 @@ func load_data() -> void:
 		# { "games": {...}, "coins": n } (older saves: just the games)
 		var saved: Dictionary = parsed.get("games", parsed)
 		coins = int(parsed.get("coins", 0))
+		daily_day = str(parsed.get("daily_day", ""))
 		for key in saved:
 			if not str(key).is_valid_int():
 				continue
@@ -315,5 +355,12 @@ func load_data() -> void:
 				for v in g.get("vaults", []):
 					vs.append(int(v))
 				games[idx]["vaults"] = vs
+				var best := {}
+				var saved_best = g.get("best", {})
+				if saved_best is Dictionary:
+					for k in saved_best:
+						if str(k).is_valid_int():
+							best[int(k)] = float(saved_best[k])
+				games[idx]["best"] = best
 		# the first game is always unlocked
 		games[FIRST_GAME]["unlocked"] = true

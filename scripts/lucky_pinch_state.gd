@@ -9,7 +9,10 @@ extends Node
 ## The machine keeps its pile: every capsule (where it lies, its colour, the prize inside)
 ## stays as it is between bonuses, also the ones knocked aside; won capsules are gone. Only
 ## when it is empty does it get refilled. The prizes are Collection.LUCKY_ITEMS, items you
-## can only get here; once all are won it is refilled with points capsules (for now).
+## can only get here; once all are won it is refilled with coin capsules (+3 coins each).
+##
+## When it comes (the skeleton, docs/progression.md): after every CLAW_EVERY-th meal that brought
+## a NEW pal (never twice in a row): about one a day, the one surprise left to luck on purpose.
 
 signal changed(pending: bool)
 signal tries_changed(tries: int)
@@ -17,7 +20,9 @@ signal visit_finished                 # the claw has gone back up: Games can be 
 
 const GAME_INDEX := 100               # its "page" for GameScreen (not a regular card)
 const TRIES := 2
-const CHANCE := 0.2                   # after each meal (never two meals in a row)
+const CHANCE := 0.2                   # (the old rule: after any meal, 1 in 5; replaced by CLAW_EVERY)
+const CLAW_EVERY := 4                 # after every 4th meal that brought a new pal
+const SAVE_FILE := "lucky_pinch.json" # (in SaveSlot.path: how many new-pal meals since the last claw)
 const VISIT_DELAY := 2.2              # (by then a new pal's PAL UNLOCKED! has started; it plays out first)
 ## Prototype/testing: the first meal after every launch always brings the claw (not in BOOT +
 ## PROGRESSION: there it's the real chance)
@@ -28,8 +33,8 @@ const ROWS := [0.1, 0.5, 0.9]
 const SLOT_X := [320.0, 485.0, 650.0, 815.0]
 const ROW_SHIFT := 55.0               # the middle row sits between the others
 const COLORS := ["pink", "mint", "yellow", "lilac", "orange"]
-const POINTS_CAPSULES := 6            # when no item is left: capsules with points
-const POINTS := [200, 300, 500]
+const POINTS_CAPSULES := 6            # when no item is left: capsules with coins
+const COINS := 3                      # ...each one
 
 var pending := false
 var visiting := false                 # the claw is in the pet cam right now
@@ -38,9 +43,11 @@ var prizes: Array[Dictionary] = []    # won in this bonus: { category, id, name 
 var pit: Array[Dictionary] = []       # { x, d, color, rot, prize }
 var _last_meal_bonus := false
 var _test_done := false
+var new_pal_meals := 0                # meals that brought a new pal since the last claw (saved)
 
 func _ready() -> void:
 	PetState.fed.connect(_on_fed)
+	_load()
 
 func _on_fed(_food: Dictionary) -> void:
 	if pending:
@@ -49,11 +56,32 @@ func _on_fed(_food: Dictionary) -> void:
 	if TEST_FIRST_MEAL and not _test_done and not SaveSlot.real():
 		go = true
 		_test_done = true
-	elif not _last_meal_bonus:
-		go = randf() < CHANCE
+	elif not _last_meal_bonus and PetState.last_meal_wait > 0:     # (a meal that brought someone new)
+		new_pal_meals += 1
+		go = new_pal_meals >= CLAW_EVERY
+		_save()
 	_last_meal_bonus = go
 	if go:
+		new_pal_meals = 0
+		_save()
 		start()
+
+func _save() -> void:
+	var f := FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({ "new_pal_meals": new_pal_meals }))
+
+func _load() -> void:
+	new_pal_meals = 0
+	var f := FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.READ)
+	if f:
+		var d = JSON.parse_string(f.get_as_text())
+		if d is Dictionary:
+			new_pal_meals = int(d.get("new_pal_meals", 0))
+
+## (BOOT + PROGRESSION: its own folder)
+func reload() -> void:
+	_load()
 
 func _can_start_now() -> bool:
 	if GameScreen.is_active or FoodRainSpawner.is_locked or DrinkWaterfallSpawner.is_locked:
@@ -151,7 +179,7 @@ func refill() -> void:
 			contents.append({ "category": it[0], "id": it[1] })
 	if contents.is_empty():
 		for i in POINTS_CAPSULES:
-			contents.append({ "points": POINTS[i % POINTS.size()] })
+			contents.append({ "coins": COINS })
 	var slots: Array = []
 	for r in ROWS.size():
 		for c in SLOT_X.size():

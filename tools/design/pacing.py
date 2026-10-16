@@ -25,7 +25,7 @@ import sys
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 # --- the games, in the Games menu's order (2026-10-16: Pal Prix 3rd, Paper Sumo 4th)
-#   name, price (PROPOSED 5/30/50/70/100; the game has 5/40/60/90/135), worlds, minutes per try
+#   name, price (scripts/game_data.gd GAME_PRICE), worlds, minutes per try
 #   at difficulty 0 (the level menu and result card included), how much harder the game is
 #   overall (added to every level's difficulty)
 GAMES = [
@@ -84,7 +84,7 @@ SPECIAL_PRICE = {'tech': 15, 'cosmic': 15, 'legend': 40}
 SPECIAL_ON_SALE = {'tech': 350, 'cosmic': 350, 'legend': 450}
 SPECIAL_STOCK = {'tech': 1, 'cosmic': 1, 'legend': 1}         # the Shop's special shelf: restocked every day
 COSMETICS = [8] * 20 + [40] * 4                   # the Shop's stickers and plain cases (after every game is bought)
-DRINK_PRICE = {2: 10, 3: 20}                      # a drink type's level 2 / level 3
+DRINK_PRICE = {2: 10, 3: 20}                      # a drink type's level 2 / level 3 (scripts/shop.gd)
 DRINK_TYPES = ['watery', 'fizzy', 'caffeinated', 'milky', 'fruity']   # one more with each game owned
 DAILY = 2                                         # the pal's daily request (from day 2, on a day you play)
 GIFTS_AT = [5, 15, 30, 60, 100]                   # each game's gift track (its star total)
