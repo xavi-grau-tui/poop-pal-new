@@ -3,6 +3,10 @@
 Living document (started 2026-10-01, last big update 2026-10-11). It holds the aim, the decisions
 made, and what's still missing, so any new conversation can pick the work up from here.
 When asked "what could we implement next?", answer from **What to implement next** below.
+THE SKELETON (2026-10-16, PROPOSED): docs/progression.md says how the whole game fits together
+(game order and difficulty, the meal clock, boosts, special foods, coins, the calendar), with the
+numbers from tools/design/pacing.py v3. Where it differs from the sections below, it wins once
+confirmed; its section 7 is the build order.
 
 ## The aim, in one paragraph
 A virtual-pet handheld in a phone: you feed a cute poop pal and it evolves along food-driven paths
@@ -12,10 +16,12 @@ minigames. The minigames are digital versions of real physical toys living insid
 come back to, and each feeding the rest (rewards, foods, drinks, secrets). Everything must feel
 light, playful and visually intuitive: icons over text, learn by doing. Asia first (Japan above all).
 
-## Where things stand (2026-10-15)
-- Branches: `main` holds everything up to Progression v2, the shop, the 120 sheet-4 pals, CASE mode
-  (Melon Soda case + the sticker book). `tilt-maze` (not merged yet): Tilt Maze's 6 worlds x 9
-  levels, vaults, the fizz boost, the level menu under the console frame, the menu on every entry.
+## Where things stand (2026-10-16)
+- Branches (2026-10-16): `main` holds everything: Progression v2, the shop, the 120 sheet-4 pals,
+  CASE mode (Melon Soda case + the sticker book), Tilt Maze's 6 worlds x 9 levels with vaults and
+  the fizz boost, Pal Prix's Garden and Kitchen (from `pipe-dream`), the skeleton
+  (docs/progression.md). Next: `complete-games` (the first five games to 6 worlds, the catalogue,
+  the Shop, the boosts, the ALL UNLOCKED mode).
 - Saving: BOOT + PROGRESSION in the dev launcher is the real game with real saves (user://progress/);
   the other launches use the testing save (wiped each launch). Release builds still use the testing
   save: switch them to the real one before TestFlight.
@@ -60,8 +66,11 @@ To decide:
 - Menu legend: an arrow down instead of "next" in every menu except the Pal Pedia ("next pal");
   the Pedia's FORWARD (next family) next to dots that are its pages (confusing).
 - Teaching the logo double-tap turn (see Onboarding: the logo's tap-tap pulse etc.).
-- The game order (user, 2026-10-15): RC Racer and Top Spin feel the "coolest"; maybe one of them
-  should be the 3rd game (now Paper Sumo). Later.
+- The skeleton's 8 decisions (docs/progression.md, section 8): the meal clock by what the meal did,
+  no points (the LCD shows coins), no lives, no pal stats or punishments, prices 5/30/50/70/100,
+  special foods found first then sold, the worlds of the last three games, the 9-level shape.
+- DECIDED (user, 2026-10-16; in code): Pal Prix is the 3rd game, Paper Sumo the 4th (it was the
+  open question "RC Racer and Top Spin feel the coolest").
 To build:
 - Tilt Maze: tune physics and par times on the phone; the vaults of the other boosts once they
   exist (see "Boost-gated prizes"); the world map showing vaults; a tutorial per world's thing.
@@ -233,6 +242,8 @@ beat the robot -> the Microchip).
 
 ## What to implement next (pick a few to offer)
 Sizes: S = a session, M = a few sessions, L = a big block. "Needs" = do that first.
+Once the skeleton is confirmed, its build order (docs/progression.md, section 7) comes first: the
+meal clock by what the meal did, the food sparkle, coins on the LCD, Pal Prix worlds 3-5...
 
 Quick wins (S)
 1. Evolution guidance, layer 1: a sparkle / "?" badge on foods that lead to an undiscovered pal,
@@ -505,7 +516,8 @@ foods once a Dai exists, legendary once its ULTRA) is THE way to go. Next: the u
 (from the v3 sheets) and their moods; then the guide cards.
 GAMES ARE ALL BUYABLE FROM THE START (user, 2026-10-10; no "opens after Tilt Maze": the player
 doesn't know Tilt Maze yet). Each has its own price, in the menu's easy -> hard order: Tilt Maze 5,
-Paper Sumo 40, Pipe Dream / RC car 60, Top Spin 90, Tummy Tunes 135 (GameData.GAME_PRICE). Cards
+Pal Prix 40, Paper Sumo 60, Top Spin 90, Tummy Tunes 135 (GameData.GAME_PRICE; the order since
+2026-10-16; docs/progression.md proposes 5/30/50/70/100). Cards
 still to make say "Coming soon".
 NEXT STEPS (set 2026-10-10): 1) the user picks the pals and their 3 moods each (from the v3 sheets),
 then tests the progression path with them; 2) guide cards G1-G9; 3) Drinks v2; 4) levels for the
@@ -928,10 +940,11 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   Marble run = the 7th, in an update. Germ Zap, Pal Dash, Tile Break and Flipper Belly are out
   (too recognisable as Space Invaders / runner / Breakout / pinball): hide their cards, keep the
   code until the final cut (their ball physics, sounds and art can be reused).
-- ORDER (DECIDED 2026-10-10, roughly easy → hard; the Games menu shows the cards in this order,
-  GameMenuSwitcher.ORDER, Splash Hoops is the game unlocked from the start):
+- ORDER (DECIDED 2026-10-10, Pal Prix and Paper Sumo swapped 2026-10-16; roughly easy → hard;
+  the Games menu shows the cards in this order, GameMenuSwitcher.ORDER, Splash Hoops is the game
+  unlocked from the start):
   1. Splash Hoops (two buttons: teaches the buttons)  2. Tilt Maze (teaches tilt)
-  3. Paper Sumo (buttons + tilt, simple rules)  4. Pipe Dream → the RC car (two buttons, precision)
+  3. Pal Prix, the RC car (two buttons, precision)  4. Paper Sumo (buttons + tilt + the hop rhythm)
   5. Top Spin (the most complex controls)  6. Tummy Tunes, the music game (the hardest timing)
   then the four on hold at the end of the list (Pal Dash, Tile Break, Germ Zap, Flipper Belly).
   After the first two, the player chooses what to unlock next, so this is the suggested path.

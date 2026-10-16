@@ -35,11 +35,11 @@ const CARD_ART := {
 ## Prototype cards not in the scene yet: copies of the last card (and its dot), added at launch
 const EXTRA_PAGES := 3
 
-## The order of the cards (2026-10-10), easy to hard: Splash Hoops, Tilt Maze, Paper Sumo, Pipe
-## Dream (to become the RC car), Top Spin, Tummy Tunes, then the four on hold (Pal Dash, Tile
-## Break, Germ Zap, Flipper Belly). Only the display order: each game keeps its own number
-## (GameScreen.game_scenes, GameData, Collection.REWARDS).
-const ORDER := [2, 1, 9, 0, 8, 6, 3, 4, 5, 7, 10]
+## The order of the cards (2026-10-16: Pal Prix 3rd, Paper Sumo 4th), easy to hard: Splash Hoops,
+## Tilt Maze, Pal Prix, Paper Sumo, Top Spin, Tummy Tunes, then the ones on hold (Pal Dash, Tile
+## Break, Germ Zap, Flipper Belly, the classic Pipe Dream). Only the display order: each game keeps
+## its own number (GameScreen.game_scenes, GameData, Collection.REWARDS).
+const ORDER := [2, 1, 0, 9, 8, 6, 3, 4, 5, 7, 10]
 ## The cards in this menu: ORDER, or only the six launch games in BOOT + PROGRESSION (the real
 ## game: the four on hold aren't there)
 var order: Array = ORDER
