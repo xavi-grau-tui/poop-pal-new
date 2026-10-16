@@ -142,7 +142,7 @@ const LEVELS := [
 ## it) and the chest on the sand (a lucky pal opens it); finales: Kraken Brine (5-9), the case (6-9)
 const SECRETS := {
 	15: ["fizzy", "sticker:starfish"], 24: ["fruity", "decor:seaweed"], 33: ["fizzy", "sticker:pufferfish"],
-	42: ["fruity", "sticker:anchor"], 51: ["fizzy", "sticker:anglerfish"],
+	42: ["fruity", "sticker:seashell"], 51: ["fizzy", "sticker:anglerfish"],
 }
 const FINALES := { 45: "food:Kraken Brine", 54: "case:splash" }
 const HOOP_AT := Vector2(150, 236)      # the golden hoop (higher with the gate's level)

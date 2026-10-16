@@ -90,6 +90,12 @@ GLYPHS = {
           "#.###",
           "#####",
           ".###."],
+ 'case': ["#####",             # the device in its case: the screen, the buttons below (the CASES card)
+          "#...#",
+          "#...#",
+          "#####",
+          "#.#.#",
+          "#####"],
  'cloud': ["...##...",
            ".######.",
            "########",

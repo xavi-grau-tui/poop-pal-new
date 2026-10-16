@@ -2,7 +2,7 @@ extends Node2D
 ## Stickers for the case (CASE mode, on the device's back): a mini sticker book whose pull
 ## tab peeks in from the case's left edge. Drag the tab out (or press it) and the book opens
 ## on a page of pal stickers; the tabs on its top turn to another page (one per food family:
-## its Sho and its 5 Chu). Drag a sticker out and the book tucks back to the side while you
+## its Sho and its 5 Chu; the last one: the games' stickers, Collection.STICKERS). Drag a sticker out and the book tucks back to the side while you
 ## stick it anywhere on the case. Drop a sticker on the book's tab to store it again; a stuck
 ## sticker can be peeled off and moved, or stored, the same way.
 ##
@@ -12,7 +12,7 @@ extends Node2D
 
 const BOOK := preload("res://textures/cases/book/book.png")   # (tools/art/case_stickers.py)
 const BODY_W := 608.0               # the book's body (its pull tab is to the right of it)
-const FAMILIES := ["green", "sweet", "greasy", "spicy", "sour"]
+const FAMILIES := ["green", "sweet", "greasy", "spicy", "sour", "games"]   # (the pages, by their tabs)
 const TAB := Rect2(608, 290, 96, 320)   # the pull tab, book coordinates (with some slack)
 const TOP := -960.0 - 452.0         # the book's top edge (it is centred on the device)
 const TUCKED := -608.0              # book x tucked: only its tab shows, at the case's left edge
@@ -22,8 +22,11 @@ const PEEK := 40.0                  # while a sticker is carried it peeks out th
 const GAPE := 110.0                 # ...and this much with the sticker over it (let go: stored)
 const CELL := Vector2(264, 280)     # the page's slots: 2 columns, 3 rows
 const FIRST := Vector2(188, 172)    # the first slot's middle, book coordinates
+const GAMES_CELL := Vector2(176, 168)   # the games' page: smaller, 3 columns, 5 rows
+const GAMES_FIRST := Vector2(132, 118)
+const GAMES_SCALE := 0.8
 const PAGE_TAB_X := 36.0            # the page tabs on the book's top: the first's left edge...
-const PAGE_TAB_STEP := 112.0        # ...and from one to the next
+const PAGE_TAB_STEP := 94.0         # ...and from one to the next
 const PAGE_TAB_Y := -64.0           # ...their top (the page showing: its tab a little higher)
 const PAGE_TAB_UP := 14.0
 const LIFT := 1.12                  # a carried sticker, bigger (closer to you)
@@ -31,7 +34,7 @@ const AREA := Rect2(50, -1870, 980, 1820)    # where a sticker can sit on the ca
 const TILT := 8.0                   # a new sticker's random tilt, degrees
 
 ## (kept for the whole launch: the stickers stay put across scene reloads)
-static var stored: Array = []       # the stickers in the book (pal ids)
+static var stored: Array = []       # the stickers in the book (pal ids, or Collection.STICKERS ids)
 static var placed: Array = []       # [{id, pos (from the case's middle), rot}]
 static var stocked := false
 static var page := 0                # the book's page (a family)
@@ -73,7 +76,7 @@ func _ready() -> void:
 		stocked = true
 		# the CASE demo: every pal sticker; otherwise the ones won (Tilt Maze's vaults)
 		if DevLaunch.case_demo:
-			stored = _sorted(PetState.FORMS.keys().filter(func(id): return int(PetState.FORMS[id]["stage"]) <= 2))
+			stored = _sorted(PetState.FORMS.keys().filter(func(id): return int(PetState.FORMS[id]["stage"]) <= 2) + Collection.STICKER_ORDER)
 	for id in Collection.owned.get("stickers", []):
 		if id not in stored and not placed.any(func(d): return d.id == id):
 			stored.append(id)
@@ -246,7 +249,7 @@ func _store(id: String, animated: bool) -> void:
 	mode = ""
 	stored.append(id)
 	stored = _sorted(stored)
-	page = maxi(0, FAMILIES.find(PetState.FORMS[id]["family"]))     # (the book on its page)
+	page = maxi(0, FAMILIES.find(_family(id)))                     # (the book on its page)
 	if animated and s:
 		# into the book's tab, riding along with the book as it tucks away to the side
 		s.reparent(book)
@@ -304,20 +307,34 @@ func _shadow(s: Sprite2D, lifted: bool) -> void:
 func _fill_page() -> void:
 	for c in slots.get_children():
 		c.queue_free()
-	var here := stored.filter(func(id): return PetState.FORMS[id]["family"] == FAMILIES[page])
+	var here := stored.filter(func(id): return _family(id) == FAMILIES[page])
+	var games: bool = FAMILIES[page] == "games"
 	for i in here.size():
 		var s := _sticker(here[i], true)
-		s.position = FIRST + Vector2(i % 2, i / 2) * CELL
+		if games:
+			s.position = GAMES_FIRST + Vector2(i % 3, i / 3) * GAMES_CELL
+			s.scale = Vector2.ONE * GAMES_SCALE
+		else:
+			s.position = FIRST + Vector2(i % 2, i / 2) * CELL
 		slots.add_child(s)
 	for i in page_tabs.size():
 		page_tabs[i].position = Vector2(PAGE_TAB_X + i * PAGE_TAB_STEP, PAGE_TAB_Y - (PAGE_TAB_UP if i == page else 0.0))
 		page_tabs[i].modulate = Color.WHITE if i == page else Color(0.86, 0.86, 0.86)
 
-## Pal ids in the Pal-Pedia's order
+## A sticker's page: its pal's family, or the games' page
+func _family(id: String) -> String:
+	return PetState.FORMS[id]["family"] if id in PetState.FORMS else "games"
+
+## Pal ids in the Pal-Pedia's order, then the games' stickers in theirs
 func _sorted(ids: Array) -> Array:
 	var out := ids.duplicate()
-	out.sort_custom(func(a, b): return int(PetState.FORMS[a]["no"]) < int(PetState.FORMS[b]["no"]))
+	out.sort_custom(func(a, b): return _rank(a) < _rank(b))
 	return out
+
+func _rank(id: String) -> int:
+	if id in PetState.FORMS:
+		return int(PetState.FORMS[id]["no"])
+	return 10000 + maxi(0, Collection.STICKER_ORDER.find(id))
 
 func _hit(s: Sprite2D, p: Vector2) -> bool:
 	var local := s.get_global_transform_with_canvas().affine_inverse() * (get_global_transform_with_canvas() * p)

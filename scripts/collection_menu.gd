@@ -19,7 +19,7 @@ extends Node2D
 ## FORWARD = next page (in a pal card: next pal). Every sub-view has a "Back" item.
 ## Built in code on top of the existing golden frame (Menu/Sprite2D).
 
-enum View { HUB, PEDIA, DETAIL, BACKGROUNDS, ACCESSORIES, DECOR, SHOP }
+enum View { HUB, PEDIA, DETAIL, BACKGROUNDS, ACCESSORIES, DECOR, SHOP, CASES }
 
 const HUB_CARDS := [
 	{ "view": View.SHOP, "logo": "res://textures/menus/coinshop.png", "pattern": "res://textures/menus/pattern_coin_caramel.png" },
@@ -27,12 +27,14 @@ const HUB_CARDS := [
 	{ "view": View.ACCESSORIES, "logo": "res://textures/menus/dressup.png", "pattern": "res://textures/menus/pattern_glasses_cream.png" },
 	{ "view": View.DECOR, "logo": "res://textures/menus/gutdecor.png", "pattern": "res://textures/menus/pattern_bulb_caramel.png" },
 	{ "view": View.BACKGROUNDS, "logo": "res://textures/menus/backgrounds.png", "pattern": "res://textures/menus/pattern_cloud_sage.png" },
+	{ "view": View.CASES, "logo": "res://textures/menus/cases.png", "pattern": "res://textures/menus/pattern_case_slate.png" },
 ]
 ## Cosmetic list views: their Collection category
 const LISTS := {
 	View.BACKGROUNDS: { "category": "backgrounds" },
 	View.ACCESSORIES: { "category": "accessories" },
 	View.DECOR: { "category": "decor" },
+	View.CASES: { "category": "cases" },
 }
 ## The type tag on backgrounds / gut decor cards (like the food types): word + pastel colour
 const KIND_TAGS := {
@@ -172,7 +174,7 @@ func flip_page() -> void:
 			pedia_family = (pedia_family + 1) % PEDIA_FAMILIES.size()
 			page = 0
 			_open(View.PEDIA)
-		View.BACKGROUNDS, View.ACCESSORIES, View.DECOR:
+		View.BACKGROUNDS, View.ACCESSORIES, View.DECOR, View.CASES:
 			page = (page + 1) % _list_pages(view)
 			_open(view)
 		View.SHOP:
@@ -271,7 +273,7 @@ func _open(v: int, select := -1) -> void:
 			_build_hub()
 		View.PEDIA:
 			_build_pedia()
-		View.BACKGROUNDS, View.ACCESSORIES, View.DECOR:
+		View.BACKGROUNDS, View.ACCESSORIES, View.DECOR, View.CASES:
 			_build_list(v)
 		View.SHOP:
 			_build_shop()
@@ -1174,6 +1176,8 @@ func _item_preview(cat: String, id: String) -> Texture2D:
 			return _accessory_preview(id)
 		"decor":
 			return _decor_preview(id)
+		"cases":
+			return Collection.prize_icon("case:" + id)
 	return null
 
 ## The accessory's own icon (food-icon style); the pal wearing it only as a fallback

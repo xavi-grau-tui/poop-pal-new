@@ -76,8 +76,10 @@ func _ready() -> void:
 	AudioServer.add_bus_effect(0, muffle)
 	muffle_idx = AudioServer.get_bus_effect_count(0) - 1
 	AudioServer.set_bus_effect_enabled(0, muffle_idx, false)
-	if DevLaunch.case_demo:
+	if DevLaunch.case_demo or not Collection.owned.get("cases", []).is_empty():
 		_setup_case()
+	Collection.unlocked.connect(_on_item_unlocked)
+	Collection.equipped_changed.connect(_on_equipped)
 
 func _exit_tree() -> void:
 	if muffle_idx >= 0:
@@ -85,15 +87,15 @@ func _exit_tree() -> void:
 		AudioServer.set_bus_volume_db(0, 0.0)
 
 func _input(event: InputEvent) -> void:
-	if DevLaunch.case_demo and progress == 1.0 and case_busy:
+	if case_ready and progress == 1.0 and case_busy:
 		# the case is going on / coming off: every touch is the case's (no turn meanwhile)
 		if event is InputEventMouse or event is InputEventScreenTouch or event is InputEventScreenDrag:
 			get_viewport().set_input_as_handled()
 		return
-	if DevLaunch.case_demo and progress == 1.0 and not turning and case_on and stickers.handle(event):
+	if case_ready and progress == 1.0 and not turning and case_on and stickers.handle(event):
 		get_viewport().set_input_as_handled()
 		return
-	if DevLaunch.case_demo and progress == 1.0 and not turning and _case_input(event):
+	if case_ready and progress == 1.0 and not turning and _case_input(event):
 		get_viewport().set_input_as_handled()
 		return
 	var showing_back := progress > 0.5
@@ -251,26 +253,28 @@ class Overlay extends Node2D:
 			draw_rect(side, CASE_OUTLINE if case_tones else OUTLINE, false, minf(4.0, side.size.x * 0.5))
 
 
-# ================================================================== CASE (dev launcher: CASE)
-## A case to try on (docs/ideas_roadmap.md, Coin Shop: cases). On the back its corner pokes in
+# ================================================================== CASE
+## The device's cases (Collection.CASES: won in the games, a few sold in the Shop; the dev
+## launcher's CASE demo has them all). On the back the case's corner pokes in
 ## from the right like an arrow; drag it in: past the middle of the screen the case slides on
 ## from above (released before, the corner goes back). Swipe the case UP to take it off: far
 ## enough and it slides away and comes back as the corner, else it settles back on. With the
 ## case on, the battery compartment is covered (take the case off to reach it), and the front wears it too (an overlay of the case's own pixels: the screen, the LCD
-## and the buttons stay live). Art: textures/cases/melon_*.png (from the mockup's rules).
-const CASE_BACK := preload("res://textures/cases/melon_back.png")   # (covers the battery compartment)
-const CASE_FRONT := preload("res://textures/cases/melon_front.png")
+## and the buttons stay live). A case picked in the gear menu's CASES goes straight on. Art:
+## textures/cases/<id>_*.png (tools/art/cases_games.py: each made from Melon Soda's).
 const CASE_CENTRE := Vector2(540, -960)          # the back's sprites (back coordinates)
 const CORNER_TIP := Vector2(910, -615)           # where the corner's tip pokes in
 const CORNER_TURN := -45.0                       # degrees: its corner points left, like an arrow
 const CASE_HALF := Vector2(540, 960)
 
+var case_ready := false             # the case's sprites are made (a case is yours, or the CASE demo)
+var case_id := ""                   # the case on the device or poking in (Collection.equipped_case)
 var case_on := false
 var case_sprite: Sprite2D           # on the back: over the shell, under the battery lid
 var corner: Sprite2D
 var front_case: Sprite2D           # (under the buttons)
 var front_case_top: Sprite2D       # (over the logo and the screws)
-var case_buttons := []             # [button, its normal, pressed, the case's normal, pressed]
+var case_buttons := []             # [button, its normal image, its pressed one]
 var case_drag := ""                 # "" / "corner" / "case"
 var case_busy := false              # the case going on / coming off: no turn meanwhile
 var stickers = null                 # the sticker book and the stickers (case_stickers.gd)
@@ -278,13 +282,15 @@ var drag_from := Vector2.ZERO
 var corner_rest := Vector2.ZERO
 
 func _setup_case() -> void:
+	case_ready = true
+	case_id = _pick_case()
 	case_sprite = Sprite2D.new()
-	case_sprite.texture = CASE_BACK
+	case_sprite.texture = _case_tex("back")
 	case_sprite.position = CASE_CENTRE
 	case_sprite.visible = false
 	back.add_child(case_sprite)                     # (over the battery lid too: the case covers it)
 	corner = Sprite2D.new()
-	corner.texture = CASE_BACK
+	corner.texture = case_sprite.texture
 	corner.rotation_degrees = CORNER_TURN
 	corner_rest = CORNER_TIP - (-CASE_HALF).rotated(deg_to_rad(CORNER_TURN))
 	corner.position = corner_rest
@@ -297,9 +303,9 @@ func _setup_case() -> void:
 	# so a button pressed or not always lands on the case), a top layer for the carved logo and
 	# the screws, and Melon Soda images for the menu buttons (their frame in the case's colours)
 	var console := front.get_node("Console")
-	front_case = _case_layer(CASE_FRONT, 3)            # (over the screen's frame art, z 3; under every button)
+	front_case = _case_layer(_case_tex("front"), 3)    # (over the screen's frame art, z 3; under every button)
 	console.add_child(front_case)
-	front_case_top = _case_layer(load("res://textures/cases/melon_front_top.png"), 4)
+	front_case_top = _case_layer(_case_tex("front_top"), 4)
 	console.add_child(front_case_top)
 	# (menu_buttons.gd keeps its off / on images in normal_texture / pressed_texture, swapped from
 	# the files' names: off = the darker "...pressed.png". Each gets the case's version of ITS file,
@@ -309,12 +315,54 @@ func _setup_case() -> void:
 		if btn:
 			var off: Texture2D = btn.get("normal_texture")
 			var lit: Texture2D = btn.get("pressed_texture")
-			case_buttons.append([btn, off, lit, _case_version(off), _case_version(lit)])
+			case_buttons.append([btn, off, lit])
 	# (no automatic turn: you flip the device yourself, double-tap the logo, to find the corner)
+	if Collection.equipped_case != "" and Collection.is_owned("cases", Collection.equipped_case):
+		_wear_case(Collection.equipped_case)            # (it was on last time)
 
-## textures/buttons/<name>.png -> textures/cases/melon_<name>.png
+## The case on the device: the one picked, else the first one you have (the CASE demo: Melon Soda)
+func _pick_case() -> String:
+	var owned: Array = Collection.owned.get("cases", [])
+	if Collection.equipped_case in owned:
+		return Collection.equipped_case
+	for id in Collection.CASE_ORDER:
+		if id in owned:
+			return id
+	return "melon"
+
+func _case_tex(layer: String) -> Texture2D:
+	return load("res://textures/cases/%s_%s.png" % [case_id, layer])
+
+## textures/buttons/<name>.png -> textures/cases/<the case>_<name>.png
 func _case_version(t: Texture2D) -> Texture2D:
-	return load("res://textures/cases/melon_" + t.resource_path.get_file())
+	return load("res://textures/cases/%s_%s" % [case_id, t.resource_path.get_file()])
+
+func _on_item_unlocked(category: String, _id: String) -> void:
+	if category == "cases" and not case_ready:
+		_setup_case()                               # (the first case won: its corner is there now)
+
+func _on_equipped(category: String, id: String) -> void:
+	if category != "cases" or id == "":
+		return
+	if not case_ready:
+		_setup_case()
+	_wear_case(id)
+
+## A case picked in the menu: on the device at once (front and back), in place of the one there
+func _wear_case(id: String) -> void:
+	case_id = id
+	case_sprite.texture = _case_tex("back")
+	corner.texture = case_sprite.texture
+	front_case.texture = _case_tex("front")
+	front_case_top.texture = _case_tex("front_top")
+	if not case_on and not case_busy:
+		case_on = true
+		case_sprite.position = CASE_CENTRE
+		case_sprite.visible = true
+		corner.visible = false
+		stickers.show_book(true)
+	overlay.case_tones = case_on
+	_show_front_case(case_on and progress <= 0.5, true)
 
 func _back_pos(screen_pos: Vector2) -> Vector2:
 	return back.get_global_transform_with_canvas().affine_inverse() * screen_pos
@@ -382,12 +430,14 @@ func _put_case_on() -> void:
 		case_busy = false
 		stickers.show_book(true)
 		Input.vibrate_handheld(30)
-		_case_click())
+		_case_click()
+		Collection.equip("cases", case_id))             # (the one on the device now)
 
 ## Up and away; its corner comes back in from the right
 func _take_case_off() -> void:
 	case_on = false
 	case_busy = true
+	Collection.equip("cases", "")                       # (the bare device: its corner still pokes in)
 	stickers.show_book(false)
 	var t := create_tween()
 	t.tween_property(case_sprite, "position", CASE_CENTRE + Vector2(0, -1920), 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
@@ -420,8 +470,8 @@ func _case_layer(t: Texture2D, z: int) -> Sprite2D:
 	sp.visible = false
 	return sp
 
-func _show_front_case(on: bool) -> void:
-	if front_case.visible == on:
+func _show_front_case(on: bool, force := false) -> void:
+	if front_case.visible == on and not force:
 		return
 	front_case.visible = on
 	front_case_top.visible = on
@@ -432,15 +482,15 @@ func _show_front_case(on: bool) -> void:
 	if screen:
 		if not screen.has_meta("plain"):
 			screen.set_meta("plain", screen.texture)
-		screen.texture = load("res://textures/cases/melon_frame3.png") if on else screen.get_meta("plain")
+		screen.texture = _case_tex("frame3") if on else screen.get_meta("plain")
 	var spk := front.get_node_or_null("Console/SpeakerCentre") as CanvasItem
 	if spk:
 		spk.visible = not on                        # (the case's art has the grille: holes on the case;
 		                                            # Speaker1/2 are the old side ones, always hidden)
 	for c in case_buttons:
 		var btn: TextureButton = c[0]
-		var normal: Texture2D = c[3] if on else c[1]
-		var pressed: Texture2D = c[4] if on else c[2]
+		var normal: Texture2D = _case_version(c[1]) if on else c[1]
+		var pressed: Texture2D = _case_version(c[2]) if on else c[2]
 		btn.texture_normal = pressed if btn.button_pressed else normal     # (menu_buttons.gd swaps these on toggle)
 		btn.texture_pressed = pressed
 		btn.set("normal_texture", normal)

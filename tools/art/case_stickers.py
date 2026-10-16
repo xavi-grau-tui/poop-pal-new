@@ -245,10 +245,11 @@ if __name__ == '__main__':
     os.makedirs(BOOK, exist_ok=True)
     forms = json.load(open(os.path.join(ROOT, 'data', 'evolution_tree.json')))['forms']
     ids = [k for k, v in forms.items() if v['stage'] <= 2]
+    from theme_stickers import THEMED              # (the games' stickers: theme_stickers.py, kept)
     os.makedirs(os.path.join(DEST, 'book'), exist_ok=True)
     for d in (DEST, os.path.join(DEST, 'book')):
         for f in os.listdir(d):
-            if f.endswith('.png') and f[:-4] not in ids:
+            if f.endswith('.png') and f[:-4] not in ids and f[:-4] not in THEMED:
                 os.remove(os.path.join(d, f))
     for fid in ids:
         # (the pal sprites are drawn finer than the console: whole multiples of their own pixels)

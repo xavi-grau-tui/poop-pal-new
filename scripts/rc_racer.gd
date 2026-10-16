@@ -124,7 +124,7 @@ const LEVELS := [
 ## jumps the springboard to it), a gift behind a crate wall in a side bay (a sturdy car breaks
 ## through), a gift on the road only a lucky car sees. Finales: Phoenix Pepper (5-9), the case (6-9).
 const SECRETS := {
-	15: ["fizzy", "food:Battery"], 24: ["milky", "food:Moon Rock"], 33: ["fruity", "sticker:checkered_flag"],
+	15: ["fizzy", "food:Battery"], 24: ["milky", "food:Moon Rock"], 33: ["fruity", "sticker:traffic_cone"],
 	42: ["milky", "sticker:rubber_duck"], 51: ["fizzy", "sticker:gold_cup"],
 }
 const FINALES := { 45: "food:Phoenix Pepper", 54: "case:prix" }

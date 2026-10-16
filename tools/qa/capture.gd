@@ -12,6 +12,8 @@ extends Node
 ##   out=DIR       where the PNGs go (default user://qa)
 ##   boost=B:L     the pal has boost B (splash, fizz, focus, sturdy, lucky) at level L before each level
 ##   skill=N       the autopilot's skill, where a game has one (Paper Sumo: 1 or 2)
+##   unlock=all    start like ALL UNLOCKED (every item owned, a random pal)
+##   case=ID       the device wears that case (with unlock=all)
 ## Prints "QA DONE" and quits when finished. The testing save is wiped at every launch anyway.
 
 var args := {}
@@ -36,6 +38,8 @@ func _ready() -> void:
 		GameData.games[idx]["intro"] = true             # (no how-to cards in the way)
 	for size in ["baby", "kid", "adult"]:
 		Shop.foods[size] = FoodLibrary.FAMILIES.duplicate()
+	if args.has("unlock"):
+		DevLaunch.unlock_everything()                       # (ALL UNLOCKED: every item, a random pal)
 	if not PetState.has_poop():
 		PetState.form_id = "picklet"
 		PetState.meals = ["sour"]
@@ -49,6 +53,9 @@ func _run() -> void:
 	await get_tree().process_frame
 	get_tree().change_scene_to_file(DevLaunch.MAIN_SCENE)
 	await _wait(2.5)
+	if args.has("case"):
+		Collection.equip("cases", str(args["case"]))       # (the device wears it: case=<id>, with unlock=all)
+		await _wait(0.5)
 	var game: String = args.get("game", "pet")
 	if args.has("menu"):
 		await _open_menu(str(args["menu"]))
@@ -93,7 +100,7 @@ func _run() -> void:
 			await _shot("g%s_l%02d%s" % [game, lvl, "" if shots == 1 else "_%d" % k])
 	_quit()
 
-## menu=food / drinks / special / games / gear / shop[:page] / dress / decor / backgrounds / pedia:
+## menu=food / drinks / special / games / gear / shop[:page] / dress / decor / backgrounds / pedia / cases:
 ## opens it like a tap on its button, then a screenshot (shop:2 = its 3rd page)
 func _open_menu(which: String) -> void:
 	var mgr = get_tree().root.get_node_or_null("PoopPal/Main UI/MenuManager")
@@ -117,8 +124,8 @@ func _open_menu(which: String) -> void:
 				t.show_page(1)
 			"special":
 				t.show_page(2)
-			"shop", "dress", "decor", "backgrounds", "pedia":
-				var v: int = { "shop": t.View.SHOP, "dress": t.View.ACCESSORIES, "decor": t.View.DECOR, "backgrounds": t.View.BACKGROUNDS, "pedia": t.View.PEDIA }[name]
+			"shop", "dress", "decor", "backgrounds", "pedia", "cases":
+				var v: int = { "shop": t.View.SHOP, "dress": t.View.ACCESSORIES, "decor": t.View.DECOR, "backgrounds": t.View.BACKGROUNDS, "pedia": t.View.PEDIA, "cases": t.View.CASES }[name]
 				if name == "shop":
 					t.shop_items = Shop.shop_order()
 				t.page = page

@@ -39,8 +39,8 @@ const REWARDS := [
 	{ "total_stars": 100, "category": "cases", "id": "melon" },
 ]
 
-## The device's cases (the shell, front and back: textures/cases/<id>_*.png). "price": sold in the
-## Shop (the plain ones); the others are only won.
+## The device's cases (the shell, front and back: textures/cases/<id>_*.png; tools/art/cases_games.py
+## makes them from Melon Soda's). "price": sold in the Shop (the plain ones); the others are only won.
 const CASES := {
 	"melon": { "name": "Melon Soda", "unlock": "100 stars in all" },
 	# the games' own cases: each one the prize of its masters' world finale (6-9)
@@ -49,12 +49,34 @@ const CASES := {
 	"prix": { "name": "Grand Prix", "unlock": "Pal Prix: 6-9" },
 	"sumo": { "name": "Dohyo", "unlock": "Paper Sumo: 6-9" },
 	"spin": { "name": "Koma", "unlock": "Top Spin: 6-9" },
+	# the Shop's plain cases (dots, like Melon Soda)
+	"sakura": { "name": "Sakura", "unlock": "The Shop", "price": 40 },
+	"lemon": { "name": "Lemon", "unlock": "The Shop", "price": 40 },
+	"sky": { "name": "Sky", "unlock": "The Shop", "price": 40 },
+	"cocoa": { "name": "Cocoa", "unlock": "The Shop", "price": 40 },
 }
-const CASE_ORDER := ["melon", "maze", "splash", "prix", "sumo", "spin"]
+const CASE_ORDER := ["melon", "maze", "splash", "prix", "sumo", "spin", "sakura", "lemon", "sky", "cocoa"]
 
 ## Themed stickers (won only: secrets, gift tracks, Lucky Pinch): textures/cases/stickers/<id>.png
-## (+ book/<id>.png). The pal stickers (one per Sho and Chu) are PAL_STICKERS.
-const STICKERS := {}
+## (+ book/<id>.png; tools/art/theme_stickers.py), the sticker book's games page. The pal stickers
+## (one per Sho and Chu) are PAL_STICKERS.
+const STICKERS := {
+	"starfish": { "name": "Starfish", "unlock": "Splash Hoops: 2-6" },
+	"pufferfish": { "name": "Pufferfish", "unlock": "Splash Hoops: 4-6" },
+	"seashell": { "name": "Seashell", "unlock": "Splash Hoops: 5-6" },
+	"anglerfish": { "name": "Anglerfish", "unlock": "Splash Hoops: 6-6" },
+	"traffic_cone": { "name": "Traffic Cone", "unlock": "Pal Prix: 4-6" },
+	"rubber_duck": { "name": "Rubber Duck", "unlock": "Pal Prix: 5-6" },
+	"gold_cup": { "name": "Gold Cup", "unlock": "Pal Prix: 6-6" },
+	"koi": { "name": "Koi", "unlock": "Paper Sumo: 2-6" },
+	"wind_up_key": { "name": "Wind-up Key", "unlock": "Paper Sumo: 4-6" },
+	"kabuto": { "name": "Kabuto", "unlock": "Paper Sumo: 5-6" },
+	"koma": { "name": "Koma", "unlock": "Top Spin: 2-6" },
+	"soap": { "name": "Soap", "unlock": "Top Spin: 4-6" },
+	"dragon": { "name": "Dragon", "unlock": "Top Spin: 6-6" },
+}
+const STICKER_ORDER := ["starfish", "pufferfish", "seashell", "anglerfish", "traffic_cone", "rubber_duck", "gold_cup",
+	"koi", "wind_up_key", "kabuto", "koma", "soap", "dragon"]
 ## Every pal with a sticker (the Sho and the Chu: the sticker book's family pages), set at start
 var PAL_STICKERS: Array = []
 
@@ -86,13 +108,30 @@ const BACKGROUNDS := {
 		"unlocked": false,
 		"unlock": "Lucky Pinch",
 	},
+	# won in the games' secrets (tools/art/bg_games.py; "icon": the prize card's picture)
+	"sewer_pipes": {
+		"name": "Sewer Pipes",
+		"kind": "complement",
+		"layers": ["res://textures/pet-background/sewer_pipes_far.png", "res://textures/pet-background/sewer_pipes_near.png"],
+		"icon": "res://textures/pet-background/icons/sewer_pipes.png",
+		"unlocked": false,
+		"unlock": "Tilt Maze: 4-6",
+	},
+	"starfield": {
+		"name": "Starfield",
+		"kind": "complement",
+		"layers": ["res://textures/pet-background/starfield_far.png", "res://textures/pet-background/starfield_near.png"],
+		"icon": "res://textures/pet-background/icons/starfield.png",
+		"unlocked": false,
+		"unlock": "Tilt Maze: 6-6",
+	},
 	"pink": { "name": "Pink", "kind": "color", "hue": 0.0, "layers": [], "unlocked": true, "unlock": "" },
 	"pastel_yellow": { "name": "Yellow", "kind": "color", "hue": 0.145, "layers": [], "unlocked": false, "unlock": "Splash Hoops: 100 stars" },
 	"lilac": { "name": "Lilac", "kind": "color", "hue": -0.12, "layers": [], "unlocked": false, "unlock": "Lucky Pinch" },
 	"mystery_3": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 	"mystery_4": { "name": "???", "layers": [], "unlocked": false, "unlock": "" },
 }
-const BACKGROUND_ORDER := ["clouds", "pink", "tp_rolls", "pastel_yellow", "bubbles", "lilac", "mystery_3", "mystery_4"]
+const BACKGROUND_ORDER := ["clouds", "pink", "tp_rolls", "pastel_yellow", "bubbles", "lilac", "sewer_pipes", "starfield", "mystery_3", "mystery_4"]
 
 ## Pal accessories. "dir" holds one texture per form and frame: <form>-1.png, <form>-2.png,
 ## drawn on the form's own canvas (see tools/art/accessories.py).
@@ -102,9 +141,16 @@ const ACCESSORIES := {
 	"scarf": { "name": "Scarf", "dir": "res://textures/pet/accessories/scarf/", "unlocked": false, "unlock": "Lucky Pinch" },
 	"headphones": { "name": "Headphones", "dir": "res://textures/pet/accessories/headphones/", "unlocked": false, "unlock": "Lucky Pinch" },
 	"round_glasses": { "name": "Round Glasses", "dir": "res://textures/pet/accessories/round_glasses/", "unlocked": false, "unlock": "10 pals found" },
+	# won in the games' secrets (tools/art/hats.py)
+	"snorkel": { "name": "Snorkel", "dir": "res://textures/pet/accessories/snorkel/", "unlocked": false, "unlock": "Tilt Maze: 2-8" },
+	"headlamp": { "name": "Headlamp", "dir": "res://textures/pet/accessories/headlamp/", "unlocked": false, "unlock": "Tilt Maze: 4-8" },
+	"hard_hat": { "name": "Hard Hat", "dir": "res://textures/pet/accessories/hard_hat/", "unlocked": false, "unlock": "Tilt Maze: 5-8" },
+	"hachimaki": { "name": "Hachimaki", "dir": "res://textures/pet/accessories/hachimaki/", "unlocked": false, "unlock": "Top Spin: 5-6" },
+	"sumo_topknot": { "name": "Sumo Topknot", "dir": "res://textures/pet/accessories/sumo_topknot/", "unlocked": false, "unlock": "Paper Sumo: 6-6" },
 	"mystery_acc_4": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
 }
-const ACCESSORY_ORDER := ["none", "sunglasses", "round_glasses", "scarf", "headphones", "mystery_acc_4"]
+const ACCESSORY_ORDER := ["none", "sunglasses", "round_glasses", "scarf", "headphones", "snorkel", "headlamp", "hard_hat",
+	"hachimaki", "sumo_topknot", "mystery_acc_4"]
 
 ## Gut decor, two kinds that combine: one "complement" (an overlay hung on the gut; "frames"
 ## are the size of intestine-front.png, cycled to animate) and one "color" (a hue shift of
@@ -116,10 +162,17 @@ const DECOR := {
 	"bunting": { "name": "Bunting", "kind": "complement", "frames": ["res://textures/pet/decor/bunting-1.png", "res://textures/pet/decor/bunting-2.png"], "unlocked": false, "unlock": "Lucky Pinch" },
 	"golden_gut": { "name": "Golden Gut", "kind": "color", "hue": 0.13, "frames": [], "unlocked": false, "unlock": "Lucky Pinch" },
 	"mint_gut": { "name": "Mint Gut", "kind": "color", "hue": 0.44, "frames": [], "unlocked": false, "unlock": "Lucky Pinch" },
+	# won in the games' secrets (tools/art/decor_games.py; "icon": the prize card's picture)
+	"glow_spores": { "name": "Glow Spores", "kind": "complement", "frames": ["res://textures/pet/decor/glow_spores-1.png", "res://textures/pet/decor/glow_spores-2.png"], "icon": "res://textures/pet/decor/icons/glow_spores.png", "unlocked": false, "unlock": "Tilt Maze: 3-8" },
+	"cog_garland": { "name": "Cog Garland", "kind": "complement", "frames": ["res://textures/pet/decor/cog_garland-1.png", "res://textures/pet/decor/cog_garland-2.png"], "icon": "res://textures/pet/decor/icons/cog_garland.png", "unlocked": false, "unlock": "Tilt Maze: 5-6" },
+	"seaweed": { "name": "Seaweed", "kind": "complement", "frames": ["res://textures/pet/decor/seaweed-1.png", "res://textures/pet/decor/seaweed-2.png"], "icon": "res://textures/pet/decor/icons/seaweed.png", "unlocked": false, "unlock": "Splash Hoops: 3-6" },
+	"koma_lanterns": { "name": "Lanterns", "kind": "complement", "frames": ["res://textures/pet/decor/koma_lanterns-1.png", "res://textures/pet/decor/koma_lanterns-2.png"], "icon": "res://textures/pet/decor/icons/koma_lanterns.png", "unlocked": false, "unlock": "Top Spin: 3-6" },
+	"maple_leaves": { "name": "Maple Leaves", "kind": "complement", "frames": ["res://textures/pet/decor/maple_leaves-1.png", "res://textures/pet/decor/maple_leaves-2.png"], "icon": "res://textures/pet/decor/icons/maple_leaves.png", "unlocked": false, "unlock": "Paper Sumo: 3-6" },
 	"mystery_decor_3": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 	"mystery_decor_4": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
 }
-const DECOR_ORDER := ["none", "fairy_lights", "purple_gut", "bunting", "golden_gut", "mint_gut", "mystery_decor_3", "mystery_decor_4"]
+const DECOR_ORDER := ["none", "fairy_lights", "purple_gut", "bunting", "golden_gut", "mint_gut", "glow_spores", "cog_garland",
+	"seaweed", "koma_lanterns", "maple_leaves", "mystery_decor_3", "mystery_decor_4"]
 
 ## Only won from the LUCKY PINCH claw machine: one capsule each
 const LUCKY_ITEMS := [
@@ -326,13 +379,14 @@ func order(category: String) -> Array:
 		"accessories": return ACCESSORY_ORDER
 		"decor": return DECOR_ORDER
 		"cases": return CASE_ORDER
-		"stickers": return PAL_STICKERS + STICKERS.keys()
+		"stickers": return PAL_STICKERS + STICKER_ORDER
 	return BACKGROUND_ORDER
 
 func equipped(category: String) -> String:
 	match category:
 		"accessories": return equipped_accessory
 		"decor": return equipped_decor
+		"cases": return equipped_case
 	return equipped_background
 
 ## Equip any owned item of a category. Returns false if it can't be used.
@@ -387,6 +441,8 @@ func in_use_label(category: String) -> String:
 		if names.size() == 2:
 			return "2 items"                  # (both would not fit on the card)
 		return names[0] if not names.is_empty() else "Nothing"
+	if category == "cases":
+		return CASES[equipped_case]["name"] if equipped_case in CASES else "No case"
 	return catalog(category)[equipped(category)]["name"]
 
 func equip_background(id: String) -> bool:

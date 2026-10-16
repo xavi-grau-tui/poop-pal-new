@@ -136,7 +136,7 @@ const LINEUPS := [
 const STYLE_SPIN := { "rookie": 55.0, "charger": 65.0, "wall": 75.0, "heavy": 85.0, "boss": 120.0 }
 ## Secrets (a world's 6th level): the golden prize top, and which drink beats it; finales
 const SECRETS := {
-	15: ["fizzy", "sticker:koma"], 24: ["caffeinated", "decor:koma_lanterns"], 33: ["milky", "sticker:daruma_top"],
+	15: ["fizzy", "sticker:koma"], 24: ["caffeinated", "decor:koma_lanterns"], 33: ["milky", "sticker:soap"],
 	42: ["fizzy", "acc:hachimaki"], 51: ["caffeinated", "sticker:dragon"],
 }
 const FINALES := { 45: "food:Dragon Oil", 54: "case:spin" }
