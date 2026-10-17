@@ -274,7 +274,6 @@ var case_sprite: Sprite2D           # on the back: over the shell, under the bat
 var corner: Sprite2D
 var front_case: Sprite2D           # (under the buttons)
 var front_case_top: Sprite2D       # (over the logo and the screws)
-var case_buttons := []             # [button, its normal image, its pressed one]
 var case_drag := ""                 # "" / "corner" / "case"
 var case_busy := false              # the case going on / coming off: no turn meanwhile
 var stickers = null                 # the sticker book and the stickers (case_stickers.gd)
@@ -301,21 +300,12 @@ func _setup_case() -> void:
 	back.add_child(stickers)                        # (above the case: its book peeks in at the left)
 	# the front: a base layer over the console body and under every button (solid where they sit,
 	# so a button pressed or not always lands on the case), a top layer for the carved logo and
-	# the screws, and Melon Soda images for the menu buttons (their frame in the case's colours)
+	# the screws. (The menu buttons keep their own colours whatever the case: the user, 2026-10-17.)
 	var console := front.get_node("Console")
 	front_case = _case_layer(_case_tex("front"), 3)    # (over the screen's frame art, z 3; under every button)
 	console.add_child(front_case)
 	front_case_top = _case_layer(_case_tex("front_top"), 4)
 	console.add_child(front_case_top)
-	# (menu_buttons.gd keeps its off / on images in normal_texture / pressed_texture, swapped from
-	# the files' names: off = the darker "...pressed.png". Each gets the case's version of ITS file,
-	# whatever the button shows right now: a menu may be open)
-	for path in ["MenuButtons/FoodButton", "MenuButtons/GameButton", "MenuButtons/SettingsButton"]:
-		var btn := front.get_node_or_null(path) as TextureButton
-		if btn:
-			var off: Texture2D = btn.get("normal_texture")
-			var lit: Texture2D = btn.get("pressed_texture")
-			case_buttons.append([btn, off, lit])
 	# (no automatic turn: you flip the device yourself, double-tap the logo, to find the corner)
 	if Collection.equipped_case != "" and Collection.is_owned("cases", Collection.equipped_case):
 		_wear_case(Collection.equipped_case)            # (it was on last time)
@@ -332,10 +322,6 @@ func _pick_case() -> String:
 
 func _case_tex(layer: String) -> Texture2D:
 	return load("res://textures/cases/%s_%s.png" % [case_id, layer])
-
-## textures/buttons/<name>.png -> textures/cases/<the case>_<name>.png
-func _case_version(t: Texture2D) -> Texture2D:
-	return load("res://textures/cases/%s_%s" % [case_id, t.resource_path.get_file()])
 
 func _on_item_unlocked(category: String, _id: String) -> void:
 	if category == "cases" and not case_ready:
@@ -487,11 +473,3 @@ func _show_front_case(on: bool, force := false) -> void:
 	if spk:
 		spk.visible = not on                        # (the case's art has the grille: holes on the case;
 		                                            # Speaker1/2 are the old side ones, always hidden)
-	for c in case_buttons:
-		var btn: TextureButton = c[0]
-		var normal: Texture2D = _case_version(c[1]) if on else c[1]
-		var pressed: Texture2D = _case_version(c[2]) if on else c[2]
-		btn.texture_normal = pressed if btn.button_pressed else normal     # (menu_buttons.gd swaps these on toggle)
-		btn.texture_pressed = pressed
-		btn.set("normal_texture", normal)
-		btn.set("pressed_texture", pressed)

@@ -44,6 +44,7 @@ var pit: Array[Dictionary] = []       # { x, d, color, rot, prize }
 var _last_meal_bonus := false
 var _test_done := false
 var new_pal_meals := 0                # meals that brought a new pal since the last claw (saved)
+var explained := false                # the first bonus has had its guide cards ("Lucky you!..."; saved)
 
 func _ready() -> void:
 	PetState.fed.connect(_on_fed)
@@ -69,15 +70,22 @@ func _on_fed(_food: Dictionary) -> void:
 func _save() -> void:
 	var f := FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({ "new_pal_meals": new_pal_meals }))
+		f.store_string(JSON.stringify({ "new_pal_meals": new_pal_meals, "explained": explained }))
 
 func _load() -> void:
 	new_pal_meals = 0
+	explained = false
 	var f := FileAccess.open(SaveSlot.path(SAVE_FILE), FileAccess.READ)
 	if f:
 		var d = JSON.parse_string(f.get_as_text())
 		if d is Dictionary:
 			new_pal_meals = int(d.get("new_pal_meals", 0))
+			explained = bool(d.get("explained", false))
+
+## The first bonus's guide cards have been shown (Onboarding)
+func mark_explained() -> void:
+	explained = true
+	_save()
 
 ## (BOOT + PROGRESSION: its own folder)
 func reload() -> void:
@@ -113,6 +121,10 @@ func start() -> void:
 	visiting = true                   # (every button is locked from now on)
 	tries = TRIES
 	prizes.clear()
+	# the very first bonus gets its guide cards, whenever it comes (the guided start shows them
+	# itself when it comes with the first meal; in the real game it comes after a few new pals)
+	if not explained and not Onboarding.active and not Onboarding.showing:
+		Onboarding.explain_bonus()
 	await get_tree().create_timer(VISIT_DELAY).timeout
 	# waits for a moment it can't break (a menu sliding, food going down, a game) and for
 	# the pal's own show to end (transforming, an LCD message, a button blinking)

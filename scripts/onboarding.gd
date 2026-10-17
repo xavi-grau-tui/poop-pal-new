@@ -10,7 +10,8 @@ class_name Onboarding
 ##   3. If a bonus came with that meal: once the claw has gone back up, "Lucky you! Sometimes a
 ##      bonus turns up after a meal.", then "Tap [games button] to play the bonus game!" with the
 ##      games button doing the bip-bip (the other buttons are locked by the bonus anyway).
-##      Later bonuses come without cards.
+##      Later bonuses come without cards. (A first bonus that comes later, after the guided start,
+##      gets the same two cards: LuckyPinch calls explain_bonus().)
 ## What comes next (games and stars, the first sticker, drinks, the shop...) is planned in
 ## docs/ideas_roadmap.md ("Onboarding").
 
@@ -36,8 +37,27 @@ var hatched := false
 var food_chosen := false               # a food was picked (it rains in before the pal hatches)
 var card_tween: Tween
 var card_gen := 0                      # bumped by every hide: a show still on its way gives up
+var bonus_only := false                # (explain_bonus: only the bonus's two cards)
+
+## The first bonus came after the guided start was over: its two cards, on their own
+static func explain_bonus() -> void:
+	var ui := (Engine.get_main_loop() as SceneTree).root.get_node_or_null("PoopPal/Main UI")
+	if not ui:
+		return
+	var o := Onboarding.new()
+	o.bonus_only = true
+	ui.add_child(o)
 
 func _ready() -> void:
+	if bonus_only:
+		food_button = get_node_or_null("../MenuButtons/FoodButton")
+		game_button = get_node_or_null("../MenuButtons/GameButton")
+		poop = get_node_or_null("../PetView/Poop")
+		z_index = 50
+		hatched = true                    # (a tap puts a card away)
+		_build_card()
+		_bonus_steps()
+		return
 	if PetState.has_poop() or not PetState.discovered.is_empty():
 		queue_free()                     # not a first start: nothing to show
 		return
@@ -120,6 +140,7 @@ func _bonus_steps() -> void:
 	if _gone() or not LuckyPinch.pending:
 		queue_free()
 		return
+	LuckyPinch.mark_explained()
 	showing = true
 	_show_card("Lucky you! Sometimes a bonus turns up after a meal.")
 	await get_tree().create_timer(3.5).timeout

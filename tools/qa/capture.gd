@@ -15,6 +15,7 @@ extends Node
 ##   unlock=all    start like ALL UNLOCKED (every item owned, a random pal)
 ##   case=ID       the device wears that case (with unlock=all)
 ##   menutest=N    drive the game's level menu: FORWARD N times, tap, hold; print what plays
+##   bonus=1       a Lucky Pinch bonus right away, a screenshot `wait` s later
 ## Prints "QA DONE" and quits when finished. The testing save is wiped at every launch anyway.
 
 var args := {}
@@ -54,6 +55,12 @@ func _run() -> void:
 	await get_tree().process_frame
 	get_tree().change_scene_to_file(DevLaunch.MAIN_SCENE)
 	await _wait(2.5)
+	if args.has("bonus"):
+		LuckyPinch.start()                                   # (a Lucky Pinch bonus now: bonus=1)
+		await _wait(float(args.get("wait", "9")))
+		await _shot("bonus")
+		_quit()
+		return
 	if args.has("case"):
 		Collection.equip("cases", str(args["case"]))       # (the device wears it: case=<id>, with unlock=all)
 		await _wait(0.5)
