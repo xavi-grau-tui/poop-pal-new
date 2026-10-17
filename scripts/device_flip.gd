@@ -214,13 +214,25 @@ class Overlay extends Node2D:
 	const SEAM := Color8(120, 88, 62)
 	const LIT := Color8(250, 237, 217)
 	const OUTLINE := Color8(72, 49, 37)
-	# ...and with the case on (its colours: Melon Soda)
-	const CASE_NEAR := Color8(158, 206, 180)
-	const CASE_FAR := Color8(126, 174, 150)
-	const CASE_SEAM := Color8(96, 140, 118)
-	const CASE_LIT := Color8(206, 240, 220)
-	const CASE_OUTLINE := Color8(70, 104, 88)
+	# ...and with the case on: its own colours (Collection.case_tones: its outline, body and light),
+	# each tone at the same place on the case's ramp as the bare shell's on its own (Melon Soda's
+	# were picked by hand: these give them back)
+	var CASE_NEAR := Color8(158, 206, 180)
+	var CASE_FAR := Color8(126, 174, 150)
+	var CASE_SEAM := Color8(96, 140, 118)
+	var CASE_LIT := Color8(206, 240, 220)
+	var CASE_OUTLINE := Color8(70, 104, 88)
 	var case_tones := false
+
+	func set_case_tones(t: Array) -> void:
+		var o: Color = t[0]
+		var b: Color = t[1]
+		var l: Color = t[2]
+		CASE_NEAR = o.lerp(b, 0.85)
+		CASE_FAR = o.lerp(b, 0.57)
+		CASE_SEAM = o.lerp(b, 0.29)
+		CASE_LIT = b.lerp(l, 0.55)
+		CASE_OUTLINE = o
 	const FAR := 100000.0
 
 	var face := Rect2()
@@ -274,6 +286,7 @@ var case_sprite: Sprite2D           # on the back: over the shell, under the bat
 var corner: Sprite2D
 var front_case: Sprite2D           # (under the buttons)
 var front_case_top: Sprite2D       # (over the logo and the screws)
+var case_buttons := []             # [button, its normal image, its pressed one]
 var case_drag := ""                 # "" / "corner" / "case"
 var case_busy := false              # the case going on / coming off: no turn meanwhile
 var stickers = null                 # the sticker book and the stickers (case_stickers.gd)
@@ -300,12 +313,23 @@ func _setup_case() -> void:
 	back.add_child(stickers)                        # (above the case: its book peeks in at the left)
 	# the front: a base layer over the console body and under every button (solid where they sit,
 	# so a button pressed or not always lands on the case), a top layer for the carved logo and
-	# the screws. (The menu buttons keep their own colours whatever the case: the user, 2026-10-17.)
+	# the screws, and the menu buttons' images with the case's edge round them in its colours (the
+	# light band below and to their right; the buttons themselves keep their own: the user, 2026-10-17)
 	var console := front.get_node("Console")
 	front_case = _case_layer(_case_tex("front"), 3)    # (over the screen's frame art, z 3; under every button)
 	console.add_child(front_case)
 	front_case_top = _case_layer(_case_tex("front_top"), 4)
 	console.add_child(front_case_top)
+	# (menu_buttons.gd keeps its off / on images in normal_texture / pressed_texture, swapped from
+	# the files' names: off = the darker "...pressed.png". Each gets the case's version of ITS file,
+	# whatever the button shows right now: a menu may be open)
+	for path in ["MenuButtons/FoodButton", "MenuButtons/GameButton", "MenuButtons/SettingsButton"]:
+		var btn := front.get_node_or_null(path) as TextureButton
+		if btn:
+			var off: Texture2D = btn.get("normal_texture")
+			var lit: Texture2D = btn.get("pressed_texture")
+			case_buttons.append([btn, off, lit])
+	overlay.set_case_tones(Collection.case_tones(case_id))
 	# (no automatic turn: you flip the device yourself, double-tap the logo, to find the corner)
 	if Collection.equipped_case != "" and Collection.is_owned("cases", Collection.equipped_case):
 		_wear_case(Collection.equipped_case)            # (it was on last time)
@@ -322,6 +346,10 @@ func _pick_case() -> String:
 
 func _case_tex(layer: String) -> Texture2D:
 	return load("res://textures/cases/%s_%s.png" % [case_id, layer])
+
+## textures/buttons/<name>.png -> textures/cases/<the case>_<name>.png
+func _case_version(t: Texture2D) -> Texture2D:
+	return load("res://textures/cases/%s_%s" % [case_id, t.resource_path.get_file()])
 
 func _on_item_unlocked(category: String, _id: String) -> void:
 	if category == "cases" and not case_ready:
@@ -341,6 +369,7 @@ func _wear_case(id: String) -> void:
 	corner.texture = case_sprite.texture
 	front_case.texture = _case_tex("front")
 	front_case_top.texture = _case_tex("front_top")
+	overlay.set_case_tones(Collection.case_tones(id))
 	if not case_on and not case_busy:
 		case_on = true
 		case_sprite.position = CASE_CENTRE
@@ -473,3 +502,11 @@ func _show_front_case(on: bool, force := false) -> void:
 	if spk:
 		spk.visible = not on                        # (the case's art has the grille: holes on the case;
 		                                            # Speaker1/2 are the old side ones, always hidden)
+	for c in case_buttons:
+		var btn: TextureButton = c[0]
+		var normal: Texture2D = _case_version(c[1]) if on else c[1]
+		var pressed: Texture2D = _case_version(c[2]) if on else c[2]
+		btn.texture_normal = pressed if btn.button_pressed else normal     # (menu_buttons.gd swaps these on toggle)
+		btn.texture_pressed = pressed
+		btn.set("normal_texture", normal)
+		btn.set("pressed_texture", pressed)

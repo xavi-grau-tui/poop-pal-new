@@ -68,19 +68,20 @@ const REWARDS := [
 
 ## The device's cases (the shell, front and back: textures/cases/<id>_*.png; tools/art/cases_games.py
 ## makes them from Melon Soda's). "price": sold in the Shop (the plain ones); the others are only won.
+## "tones": its outline, body and light colours (the case's side as the device turns: device_flip.gd)
 const CASES := {
-	"melon": { "name": "Melon Soda", "unlock": "100 stars in all" },
+	"melon": { "name": "Melon Soda", "unlock": "100 stars in all", "tones": ["#466858", "#b0dec4", "#f0faec"] },
 	# the games' own cases: each one the prize of its masters' world finale (6-9)
-	"maze": { "name": "Labyrinth", "unlock": "Tilt Maze: 6-9" },
-	"splash": { "name": "Lagoon", "unlock": "Splash Hoops: 6-9" },
-	"prix": { "name": "Grand Prix", "unlock": "Pal Prix: 6-9" },
-	"sumo": { "name": "Dohyo", "unlock": "Paper Sumo: 6-9" },
-	"spin": { "name": "Koma", "unlock": "Top Spin: 6-9" },
+	"maze": { "name": "Labyrinth", "unlock": "Tilt Maze: 6-9", "tones": ["#623e24", "#d6ac72", "#f6e0b6"] },
+	"splash": { "name": "Lagoon", "unlock": "Splash Hoops: 6-9", "tones": ["#245e6c", "#7ec8cc", "#ecfafa"] },
+	"prix": { "name": "Grand Prix", "unlock": "Pal Prix: 6-9", "tones": ["#6e2222", "#dc5448", "#fcf0e6"] },
+	"sumo": { "name": "Dohyo", "unlock": "Paper Sumo: 6-9", "tones": ["#6e4628", "#dec28a", "#f6e2ba"] },
+	"spin": { "name": "Koma", "unlock": "Top Spin: 6-9", "tones": ["#283248", "#7686a0", "#d2dcec"] },
 	# the Shop's plain cases (dots, like Melon Soda)
-	"sakura": { "name": "Sakura", "unlock": "The Shop", "price": 40 },
-	"lemon": { "name": "Lemon", "unlock": "The Shop", "price": 40 },
-	"sky": { "name": "Sky", "unlock": "The Shop", "price": 40 },
-	"cocoa": { "name": "Cocoa", "unlock": "The Shop", "price": 40 },
+	"sakura": { "name": "Sakura", "unlock": "The Shop", "price": 40, "tones": ["#82465a", "#f2becc", "#fff6f8"] },
+	"lemon": { "name": "Lemon", "unlock": "The Shop", "price": 40, "tones": ["#82641e", "#f6de78", "#fffce6"] },
+	"sky": { "name": "Sky", "unlock": "The Shop", "price": 40, "tones": ["#325082", "#a0c8f0", "#f4faff"] },
+	"cocoa": { "name": "Cocoa", "unlock": "The Shop", "price": 40, "tones": ["#462a1e", "#a07054", "#ecd2ba"] },
 }
 const CASE_ORDER := ["melon", "maze", "splash", "prix", "sumo", "spin", "sakura", "lemon", "sky", "cocoa"]
 
@@ -530,6 +531,11 @@ func in_use_label(category: String) -> String:
 	if category == "cases":
 		return CASES[equipped_case]["name"] if equipped_case in CASES else "No case"
 	return catalog(category)[equipped(category)]["name"]
+
+## A case's colours for its side: [outline, body, light] (Melon Soda's for one without)
+func case_tones(id: String) -> Array:
+	var t: Array = CASES.get(id, {}).get("tones", CASES["melon"]["tones"])
+	return [Color.html(t[0]), Color.html(t[1]), Color.html(t[2])]
 
 func equip_background(id: String) -> bool:
 	if not is_owned("backgrounds", id) or id not in BACKGROUNDS:

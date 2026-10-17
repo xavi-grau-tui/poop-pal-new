@@ -12,10 +12,12 @@ extends BaseMinigame
 ## Each level is made by the maze generator from a seed, the best of SEED_TRIES for the route
 ## length that level should have (so difficulty climbs smoothly, the same board every time).
 ##
-## No lives: a fall into a hole puts the pal back on the last marble collected (the time keeps
-## running). Stars: 1 = cleared, +1 = within the par time (from the route's length), +1 = no fall
-## at all. Speed against care: going fast is how you fall. A SPLASH pal (a watery drink) bounces
-## straight back out of its first fall (the boost is spent).
+## Lives (BaseMinigame, the user 2026-10-17): 3 hearts. A fall into a hole puts the pal back on the
+## last marble collected (the time keeps running) and breaks a heart; the third ends the level (Out
+## of lives!: retry starts it again). Stars: 1 = cleared, +1 = within the par time (from the route's
+## length), +1 = no fall at all. Speed against care: going fast is how you fall. A SPLASH pal (a
+## watery drink) has a fourth, a water heart: it bounces straight back out of its first fall (the
+## boost is spent).
 ##
 ## The marbles are the level's progress: each one fills a slot of the tray on the HUD with a
 ## higher note (a little scale), and the last one rings out as the trapdoor opens.
@@ -330,6 +332,7 @@ func _build_level() -> void:
 	vel = Vector2.ZERO
 	level_time = 0.0
 	falls = 0
+	reset_lives()
 	marbles_taken = 0
 	splash_used = false
 	state = State.PLAY
@@ -879,6 +882,8 @@ func _create_static_nodes() -> void:
 		st.position = Vector2(ORIGIN.x + 392 + i * 44, ORIGIN.y + 8)
 		add_child(st)
 		hud_stars.append(st)
+	# the lives, between the stars and the marble tray
+	build_lives(Vector2(ORIGIN.x + 532, ORIGIN.y + 15), 30.0, 33.0)
 
 	# (the marble tray goes on the rail's right: _build_tray, per level)
 	blocker_layer = Node2D.new()
@@ -1438,21 +1443,22 @@ func _check_finish() -> void:
 		if is_running:
 			finish_level(level, stars, level_time))
 
-## Into a hole: back on the last marble taken (no lives; the clock keeps going, the
-## no-fall star is gone)
+## Into a hole: a heart breaks, back on the last marble taken (the clock keeps going, the no-fall
+## star is gone); the last heart: the level is over
 func _fall_into(h: Vector2) -> void:
 	if _splash_save(h):
 		return
 	state = State.FALLING
 	vel = Vector2.ZERO
 	falls += 1
+	var last := lose_life()
 	_sfx("res://sounds/fx/hole_plop.wav", -16.0)
 	Input.vibrate_handheld(90)
 	var t := create_tween()
 	t.tween_property(ball, "position", h, 0.12)
 	t.tween_property(ball, "scale", Vector2(0.15, 0.15) * BALL_SCALE, 0.45).set_ease(Tween.EASE_IN)
 	t.parallel().tween_property(ball, "modulate", Color(0.2, 0.15, 0.1, 1), 0.45)
-	t.tween_callback(_respawn)
+	t.tween_callback(_out_of_lives if last else _respawn)
 
 # ================================================================== BLOCKERS
 
@@ -1728,6 +1734,7 @@ func _hurt(at: Vector2, kind: String) -> void:
 	state = State.FALLING
 	vel = Vector2.ZERO
 	falls += 1
+	var last := lose_life()
 	_sfx("res://sounds/fx/hole_plop.wav", -12.0, 0.0, 0.8)
 	Input.vibrate_handheld(90)
 	var t := create_tween()
@@ -1738,7 +1745,7 @@ func _hurt(at: Vector2, kind: String) -> void:
 		t.tween_property(ball, "scale", Vector2(1.4, 0.6) * BALL_SCALE, 0.1)
 		t.tween_property(ball, "modulate:a", 0.2, 0.2)
 	t.tween_interval(0.25)
-	t.tween_callback(_respawn)
+	t.tween_callback(_out_of_lives if last else _respawn)
 
 ## A splashy pal's one bounce back out of a fall (a hole, a fire jet, a meteor): no fall counted,
 ## the boost is spent. True if it saved the pal.
@@ -1747,6 +1754,7 @@ func _splash_save(at: Vector2) -> bool:
 		return false
 	splash_used = true
 	PetState.use_boost()
+	spend_water_heart()
 	var away := (ball_pos - at)
 	if away.length() < 1.0:
 		away = -vel if vel.length() > 1.0 else Vector2.UP
@@ -1757,6 +1765,17 @@ func _splash_save(at: Vector2) -> bool:
 	_debris(at, Color8(150, 210, 250))
 	_float_text("Splash!", at)
 	return true
+
+## The last heart broke: the level is over (its result card: Out of lives!, retry from the start)
+func _out_of_lives() -> void:
+	_show_banner("Out of lives!", 0.9)
+	_sfx("res://sounds/fx/error.mp3", -10.0)
+	get_tree().create_timer(1.3).timeout.connect(func():
+		if is_running:
+			finish_level(level, 0, level_time))
+
+func fail_title() -> String:
+	return "Out of lives!"
 
 ## Back on the last marble taken, blinking
 func _respawn() -> void:

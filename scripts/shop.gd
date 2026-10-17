@@ -65,7 +65,7 @@ const ITEMS := [
 var foods := {}                               # size -> the types whose foods of that size you have
 var pantry := {}                              # special food name -> how many
 var drink_lvl := {}                           # drink type -> its level (1-3; 1 when not bought)
-var met := []                                 # special foods found in a game at least once
+var met := []                                 # special foods you've had at least once (found in a game, or bought)
 var stock := {}                               # special kind -> how many left on today's shelf
 var stock_day := ""                           # the day the shelf was last stocked ("2026-10-16")
 
@@ -317,6 +317,8 @@ func buy(id: String) -> bool:
 			foods[it["tier"]].append(it["family"])
 		"special":
 			pantry[it["food"]] = pantry_count(it["food"]) + 1
+			if it["food"] not in met:
+				met.append(it["food"])
 			var kind := special_kind(it["food"])
 			stock[kind] = maxi(0, int(stock.get(kind, 0)) - 1)
 		"drink":
@@ -328,6 +330,11 @@ func buy(id: String) -> bool:
 	save_data()
 	changed.emit()
 	return true
+
+## Has a special food ever been yours (found in a game, or bought)? The food menu's specials page
+## is only there from then on (the user, 2026-10-17)
+func specials_found() -> bool:
+	return not met.is_empty() or not pantry.is_empty()
 
 ## A special food was eaten: one less in the pantry
 func use_special(food_name: String) -> void:

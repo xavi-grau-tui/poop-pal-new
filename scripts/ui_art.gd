@@ -65,6 +65,45 @@ static func star(won: bool) -> Texture2D:
 	_cache[key] = tex
 	return tex
 
+## A life's heart, 13 x 11 px, lit from the top left like the star: "full" (red), "water" (a
+## splashy pal's extra life: blue), "empty" (a lost one, dull)
+static func heart(kind: String) -> Texture2D:
+	var key := "heart_" + kind
+	if key in _cache:
+		return _cache[key]
+	var rows := [
+		"..###...###..",
+		".#lll#.#lmm#.",
+		"#lllmm#mmmmd#",
+		"#llmmmmmmmmd#",
+		"#lmmmmmmmmdd#",
+		".#mmmmmmmdd#.",
+		"..#mmmmmdd#..",
+		"...#mmmdd#...",
+		"....#mdd#....",
+		".....#d#.....",
+		"......#......",
+	]
+	var tones := {
+		"full": [Color8(255, 176, 180), Color8(236, 84, 96), Color8(186, 50, 70)],
+		"water": [Color8(214, 240, 255), Color8(110, 178, 236), Color8(56, 116, 196)],
+		"empty": [EMPTY.lightened(0.12), EMPTY, EMPTY_DARK],
+	}
+	var c: Array = tones.get(kind, tones["full"])
+	var img := Image.create(13, 11, false, Image.FORMAT_RGBA8)
+	for y in rows.size():
+		for x in 13:
+			var ch: String = rows[y][x]
+			if ch == "#":
+				img.set_pixel(x, y, OUTLINE)
+			elif ch != ".":
+				img.set_pixel(x, y, c["lmd".find(ch)])
+	if kind != "empty":
+		img.set_pixel(2, 2, Color8(255, 252, 248))   # a glint
+	var tex := ImageTexture.create_from_image(img)
+	_cache[key] = tex
+	return tex
+
 ## The coin (the same one as in Splash Hoops)
 static func coin() -> Texture2D:
 	if "coin" not in _cache:

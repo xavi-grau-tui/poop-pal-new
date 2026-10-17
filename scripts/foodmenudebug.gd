@@ -102,7 +102,7 @@ func reset_selection():
 		node.scale = Vector2.ONE
 
 func flip_page():
-	current_page = (current_page + 1) % PAGES
+	current_page = (current_page + 1) % _pages()
 	show_page(current_page)
 	if current_page == 1 and not drinks_populated:
 		populate_drinks()
@@ -112,8 +112,8 @@ func _ready():
 	legend = MenuLegend.attach($Menu, $Menu/Background)
 	_build_barrier()
 	$Menu/ForwardHint.position.x = MenuLegend.forward_center_x()
-	MenuLegend.layout_dots(dots)
 	_build_special_page()
+	_layout_pages()
 	_build_scroll_marks()
 	show_page(0)
 	populate_foods()
@@ -124,7 +124,8 @@ func _ready():
 			_update_barrier())             # (the page as it is now: a roll if it changed since)
 	Shop.changed.connect(func():
 		populate_foods()
-		populate_special())
+		populate_special()
+		_layout_pages())
 	# a new game brings a new drink type
 	GameData.game_unlocked.connect(func(_idx):
 		if drinks_populated:
@@ -136,11 +137,9 @@ func _build_special_page() -> void:
 	vbox_food.get_parent().add_child(vbox_special)
 	vbox_special.visible = false
 	special_options = vbox_special.get_children().filter(func(n): return n.name.begins_with("FoodOption"))
-	# a third dot; the row still ends right before the forward sign
+	# a third dot (_layout_pages: the row still ends right before the forward sign)
 	var extra: Control = dots[dots.size() - 1].duplicate()
 	nodedots.add_child(extra)
-	for d in dots:
-		d.position.x -= 40.0
 	dots = nodedots.get_children()
 
 ## Special foods: a tech, a cosmic and a legendary card, from the pantry (FoodLibrary.get_special_set);
@@ -321,6 +320,17 @@ func _set_type_tag(option_node: Node, family: String, level := 0) -> void:
 	UiArt.place_tier_icons(option_node, tag, family, level)
 
 
+## The special foods' page is only there once a special food has been yours (Shop.specials_found):
+## before, FORWARD flips food / drinks, and two dots show (the user, 2026-10-17)
+func _pages() -> int:
+	return PAGES if Shop.specials_found() else 2
+
+func _layout_pages() -> void:
+	var n := _pages()
+	for i in dots.size():
+		dots[i].visible = i < n
+	MenuLegend.layout_dots(dots, n)
+
 func update_dots(index: int):
 	for i in range(dots.size()):
 		dots[i].modulate = Color(1, 1, 1, 1) if i == index else Color(1, 1, 1, 0.3)
@@ -383,8 +393,8 @@ func _wait_left() -> int:
 
 ## What the shutter is down for on this page ("" = it's up):
 ##   "upcoming"  drinks, before the first meal (drinks come once there is a pal): DRINKS UPCOMING
-##   "mystery"   special foods, before any pal has reached Dai (and none in the pantry): the "?"
-##               label on the rolling "?" pattern, like a locked game card
+##   "mystery"   special foods, before any was yours (the page isn't in the flip then: only if
+##               it's shown anyway): the "?" label on the rolling "?" pattern, like a locked game card
 ##   "wait"      the meal / drink countdown is running: NEXT MEAL IN 12:34
 func _barrier_mode() -> String:
 	if current_page == 1 and PetState.needs_first_meal():
@@ -394,12 +404,7 @@ func _barrier_mode() -> String:
 	return "wait" if _wait_left() > 0 else ""
 
 func _specials_locked() -> bool:
-	if Shop.stage_reached() >= 3:
-		return false
-	for f in FoodLibrary.SPECIALS:
-		if Shop.pantry_count(f["name"]) > 0:
-			return false
-	return true
+	return not Shop.specials_found()
 
 func _update_barrier() -> void:
 	if barrier and (not is_visible_in_tree() or _leaving()):

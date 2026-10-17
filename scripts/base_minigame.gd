@@ -133,6 +133,62 @@ func finish_level(level: int, stars: int, best := -1.0, best_lower := true) -> v
 func fail_title() -> String:
 	return "Time's up!"
 
+# --- Lives (Tilt Maze and Pal Prix: the user, 2026-10-17) ---
+## LIVES hearts on the game's HUD: each fall breaks one, and when the last one breaks the level is
+## over ("Out of lives!": the result card's retry starts it again from the beginning). A splashy
+## pal (a watery drink) has one more, a water heart: its first fall is the game's splash save.
+const LIVES := 3
+var lives := LIVES
+var life_hearts: Array[TextureRect] = []
+
+## The hearts in a row from `at` (on the game's HUD), `size` px wide each
+func build_lives(at: Vector2, size := 26.0, step := 30.0) -> void:
+	for h in life_hearts:
+		h.queue_free()
+	life_hearts.clear()
+	for i in LIVES + 1:
+		var r := TextureRect.new()
+		r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		r.size = Vector2(size, size * 11.0 / 13.0)
+		r.pivot_offset = r.size / 2.0
+		r.position = at + Vector2(i * step, 0)
+		add_child(r)
+		life_hearts.append(r)
+	reset_lives()
+
+## A level starts: every heart full, and the water one if the pal is splashy
+func reset_lives() -> void:
+	lives = LIVES
+	var water := PetState.boost_power("splash") > 0
+	for i in life_hearts.size():
+		var r := life_hearts[i]
+		r.scale = Vector2.ONE
+		r.modulate.a = 1.0
+		r.texture = UiArt.heart("full" if i < LIVES else "water")
+		r.visible = i < LIVES or water
+
+## The splash save happened (the pal bounced back out of its first fall): the water heart goes
+func spend_water_heart() -> void:
+	if life_hearts.size() <= LIVES or not life_hearts[LIVES].visible:
+		return
+	var r := life_hearts[LIVES]
+	var t := create_tween()
+	t.tween_property(r, "scale", Vector2(1.5, 1.5), 0.1)
+	t.parallel().tween_property(r, "modulate:a", 0.0, 0.25)
+	t.tween_callback(func(): r.visible = false)
+
+## A fall: a heart breaks (the rightmost one left). True when that was the last.
+func lose_life() -> bool:
+	lives = maxi(0, lives - 1)
+	if lives < life_hearts.size():
+		var r := life_hearts[lives]
+		r.texture = UiArt.heart("empty")
+		var t := create_tween()
+		t.tween_property(r, "scale", Vector2(1.5, 1.5), 0.08)
+		t.tween_property(r, "scale", Vector2.ONE, 0.2)
+	return lives <= 0
+
 # --- Secrets and prizes (every game: docs/progression.md, sections 2 and 4) ---
 # A SECRET is a level's hidden prize behind a gate that a drink's boost opens (its type and at
 # least its level: a fence only a fizzy pal hops, a cracked wall only a sturdy one breaks...), or

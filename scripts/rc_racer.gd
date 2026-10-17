@@ -41,6 +41,7 @@ const TURN := 6.2                     # rad/s while a button is held (a full tur
 const ZOOM := 1.5                     # the view, close up (board px shown 6 px)
 const LOOK_AHEAD := 260.0             # the view looks this far ahead of the car (mat px)
 const FALL_AT := 6.0                  # past the road's edge by this much: off the track
+const TIP_OUT := 48.0                 # a falling car first tips this far out, clear of the edge
 const CHECKPOINTS := 10               # per lap: where a fallen car is put back
 const TRACK_SIDE := 6                 # the raised track's side face, board px (seen from the south)
 const LAYERS := 6                     # the car's slices
@@ -1917,15 +1918,18 @@ func _fall() -> void:
 		return
 	state = State.FALL
 	falls += 1
-	# off the far side (above the road on screen): the car drops BEHIND the raised track
-	if (car_pos - centre[near]).y < 0.0:
-		for n in [car, antenna, antenna_tip, driver]:
-			n.reparent(behind, false)
+	# the car tips out over the edge it left, then drops to the floor, always UNDER the raised
+	# track: whichever side it went off, it's never drawn over a road (the user, 2026-10-17)
+	for n in [car, antenna, antenna_tip, driver]:
+		n.reparent(behind, false)
+	var from := car_pos
+	var out := (car_pos - centre[near]).normalized()
 	motor.stop()
 	_sfx("res://sounds/fx/rc_fall.wav", -12.0)
 	Input.vibrate_handheld(80)
 	var t := create_tween()
 	t.tween_method(func(f: float):
+		car_pos = from + out * TIP_OUT * (1.0 - pow(1.0 - minf(1.0, f * 2.5), 2.0))
 		car_drop = f * f * TRACK_SIDE * PX * 3.0
 		car.modulate = Color(1, 1, 1).lerp(Color(0.4, 0.38, 0.45), f)
 		car.scale = Vector2.ONE * (1.0 - 0.15 * f), 0.0, 1.0, 0.45)

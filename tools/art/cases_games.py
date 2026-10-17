@@ -104,9 +104,37 @@ def pattern(kind, h, w):
     return m
 
 
+# the menu buttons keep their own colours whatever the case (the user, 2026-10-17): only the case's
+# edge round each one, the light band below and to its right outside its dark outline (textures/
+# buttons/<name>.png), takes the case's colours, by its brightness along the bare device's ramp
+BUTTONS = ['buttonfoodnormal', 'buttonfoodpressed', 'padbuttonnormal', 'padbuttonpressed', 'settingsbuttonnormal',
+           'settingsbuttonpressed']
+DEVICE = {'outline': (54, 36, 31), 'body': (250, 237, 217)}
+
+
+def buttons(cid, theme):
+    from scipy.ndimage import binary_fill_holes
+    lo, lb = lum(DEVICE['outline']), lum(DEVICE['body'])
+    O, B = (np.array(theme[k], np.float32) for k in ('outline', 'body'))
+    L_ = np.array(theme.get('light', theme['dots']), np.float32)
+    for name in BUTTONS:
+        src = np.asarray(Image.open(os.path.join(ROOT, 'textures', 'buttons', f'{name}.png')).convert('RGBA')).copy()
+        rgb, a = src[..., :3].astype(np.float32), src[..., 3]
+        dark = (a > 0) & (rgb.sum(-1) < 330)
+        stripe = (a > 0) & ~binary_fill_holes(dark)            # (outside the button's outer outline)
+        t = ((lum(rgb) - lo) / (lb - lo))[..., None]
+        new = np.where(t <= 1.0, O + (B - O) * np.clip(t, 0, 1), B + (L_ - B) * np.clip(t - 1.0, 0, 1))
+        rgb[stripe] = new[stripe]
+        src[..., :3] = np.clip(rgb, 0, 255).astype(np.uint8)
+        Image.fromarray(src, 'RGBA').save(os.path.join(DIR, f'{cid}_{name}.png'))
+
+
 def make(cid, theme):
     out = {}
+    buttons(cid, theme)
     for layer in LAYERS:
+        if layer in BUTTONS:
+            continue
         src = np.asarray(Image.open(os.path.join(DIR, f'melon_{layer}.png')).convert('RGBA'))
         rgb, a = src[..., :3], src[..., 3]
         new = recolour(rgb.astype(np.float32), theme)
@@ -143,6 +171,7 @@ if __name__ == '__main__':
         icon(cid)
         print(cid, 'ok', flush=True)
     icon('melon')
+    buttons('melon', MELON)
     out = os.path.join(HERE, 'out')
     os.makedirs(out, exist_ok=True)
     ids = ['melon'] + list(CASES)
