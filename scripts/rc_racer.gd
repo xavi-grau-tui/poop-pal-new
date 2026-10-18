@@ -2689,11 +2689,11 @@ func _place_car() -> void:
 		prop.scale = Vector2(PX, PX * (1.0 - 0.42 * absf(bank)))
 		prop.position = (car.position + Vector2.from_angle(heading) * 46.0 + Vector2(0, -2.0 * LAYER_UP) + tilt * 0.66).round()
 	# the antenna stands up from the toy's back left corner, leaning back and out in the turns; the
-	# plane's is a wire from behind its cockpit to the top of its tail fin, the ball on the fin's tip
+	# plane's is a wire from its back, behind the wings, to the top of its tail fin, the ball on the fin's tip
 	if vehicle == "plane":
 		var up := Vector2(0, -(n - 1) * LAYER_UP)
-		var from_pt := car.position + Vector2.from_angle(heading) * -6.0 + up + tilt
-		var fin_top := car.position + Vector2.from_angle(heading) * -40.0 + up + tilt * 1.4 + Vector2(0, -22)
+		var from_pt := car.position + Vector2.from_angle(heading) * -26.0 + up + tilt
+		var fin_top := car.position + Vector2.from_angle(heading) * -46.0 + up + tilt * 1.4 + Vector2(0, -20)
 		antenna.points = PackedVector2Array([from_pt.round(), fin_top.round()])
 		antenna_tip.position = fin_top.round()
 	else:
