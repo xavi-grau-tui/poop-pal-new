@@ -18,6 +18,7 @@ extends Node
 ##   bonus=1       a Lucky Pinch bonus right away, a screenshot `wait` s later
 ##   until=done    on to the next level as soon as this one is over (at most `wait` s)
 ##   hands=off     (Pal Prix) the toy isn't steered at all: can it finish by itself?
+##   intro=1       the game's how-to card over each level
 ## Prints "QA DONE" and quits when finished. The testing save is wiped at every launch anyway.
 
 var args := {}
@@ -113,6 +114,9 @@ func _run() -> void:
 				g.qa_hands_off = true                          # (hands=off: nobody steers)
 			if "qa_skill" in g and args.has("skill"):
 				g.qa_skill = int(args["skill"])
+			if args.get("intro", "") == "1" and g.has_method("_show_intro"):
+				g.is_running = false
+				g._show_intro()                                  # (intro=1: its how-to card)
 		for k in shots:
 			if args.has("until"):
 				# (until=done: on as soon as the level is over, at most `wait` s)

@@ -1110,7 +1110,7 @@ func _begin(n: int) -> void:
 	rain = bool(extras.get("rain", false))
 	_set_vehicle()
 	# (the how-to card names this level's toy: the first level played may be a boat's or a plane's)
-	intro_text = "Steer your " + vehicle
+	intro_text = { "car": "Steer your car", "boat": "Sail your boat", "plane": "Fly your plane" }[vehicle]   # (one line each)
 	intro_icon = car_texture() if vehicle == "car" else _toy_icon(vehicle, 3)
 	_build_circuit()
 	_place_crowd()
@@ -2863,7 +2863,14 @@ func _toy_icon(kind: String, _k: int) -> Texture2D:
 	for li in layers.size():
 		var src := layers[li].get_image()
 		img.blend_rect(src, Rect2i(Vector2i.ZERO, src.get_size()), Vector2i(0, layers.size() - li))
-	return ImageTexture.create_from_image(img)
+	# (the card's picture is laid out for the car's: wide and flat; these are about as tall as they
+	# are wide, so they get room round them, smaller, clear of the words as they swing: the user)
+	var used := img.get_used_rect()
+	var cw := int(ceilf(maxf(used.size.x, used.size.y * 1.2)))
+	var ch := int(ceilf(cw / 1.375))
+	var out := Image.create(cw, ch, false, Image.FORMAT_RGBA8)
+	out.blend_rect(img, used, Vector2i((cw - used.size.x) / 2, (ch - used.size.y) / 2))
+	return ImageTexture.create_from_image(out)
 
 static func car_texture() -> Texture2D:
 	var rows := [
