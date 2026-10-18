@@ -4432,17 +4432,34 @@ func _take_secret() -> void:
 ## they wander off their line, how often they make a mistake (a moment slow, off the line; s, 0 =
 ## never), and how long they take to go at the green light (s)
 const RIVAL_TIERS := [
-	{ "name": "rookie", "speed": 0.9, "corner": 0.55, "wander": 0.24, "slip_every": 9.0, "react": 0.5 },
-	{ "name": "average", "speed": 0.95, "corner": 0.35, "wander": 0.14, "slip_every": 16.0, "react": 0.3 },
-	{ "name": "ace", "speed": 1.0, "corner": 0.15, "wander": 0.05, "slip_every": 0.0, "react": 0.12 },
+	{ "name": "rookie", "speed": 0.9, "corner": 0.55, "wander": 0.24, "slip_every": 9.0, "react": 0.5, "dodge": 0.55 },
+	{ "name": "average", "speed": 0.95, "corner": 0.35, "wander": 0.14, "slip_every": 16.0, "react": 0.3, "dodge": 0.8 },
+	{ "name": "ace", "speed": 1.0, "corner": 0.15, "wander": 0.05, "slip_every": 0.0, "react": 0.12, "dodge": 0.97 },
 ]
 const PLANE_BODY := Color8(250, 210, 84)          # (every plane's yellow body: yours and the rivals')
 const RIVAL_PLANE_COLS := [Color8(70, 130, 220), Color8(150, 100, 210), Color8(110, 190, 110)]   # the rival planes' wings: blue, purple, green
 const RIVAL_COLS := [[Color8(70, 130, 220), Color8(46, 92, 170)], [Color8(240, 200, 70), Color8(196, 150, 40)], [Color8(110, 190, 110), Color8(70, 140, 76)]]
+var _rival_things: Array = []          # what's in the rivals' way: [course point, lane (-1..1 across), room to pass (lane), where (mat px), how close is a hit (px)]
 func _spawn_rivals() -> void:
 	for r in rivals:
 		(r["node"] as Node).queue_free()
 	rivals.clear()
+	_rival_things.clear()
+	for ob in obstacles:
+		var oi := int(ob["i"])
+		var at: Vector2 = ob["b"] if ob["kind"] == "log" else ob["pos"]
+		var lat := (at - centre[oi]).dot(_normal(oi)) / half_w
+		_rival_things.append([oi, lat, (float(ob["r"]) + 50.0) / half_w, ob["pos"], float(ob["r"]) + 22.0])
+	for sl2 in slicks:
+		var p2: Vector2 = sl2[0]
+		var best := 0
+		var bd := INF
+		for ci in range(0, count, 2):
+			var dd := centre[ci].distance_squared_to(p2)
+			if dd < bd:
+				bd = dd
+				best = ci
+		_rival_things.append([best, (p2 - centre[best]).dot(_normal(best)) / half_w, (SLICK_R + 40.0) / half_w, p2, SLICK_R * 0.8])
 	var n := int(extras.get("rivals", 0))
 	var k := (level - 1) % GameData.LEVELS_PER_WORLD
 	for j in n:
@@ -4470,6 +4487,15 @@ func _spawn_rivals() -> void:
 			sl.append(spr)
 		var helmet := _px_sprite(_helmet_texture(RIVAL_COLS[j][0] if vehicle != "plane" else RIVAL_PLANE_COLS[j]), Vector2(0, -layers.size() * LAYER_UP - 4.0), 2)
 		node.add_child(helmet)
+		# its antenna, like yours (the user, 2026-10-18): a thin wire with its ball, the ball in its colour
+		var ant := Line2D.new()
+		ant.width = 4.0
+		ant.default_color = Color8(40, 30, 40)
+		ant.antialiased = false
+		node.add_child(ant)
+		var ant_tip := _px_sprite(antenna_tip.texture, Vector2.ZERO, PX)
+		ant_tip.modulate = RIVAL_PLANE_COLS[j].lightened(0.2)
+		node.add_child(ant_tip)
 		var rprop: Sprite2D = null
 		if vehicle == "plane":
 			rprop = Sprite2D.new()
@@ -4495,6 +4521,7 @@ func _spawn_rivals() -> void:
 		var tr: Dictionary = RIVAL_TIERS[tier]
 		rivals.append({ "node": node, "slices": sl, "light": light, "helmet": helmet, "prop": rprop, "layers": layers, "bank": 0.0, "col": RIVAL_PLANE_COLS[j], "progress": -float(back_pts), "lane": lane,
 			"speed": _speed() * float(tr["speed"]) * (1.0 + 0.004 * k) * (0.88 if vehicle == "boat" else 1.0), "heading": 0.0, "pos": Vector2.ZERO, "done": false,
+			"ant": ant, "ant_tip": ant_tip, "dodge": {}, "spin": 0.0,
 			"tier": tier, "lane_now": lane, "phase": randf() * TAU, "wander_hz": randf_range(0.25, 0.5), "slip_t": 0.0,
 			"next_slip": randf_range(float(tr["slip_every"]) * 0.5, float(tr["slip_every"]) * 1.5), "react": float(tr["react"]) + randf_range(0.0, 0.15), "gone": false })
 	_place_rivals()
@@ -4547,6 +4574,27 @@ func _place_rivals() -> void:
 				break
 			(r["slices"][li] as Sprite2D).rotation = r["heading"]
 			(r["slices"][li] as Sprite2D).position = Vector2(0, -li * LAYER_UP - (40.0 if air else 0.0))
+		# (spun round by a thing it hit)
+		var spin_a := 0.0
+		if float(r.get("spin", 0.0)) > 0.0:
+			spin_a = (1.0 - float(r["spin"]) / 0.9) * TAU
+			for sp2 in r["slices"]:
+				(sp2 as Sprite2D).rotation = float(r["heading"]) + spin_a
+		var hd := float(r["heading"]) + spin_a
+		var n_l: int = r["slices"].size()
+		var ant: Line2D = r["ant"]
+		if vehicle == "plane":
+			var up := Vector2(0, -(n_l - 1) * LAYER_UP)
+			var a0 := Vector2.from_angle(hd) * -26.0 + up
+			var a1 := Vector2.from_angle(hd) * -46.0 + up + Vector2(0, -20)
+			ant.points = PackedVector2Array([a0.round(), a1.round()])
+			(r["ant_tip"] as Sprite2D).position = a1.round()
+		else:
+			var corner := Vector2(-30, -22) if vehicle == "car" else Vector2(-46, -18)
+			var base := corner.rotated(hd) + Vector2(0, -n_l * LAYER_UP)
+			var top := base + Vector2(0, -46) + Vector2.from_angle(hd) * -10.0
+			ant.points = PackedVector2Array([base.round(), (base.lerp(top, 0.5)).round(), top.round()])
+			(r["ant_tip"] as Sprite2D).position = top.round()
 		(r["light"] as Sprite2D).rotation = r["heading"]
 		(r["light"] as Sprite2D).position = Vector2.from_angle(r["heading"]) * 92.0
 
@@ -4589,7 +4637,34 @@ func _update_rivals(delta: float) -> void:
 		# its own line: wandering about its lane on its own rhythm, jolted aside by a mistake
 		var wob := sin(race_time * TAU * float(r["wander_hz"]) + float(r["phase"])) * float(tr["wander"])
 		var jolt := sin(float(r["slip_t"]) / 0.8 * PI) * 0.25 * (1.0 if int(r["phase"] * 10.0) % 2 == 0 else -1.0) if float(r["slip_t"]) > 0.0 else 0.0
-		r["lane_now"] = clampf(float(r["lane"]) + wob + jolt, -0.62, 0.62)
+		var want := float(r["lane"]) + wob + jolt
+		# the things in the way (the user, 2026-10-18: rivals went straight through the rocks): as
+		# one comes up it decides once whether it sees it in time (its tier's dodge); if so it
+		# steers to its far side, else it hits it like you would: a bump, slowed, spun round
+		var rp := float(r["progress"])
+		for oi in _rival_things.size():
+			var th: Array = _rival_things[oi]
+			var ahead_pts := posmod(int(th[0]) - posmod(int(rp), count), count)
+			if ahead_pts > 0 and ahead_pts < 34:
+				if not (r["dodge"] as Dictionary).has(oi):
+					r["dodge"][oi] = randf() < float(tr["dodge"])
+				if r["dodge"][oi]:
+					var th_lane: float = th[1]
+					var room: float = th[2]
+					want = th_lane - signf(th_lane if th_lane != 0.0 else 1.0) * room
+		r["lane_now"] = lerpf(float(r["lane_now"]), clampf(want, -0.62, 0.62), minf(1.0, delta * 4.0))
+		if not r["done"] and float(r["spin"]) <= 0.0:
+			for oi2 in _rival_things.size():
+				var th2: Array = _rival_things[oi2]
+				if (r["pos"] as Vector2).distance_to(th2[3]) < float(th2[4]):
+					r["spin"] = 0.9
+					r["slip_t"] = 1.0
+					r["dodge"].erase(oi2)
+					if (r["pos"] as Vector2).distance_to(car_pos) < 700.0:
+						_sfx("res://sounds/fx/wood_tap.wav", -14.0, 0.7)
+					break
+		if float(r["spin"]) > 0.0:
+			r["spin"] = float(r["spin"]) - delta
 		if r["progress"] > progress:
 			ahead += 1
 		# a bump (the cars, the boats; planes keep apart; a finished one is out of the way)
