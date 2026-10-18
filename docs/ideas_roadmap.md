@@ -68,6 +68,12 @@ light, playful and visually intuitive: icons over text, learn by doing. Asia fir
 
 ## Open questions & pending (one list; keep it updated, details in the sections below)
 To decide:
+- HUNGER (the user, 2026-10-19, to design): a pal not fed for a while (X hours) refuses to play
+  the games until it's fed (a hungry face, a "feed me first" on the game card); other penalties
+  for not eating could follow. NOTE: it goes against the rule in docs/progression.md ("care is
+  rewarded, never punished": no sickness, no going back a stage), which is there for the casual
+  player; decide how far to go: e.g. only a block on the games, never lost progress, X long enough
+  that a normal day's play never meets it, and the fix always one meal away.
 - REVIEW the drink boosts and what they unlock (the user, 2026-10-18), game by game, so that in
   each case the mechanic makes the most sense possible: what each boost does in each game (Splash,
   Fizz, Focus, Sturdy, Lucky), which gate it opens there, and what's behind it (the prize should
