@@ -3716,6 +3716,7 @@ func _corridor(delta: float) -> void:
 func _new_lap() -> void:
 	for rg in rings:
 		rg["hit"] = false
+		rg["popped"] = false
 	_ring_fx_refresh()
 
 ## Off a ramp (or a springboard): up in the air for `t` (the car lifts, its shadow drops away)
@@ -4022,8 +4023,12 @@ func _ring_fx_refresh() -> void:
 		var st := 0
 		if int(rg["lap"]) == lap:
 			st = 2 if rg["hit"] else 3
-			if rg["hit"] and progress < float((lap - 1) * count + int(rg["i"])) + RING_PAST:
-				st = 1                                   # (the plane still in it: it pops once it's out)
+			if rg["hit"] and not rg.get("popped", false):
+				if progress < float((lap - 1) * count + int(rg["i"])) + RING_PAST:
+					st = 1                               # (the plane still in it: it pops once it's out)
+				else:
+					rg["popped"] = true                  # (and once popped it stays gone this lap, even
+														 # flying back past it: the user, 2026-10-18)
 		elif is_same(rg, nxt):
 			st = 1
 		elif is_same(rg, after):
