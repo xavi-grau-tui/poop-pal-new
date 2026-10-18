@@ -637,16 +637,19 @@ class Trail extends Node2D:
 				draw_rect(Rect2(p - Vector2(sz, sz) / 2.0 + Vector2(0, -f * 10.0), Vector2(sz, sz)).abs(), Color(0.85, 0.85, 0.9, 0.5 * (1.0 - f)))
 
 ## A plane's ring: a hoop standing across the course, seen from above at an angle (an ellipse: its
-## width across the course, its depth foreshortened). Drawn in two halves: the upper one over the
-## plane, the lower one under it, so the plane flies through. A round tube (the user, 2026-10-18:
+## width across the course, its depth foreshortened). Drawn in two halves split across the course:
+## the one the plane flies in by over it, the one it leaves by under it, so it flies through
+## whichever way the course goes (the user, 2026-10-18: it was split along the screen, right for a
+## course going down it, wrong for one going sideways, which cut the plane in two). A round tube (the user, 2026-10-18:
 ## the rings should be more beautiful): candy red and white bands, lit from the top left, a dark
 ## outline, painted once per look on the 4 px grid. The next one is gold, pulsing, sparkles running
 ## round it; the one after it plain; the farther ones faint (the way reads ring
-## by ring); flown through it pops (bigger, fading), a missed one goes grey.
+## by ring); flown through it pops (bigger, fading) once the plane is out of it, a missed one goes grey.
 class Ring extends Node2D:
 	var n := Vector2.RIGHT
 	var r := 100.0
-	var upper := true
+	var upper := true                     # the half the plane flies in through (over it), else the half it leaves by (under it)
+	var d := Vector2.DOWN                 # the way the course goes through it
 	var state := 0                        # 0 farther on, 1 the next one, 2 flown through, 3 missed, 4 the one after the next
 	var t := 0.0
 	var _shown := -1
@@ -706,7 +709,7 @@ class Ring extends Node2D:
 		for cy in cells:
 			for cx in cells:
 				var q := Vector2(cx * 4.0 + 2.0 - ext, cy * 4.0 + 2.0 - ext)
-				if (q.y <= 0.0) != upper:
+				if (q.dot(d) <= 0.0) != upper:
 					continue
 				var a := q.dot(n) / r
 				var b := q.dot(m) / (r * 0.42)
@@ -741,7 +744,7 @@ class Ring extends Node2D:
 		for k2 in 4:
 			var a2 := t * 1.6 + k2 * TAU / 4.0
 			var sp := _point(a2)
-			if (sp.y <= 0.0) != upper:
+			if (sp.dot(d) <= 0.0) != upper:
 				continue
 			sp = sp.snapped(Vector2(4, 4))
 			var tw := 1.0 if int(t * 10.0 + k2) % 2 == 0 else 0.0
@@ -2981,6 +2984,7 @@ func _drive(delta_real: float) -> void:
 		_new_lap()
 	_refresh_hud()
 
+const RING_PAST := 16.0                # course points past a ring's middle: the plane is out of it
 const RING_TOL := 0.86                # through a ring: within this much of its size from its middle
 const GUST_PUSH := 230.0              # px/s across the course (a sturdy plane: half)
 const TOY_R := { "car": 26.0, "boat": 24.0, "plane": 24.0 }
@@ -3429,6 +3433,7 @@ func _spawn_course_things() -> void:
 			ring.n = rg["n"]
 			ring.r = rg["r"]
 			ring.upper = upper
+			ring.d = (centre[(i + 1) % count] - centre[i]).normalized()
 			(ring_front if upper else ring_back).add_child(ring)
 			rg["front" if upper else "back"] = ring
 			_thing_nodes.append(ring)
@@ -3470,6 +3475,8 @@ func _ring_fx_refresh() -> void:
 		var st := 0
 		if int(rg["lap"]) == lap:
 			st = 2 if rg["hit"] else 3
+			if rg["hit"] and progress < float((lap - 1) * count + int(rg["i"])) + RING_PAST:
+				st = 1                                   # (the plane still in it: it pops once it's out)
 		elif is_same(rg, nxt):
 			st = 1
 		elif is_same(rg, after):
@@ -3482,6 +3489,8 @@ func _ring_fx_refresh() -> void:
 ## sparkles start where the plane is and join the course's line over a few steps), and the arrow
 ## when that ring is off the screen
 func _update_guide() -> void:
+	if vehicle == "plane":
+		_ring_fx_refresh()                              # (a ring flown through pops once the plane is out)
 	var nxt := _next_ring() if vehicle == "plane" and state == State.DRIVE else {}
 	guide.visible = not nxt.is_empty()
 	pointer.on = guide.visible
