@@ -916,13 +916,21 @@ class FloatingBuoys extends Node2D:
 				for a in 10:
 					var q := (p + Vector2.from_angle(a * TAU / 10.0) * ring).snapped(Vector2(4, 4))
 					draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, 0.45))
-			# (a gentle bob on its own beat, bigger while it's knocked about)
-			var bob := roundf(sin(t * 2.4 + rest[i].x * 0.05 + rest[i].y * 0.03) * (0.5 if not moving else 1.0)) * 4.0
+			# a light swell (the user, 2026-10-18: they should move a little by default): each bobs a
+			# px up and down, the beat a little later buoy after buoy along the line (a ripple
+			# running along it), and now and then one rocks to a side as a wave goes under it;
+			# more while it's been knocked about
+			var ph := t * 1.7 - float(i) * 0.45
+			var sw := sin(ph)
+			var bob := (-4.0 if sw > 0.45 else (4.0 if sw < -0.55 else 0.0)) * (1.5 if moving else 1.0)
+			var rock := Vector2.ZERO
+			if not moving and sin(t * 0.7 + float(i) * 2.3) > 0.93:
+				rock = Vector2(4.0 if sin(t * 5.0 + float(i)) > 0.0 else -4.0, 0)
 			var sl: Array = slices[red[i]]
 			for k in sl.size():
 				var tx: Texture2D = sl[k]
 				var f := float(k) / float(sl.size() - 1)
-				var at := p + Vector2(0, bob * f - k * UP) + lean[i] * f
+				var at := p + Vector2(0, bob * f - k * UP) + (lean[i] + rock) * f
 				draw_texture_rect(tx, Rect2(at.round() - Vector2(14, 14), tx.get_size() * 4.0), false)
 
 ## The water moving (the user, 2026-10-18): glints drifting on it, short light strokes on the
