@@ -122,8 +122,16 @@ To build:
   Faster, not harder: wider roads and long sweeping bends taken flat out, a camera that pulls back
   with the speed (speed lines, streaks, a star field, a shake on boosts), forgiving edges (stick
   to the walls, slowed, never off), boost chains on a good line, slipstream behind rivals, a drift
-  boost (hold through a long bend, still two buttons). The transforming craft (below) fits it as
-  its finale. Cosmic special foods (Moon Rock, Stardust Sugar) in the space worlds.
+  boost (hold through a long bend, still two buttons). Cosmic special foods (Moon Rock, Stardust
+  Sugar) in the space worlds.
+  ITS CORE (the user, 2026-10-19): MIXED RACES, land, sea and air in one evolving vehicle (the
+  transforming craft below): a hover car splashes in at the shore as a jet ski, takes off a launch
+  ramp as a rocket; each change at a fixed gate (a ramp into the water, off a wave, a launch pad),
+  the craft spinning and unfolding in a puff (wheels fold, fins pop, wings and thrusters open), a
+  slow-motion beat, a burst of speed, the camera swinging to the new place. Worlds building up:
+  land + sea (shores, harbours) · sea + air (islands, waterfalls to fly off) · land + air
+  (canyons, cliffs) · all three in a lap · all three with rivals · the final: Earth to space and
+  back. Nothing new to learn (each craft is Pal Prix 1's): the step is switching between them.
   LATER (the user, 2026-10-18: "we can figure that out after"):
   - More places per toy, so the worlds keep the variety they had (the Kitchen, the Rain park, the
     old Sky track, a bathtub or a river for the boat, space for the plane...).
