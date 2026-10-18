@@ -69,7 +69,6 @@ const WIND_GOOD := 16.0
 const WIND_SLIP := 6.0                # a tap off the gold slips the cord: spin lost...
 const WIND_JAM := 0.35                # ...and it jams this long (taps do nothing): mashing never pays
 const ZONE_HALF := 0.32
-const LIVES := 3
 
 # --- Palette (a ceramic bowl, slate blue like the card) ---
 const BG := Color8(58, 66, 84)
@@ -181,7 +180,6 @@ enum Tut { NONE, WIND, DROP, MOVE, DASH, DASHED, GUARD, GUARDED, FIGHT }
 
 var phase := Phase.WIND
 var level := 1
-var lives := LIVES
 var loop := 0                         # (the old endless mode's laps: 0 with the level menu)
 var time := 0.0
 var world := 0

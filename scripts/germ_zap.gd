@@ -15,7 +15,6 @@ const PLAYER_ACCEL := 6500.0
 const FIRE_RATE := 0.2
 const SHOT_SPEED := 980.0
 const SLIME_SPEED := 400.0
-const LIVES := 3
 const INVULN := 1.6
 
 const COLS := 8
@@ -31,7 +30,6 @@ const TYPES := {
 const GERM_S := 3.6                    # germs are drawn a bit bigger than other sprites
 const OUTLINE := Color8(74, 44, 32)
 
-var lives := LIVES
 var wave := 0
 var player_x := 475.0
 var player_v := 0.0

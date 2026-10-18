@@ -18,7 +18,6 @@ const BALL_SPEED := 540.0
 const BALL_SPEED_MAX := 920.0
 const SPEEDUP_PER_HIT := 6.0
 const MAX_BOUNCE_ANGLE := deg_to_rad(62.0)
-const LIVES := 3
 const COLS := 12
 const TILE_W := 72.0
 const TILE_H := 33.0
@@ -57,7 +56,6 @@ const LEVELS := [
 const OUTLINE := Color8(74, 44, 32)
 
 var level := 0
-var lives := LIVES
 var paddle_x := 475.0
 var paddle_v := 0.0
 var paddle_w := 132.0
