@@ -947,6 +947,9 @@ class WaterFx extends Node2D:
 	var glints: Array = []                # [position, age, life, length]
 	var whirls: Array = []                # whirlpools' middles (mat px)
 	var currents: Array = []              # boost currents: [middle, the way it flows]
+	var fish: Array = []                  # fish shadows: [position, heading, speed, how seen (0-1), fleeing]
+	const FISH_NEAR := 150.0              # the boat this close: they dart away and fade (mat px)
+	const FISH_BODY := [[1, 0], [0, 0], [-1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [-2, -1], [-2, 1]]
 	var cur_len := 64.0
 	var cur_w := 60.0
 	var t := 0.0
@@ -973,8 +976,38 @@ class WaterFx extends Node2D:
 			g[1] += delta
 			g[0] += Vector2(6.0 * delta, 0)                # (a slow drift)
 		glints = glints.filter(func(g): return g[1] < g[2])
+		# fish shadows in the water (the user, 2026-10-18: fish shades that go away when you pass):
+		# a few wander slowly about the view; the boat coming near sends them darting off, fading
+		var boat: Vector2 = rc.car_pos
+		if fish.size() < 12 and randf() < delta * 4.0:
+			var fp := Vector2(randf_range(view.position.x, view.end.x), randf_range(view.position.y, view.end.y))
+			if fp.distance_to(boat) > FISH_NEAR * 1.6 and rc.is_open_water(fp):
+				fish.append([fp, randf() * TAU, randf_range(18.0, 34.0), 0.0, false])
+		for f in fish:
+			var fp2: Vector2 = f[0]
+			if not f[4] and fp2.distance_to(boat) < FISH_NEAR:
+				f[4] = true
+				f[1] = (fp2 - boat).angle() + randf_range(-0.5, 0.5)
+				f[2] = randf_range(200.0, 280.0)
+			if f[4]:
+				f[3] = maxf(0.0, f[3] - delta * 2.2)
+			else:
+				f[3] = minf(1.0, f[3] + delta * 1.5)
+				f[1] += randf_range(-1.5, 1.5) * delta
+				if not rc.is_open_water(fp2 + Vector2.from_angle(f[1]) * 24.0):
+					f[1] += PI * 0.6                        # (turns away from the sand)
+			f[0] = fp2 + Vector2.from_angle(f[1]) * float(f[2]) * delta
+		fish = fish.filter(func(f): return not (f[4] and f[3] <= 0.0) and view.grow(200.0).has_point(f[0]))
 		queue_redraw()
 	func _draw() -> void:
+		for f in fish:
+			var fwd := Vector2.from_angle(f[1])
+			var sd := Vector2(-fwd.y, fwd.x)
+			var shade := Color(0.1, 0.05, 0.14, 0.5 * float(f[3]))
+			var wag := 1.0 if int(t * 6.0 + float(f[2])) % 2 == 0 else 0.0
+			for cell in FISH_BODY:
+				var off: Vector2 = fwd * float(cell[0]) * 7.0 + sd * float(cell[1]) * (6.0 + (wag * 3.0 if cell[0] <= -2 else 0.0))
+				draw_rect(Rect2(((f[0] as Vector2) + off).snapped(Vector2(4, 4)) - Vector2(4, 4), Vector2(8, 8)), shade)
 		for g in glints:
 			var f: float = g[1] / g[2]
 			var c := tint
@@ -1874,7 +1907,9 @@ func _distance_field(w: int, h: int) -> void:
 	_idx = PackedInt32Array()
 	_idx.resize(w * h)
 	var hw := half_w / PX
-	var reach := hw + (14.0 if vehicle == "boat" else 4.0)       # (the boat's: the foam round its rocks too)
+	# (the boat's: out past its bank, the shallows and the bank are painted from it: it stopped
+	# just past the bank's edge, so on the straights the bank came out a thin line)
+	var reach := hw + (SHORE_PAINT / PX + 16.0 if vehicle == "boat" else 4.0)
 	for s in range(0, count, 3):                     # (points 24 px apart: the discs overlap)
 		var c := centre[s] / PX
 		for y in range(maxi(0, int(c.y - reach)), mini(h, int(c.y + reach) + 1)):
@@ -2184,6 +2219,8 @@ func _paint_water(w: int, h: int) -> Image:
 			k += 4
 	for pf in _palms:
 		_paint_palm(data, w, h, pf)
+	if look == "lagoon":
+		_lagoon_bank_decor(data, w, h, rng)
 	# then the channel's own things, each over its own patch: a current's foam arrows down the
 	# channel, a whirlpool (water spiralling in, darker to its eye), the foam round a rock or a log
 	for pd in pads:
@@ -2266,6 +2303,52 @@ func _paint_water(w: int, h: int) -> Image:
 				top[k4 + 3] = 255
 	track_image = Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, top)
 	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
+
+## The Lagoon's bank, dressed (the user, 2026-10-18): pebbles, starfish and shells on the sand,
+## tufts of seagrass in the shallows beside it, all outlined like the rest
+const PEBBLE := [".##.", "#lm#", "#md#", ".##."]
+const STARFISH := ["..#..", ".#s#.", "#sSs#", ".#s#.", ".#.#."]
+const SHELL := [".#.", "#w#", "#p#"]
+const SEAGRASS := ["g.g", "g.g", ".gG", ".G."]
+func _lagoon_bank_decor(data: PackedByteArray, w: int, h: int, rng: RandomNumberGenerator) -> void:
+	var hw := half_w / PX
+	var bank := hw + SHORE_PAINT / PX
+	var cols := { "#": Color8(118, 82, 58), "l": Color8(214, 208, 200), "m": Color8(170, 162, 160), "d": Color8(130, 122, 124),
+		"s": Color8(250, 140, 90), "S": Color8(255, 196, 140), "w": Color8(255, 246, 236), "p": Color8(248, 196, 206),
+		"g": Color8(110, 150, 96), "G": Color8(80, 120, 78) }
+	var stamp := func(rows: Array, at: Vector2i) -> void:
+		for yy in rows.size():
+			var row: String = rows[yy]
+			for xx in row.length():
+				var ch := row[xx]
+				if ch == ".":
+					continue
+				var q := at + Vector2i(xx - row.length() / 2, yy - rows.size() / 2)
+				if q.x < EDGE or q.y < EDGE or q.x >= w - EDGE or q.y >= h - EDGE:
+					continue
+				var c: Color = _lit(cols[ch], q.x, q.y)
+				var j := (q.y * w + q.x) * 4
+				data[j] = c.r8
+				data[j + 1] = c.g8
+				data[j + 2] = c.b8
+	for s0 in range(0, count, 3):
+		for sd in [-1.0, 1.0]:
+			var c0: Vector2 = centre[s0] / PX + _normal(s0) * sd * (bank + 5.0)
+			var ci := Vector2i(c0.round())
+			if ci.x < 0 or ci.y < 0 or ci.x >= w or ci.y >= h or absf(_dist[ci.y * w + ci.x] - bank - 5.0) > 2.5:
+				continue                                  # (another stretch of the course is nearer here)
+			var roll := rng.randf()
+			if roll < 0.16:
+				stamp.call(PEBBLE, ci + Vector2i(rng.randi_range(-1, 1), 0))
+			elif roll < 0.24:
+				stamp.call(STARFISH, ci)
+			elif roll < 0.34:
+				stamp.call(SHELL, ci)
+			# and seagrass just past the bank, in the open shallows
+			if rng.randf() < 0.3:
+				var g0 := Vector2i((centre[s0] / PX + _normal(s0) * sd * (bank + 14.0 + rng.randf_range(0.0, 6.0))).round())
+				if g0.x >= 0 and g0.y >= 0 and g0.x < w and g0.y < h and _dist[g0.y * w + g0.x] > bank + 11.0 and _island[g0.y * w + g0.x] == 0:
+					stamp.call(SEAGRASS, g0)
 
 ## A palm tree on an island (foot: board px): its shadow on the sand, a curved trunk with rings,
 ## five fronds drooping out from its top, outlined, two coconuts
@@ -2414,16 +2497,21 @@ func _water_px(x: int, y: int, d: float, hw: float) -> Color:
 	# past the buoys: the shallows (lighter, foam breaking at their far side), then the bank (the
 	# Lagoon's sand, the Reef's coral: a crash), then the open shallows beyond
 	var bank := hw + SHORE_PAINT / PX + _grass_noise.get_noise_2d(x * 3.0, y * 3.0) * 1.5
-	var bank_w := (10.0 if look != "reef" else 7.0) + _cloud_noise.get_noise_2d(x * 2.0, y * 2.0) * 3.0
+	var bank_w := (10.0 if look != "reef" else 7.0) + clampf(_cloud_noise.get_noise_2d(x * 2.0, y * 2.0), -0.6, 0.6) * 3.0   # (the noise can run past 1: never a thin bank)
 	var in_shallows := not in_channel and d < bank
 	var on_bank := d >= bank and d < bank + bank_w
 	if on_bank and look != "reef":
-		if d < bank + 1.2:
+		# (the user, 2026-10-18: as pretty as the Reef's) outlined dark on both sides like the
+		# islands, a wet edge inside each outline, the sand lit in soft patches; its pebbles,
+		# starfish and shells are stamped on after (_lagoon_bank_decor)
+		var into := d - bank
+		var out_of := bank + bank_w - d
+		if into < 0.9 or out_of < 0.9:
+			return Color8(118, 82, 58)                                    # (its outline)
+		if into < 1.9 or out_of < 1.9:
 			return Color8(214, 180, 126)                                  # (its wet edge)
-		if (x * 7 + y * 13) % 41 == 0:
-			return Color8(250, 238, 214)                                  # (a shell)
-		if d > bank + bank_w - 1.0 and DITHER[y % 2][x % 2] < 0.5:
-			return Color8(226, 196, 140)
+		if _grass_noise.get_noise_2d(x * 4.0, y * 4.0) > 0.25:
+			return Color8(254, 238, 196) if DITHER[y % 2][x % 2] < 0.75 else Color8(244, 220, 166)
 		return Color8(244, 220, 166)
 	if look == "reef":
 		var water: Color = REEF[0] if in_channel else (REEF[1] as Color).lerp(REEF[2], shallow)
