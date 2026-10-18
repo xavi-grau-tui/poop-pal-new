@@ -114,6 +114,16 @@ To build:
   6 Grand Prix (a sunset over a sea of clouds: storm clouds, rival planes). Lives (3 little toys):
   a crash costs one. Balanced with the QA autopilot (tools/qa until=done: every race's result and
   crashes printed; hands=off: nobody steers, it must not finish). Its song: see "Music prompts".
+  PAL PRIX 2 (the user, 2026-10-19, a note for the future): the FINAL game, a reward for the
+  player (Pal Prix is very fun). The step: winning the Grand Prix cup (6-9) invites the pal to the
+  next league, the toys turbo-charged. Hover cars, Wipeout-like (anti-grav, neon, magnetic edges:
+  Neon City, Canyon) · jet skis / hydrofoils (Rapids: waterfalls as jumps, Ice Fjord) · rocket
+  ships in space (Asteroid Belt, Saturn's Rings: gravity wells that bend your path, slingshots).
+  Faster, not harder: wider roads and long sweeping bends taken flat out, a camera that pulls back
+  with the speed (speed lines, streaks, a star field, a shake on boosts), forgiving edges (stick
+  to the walls, slowed, never off), boost chains on a good line, slipstream behind rivals, a drift
+  boost (hold through a long bend, still two buttons). The transforming craft (below) fits it as
+  its finale. Cosmic special foods (Moon Rock, Stardust Sugar) in the space worlds.
   LATER (the user, 2026-10-18: "we can figure that out after"):
   - More places per toy, so the worlds keep the variety they had (the Kitchen, the Rain park, the
     old Sky track, a bathtub or a river for the boat, space for the plane...).
