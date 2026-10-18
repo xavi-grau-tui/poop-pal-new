@@ -1085,6 +1085,9 @@ func _begin(n: int) -> void:
 	extras = spec0[7] if spec0.size() > 7 else {}
 	rain = bool(extras.get("rain", false))
 	_set_vehicle()
+	# (the how-to card names this level's toy: the first level played may be a boat's or a plane's)
+	intro_text = "Steer your " + vehicle
+	intro_icon = car_texture() if vehicle == "car" else _toy_icon(vehicle, 3)
 	_build_circuit()
 	_place_crowd()
 	_place_features()
@@ -2767,6 +2770,77 @@ func _garden_decor(w: int, h: int, dist: PackedFloat32Array, hw: float) -> void:
 			_decor[i] = _floor_px(i % w, i / w).darkened(0.22)
 
 ## A little red RC car seen from above, nose to the right: 22 x 16 px (x4), a seat in the middle
+## A life (the user, 2026-10-18: three little cars, boats or planes instead of hearts): the
+## world's toy, 13 x 11 px, outlined like the hearts; red when it's there, blue for the splashy
+## pal's extra one, a faded grey one lost
+const LIFE_TOYS := {
+	"car": [
+		"....#####....",
+		"...#gg#gg#...",
+		"..#lllllll#..",
+		".#lllllllll#.",
+		"#lmmmmmmmmmd#",
+		"#mmmmmmmmmmd#",
+		"#dd###d###dd#",
+		".##www#www##.",
+		"..#www#www#..",
+		"...###.###...",
+		".............",
+	],
+	"boat": [
+		"....#........",
+		"...#l#.......",
+		"...#####.....",
+		"...#ggg#.....",
+		"#############",
+		"#lllllllllll#",
+		".#mmmmmmmmd#.",
+		"..#ddddddd#..",
+		"...#######...",
+		".w..ww..ww..w",
+		"w.ww..ww..ww.",
+	],
+	"plane": [
+		"......#......",
+		".....#l#.....",
+		"....#lmd#....",
+		"#############",
+		"#llllllmmmmd#",
+		"#mmmmmmmmmdd#",
+		"#############",
+		".....#m#.....",
+		"...##lmd##...",
+		"...#lmmmmd#..",
+		"...#######...",
+	],
+}
+func life_icon(kind: String) -> Texture2D:
+	var key := "%s_%s" % [vehicle, kind]
+	if _life_icons.has(key):
+		return _life_icons[key]
+	var tone: Array = {
+		"full": [Color8(255, 150, 130), Color8(226, 70, 64), Color8(170, 44, 48)],
+		"water": [Color8(214, 240, 255), Color8(110, 178, 236), Color8(56, 116, 196)],
+		"empty": [UiArt.EMPTY.lightened(0.12), UiArt.EMPTY, UiArt.EMPTY_DARK],
+	}[kind]
+	var cols := { "#": UiArt.OUTLINE, "l": tone[0], "m": tone[1], "d": tone[2],
+		"g": Color8(180, 226, 250) if kind != "empty" else UiArt.EMPTY.lightened(0.2),
+		"w": Color8(60, 56, 70) if vehicle == "car" else (Color8(150, 210, 240) if kind != "empty" else UiArt.EMPTY) }
+	var tex := _rows_texture(LIFE_TOYS[vehicle], cols)
+	_life_icons[key] = tex
+	return tex
+var _life_icons := {}
+
+## The boat's or the plane's top view as one picture (its slices stacked), for the how-to card
+func _toy_icon(kind: String, _k: int) -> Texture2D:
+	var layers: Array[Texture2D] = PalPrixArt.boat_slices() if kind == "boat" else PalPrixArt.plane_slices(Color8(226, 70, 64), Color8(250, 210, 84), true)
+	var first := layers[0].get_image()
+	var img := Image.create(first.get_width(), first.get_height() + layers.size(), false, Image.FORMAT_RGBA8)
+	for li in layers.size():
+		var src := layers[li].get_image()
+		img.blend_rect(src, Rect2i(Vector2i.ZERO, src.get_size()), Vector2i(0, layers.size() - li))
+	return ImageTexture.create_from_image(img)
+
 static func car_texture() -> Texture2D:
 	var rows := [
 		"..####........####....",

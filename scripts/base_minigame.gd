@@ -157,6 +157,11 @@ func build_lives(at: Vector2, size := 26.0, step := 30.0) -> void:
 		life_hearts.append(r)
 	reset_lives()
 
+## Override: a life's picture, "full" / "water" (the splashy pal's extra) / "empty", 13 x 11 px
+## (a heart; Pal Prix: its toy)
+func life_icon(kind: String) -> Texture2D:
+	return UiArt.heart(kind)
+
 ## A level starts: every heart full, and the water one if the pal is splashy
 func reset_lives() -> void:
 	lives = LIVES
@@ -165,7 +170,7 @@ func reset_lives() -> void:
 		var r := life_hearts[i]
 		r.scale = Vector2.ONE
 		r.modulate.a = 1.0
-		r.texture = UiArt.heart("full" if i < LIVES else "water")
+		r.texture = life_icon("full" if i < LIVES else "water")
 		r.visible = i < LIVES or water
 
 ## The splash save happened (the pal bounced back out of its first fall): the water heart goes
@@ -183,7 +188,7 @@ func lose_life() -> bool:
 	lives = maxi(0, lives - 1)
 	if lives < life_hearts.size():
 		var r := life_hearts[lives]
-		r.texture = UiArt.heart("empty")
+		r.texture = life_icon("empty")
 		var t := create_tween()
 		t.tween_property(r, "scale", Vector2(1.5, 1.5), 0.08)
 		t.tween_property(r, "scale", Vector2.ONE, 0.2)
