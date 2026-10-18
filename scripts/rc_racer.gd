@@ -16,18 +16,19 @@ extends BaseMinigame
 ## too close): the view follows the toy and shows only part of it, so you read the road as it comes.
 ##
 ## Levels (the level menu, BaseMinigame / LevelMenu): 6 worlds of 9, two per toy (the user,
-## 2026-10-17), each with its own place, its light and its own things (alone on their first levels,
-## then mixed in):
+## 2026-10-17), in the order car, boat, plane, then each toy's second world (the user, 2026-10-18:
+## every toy early on), each with its own place, its light and its own things (alone on their
+## first levels, then mixed in):
 ##   1 Garden (a morning, the car): the basics, guard rails on the corners · boost pads (4th) ·
 ##     JUMPS, a ramp before each gap (7th: straight on it or you fall)
-##   2 Night Race (the lamps and your headlights): CROSSOVERS, figure-8s with a bridge · rain,
-##     PUDDLES that spin the car, OIL (4th) · RIVALS, up to three cars to beat (7th)
-##   3 Lagoon (sunset, the boat): it drifts (it carries on the way it was going a moment), the
-##     buoys mark the channel, the shallows past them slow it, the sandbank beyond is a crash · CURRENTS that speed it on (4th) · RAMPS over sandbars (7th:
-##     straight on them, or it runs aground)
-##   4 Reef (noon, the boat): ROCKS and LOGS in the channel (a crash), WHIRLPOOLS (4th) · RIVALS (7th)
-##   5 Sky (noon above the fields, the plane): RINGS to fly through (a ring missed = a crash) ·
+##   2 Lagoon (sunset, the boat): it drifts (it carries on the way it was going a moment), the
+##     buoys mark the channel, the shallows past them slow it, the sandbank beyond is a crash ·
+##     CURRENTS that speed it on (4th) · RAMPS over sandbars (7th: straight on them, or it runs aground)
+##   3 Sky (noon above the fields, the plane): RINGS to fly through (a ring missed = a crash) ·
 ##     GUSTS that blow it sideways (4th) · hot-air BALLOONS in the way (7th)
+##   4 Night Race (the lamps and your headlights): CROSSOVERS, figure-8s with a bridge · rain,
+##     PUDDLES that spin the car, OIL (4th) · RIVALS, up to three cars to beat (7th)
+##   5 Reef (noon, the boat): ROCKS and LOGS in the channel (a crash), WHIRLPOOLS (4th) · RIVALS (7th)
 ##   6 Grand Prix (the masters' world, a sunset over a sea of clouds): rival planes, STORM clouds
 ##     (a crash), everything of the sky mixed in
 ## Guard rails (the car, the user 2026-10-17): on the outer side of the Garden's corners (from its
@@ -70,7 +71,7 @@ const PAR_SLACK := 1.03               # par time = a clean drive's time x this, 
 const PAR_PLUS := 1.0                 # 2nd star only for a near-perfect run (no curbs, clean lines)
 ## ...per toy (the boat drifts wide; the plane cuts the corners), and the seconds each
 ## thing in the way costs a lap (going round it)
-const PAR_SLACKS := { "car": 1.03, "boat": 1.12, "plane": 1.06 }
+const PAR_SLACKS := { "car": 1.03, "boat": 1.2, "plane": 1.06 }
 const PAR_PER_THING := { "rock": 0.6, "log": 0.6, "whirl": 0.5, "balloon": 0.4, "storm": 0.5 }
 const CURB_TOUCH := 26.0              # the car's body on the curb (this close to the road's edge)...
 const CURB_SLOW := 0.72               # ...slows it to this
@@ -104,17 +105,17 @@ const PARALLAX := 0.55                # the plane's ground scrolls this much as 
 const VIEW := Rect2(27, 92, 896, 830)
 const HUD_BAND := Rect2(27, 26, 896, 66)
 
-const WORLDS := ["Garden", "Night Race", "Lagoon", "Reef", "Sky", "Grand Prix"]
+const WORLDS := ["Garden", "Lagoon", "Sky", "Night Race", "Reef", "Grand Prix"]
 ## Each world's toy and its place (the floor, the light: _paint)
-const VEHICLES := ["car", "car", "boat", "boat", "plane", "plane"]
-const LOOKS := ["garden", "night", "lagoon", "reef", "sky", "sunset"]
+const VEHICLES := ["car", "boat", "plane", "car", "boat", "plane"]
+const LOOKS := ["garden", "lagoon", "sky", "night", "reef", "sunset"]
 ## What each world brings, said on its first level
-const WORLD_HINTS := ["", "crossovers!", "a boat! it drifts", "rocks: steer clear!", "fly through the rings!", "the Grand Prix!"]
+const WORLD_HINTS := ["", "a boat! it drifts", "fly through the rings!", "crossovers!", "rocks: steer clear!", "the Grand Prix!"]
 ## ...and what joins in later in a world (its 4th and its 7th level)
-const LATER_HINTS := [["boost pads!", "jumps! ramps straight"], ["rain! puddles spin you", "beat the rivals!"],
-	["currents!", "ramps! hit them straight"], ["whirlpools!", "beat the rivals!"], ["gusts blow you!", "balloons ahead!"], ["", ""]]
+const LATER_HINTS := [["boost pads!", "jumps! ramps straight"], ["currents!", "ramps! hit them straight"],
+	["gusts blow you!", "balloons ahead!"], ["rain! puddles spin you", "beat the rivals!"], ["whirlpools!", "beat the rivals!"], ["", ""]]
 ## Each world's page in the level menu
-const WORLD_BACKDROPS := [Color8(150, 196, 120), Color8(44, 46, 82), Color8(232, 150, 120), Color8(110, 200, 196), Color8(170, 204, 230), Color8(236, 150, 110)]
+const WORLD_BACKDROPS := [Color8(150, 196, 120), Color8(232, 150, 120), Color8(170, 204, 230), Color8(44, 46, 82), Color8(110, 200, 196), Color8(236, 150, 110)]
 ## The courses, 9 per world: [grid columns, rows, squares in the patch, road half-width px, a fixed
 ## shape or null, corners wanted, boost pads (a boat: currents), extras]. The first ones of a toy's
 ## first world are fixed shapes, long straights and few turns: an oval, an L, a U (its first
@@ -135,17 +136,7 @@ const LEVELS := [
 	[9, 5, 18, 92.0, null, 14, 2, { "rails": "hairpins", "jumps": 1 }],
 	[9, 6, 21, 88.0, null, 16, 2, { "rails": "hairpins", "jumps": 2 }],
 	[10, 6, 24, 86.0, null, 18, 3, { "rails": "hairpins", "jumps": 2 }],
-	# 2 Night Race (the car): figure-8s; rain, puddles and oil from the 4th; rivals from the 7th
-	[0, 0, 0, 100.0, null, 0, 0, { "eight": [2, 2, 2, 2, 0], "rails": "hairpins" }],
-	[0, 0, 0, 98.0, null, 0, 0, { "eight": [3, 2, 2, 2, 0], "rails": "hairpins" }],
-	[0, 0, 0, 96.0, null, 0, 1, { "eight": [3, 2, 3, 2, 1], "rails": "hairpins" }],
-	[9, 5, 18, 92.0, null, 14, 1, { "rain": true, "puddles": 2, "rails": "hairpins" }],
-	[9, 6, 21, 90.0, null, 16, 1, { "rain": true, "puddles": 3, "oil": 1, "rails": "hairpins" }],
-	[0, 0, 0, 90.0, null, 0, 2, { "eight": [3, 3, 3, 3, 1], "rain": true, "puddles": 3, "oil": 1, "rails": "hairpins" }],
-	[9, 6, 21, 88.0, null, 16, 2, { "rivals": 1, "oil": 1 }],
-	[0, 0, 0, 86.0, null, 0, 2, { "eight": [4, 3, 3, 3, 2], "rain": true, "rivals": 2, "puddles": 2, "jumps": 1 }],
-	[10, 7, 27, 84.0, null, 20, 3, { "rain": true, "rivals": 3, "puddles": 3, "oil": 2, "jumps": 2 }],
-	# 3 Lagoon (the boat): it drifts; currents from the 4th, ramps over sandbars from the 7th
+	# 2 Lagoon (the boat): it drifts; currents from the 4th, ramps over sandbars from the 7th
 	[6, 2, 0, 118.0, [Rect2i(0, 0, 6, 2)], 0, 0],
 	[6, 4, 0, 116.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2)], 0, 0],
 	[6, 4, 0, 114.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2), Rect2i(4, 2, 2, 2)], 0, 0],
@@ -155,17 +146,7 @@ const LEVELS := [
 	[9, 5, 18, 108.0, null, 14, 2, { "jumps": 1 }],
 	[9, 6, 21, 104.0, null, 16, 2, { "jumps": 2 }],
 	[10, 6, 24, 102.0, null, 18, 3, { "jumps": 2 }],
-	# 4 Reef (the boat): rocks and logs; whirlpools from the 4th; rivals from the 7th
-	[8, 4, 14, 112.0, null, 10, 0, { "rocks": 2 }],
-	[8, 5, 16, 110.0, null, 12, 1, { "rocks": 3 }],
-	[9, 5, 18, 108.0, null, 14, 1, { "rocks": 3, "logs": 1 }],
-	[9, 5, 18, 108.0, null, 14, 1, { "rocks": 2, "whirls": 1 }],
-	[9, 6, 21, 106.0, null, 16, 2, { "rocks": 3, "logs": 1, "whirls": 2 }],
-	[9, 6, 21, 104.0, null, 16, 2, { "rocks": 3, "whirls": 2 }],
-	[9, 6, 21, 104.0, null, 16, 2, { "rivals": 1, "rocks": 3 }],
-	[10, 6, 24, 102.0, null, 18, 2, { "rivals": 2, "rocks": 3, "logs": 1, "whirls": 2, "jumps": 1 }],
-	[10, 7, 27, 100.0, null, 20, 3, { "rivals": 3, "rocks": 4, "logs": 2, "whirls": 2, "jumps": 1 }],
-	# 5 Sky (the plane): rings; gusts from the 4th, balloons from the 7th
+	# 3 Sky (the plane): rings; gusts from the 4th, balloons from the 7th
 	[6, 2, 0, 130.0, [Rect2i(0, 0, 6, 2)], 0, 0, { "ring_r": 124.0 }],
 	[6, 4, 0, 130.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2)], 0, 0, { "ring_r": 120.0 }],
 	[6, 4, 0, 130.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2), Rect2i(4, 2, 2, 2)], 0, 0, { "ring_r": 116.0 }],
@@ -175,6 +156,26 @@ const LEVELS := [
 	[9, 5, 18, 130.0, null, 14, 0, { "ring_r": 104.0, "gusts": 2, "balloons": 2 }],
 	[9, 6, 21, 130.0, null, 16, 0, { "ring_r": 100.0, "gusts": 2, "balloons": 3 }],
 	[10, 6, 24, 130.0, null, 18, 0, { "ring_r": 96.0, "gusts": 3, "balloons": 3 }],
+	# 4 Night Race (the car): figure-8s; rain, puddles and oil from the 4th; rivals from the 7th
+	[0, 0, 0, 100.0, null, 0, 0, { "eight": [2, 2, 2, 2, 0], "rails": "hairpins" }],
+	[0, 0, 0, 98.0, null, 0, 0, { "eight": [3, 2, 2, 2, 0], "rails": "hairpins" }],
+	[0, 0, 0, 96.0, null, 0, 1, { "eight": [3, 2, 3, 2, 1], "rails": "hairpins" }],
+	[9, 5, 18, 92.0, null, 14, 1, { "rain": true, "puddles": 2, "rails": "hairpins" }],
+	[9, 6, 21, 90.0, null, 16, 1, { "rain": true, "puddles": 3, "oil": 1, "rails": "hairpins" }],
+	[0, 0, 0, 90.0, null, 0, 2, { "eight": [3, 3, 3, 3, 1], "rain": true, "puddles": 3, "oil": 1, "rails": "hairpins" }],
+	[9, 6, 21, 88.0, null, 16, 2, { "rivals": 1, "oil": 1 }],
+	[0, 0, 0, 86.0, null, 0, 2, { "eight": [4, 3, 3, 3, 2], "rain": true, "rivals": 2, "puddles": 2, "jumps": 1 }],
+	[10, 7, 27, 84.0, null, 20, 3, { "rain": true, "rivals": 3, "puddles": 3, "oil": 2, "jumps": 2 }],
+	# 5 Reef (the boat): rocks and logs; whirlpools from the 4th; rivals from the 7th
+	[8, 4, 14, 112.0, null, 10, 0, { "rocks": 2 }],
+	[8, 5, 16, 110.0, null, 12, 1, { "rocks": 3 }],
+	[9, 5, 18, 108.0, null, 14, 1, { "rocks": 3, "logs": 1 }],
+	[9, 5, 18, 108.0, null, 14, 1, { "rocks": 2, "whirls": 1 }],
+	[9, 6, 21, 106.0, null, 16, 2, { "rocks": 3, "logs": 1, "whirls": 2 }],
+	[9, 6, 21, 104.0, null, 16, 2, { "rocks": 3, "whirls": 2 }],
+	[9, 6, 21, 104.0, null, 16, 2, { "rivals": 1, "rocks": 3 }],
+	[10, 6, 24, 102.0, null, 18, 2, { "rivals": 2, "rocks": 3, "logs": 1, "whirls": 2, "jumps": 1 }],
+	[10, 7, 27, 100.0, null, 20, 3, { "rivals": 3, "rocks": 4, "logs": 2, "whirls": 2, "jumps": 1 }],
 	# 6 Grand Prix (the plane, the masters' world): rival planes, storms, everything
 	[8, 5, 16, 130.0, null, 12, 0, { "ring_r": 104.0, "rivals": 1, "gusts": 1 }],
 	[9, 5, 18, 130.0, null, 14, 0, { "ring_r": 100.0, "rivals": 1, "storms": 1 }],
@@ -189,10 +190,12 @@ const LEVELS := [
 ## Secrets (a world's 6th level; BaseMinigame): a gift up on a balloon over the course (a fizzy car
 ## jumps the springboard to it, a fizzy plane climbs to it), a gift behind a crate wall in a side bay
 ## (a sturdy boat rams through), a gift inside a storm cloud (a sturdy plane flies through), a gift
-## on the water only a lucky boat sees. Finales: Phoenix Pepper (5-9), the case (6-9).
+## on the water only a lucky boat sees. Finales: Phoenix Pepper (5-9, now the Reef's: every game's
+## legendary food is its 5-9 finale), the case (6-9). (The secrets went with their worlds when the
+## worlds were reordered, 2026-10-18.)
 const SECRETS := {
-	15: ["fizzy", "sticker:traffic_cone"], 24: ["milky", "food:Battery"], 33: ["fruity", "sticker:rubber_duck"],
-	42: ["milky", "food:Moon Rock"], 51: ["fizzy", "sticker:gold_cup"],
+	15: ["milky", "food:Battery"], 24: ["milky", "food:Moon Rock"], 33: ["fizzy", "sticker:traffic_cone"],
+	42: ["fruity", "sticker:rubber_duck"], 51: ["fizzy", "sticker:gold_cup"],
 }
 const FINALES := { 45: "food:Phoenix Pepper", 54: "case:prix" }
 const GAP_LEN := 120.0                # a jump's gap along the road (mat px)
@@ -245,7 +248,10 @@ var slow_t := 0.0                      # (focus: the slow-motion left)
 var place := 1                         # the race's position (Grand Prix)
 var qa_autopilot := false              # (tools/qa: the car drives itself, for screenshots)
 var qa_hands_off := false              # (tools/qa hands=off: nobody steers)
-var world_no := 0                      # which world (0 Garden, 1 Night Race...)
+var world_no := 0                      # which world (0 Garden, 1 Lagoon, 2 Sky...)
+var course_seed := 1                   # what this level's course grows from: its number before the worlds were
+									   # reordered (2026-10-18), so every course stays the one it was balanced on
+const OLD_WORLD := [0, 2, 4, 1, 3, 5]  # (each world's place in the old order: Garden, Night Race, Lagoon, Reef, Sky, Grand Prix)
 var vehicle := "car"                   # its toy: "car" / "boat" / "plane" (VEHICLES)
 var look := "garden"                   # its place (LOOKS): the floor, the light
 var cell := 360.0                      # a grid square for this toy (CELLS)
@@ -1102,6 +1108,7 @@ func play_level(n: int) -> void:
 func _begin(n: int) -> void:
 	level = clampi(n, 1, LEVELS.size())
 	world_no = (level - 1) / GameData.LEVELS_PER_WORLD
+	course_seed = OLD_WORLD[world_no] * GameData.LEVELS_PER_WORLD + (level - 1) % GameData.LEVELS_PER_WORLD + 1
 	vehicle = VEHICLES[world_no]
 	look = LOOKS[world_no]
 	cell = CELLS[vehicle]
@@ -1197,7 +1204,7 @@ func _build_circuit() -> void:
 		best_err = 0
 	for i in (0 if extras.has("eight") else SEED_TRIES):
 		var rng := RandomNumberGenerator.new()
-		rng.seed = 6151 * level + 92821 * i + 3
+		rng.seed = 6151 * course_seed + 92821 * i + 3
 		var corners := _patch_outline(rng, spec[0], spec[1], spec[2], spec[4])
 		# the corners wanted first, then the longest (so every level is longer than the last)
 		var err: int = absi(corners.size() - spec[5]) * 100000 - _perimeter(corners)
@@ -1432,7 +1439,7 @@ func _try_crowd(dir: Vector2, horizontal: bool, normal: Vector2, long: float) ->
 					ok = false
 					break
 		if ok:
-			crowd.setup(r, horizontal, level * 13 + 1, normal * side, { "car": "stand", "boat": "pier", "plane": "cloud" }[vehicle])
+			crowd.setup(r, horizontal, course_seed * 13 + 1, normal * side, { "car": "stand", "boat": "pier", "plane": "cloud" }[vehicle])
 			crowd.visible = true
 			return true
 	return false
@@ -1532,7 +1539,7 @@ func _place_features() -> void:
 	gaps.clear()
 	slicks.clear()
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 4409 * level + 11
+	rng.seed = 4409 * course_seed + 11
 	var used: Array = []                       # [first, last] index ranges taken
 	var free_at := func(a: int, b: int) -> bool:
 		if a < 30 or b > count - 30:
@@ -1845,8 +1852,8 @@ func _paint() -> Image:
 		_grass_noise.fractal_octaves = 3
 		_cloud_noise = FastNoiseLite.new()
 		_cloud_noise.frequency = 0.006
-	_grass_noise.seed = level
-	_cloud_noise.seed = level * 7 + 1
+	_grass_noise.seed = course_seed
+	_cloud_noise.seed = course_seed * 7 + 1
 	_distance_field(w, h)
 	match vehicle:
 		"boat":
@@ -2079,7 +2086,7 @@ func _paint_water(w: int, h: int) -> Image:
 	var idx := _idx
 	var hw := half_w / PX
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 77 * level + 5
+	rng.seed = 77 * course_seed + 5
 	_sandbars.clear()
 	_palms.clear()
 	for k in int(w * h / 16000) + 3:
@@ -2492,7 +2499,7 @@ func _paint_sky(w: int, h: int) -> Image:
 				top[kk + 3] = arrow.a8
 	# a few clouds at the plane's height, off the course (it flies past them: they show its speed)
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 313 * level + 1
+	rng.seed = 313 * course_seed + 1
 	for c2 in int(w * h / 30000) + 3:
 		var p := Vector2i(rng.randi_range(EDGE, w - EDGE - 40), rng.randi_range(EDGE, h - EDGE - 30))
 		if _dist[p.y * w + p.x] < half_w / PX * 1.6:
@@ -2668,7 +2675,7 @@ func _lit(c: Color, x: int, y: int) -> Color:
 ## the car), and under them the shade, with flecks of sun through the leaves
 func _plant_trees(w: int, h: int) -> void:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 53 * level + 9
+	rng.seed = 53 * course_seed + 9
 	var spots: Array = []
 	var x := rng.randi_range(20, 120)
 	while x < w - 20:
@@ -2705,7 +2712,7 @@ func _plant_trees(w: int, h: int) -> void:
 func _paint_canopy(w: int, h: int) -> Image:
 	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 17 * level + 2
+	rng.seed = 17 * course_seed + 2
 	for tr in _trees:
 		var c: Vector2 = tr[0]
 		var r: float = tr[1]
@@ -2741,7 +2748,7 @@ func _garden_decor(w: int, h: int, dist: PackedFloat32Array, hw: float) -> void:
 		return
 	_plant_trees(w, h)
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 91 * level + 3
+	rng.seed = 91 * course_seed + 3
 	var stand := Rect2(crowd.rect.position / PX, crowd.rect.size / PX).grow(4.0) if crowd.visible else Rect2()
 	var clear := func(x: int, y: int, room: float) -> bool:
 		return x >= EDGE and y >= EDGE and x < w - EDGE and y < h - EDGE and dist[y * w + x] > hw + room and not stand.has_point(Vector2(x, y))

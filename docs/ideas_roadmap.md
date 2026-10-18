@@ -91,15 +91,17 @@ To build:
 - Tilt Maze: tune physics and par times on the phone; the vaults of the other boosts once they
   exist (see "Boost-gated prizes"); the world map showing vaults; a tutorial per world's thing.
 - Splash Hoops: more polish (it has the skeleton).
-- Pal Prix (BUILT on complete-games, reworked 2026-10-17 after the user: "2 car, 2 boat, 2
-  plane"): the pal on an RC toy round a course seen close up at an angle (sprite-stacked toys,
-  orange = left, forward = right). Car: Garden (the basics, tyre walls on the corners, pads, jumps)
-  and Night Race (figure-8s, rain, puddles, oil, rival cars). Boat (it drifts, bumps along a buoyed
-  channel, can't fall): Lagoon (currents, ramps over sandbars) and Reef (rocks, logs, whirlpools,
-  rival boats). Plane (free in the sky, through rings; the ground far below scrolls slower): Sky
-  (gusts, hot-air balloons) and Grand Prix (a sunset over a sea of clouds: storm clouds, rival
-  planes). Lives (3 hearts): a crash breaks one. Balanced with the QA autopilot (tools/qa
-  until=done: every race's result and crashes printed). Its song: see "Music prompts".
+- Pal Prix (BUILT on complete-games, reworked 2026-10-17/18 after the user: "2 car, 2 boat, 2
+  plane", in the order car, boat, plane, then the second world of each): the pal on an RC toy round
+  a course seen close up at an angle (sprite-stacked toys, orange = left, forward = right).
+  1 Garden (the car: the basics, tyre barriers that bounce it back, pads, jumps) · 2 Lagoon (the
+  boat drifts down a channel of floating buoys; the shallows slow it, the sandbank is a crash;
+  currents, ramps over sandbars) · 3 Sky (the plane through rings, a sparkle trail to the next
+  ones, the ground far below scrolling slower; gusts, hot-air balloons) · 4 Night Race (figure-8s,
+  rain, puddles, oil, rival cars) · 5 Reef (a coral bank, rocks, logs, whirlpools, rival boats) ·
+  6 Grand Prix (a sunset over a sea of clouds: storm clouds, rival planes). Lives (3 little toys):
+  a crash costs one. Balanced with the QA autopilot (tools/qa until=done: every race's result and
+  crashes printed; hands=off: nobody steers, it must not finish). Its song: see "Music prompts".
   LATER (the user, 2026-10-18: "we can figure that out after"):
   - More places per toy, so the worlds keep the variety they had (the Kitchen, the Rain park, the
     old Sky track, a bathtub or a river for the boat, space for the plane...).

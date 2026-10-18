@@ -113,15 +113,20 @@ and its finale; the details are in each game's script header.)
   breaks; the duck rests against a wall between crossings, the rat hides in its grate between runs
   (always a way past). A vault gate for every drink (fence, cracked wall, channel, shutter, chest);
   its sticker prizes are stickers of your own pals (never one you haven't met: "sticker:pal").
-- Pal Prix (BUILT, reworked 2026-10-17 after the user: two worlds per toy): 1 Garden (the car: the
-  basics, tyre walls on the corners; boost pads; jumps over gaps) · 2 Night Race (figure-8s with a
-  bridge; rain, puddles and oil; up to three rival cars) · 3 Lagoon (the boat: it drifts down a
-  buoyed channel and can't fall; currents; ramps over sandbars) · 4 Reef (rocks and logs, whirlpools,
-  rival boats) · 5 Sky (the plane through rings, the ground far below scrolling slower; gusts;
-  hot-air balloons) · 6 Grand Prix (a sunset over a sea of clouds: storm clouds, rival planes, all
-  of the sky). Bigger courses with room round them; puddles, oil, rocks, balloons and storms always
-  to one side of the course, on straights. The crowd is pals of every kind, your own among them;
-  they scream and scatter at a crash near them. Phoenix Pepper on 5-9, the Grand Prix case on 6-9.
+- Pal Prix (BUILT, reworked 2026-10-17/18 after the user: two worlds per toy, in the order car,
+  boat, plane, then each toy's second world): 1 Garden (the car: the basics, tyre barriers on the
+  corners that bounce it back; boost pads; jumps over gaps) · 2 Lagoon (the boat: it drifts down a
+  channel marked by floating buoys; past them the shallows slow it and the sandbank is a crash;
+  currents; ramps over sandbars) · 3 Sky (the plane through rings, a sparkle trail to the next
+  ones, the ground far below scrolling slower; gusts; hot-air balloons) · 4 Night Race (figure-8s
+  with a bridge; rain, puddles and oil; rival cars) · 5 Reef (a coral bank, rocks and logs,
+  whirlpools, rival boats) · 6 Grand Prix (a sunset over a sea of clouds: storm clouds, rival
+  planes, all of the sky). Each toy's first world starts on easy shapes again (an oval, an L, a U).
+  Bigger courses with room round them; puddles, oil, rocks, balloons and storms always to one side
+  of the course, on straights. The crowd is pals of every kind, your own among them, never still;
+  they scream and scatter at a crash near them. The lives are little toys of the world's kind.
+  Battery on 2-6 (the Lagoon), Moon Rock on 3-6 (the Sky), Phoenix Pepper on 5-9 (the Reef: every
+  game's legendary food is its 5-9 finale), the Grand Prix case on 6-9.
 - Paper Sumo (BUILT; the rivals are critters of the pals' world, not pals, drawn by the pal
   renderer: tools/art/sumo_rivals.py, after the user's note that the first paper dolls, cereal
   mascots and origami didn't fit): 1 Wooden Box (frogs: hop, lean, push out) · 2 Pond Garden, a
@@ -234,12 +239,12 @@ and each family's legendary food on its ULTRA Dai (5 legends).
 
 | Special food   | Kind      | Found first                                                   |
 |----------------|-----------|---------------------------------------------------------------|
-| Battery        | tech      | Pal Prix 3-6 (Lagoon: behind crates) · Tilt Maze 5-3 (Factory) |
+| Battery        | tech      | Pal Prix 2-6 (Lagoon: behind crates) · Tilt Maze 5-3 (Factory) |
 | Microchip      | tech      | Tilt Maze 4-3 (Sewer) · Paper Sumo 4-9 (beat the tin robot)   |
-| Moon Rock      | cosmic    | Pal Prix 5-6 (Sky: in a storm cloud) · Tilt Maze 6-3 (Space)  |
+| Moon Rock      | cosmic    | Pal Prix 3-6 (Sky: in a storm cloud) · Tilt Maze 6-3 (Space)  |
 | Alien Goo      | cosmic    | Tilt Maze 6-8 (Space)                                         |
 | Kraken Brine   | legendary | Splash Hoops 5-9 (the Storm)                                  |
-| Phoenix Pepper | legendary | Pal Prix 5-9 (the Phoenix Cup)                                |
+| Phoenix Pepper | legendary | Pal Prix 5-9 (the Reef's last race)                           |
 | Golden Seed    | legendary | Paper Sumo 5-9 (the beetle king)                              |
 | Dragon Oil     | legendary | Top Spin 5-9 (the dragon top)                                 |
 | Stardust Sugar | legendary | Tummy Tunes 5-9 (the star song)                               |
@@ -425,7 +430,7 @@ extra life) · no pal stats or punishments (hunger and boost the only states) ·
 50 / 70 / 100 and drink levels 10 / 20 · special foods found first, then the daily shelf (or
 350 / 450 stars) · the 9-level world shape · the collectables rule (5b).
 DECIDED (user, 2026-10-17/18): Pal Prix 2 car + 2 boat + 2 plane worlds (the car's progression in
-its two) · lives in Tilt Maze and Pal Prix (3, +1 for a splashy pal; out = the level again) · guard
+its two; 2026-10-18: ordered car, boat, plane, then the second of each) · lives in Tilt Maze and Pal Prix (3, +1 for a splashy pal; out = the level again) · guard
 rails to try · the crowd: pals of every kind, screaming at a crash · the first case early and
 simple, then fancier ones · the specials page once a special food is yours.
 OPEN: Tummy Tunes' 6th world (Toy Trumpet or The Tummy) · Pal Prix's places (see the roadmap: more
