@@ -68,6 +68,12 @@ light, playful and visually intuitive: icons over text, learn by doing. Asia fir
 
 ## Open questions & pending (one list; keep it updated, details in the sections below)
 To decide:
+- REVIEW the drink boosts and what they unlock (the user, 2026-10-18), game by game, so that in
+  each case the mechanic makes the most sense possible: what each boost does in each game (Splash,
+  Fizz, Focus, Sturdy, Lucky), which gate it opens there, and what's behind it (the prize should
+  belong to the boost and to the place: a fizzy pal hops, a sturdy one rams, a lucky one sees what
+  others don't...). Today's state: docs/progression.md (the boost table, the secrets) and each
+  game's SECRETS; the older Tilt Maze proposal: "Boost-gated prizes" below.
 - Coins vs won items (PROPOSED 2026-10-15): coins buy the basics (games, food packs, special foods,
   drink levels, a sticker pack of the pals you've discovered, a few plain cases); the themed / rare
   stickers and cases are only WON (vaults, gift tracks, Lucky Pinch, bosses). Some stickers in the
