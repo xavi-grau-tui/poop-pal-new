@@ -89,6 +89,7 @@ const BOAT_SPEED := 520.0
 const BOAT_TURN := 5.0
 const BOAT_GRIP := 3.4
 const SHALLOW_IN := 10.0
+const BUOY_GAP := 12.0                # a buoy every this far along the channel's edge, board px
 const SHALLOW_SLOW := 0.7
 const SHORE_AT := 36.0
 const SHORE_PAINT := 52.0
@@ -208,9 +209,10 @@ const CURB := [Color8(226, 70, 64), Color8(246, 242, 232)]
 ## The guard rail: a row of tyres just outside the road's edge (dark rubber, a lit rim, the hole;
 ## every other one painted red or white, like a race track's tyre wall)
 const TYRE := [Color8(40, 34, 44), Color8(62, 58, 70), Color8(96, 92, 104), Color8(24, 20, 28)]
-const TYRE_PAINT := [Color8(226, 70, 64), Color8(246, 242, 232)]
-const TYRE_R := 3.4                   # a tyre's radius, board px
-const TYRE_STEP := 7.0                # one every this far along the edge, board px
+const TYRE_PAINT := [Color8(60, 112, 196), Color8(246, 242, 232)]    # the barrier's belt panels
+const TYRE_R := 4.5                   # a tyre's radius, board px (its sprite 9 px across)
+const RAIL_BELT := 3.5                # the barrier's belt in front of the tyres, board px
+const TYRE_STEP := 8.0                # one every this far along the edge, board px (they touch)
 const OUTLINE := Color8(40, 34, 44)
 const PAD := [Color8(252, 210, 64), Color8(226, 150, 40), Color8(70, 64, 78)]    # chevrons, their edge, the plate
 const SIDE := [Color8(236, 150, 64), Color8(198, 110, 44), Color8(150, 78, 34)]    # the track's orange plastic side
@@ -293,6 +295,7 @@ var ring_back: Node2D                  # the plane's rings: their lower halves (
 var ring_front: Node2D                 # ...and their upper ones (over it)
 var gust_fx: GustFx                    # the wind's streaks across the course
 var guide: FlightGuide                  # the plane's: the sparkles to its next rings
+var buoys: FloatingBuoys                # the boat's: the buoys along the channel
 var pointer: RingPointer                # ...and the arrow to the next one off the screen
 var sky_shadow: Sprite2D               # the plane's shadow on the ground far below (it moves with the ground)
 var car: Node2D
@@ -816,6 +819,70 @@ class RingPointer extends Node2D:
 		draw_colored_polygon(PackedVector2Array([tip, l, notch, r]), Color8(255, 210, 70))
 		draw_colored_polygon(PackedVector2Array([tip, l.lerp(tip, 0.35), notch.lerp(tip, 0.4)]), Color8(255, 244, 180))
 
+## The buoys along the boat's channel, floating (the user, 2026-10-18: give them some flexibility,
+## still marking the course but moved by the boat): the boat (a rival boat too) brushing one
+## pushes it aside, it bobs and drifts back to its place on a soft spring, a ring of ripples
+## round it while it moves; on the 4 px grid
+class FloatingBuoys extends Node2D:
+	const REACH := 34.0                   # a hull this close pushes a buoy (mat px)
+	const SPRING := 14.0                  # its pull back to its place, per s^2
+	const DAMP := 3.2
+	const MAX_OFF := 30.0                 # never farther than this from its place
+	var rest := PackedVector2Array()
+	var off := PackedVector2Array()
+	var vel := PackedVector2Array()
+	var red: Array[bool] = []
+	var tex := {}
+	var t := 0.0
+	func setup(spots: Array) -> void:
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		rest.clear()
+		off.clear()
+		vel.clear()
+		red.clear()
+		for sp in spots:
+			rest.append(sp[0])
+			off.append(Vector2.ZERO)
+			vel.append(Vector2.ZERO)
+			red.append(bool(sp[1]))
+		tex = { true: PalPrixArt.buoy(true), false: PalPrixArt.buoy(false) }
+		visible = not rest.is_empty()
+		queue_redraw()
+	func update(delta: float, boat: Vector2, boat_vel: Vector2, rivals: Array) -> void:
+		if rest.is_empty():
+			return
+		t += delta
+		var hulls: Array = [[boat, boat_vel]]
+		for r in rivals:
+			hulls.append([r["pos"], Vector2.from_angle(float(r["heading"])) * 400.0])
+		for i in rest.size():
+			var p := rest[i] + off[i]
+			for hl in hulls:
+				var to: Vector2 = p - (hl[0] as Vector2)
+				var dd := to.length()
+				if dd < REACH and dd > 0.01:
+					# shoved out of the hull's way, and a little along with it
+					vel[i] += to / dd * (REACH - dd) * 26.0 * delta + (hl[1] as Vector2) * 0.9 * delta
+			vel[i] += -off[i] * SPRING * delta
+			vel[i] *= exp(-DAMP * delta)
+			off[i] += vel[i] * delta
+			if off[i].length() > MAX_OFF:
+				off[i] = off[i].normalized() * MAX_OFF
+		queue_redraw()
+	func _draw() -> void:
+		for i in rest.size():
+			var moving := vel[i].length() > 8.0 or off[i].length() > 3.0
+			# (a gentle bob, a little more while it's been knocked about)
+			var bob := roundf(sin(t * 2.2 + rest[i].x * 0.05 + rest[i].y * 0.03) * (0.6 if not moving else 1.2)) * 4.0
+			var p := (rest[i] + off[i]).snapped(Vector2(4, 4))
+			if moving:
+				var ring := 4.0 * (3.0 + roundf(fposmod(t * 6.0 + i, 3.0)))
+				for a in 8:
+					var q := (p + Vector2.from_angle(a * TAU / 8.0) * ring).snapped(Vector2(4, 4))
+					draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, 0.45))
+			var tx: Texture2D = tex[red[i]]
+			draw_texture_rect(tx, Rect2(p - Vector2(10, 10) + Vector2(0, bob), tx.get_size() * 4.0), false)
+
 ## The wind across the course in a gust: short white streaks blowing over it (on the 4 px grid)
 class GustFx extends Node2D:
 	var zones: Array = []                 # [points (the course there), the way it blows]
@@ -905,8 +972,10 @@ func _begin(n: int) -> void:
 	_build_circuit()
 	_place_crowd()
 	_place_features()
+	_buoy_spots.clear()
 	board.texture = ImageTexture.create_from_image(_paint())
 	track.texture = ImageTexture.create_from_image(track_image)
+	buoys.setup(_buoy_spots)
 	canopy.visible = look == "garden" and not _trees.is_empty()
 	if canopy.visible:
 		canopy.texture = ImageTexture.create_from_image(_paint_canopy(int(mat_size.x / PX), int(mat_size.y / PX)))
@@ -923,6 +992,15 @@ func _begin(n: int) -> void:
 	trail.marks.clear()
 	last_cp = 0.0
 	car_drop = 0.0
+	# (a race lost on its last heart left the toy faded out, shrunk, under the track: put it back,
+	# the user 2026-10-18: after a storm cloud the next race's plane was invisible)
+	car.modulate = Color(1, 1, 1)
+	car.scale = Vector2.ONE
+	for nd in [car, antenna, antenna_tip, driver]:
+		if nd.get_parent() != front:
+			nd.reparent(front, false)
+	front.move_child(shadow, 0)
+	front.move_child(prop, -1)                      # (the propeller over the plane's nose)
 	held = [false, false]
 	_touch.clear()
 	_stars_shown = 3
@@ -1092,15 +1170,17 @@ func _normal(i: int) -> Vector2:
 ## The tyre wall's px for the painter: 1 a tyre's dark rim, 2 its rubber, 3 its lit side, 4 its
 ## hole, 5 / 6 a painted (red / white) tyre's band; just outside the road's edge on a rail's side
 func _rail_mask() -> PackedByteArray:
+	# a racing barrier (the user, 2026-10-18: "more pro", "whole round pixelated tyres, actual tyre
+	# barriers"): a belt along the road's edge in long blue and white panels, outlined; the tyres
+	# behind it are whole round sprites stamped on afterwards (_stamp_tyres)
 	var m := PackedByteArray()
 	m.resize(_bw * _bh)
 	if _rail.is_empty() or not _rail.has(1) and not _rail.has(-1):
 		return m
 	var hw := half_w / PX
-	var mid := hw + 1.0 + TYRE_R
 	for i in m.size():
 		var d := _dist[i]
-		if d <= hw or d > mid + TYRE_R + 0.6:
+		if d <= hw or d > hw + RAIL_BELT:
 			continue
 		var c := _idx[i]
 		if _rail[c] == 0:
@@ -1109,23 +1189,68 @@ func _rail_mask() -> PackedByteArray:
 		var n := _normal(c)
 		if signf((p - centre[c]).dot(n)) != float(_rail[c]):
 			continue
-		# where along the edge (board px), then the nearest tyre's middle
-		var dir := Vector2(n.y, -n.x)
-		var u := (c * STEP + (p - centre[c]).dot(dir)) / PX * (mid / hw)
-		var k := roundf(u / TYRE_STEP)
-		var off := Vector2(u - k * TYRE_STEP, d - mid)
-		var r := off.length()
-		if r > TYRE_R + 0.6:
-			continue
-		if r > TYRE_R - 0.4:
+		var along := (c * STEP + (p - centre[c]).dot(Vector2(n.y, -n.x))) / PX
+		if d > hw + RAIL_BELT - 0.9:
 			m[i] = 1
-		elif r < 1.1:
-			m[i] = 4
-		elif int(k) % 2 == 0 and r > 1.9:
-			m[i] = 5 if int(k / 2) % 2 == 0 else 6
 		else:
-			m[i] = 3 if off.x + off.y * signf(float(_rail[c])) < -0.8 else 2
+			m[i] = 5 if int(floorf(along * (d / hw) / 7.0)) % 2 == 0 else 6
 	return m
+
+## The tyre barrier behind the belt: two rows of whole tyres (the back row staggered half a tyre,
+## the front one over it), each a round pixel sprite (TYRE_ROWS), lit like the track
+const TYRE_ROWS := [
+	"...ooo...",
+	".ooLLLoo.",
+	".oLLLMMo.",
+	"oLLoooMDo",
+	"oLMohoDDo",
+	"oLMoooDDo",
+	".oMMDDDo.",
+	".ooDDDoo.",
+	"...ooo...",
+]
+func _stamp_tyres(top: PackedByteArray, w: int, h: int) -> void:
+	if _rail.is_empty():
+		return
+	var hw := half_w / PX
+	var cols := { "o": TYRE[3], "L": TYRE[2], "M": TYRE[1], "D": Color8(48, 44, 54), "h": Color8(14, 12, 18) }
+	var front: Array = []                    # [middle (board px), outward]
+	var back: Array = []
+	var last := Vector2(-1e9, -1e9)
+	var prev: Array = []
+	for c in count:
+		if _rail[c] == 0:
+			last = Vector2(-1e9, -1e9)
+			prev = []
+			continue
+		var out := _normal(c) * float(_rail[c])
+		var at: Vector2 = centre[c] / PX + out * (hw + RAIL_BELT + TYRE_R - 2.0)   # (snug against the belt)
+		if at.distance_to(last) < TYRE_STEP:
+			continue
+		front.append([at, out])
+		if not prev.is_empty():
+			var o2: Vector2 = ((prev[1] as Vector2) + out).normalized()
+			back.append([((prev[0] as Vector2) + at) / 2.0 + o2 * TYRE_R * 1.35, o2])
+		prev = [at, out]
+		last = at
+	for spot in back + front:
+		var tl := Vector2i(((spot[0] as Vector2) - Vector2(4, 4)).round())
+		for yy in TYRE_ROWS.size():
+			var row: String = TYRE_ROWS[yy]
+			for xx in row.length():
+				var ch := row[xx]
+				if ch == ".":
+					continue
+				var x := tl.x + xx
+				var y := tl.y + yy
+				if x < 0 or y < 0 or x >= w or y >= h:
+					continue
+				var col: Color = _lit(cols[ch], x, y)
+				var kk := (y * w + x) * 4
+				top[kk] = col.r8
+				top[kk + 1] = col.g8
+				top[kk + 2] = col.b8
+				top[kk + 3] = 255
 
 ## The stand beside the start straight, on whichever side has room (never near the road)
 func _place_crowd() -> void:
@@ -1146,9 +1271,11 @@ func _try_crowd(dir: Vector2, horizontal: bool, normal: Vector2, long: float) ->
 		var r := Rect2(c - size / 2.0, size)
 		var ok := r.position.x > EDGE * PX + 8 and r.position.y > EDGE * PX + 8 and r.end.x < mat_size.x - EDGE * PX - 8 and r.end.y < mat_size.y - EDGE * PX - 8
 		if ok:
-			for p in centre:
+			for j in count:
+				var p := centre[j]
 				var q := p.clamp(r.position, r.end)
-				if p.distance_to(q) < half_w + gap - 6.0:
+				var clear := half_w + gap - 6.0 + (60.0 if _rail_at(j) else 0.0)   # (a tyre wall there: its width too)
+				if p.distance_to(q) < clear:
 					ok = false
 					break
 		if ok:
@@ -1760,6 +1887,7 @@ func _paint_track(w: int, h: int) -> Image:
 				data[k + 2] = col.b8
 				data[k + 3] = 255
 			k += 4
+	_stamp_tyres(top, w, h)
 	track_image = Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, top)
 	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
 
@@ -1893,15 +2021,26 @@ func _paint_water(w: int, h: int) -> Image:
 				dd = wp.distance_to(c2) - float(ob["r"])
 			if dd > 0.0 and dd < 22.0 and ((q.x + q.y) % 2 == 0 or dd < 10.0):
 				_tint(data, q.y * w + q.x, Color8(250, 252, 255), 0.75 - dd / 40.0)
-	# the track layer: the buoys marking both edges of the channel, the floating ramps, the start line
+	# the track layer: the floating ramps, the start line; the buoys marking both edges of the
+	# channel float on their own (FloatingBuoys: the boat pushes them aside)
+	_buoy_spots.clear()
 	var top := PackedByteArray()
 	top.resize(w * h * 4)
-	for s3 in range(0, count, 6):
-		var c3 := centre[s3] / PX
-		var n3 := _normal(s3)
-		for sd in [-1.0, 1.0]:
-			var b := PalPrixArt.buoy((s3 / 6) % 2 == 0).get_image()
-			_blit(top, w, h, b, Vector2i((c3 + n3 * sd * hw).round()) - Vector2i(2, 2))
+	# (one every BUOY_GAP along each edge itself: spaced by the course's middle they bunched up on
+	# the inside of the bends, the user 2026-10-18)
+	for sd in [-1.0, 1.0]:
+		var placed := PackedVector2Array()
+		var first: Vector2 = centre[0] / PX + _normal(0) * sd * hw
+		var nb := 0
+		for s3 in count:
+			var at: Vector2 = centre[s3] / PX + _normal(s3) * sd * hw
+			if not placed.is_empty() and at.distance_to(placed[placed.size() - 1]) < BUOY_GAP:
+				continue
+			if s3 > count - 8 and at.distance_to(first) < BUOY_GAP:
+				continue                                         # (the lap closing on the first one)
+			placed.append(at)
+			_buoy_spots.append([(at.round() + Vector2(0.5, 0.5)) * PX, nb % 2 == 0])
+			nb += 1
 	for i3 in count:
 		if _on_ramp(i3) or i3 <= 2 or i3 >= count - 2:
 			var c4 := centre[i3] / PX
@@ -1970,6 +2109,7 @@ static func _tint(data: PackedByteArray, i: int, col: Color, k: float) -> void:
 ## lighter in the shallows outside, sand and islands farther out; the Lagoon's warm sunset, the
 ## Reef's turquoise over coral
 var _island := PackedByteArray()       # the boat's worlds: the islands, per board px (_paint_water)
+var _buoy_spots: Array = []            # ...and where its buoys float: [mat px, red]
 var _coral := PackedByteArray()        # ...and the reef's coral
 const REEF := [Color8(30, 142, 178), Color8(62, 190, 200), Color8(132, 222, 214)]   # deep, the shallows, near the sand
 const CORAL := [Color8(236, 128, 150), Color8(250, 176, 104), Color8(184, 132, 214)]
@@ -2468,8 +2608,6 @@ func _create_nodes() -> void:
 	sky_shadow.modulate = Color(0.1, 0.08, 0.2, 0.28)
 	sky_shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	world.add_child(sky_shadow)                      # (the plane's shadow, on the ground far below)
-	crowd = Crowd.new()
-	world.add_child(crowd)                          # (on the floor, beside the track)
 	# drawn in this order: the floor, a car falling behind the track, the raised track, the car
 	behind = Node2D.new()
 	world.add_child(behind)
@@ -2478,6 +2616,12 @@ func _create_nodes() -> void:
 	track.scale = Vector2(PX, PX)
 	track.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	world.add_child(track)
+	# the stand beside the track, drawn over it: its front row is nearer you than the track's side
+	# (the user, 2026-10-18: a stand south of the road had its pals hop up under the track)
+	crowd = Crowd.new()
+	world.add_child(crowd)
+	buoys = FloatingBuoys.new()
+	world.add_child(buoys)                          # (on the water, under the boat)
 	trail = Trail.new()
 	world.add_child(trail)
 	guide = FlightGuide.new()
@@ -2818,6 +2962,8 @@ func _process(frame_delta: float) -> void:
 	var delta := minf(frame_delta, 0.05)
 	_update_course_things(delta)
 	crowd.watch = car_pos
+	if vehicle == "boat":
+		buoys.update(delta, car_pos, vel, rivals)
 	match state:
 		State.WAIT:
 			var before := ceili(countdown - 0.6)
@@ -3320,6 +3466,7 @@ func _respawn() -> void:
 		if n.get_parent() != front:
 			n.reparent(front, false)
 	front.move_child(shadow, 0)
+	front.move_child(prop, -1)                      # (the propeller over the plane's nose)
 	trail.marks.clear()
 	car.modulate = Color(1, 1, 1)
 	car.scale = Vector2.ONE
