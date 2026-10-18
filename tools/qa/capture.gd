@@ -16,6 +16,7 @@ extends Node
 ##   case=ID       the device wears that case (with unlock=all)
 ##   menutest=N    drive the game's level menu: FORWARD N times, tap, hold; print what plays
 ##   bonus=1       a Lucky Pinch bonus right away, a screenshot `wait` s later
+##   until=done    on to the next level as soon as this one is over (at most `wait` s)
 ## Prints "QA DONE" and quits when finished. The testing save is wiped at every launch anyway.
 
 var args := {}
@@ -110,7 +111,14 @@ func _run() -> void:
 			if "qa_skill" in g and args.has("skill"):
 				g.qa_skill = int(args["skill"])
 		for k in shots:
-			await _wait(wait)
+			if args.has("until"):
+				# (until=done: on as soon as the level is over, at most `wait` s)
+				var waited := 0.0
+				while waited < wait and g.is_running:
+					await _wait(0.5)
+					waited += 0.5
+			else:
+				await _wait(wait)
 			await _shot("g%s_l%02d%s" % [game, lvl, "" if shots == 1 else "_%d" % k])
 	_quit()
 

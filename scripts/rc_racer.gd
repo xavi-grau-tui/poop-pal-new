@@ -68,6 +68,10 @@ const STEP := 8.0                     # centre-line points, every STEP px
 const SEED_TRIES := 30
 const PAR_SLACK := 1.03               # par time = a clean drive's time x this, + PAR_PLUS: the
 const PAR_PLUS := 1.0                 # 2nd star only for a near-perfect run (no curbs, clean lines)
+## ...per toy (the boat drifts and bumps the buoys; the plane cuts the corners), and the seconds each
+## thing in the way costs a lap (going round it)
+const PAR_SLACKS := { "car": 1.03, "boat": 1.2, "plane": 1.06 }
+const PAR_PER_THING := { "rock": 0.6, "log": 0.6, "whirl": 0.5, "balloon": 0.4, "storm": 0.5 }
 const CURB_TOUCH := 26.0              # the car's body on the curb (this close to the road's edge)...
 const CURB_SLOW := 0.72               # ...slows it to this
 const BOOST := 0.6                    # a boost pad: this much faster...
@@ -853,7 +857,9 @@ func _build_circuit() -> void:
 	bridge_range = _find_bridge() if extras.has("eight") and vehicle == "car" else Vector2i(-1, -1)
 	_find_rails(str(extras.get("rails", "")) if vehicle == "car" else "")
 	_place_pads(spec[6])
-	par = ceilf(lap_length * LAPS / SPEED * PAR_SLACK + PAR_PLUS - pads.size() * LAPS * PAD_SAVES)
+	par = ceilf(lap_length * LAPS / _speed() * PAR_SLACKS[vehicle] + PAR_PLUS - pads.size() * LAPS * PAD_SAVES)
+	for kind in PAR_PER_THING:
+		par += ceilf(int(extras.get(kind + "s", 0)) * PAR_PER_THING[kind] * LAPS)
 
 ## The car's guard rails (the user, 2026-10-17): on the outer side of the corners ("all") or of
 ## the hairpins only, the tightest ("hairpins": two corners the same way, a short straight between)
@@ -901,6 +907,16 @@ func _find_rails(kind: String) -> void:
 		var outer := -int(cr[2])
 		for j in range(cr[0] - 6, cr[1] + 7):
 			_rail[posmod(j, count)] = outer
+
+## Is the course straight round point i (a little either side)?
+func _straight(i: int, reach := 10) -> bool:
+	for o in range(-reach, reach + 1, 5):
+		var a := centre[posmod(i + o - 4, count)]
+		var b := centre[posmod(i + o, count)]
+		var c := centre[posmod(i + o + 4, count)]
+		if absf((b - a).angle_to(c - b)) > 0.01:
+			return false
+	return true
 
 ## The left normal of the centre line at point i (screen: to the right when facing along it)
 func _normal(i: int) -> Vector2:
@@ -1112,14 +1128,24 @@ func _place_features() -> void:
 			continue
 		gaps.append([g0, g1])
 		used.append([r0, g1])
-	# the plane's rings first (the rest keeps clear of them): every RING_GAP along the course
+	# the plane's rings first (the rest keeps clear of them): every RING_GAP along the course, each
+	# moved onto the nearest straight bit (not just out of a bend)
 	rings.clear()
 	if vehicle == "plane":
 		var gap_pts := int(RING_GAP / STEP)
 		var i := 40
 		while i < count - 30:
-			rings.append({ "i": i, "pos": centre[i], "n": _normal(i), "r": float(extras.get("ring_r", 110.0)), "lap": 0, "hit": false })
-			used.append([i - 10, i + 10])
+			var at := i
+			for o in 25:
+				if _straight(i + o):
+					at = i + o
+					break
+				if _straight(i - o) and i - o > 30:
+					at = i - o
+					break
+			at = clampi(at, 30, count - 30)
+			rings.append({ "i": at, "pos": centre[at], "n": _normal(at), "r": float(extras.get("ring_r", 110.0)), "lap": 0, "hit": false })
+			used.append([at - 10, at + 10])
 			i += gap_pts
 	# oil slicks, puddles (the car), whirlpools (the boat): to one side of the road, never across it
 	# all (the user, 2026-10-17: there's always room to go round)
@@ -1130,7 +1156,7 @@ func _place_features() -> void:
 		while placed < want and tries < 200:
 			tries += 1
 			var i := rng.randi_range(40, count - 40)
-			if not free_at.call(i - 6, i + 6):
+			if not free_at.call(i - 6, i + 6) or not _straight(i, 12 if tries < 120 else 8):
 				continue
 			var side := -1.0 if rng.randf() < 0.5 else 1.0
 			slicks.append([centre[i] + _normal(i) * side * rng.randf_range(0.42, 0.52) * half_w, kind])
@@ -1146,7 +1172,15 @@ func _place_features() -> void:
 		while placed < want and tries < 300:
 			tries += 1
 			var i := rng.randi_range(45, count - 40)
-			if not free_at.call(i - 8, i + 8):
+			# (on a straight, the longer the better, never in a bend where a toy swings out: none left,
+			# one fewer), with room to straighten up between two (a boat drifts)
+			if not free_at.call(i - 8, i + 8) or not _straight(i, 16 if tries < 150 else 9):
+				continue
+			var crowded := false
+			for o2 in obstacles:
+				if absi(posmod(int(o2["i"]) - i + count / 2, count) - count / 2) < (70 if vehicle == "boat" else 40):
+					crowded = true
+			if crowded and tries < 250:
 				continue
 			var side := -1.0 if rng.randf() < 0.5 else 1.0
 			var n := _normal(i)
@@ -1162,10 +1196,10 @@ func _place_features() -> void:
 					ob["pos"] = (a + ob["b"]) / 2.0
 					ob["r"] = 13.0
 				"balloon":
-					ob["r"] = 44.0
+					ob["r"] = 34.0
 					ob["pos"] = centre[i] + n * side * rng.randf_range(0.35, 0.8) * half_w
 				"storm":
-					ob["r"] = 64.0
+					ob["r"] = 56.0
 					ob["pos"] = centre[i] + n * side * rng.randf_range(0.45, 0.7) * half_w
 			ob["base"] = ob["pos"]
 			obstacles.append(ob)
@@ -2718,7 +2752,7 @@ func _drive(delta_real: float) -> void:
 
 const RING_TOL := 0.86                # through a ring: within this much of its size from its middle
 const GUST_PUSH := 230.0              # px/s across the course (a sturdy plane: half)
-const TOY_R := { "car": 26.0, "boat": 24.0, "plane": 30.0 }
+const TOY_R := { "car": 26.0, "boat": 24.0, "plane": 24.0 }
 
 ## Does the toy touch this obstacle? (a log: anywhere along it)
 func _hits(ob: Dictionary) -> bool:
@@ -2767,33 +2801,46 @@ func _blow(delta: float) -> void:
 			var k := 0.5 if PetState.boost_power("sturdy") > 0 else 1.0
 			car_pos += _normal(near) * float(g[2]) * GUST_PUSH * k * delta
 
-## QA only: the toy drives itself like a careful driver (steering at the course a little ahead;
-## a plane at its next ring)
+## QA only: the toy drives itself like a careful driver (steering at the course a little ahead,
+## onto a safe line beside whatever is coming up; a plane at its next ring)
 func _autopilot() -> float:
 	var ahead := 14 if vehicle == "car" else (18 if vehicle == "boat" else 20)
 	var ai := (near + ahead) % count
 	var aim := centre[ai]
-	# (round what's coming up: the lane on its other side)
-	var dodge := 0.0
-	var dodge_at := 1 << 20
+	var lat := 0.0                                   # where across the course it wants to be
+	var first := 1 << 20
 	for ob in obstacles:
-		var di := posmod(int(ob["i"]) - near, count)
-		if di > 0 and di < 55 and di < dodge_at:
-			dodge = -float(ob["side"])
-			dodge_at = di
-	for sl in slicks:
-		var to: Vector2 = (sl[0] as Vector2) - car_pos
-		if to.length() < 420.0 and to.dot(Vector2.from_angle(heading)) > 0.0:
-			dodge = -signf(((sl[0] as Vector2) - centre[near]).dot(_normal(near)))
+		var oi := int(ob["i"])
+		var di := posmod(oi - near, count)
+		if di <= 0 or di >= 75 or di >= first:
+			continue
+		first = di
+		var n := _normal(oi)
+		var at: Vector2 = ob["pos"]
+		if ob["kind"] == "log":
+			at = ob["b"]                             # (its inner end: the way past is beyond it)
+		var ob_lat := (at - centre[oi]).dot(n)
+		var room: float = float(ob["r"]) + float(TOY_R[vehicle]) + 28.0 + (34.0 if ob["kind"] == "balloon" else 0.0)
+		lat = ob_lat - signf(ob_lat if ob_lat != 0.0 else 1.0) * room
+	var round_these: Array = slicks.map(func(sl): return sl[0])
+	if not gate_open("milky", int(secret.get("lvl", 1))):
+		for cr in secret.get("crates", []):
+			if is_instance_valid(cr):
+				round_these.append((cr as Sprite2D).position)
+	for at2 in round_these:
+		var to: Vector2 = (at2 as Vector2) - car_pos
+		var ahead_px := to.dot(Vector2.from_angle(heading))
+		if to.length() < 420.0 and ahead_px > 0.0 and ahead_px / STEP < first:
+			first = int(ahead_px / STEP)                  # (the nearest thing first)
+			var sl_lat := ((at2 as Vector2) - centre[near]).dot(_normal(near))
+			lat = sl_lat - signf(sl_lat if sl_lat != 0.0 else 1.0) * (SLICK_R + float(TOY_R[vehicle]) + 16.0)
 	if vehicle == "plane":
 		var rg := _next_ring()
-		if not rg.is_empty() and (rg["pos"] as Vector2).distance_to(car_pos) < 700.0:
-			var ring_at := posmod(int(rg["i"]) - near, count)
+		if not rg.is_empty() and (rg["pos"] as Vector2).distance_to(car_pos) < 320.0 and posmod(int(rg["i"]) - near, count) < first:
 			aim = rg["pos"]
-			if ring_at < dodge_at:
-				dodge = 0.0                                  # (the ring first)
-	if dodge != 0.0:
-		aim += _normal(ai) * dodge * half_w * 0.5
+			lat = 0.0                                # (the ring first)
+	var limit: float = half_w * (CORRIDOR - 0.4) if vehicle == "plane" else half_w - (BUOY_IN + 10.0 if vehicle == "boat" else 36.0)
+	aim += _normal(ai) * clampf(lat, -limit, limit)
 	var want := (aim - car_pos).angle()
 	if vehicle == "boat":
 		want -= wrapf(vel.angle() - heading, -PI, PI) * 0.8            # (against its drift)
@@ -2969,6 +3016,8 @@ func _crash(kind: String) -> void:
 		return
 	falls += 1
 	var last := lose_life()
+	if qa_autopilot:
+		print("QA crash %d: %s at %.1f s" % [level, kind, race_time])
 	if crowd.visible:
 		crowd.scream(car_pos)
 		if crowd.rect.grow(320.0).has_point(car_pos):
@@ -3050,6 +3099,8 @@ func _respawn() -> void:
 func _out_of_lives() -> void:
 	state = State.DONE
 	motor.stop()
+	if qa_autopilot:
+		print("QA race %d (%s) OUT OF LIVES at %.1f lap %d" % [level, vehicle, race_time, lap])
 	_show_banner("Out of lives!", 0.9)
 	_sfx("res://sounds/fx/error.mp3", -10.0)
 	get_tree().create_timer(1.4).timeout.connect(func():
@@ -3083,6 +3134,8 @@ func _finish() -> void:
 	crowd.party = true
 	motor.stop()
 	var stars := _stars_now()
+	if qa_autopilot:
+		print("QA race %d (%s) stars %d time %.1f par %.0f crashes %d place %d" % [level, vehicle, stars, race_time, par, falls, place])
 	_show_banner("FINISH!", 1.0)
 	_sfx("res://sounds/fx/unlock_ding.wav", -8.0)
 	Input.vibrate_handheld(60)
@@ -3400,7 +3453,12 @@ func _update_secret(was_near: int) -> void:
 					Input.vibrate_handheld(50)
 					PetState.use_boost()
 					secret["broken"] = true
-				elif slip_t <= 0.0:
+				elif vehicle == "boat" and _buoy_cd <= 0.0:
+					vel = -vel * 0.5                            # (a bump back off the crates)
+					_buoy_cd = 0.4
+					_sfx("res://sounds/fx/wood_tap.wav", -8.0, 0.7)
+					_show_banner("sturdy boats smash!", 0.8)
+				elif vehicle != "boat" and slip_t <= 0.0:
 					slip_t = SLIP_TIME * 0.6                   # (bounced off the crates)
 					slip_heading = heading + PI
 					_show_banner("sturdy cars smash!", 0.8)
@@ -3472,7 +3530,7 @@ func _spawn_rivals() -> void:
 		var lane: float = [-0.42, 0.42, 0.0][j]
 		var back_pts := 8 + j * 7
 		rivals.append({ "node": node, "slices": sl, "light": light, "progress": -float(back_pts), "lane": lane,
-			"speed": _speed() * (0.95 + 0.02 * j + 0.005 * k), "heading": 0.0, "pos": Vector2.ZERO, "done": false })
+			"speed": _speed() * (0.95 + 0.02 * j + 0.005 * k) * (0.88 if vehicle == "boat" else 1.0), "heading": 0.0, "pos": Vector2.ZERO, "done": false })
 	_place_rivals()
 
 ## A rival's place on the road from its progress (points along the centre line, laps included)
