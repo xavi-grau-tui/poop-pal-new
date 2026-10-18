@@ -41,7 +41,7 @@ extends BaseMinigame
 ##   caffeinated  a shutter that snaps open for an instant: a focused pal times it
 ##   fruity       a locked chest holds the prize: a lucky pal finds the key
 ##   skill        no gate, but two holes guard its door: a steady hand gets through
-## Prizes: pal stickers, special foods, world dress-ups (snorkel, headlamp, hard hat), gut decor,
+## Prizes: stickers of your own pals, special foods, world dress-ups (snorkel, headlamp, hard hat), gut decor,
 ## backgrounds. Taken once (BaseMinigame.take_secret). The finale of world 6 holds the game's case.
 ##
 ## Tilt: gravity sensor on device. Desktop: arrow keys / WASD / hold mouse to pull.
@@ -110,10 +110,11 @@ const MIX_FROM := 6
 const SEED_TRIES := 24
 
 ## Vaults: level -> [gate (a drink type, or "skill"), prize] (Collection.give_prize's prizes)
+## ("sticker:pal": a sticker of one of your own pals, never one you haven't met: Collection.give_prize)
 const VAULTS := {
-	3: ["fizzy", "sticker:bud"], 6: ["skill", "sticker:peapod"], 8: ["fizzy", "sticker:usagi"],
-	12: ["fizzy", "sticker:nib"], 15: ["skill", "sticker:fudge"], 17: ["milky", "acc:snorkel"],
-	21: ["fizzy", "sticker:inari"], 24: ["skill", "sticker:kitsune"], 26: ["watery", "decor:glow_spores"],
+	3: ["fizzy", "sticker:pal"], 6: ["skill", "sticker:pal"], 8: ["fizzy", "sticker:pal"],
+	12: ["fizzy", "sticker:pal"], 15: ["skill", "sticker:pal"], 17: ["milky", "acc:snorkel"],
+	21: ["fizzy", "sticker:pal"], 24: ["skill", "sticker:pal"], 26: ["watery", "decor:glow_spores"],
 	30: ["fizzy", "food:Microchip"], 33: ["caffeinated", "bg:sewer_pipes"], 35: ["milky", "acc:headlamp"],
 	39: ["fizzy", "food:Battery"], 42: ["caffeinated", "decor:cog_garland"], 44: ["milky", "acc:hard_hat"],
 	48: ["fruity", "food:Moon Rock"], 51: ["watery", "bg:starfield"], 53: ["fruity", "food:Alien Goo"],

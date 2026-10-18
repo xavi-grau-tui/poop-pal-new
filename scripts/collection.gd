@@ -62,28 +62,33 @@ const REWARDS := [
 	{ "game": 8, "stars": 150, "category": "stickers", "id": "gold_top" },
 	# the Pal Pedia: every 10 pals found
 	{ "pedia": 10, "category": "accessories", "id": "round_glasses" },
-	# the device: its first case, a present (it opens the Shop's CASES)
+	# the device's own milestone: Melon Soda (its first case, Taro, is Splash Hoops' 1-5)
 	{ "total_stars": 100, "category": "cases", "id": "melon" },
 ]
 
 ## The device's cases (the shell, front and back: textures/cases/<id>_*.png; tools/art/cases_games.py
-## makes them from Melon Soda's). "price": sold in the Shop (the plain ones); the others are only won.
-## "tones": its outline, body and light colours (the case's side as the device turns: device_flip.gd)
+## makes them from Melon Soda's, each with its own print: tools/art/case_prints.py), from simple to
+## fancy (the user, 2026-10-17): the first one plain and early, then the Shop's prints, the games' own.
+## "price": sold in the Shop; the others are only won. "tones": its outline, body and light colours
+## (the case's side as the device turns: device_flip.gd)
+const FIRST_CASE := "taro"
 const CASES := {
+	# the first case: plain, early (and it comes with the first sticker, if that comes first)
+	"taro": { "name": "Taro", "unlock": "Splash Hoops: 1-5", "tones": ["#62487c", "#c6b0e2", "#ece2fa"] },
 	"melon": { "name": "Melon Soda", "unlock": "100 stars in all", "tones": ["#466858", "#b0dec4", "#f0faec"] },
 	# the games' own cases: each one the prize of its masters' world finale (6-9)
 	"maze": { "name": "Labyrinth", "unlock": "Tilt Maze: 6-9", "tones": ["#623e24", "#d6ac72", "#f6e0b6"] },
-	"splash": { "name": "Lagoon", "unlock": "Splash Hoops: 6-9", "tones": ["#245e6c", "#7ec8cc", "#ecfafa"] },
+	"splash": { "name": "Lagoon", "unlock": "Splash Hoops: 6-9", "tones": ["#1c4e64", "#60b8c8", "#dcf8fa"] },
 	"prix": { "name": "Grand Prix", "unlock": "Pal Prix: 6-9", "tones": ["#6e2222", "#dc5448", "#fcf0e6"] },
 	"sumo": { "name": "Dohyo", "unlock": "Paper Sumo: 6-9", "tones": ["#6e4628", "#dec28a", "#f6e2ba"] },
-	"spin": { "name": "Koma", "unlock": "Top Spin: 6-9", "tones": ["#283248", "#7686a0", "#d2dcec"] },
-	# the Shop's plain cases (dots, like Melon Soda)
+	"spin": { "name": "Koma", "unlock": "Top Spin: 6-9", "tones": ["#0c0c14", "#222234", "#e2b652"] },
+	# the Shop's: a print each (blossoms, lemon slices, clouds, sprinkles)
 	"sakura": { "name": "Sakura", "unlock": "The Shop", "price": 40, "tones": ["#82465a", "#f2becc", "#fff6f8"] },
 	"lemon": { "name": "Lemon", "unlock": "The Shop", "price": 40, "tones": ["#82641e", "#f6de78", "#fffce6"] },
 	"sky": { "name": "Sky", "unlock": "The Shop", "price": 40, "tones": ["#325082", "#a0c8f0", "#f4faff"] },
-	"cocoa": { "name": "Cocoa", "unlock": "The Shop", "price": 40, "tones": ["#462a1e", "#a07054", "#ecd2ba"] },
+	"cocoa": { "name": "Cocoa", "unlock": "The Shop", "price": 40, "tones": ["#462a1e", "#96644a", "#ecd2ba"] },
 }
-const CASE_ORDER := ["melon", "maze", "splash", "prix", "sumo", "spin", "sakura", "lemon", "sky", "cocoa"]
+const CASE_ORDER := ["taro", "melon", "sakura", "lemon", "sky", "cocoa", "maze", "splash", "prix", "sumo", "spin"]
 
 ## Themed stickers (won only: secrets, gift tracks, Lucky Pinch): textures/cases/stickers/<id>.png
 ## (+ book/<id>.png; tools/art/theme_stickers.py), the sticker book's games page. The pal stickers
@@ -335,6 +340,9 @@ func unlock(category: String, id: String) -> void:
 	new_items["%s/%s" % [category, id]] = true
 	save_data()
 	unlocked.emit(category, id)
+	# a sticker needs somewhere to go: the first one brings the first case along, if none yet
+	if category == "stickers" and owned.get("cases", []).is_empty():
+		unlock("cases", FIRST_CASE)
 
 ## Called by every minigame as points come in (live, mid-round)
 func report_game_score(game: int, score: int) -> void:
@@ -379,9 +387,17 @@ const GAME_NAMES := { 0: "Pal Prix", 1: "Tilt Maze", 2: "Splash Hoops", 6: "Tumm
 ## A prize from a game (a vault, a secret, a finale): "sticker:<id>", "food:<special food>",
 ## "acc:<id>", "bg:<id>", "decor:<id>", "case:<id>" or "coins:<n>". Gives it and says what it was:
 ## { "name", "icon" (Texture2D), "kind" } (the game shows it as it's taken).
+## "sticker:pal": a sticker of one of YOUR pals (one you've met and haven't a sticker of: the pal you
+## have now if it can be; none left: coins) - never a pal you don't know yet (the user, 2026-10-17)
 func give_prize(prize: String) -> Dictionary:
 	var kind := prize.get_slice(":", 0)
 	var id := prize.get_slice(":", 1)
+	if prize == "sticker:pal":
+		id = pal_sticker_prize()
+		if id == "":
+			GameData.add_coins(PAL_STICKER_COINS)
+			return { "name": "+%d coins" % PAL_STICKER_COINS, "icon": UiArt.coin(), "kind": "coins" }
+		prize = "sticker:" + id
 	match kind:
 		"food":
 			var coins := Shop.give_special(id)
@@ -396,8 +412,20 @@ func give_prize(prize: String) -> Dictionary:
 	var cat: String = { "sticker": "stickers", "acc": "accessories", "bg": "backgrounds", "decor": "decor", "case": "cases" }.get(kind, "")
 	if cat == "":
 		return {}
+	var had_case: bool = not owned.get("cases", []).is_empty()
 	unlock(cat, id)
-	return { "name": item_name(cat, id), "icon": prize_icon(prize), "kind": cat }
+	var name := item_name(cat, id)
+	if cat == "stickers" and not had_case and is_owned("cases", FIRST_CASE):
+		name += " + a case"                              # (the first case came with it)
+	return { "name": name, "icon": prize_icon(prize), "kind": cat }
+
+## "sticker:pal": which pal's sticker it gives right now ("" = none left: coins instead)
+const PAL_STICKER_COINS := 10
+func pal_sticker_prize() -> String:
+	var mine: Array = PAL_STICKERS.filter(func(p): return p in PetState.discovered and not is_owned("stickers", p))
+	if mine.is_empty():
+		return ""
+	return PetState.form_id if PetState.form_id in mine else mine[0]
 
 ## An item's name, any category (a pal sticker: the pal's name)
 func item_name(category: String, id: String) -> String:
@@ -407,6 +435,11 @@ func item_name(category: String, id: String) -> String:
 
 ## A prize's picture (for the game's prize reveal and the vault's window)
 func prize_icon(prize: String) -> Texture2D:
+	if prize == "sticker:pal":
+		var who := pal_sticker_prize()                  # (the one it would give now; none: coins)
+		if who == "":
+			return UiArt.coin()
+		prize = "sticker:" + who
 	var kind := prize.get_slice(":", 0)
 	var id := prize.get_slice(":", 1)
 	var path := ""

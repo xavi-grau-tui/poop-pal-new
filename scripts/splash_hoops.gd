@@ -139,12 +139,13 @@ const LEVELS := [
 	["wheel", null, "", 1.8, 70, true],
 ]
 ## Secrets (a world's 6th level): the golden hoop high up (only fizzy jets throw a ball through
-## it) and the chest on the sand (a lucky pal opens it); finales: Kraken Brine (5-9), the case (6-9)
+## it) and the chest on the sand (a lucky pal opens it); finales: the device's first case, Taro
+## (1-5: plain, early, the user 2026-10-17), Kraken Brine (5-9), the game's own case (6-9)
 const SECRETS := {
 	15: ["fizzy", "sticker:starfish"], 24: ["fruity", "decor:seaweed"], 33: ["fizzy", "sticker:pufferfish"],
 	42: ["fruity", "sticker:seashell"], 51: ["fizzy", "sticker:anglerfish"],
 }
-const FINALES := { 45: "food:Kraken Brine", 54: "case:splash" }
+const FINALES := { 5: "case:taro", 45: "food:Kraken Brine", 54: "case:splash" }
 const HOOP_AT := Vector2(150, 236)      # the golden hoop (higher with the gate's level)
 const HOOP_R := 26.0
 const CHEST_X := 475.0                  # the chest: half buried on the sand between the pumps
