@@ -3226,8 +3226,9 @@ func _process(frame_delta: float) -> void:
 	var delta := minf(frame_delta, 0.05)
 	_update_course_things(delta)
 	crowd.watch = car_pos
-	if vehicle == "boat" and state == State.DRIVE:
-		if buoys.update(delta, car_pos, vel, rivals) > 0 and _buoy_cd <= 0.0:
+	# (the buoys float the whole time, the countdown too; the bonk only while racing)
+	if vehicle == "boat":
+		if buoys.update(delta, car_pos, vel, rivals) > 0 and state == State.DRIVE and _buoy_cd <= 0.0:
 			_buoy_cd = 0.12                                # (a soft bonk: you're at the channel's edge)
 			_sfx("res://sounds/fx/water_boing.wav", -14.0, randf_range(1.5, 1.8))
 			Input.vibrate_handheld(10)
