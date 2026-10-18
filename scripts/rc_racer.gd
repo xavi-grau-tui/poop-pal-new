@@ -244,6 +244,7 @@ var focus_used := false                # the slow beat before a fall, once a lev
 var slow_t := 0.0                      # (focus: the slow-motion left)
 var place := 1                         # the race's position (Grand Prix)
 var qa_autopilot := false              # (tools/qa: the car drives itself, for screenshots)
+var qa_hands_off := false              # (tools/qa hands=off: nobody steers)
 var world_no := 0                      # which world (0 Garden, 1 Night Race...)
 var vehicle := "car"                   # its toy: "car" / "boat" / "plane" (VEHICLES)
 var look := "garden"                   # its place (LOOKS): the floor, the light
@@ -259,6 +260,7 @@ var _grace_t := 0.0                    # (just put back: nothing hits it for a m
 var _t := 0.0                          # (the race's own clock for the drifting balloons, the storms' flashes)
 var pads: Array = []                   # boost pads: [centre (mat px), direction along the road]
 var boost_t := 0.0                     # the boost left (1 = just hit a pad)
+var bump_t := 0.0                      # just bounced off a barrier (1), fading
 var curb_t := 0.0                      # (the rumble's ticks)
 var _on_pad := false
 var half_w := 70.0
@@ -819,69 +821,98 @@ class RingPointer extends Node2D:
 		draw_colored_polygon(PackedVector2Array([tip, l, notch, r]), Color8(255, 210, 70))
 		draw_colored_polygon(PackedVector2Array([tip, l.lerp(tip, 0.35), notch.lerp(tip, 0.4)]), Color8(255, 244, 180))
 
-## The buoys along the boat's channel, floating (the user, 2026-10-18: give them some flexibility,
-## still marking the course but moved by the boat): the boat (a rival boat too) brushing one
-## pushes it aside, it bobs and drifts back to its place on a soft spring, a ring of ripples
-## round it while it moves; on the 4 px grid
+## The buoys along the boat's channel, floating (the user, 2026-10-18: they should react to the
+## boat, little 3D pixel pieces that move with it and come back once it's passed, telling you
+## you're about to leave the course): each a stack of slices standing up out of the water. A hull
+## touching one carries it along at its edge (it leans away, bobs, a soft bonk); once the boat has
+## gone it swings back to its place on a spring, wobbling, a ring of ripples round it while it moves
 class FloatingBuoys extends Node2D:
-	const REACH := 34.0                   # a hull this close pushes a buoy (mat px)
-	const SPRING := 14.0                  # its pull back to its place, per s^2
-	const DAMP := 3.2
-	const MAX_OFF := 30.0                 # never farther than this from its place
+	const REACH := 36.0                   # a hull this close carries a buoy (mat px)
+	const SPRING := 22.0                  # its pull back to its place, per s^2
+	const DAMP := 4.0
+	const MAX_OFF := 48.0                 # never farther than this from its place (then the hull rides over it)
+	const UP := 3.0                       # each slice this much higher (mat px)
 	var rest := PackedVector2Array()
 	var off := PackedVector2Array()
 	var vel := PackedVector2Array()
+	var lean := PackedVector2Array()
+	var touched: Array[bool] = []
 	var red: Array[bool] = []
-	var tex := {}
+	var slices := {}
 	var t := 0.0
 	func setup(spots: Array) -> void:
 		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		rest.clear()
 		off.clear()
 		vel.clear()
+		lean.clear()
+		touched.clear()
 		red.clear()
 		for sp in spots:
 			rest.append(sp[0])
 			off.append(Vector2.ZERO)
 			vel.append(Vector2.ZERO)
+			lean.append(Vector2.ZERO)
+			touched.append(false)
 			red.append(bool(sp[1]))
-		tex = { true: PalPrixArt.buoy(true), false: PalPrixArt.buoy(false) }
+		slices = { true: PalPrixArt.buoy_slices(true), false: PalPrixArt.buoy_slices(false) }
 		visible = not rest.is_empty()
 		queue_redraw()
-	func update(delta: float, boat: Vector2, boat_vel: Vector2, rivals: Array) -> void:
+	## Moves them; returns how many the boat has just bumped into (for the bonk)
+	func update(delta: float, boat: Vector2, boat_vel: Vector2, rivals: Array) -> int:
 		if rest.is_empty():
-			return
+			return 0
 		t += delta
-		var hulls: Array = [[boat, boat_vel]]
+		var hulls: Array = [[boat, boat_vel, true]]
 		for r in rivals:
-			hulls.append([r["pos"], Vector2.from_angle(float(r["heading"])) * 400.0])
+			hulls.append([r["pos"], Vector2.from_angle(float(r["heading"])) * 400.0, false])
+		var bumps := 0
 		for i in rest.size():
 			var p := rest[i] + off[i]
+			var held := false
 			for hl in hulls:
 				var to: Vector2 = p - (hl[0] as Vector2)
 				var dd := to.length()
-				if dd < REACH and dd > 0.01:
-					# shoved out of the hull's way, and a little along with it
-					vel[i] += to / dd * (REACH - dd) * 26.0 * delta + (hl[1] as Vector2) * 0.9 * delta
-			vel[i] += -off[i] * SPRING * delta
-			vel[i] *= exp(-DAMP * delta)
-			off[i] += vel[i] * delta
+				if dd < REACH and off[i].length() < MAX_OFF:
+					var away := to / dd if dd > 0.01 else Vector2.RIGHT
+					p = (hl[0] as Vector2) + away * REACH          # (carried at the hull's edge)
+					vel[i] = (hl[1] as Vector2) * 0.5 + away * 60.0
+					lean[i] = lean[i].lerp(away * 7.0, minf(1.0, delta * 14.0))
+					held = true
+					if hl[2] and not touched[i] and (hl[1] as Vector2).length() > 120.0:
+						bumps += 1
+					if hl[2]:
+						touched[i] = true
+			if held:
+				off[i] = p - rest[i]
+			else:
+				touched[i] = touched[i] and off[i].length() > 6.0
+				vel[i] += -off[i] * SPRING * delta
+				vel[i] *= exp(-DAMP * delta)
+				off[i] += vel[i] * delta
+				# (it rocks the way it's swinging back, then settles upright)
+				lean[i] = lean[i].lerp(-vel[i] * 0.04, minf(1.0, delta * 8.0)).limit_length(7.0)
 			if off[i].length() > MAX_OFF:
 				off[i] = off[i].normalized() * MAX_OFF
 		queue_redraw()
+		return bumps
 	func _draw() -> void:
 		for i in rest.size():
-			var moving := vel[i].length() > 8.0 or off[i].length() > 3.0
-			# (a gentle bob, a little more while it's been knocked about)
-			var bob := roundf(sin(t * 2.2 + rest[i].x * 0.05 + rest[i].y * 0.03) * (0.6 if not moving else 1.2)) * 4.0
+			var moving := vel[i].length() > 10.0 or off[i].length() > 3.0
 			var p := (rest[i] + off[i]).snapped(Vector2(4, 4))
 			if moving:
-				var ring := 4.0 * (3.0 + roundf(fposmod(t * 6.0 + i, 3.0)))
-				for a in 8:
-					var q := (p + Vector2.from_angle(a * TAU / 8.0) * ring).snapped(Vector2(4, 4))
+				var ring := 4.0 * (4.0 + roundf(fposmod(t * 6.0 + i, 3.0)))
+				for a in 10:
+					var q := (p + Vector2.from_angle(a * TAU / 10.0) * ring).snapped(Vector2(4, 4))
 					draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, 0.45))
-			var tx: Texture2D = tex[red[i]]
-			draw_texture_rect(tx, Rect2(p - Vector2(10, 10) + Vector2(0, bob), tx.get_size() * 4.0), false)
+			# (a gentle bob on its own beat, bigger while it's knocked about)
+			var bob := roundf(sin(t * 2.4 + rest[i].x * 0.05 + rest[i].y * 0.03) * (0.5 if not moving else 1.0)) * 4.0
+			var sl: Array = slices[red[i]]
+			for k in sl.size():
+				var tx: Texture2D = sl[k]
+				var f := float(k) / float(sl.size() - 1)
+				var at := p + Vector2(0, bob * f - k * UP) + lean[i] * f
+				draw_texture_rect(tx, Rect2(at.round() - Vector2(10, 10), tx.get_size() * 4.0), false)
 
 ## The wind across the course in a gust: short white streaks blowing over it (on the 4 px grid)
 class GustFx extends Node2D:
@@ -1027,6 +1058,7 @@ func _begin(n: int) -> void:
 			if is_running and level == n:
 				_show_banner(hint, 1.2))
 	boost_t = 0.0
+	bump_t = 0.0
 	curb_t = 0.0
 	air_t = 0.0
 	slip_t = 0.0
@@ -1108,7 +1140,11 @@ func _build_circuit() -> void:
 ## The car's guard rails (the user, 2026-10-17): on the outer side of the corners ("all") or of
 ## the hairpins only, the tightest ("hairpins": two corners the same way, a short straight between)
 var _rail := PackedInt32Array()       # per centre point: 0, or the side its rail is on (+1 / -1: along the left normal or against it)
-const RAIL_IN := 34.0                 # the car's middle is held this far inside the road's edge
+const RAIL_IN := 34.0                 # the car's middle meets the barrier this far inside the road's edge
+const RAIL_KNOCK := 10.0              # ...and is knocked back this much farther in
+const RAIL_BOUNCE := 0.6              # how much of its heading into the barrier bounces back out
+const BUMP_SLOW := 0.45               # a bump off a barrier: this much slower, fading over BUMP_TIME
+const BUMP_TIME := 0.5
 
 func _find_rails(kind: String) -> void:
 	_rail = PackedInt32Array()
@@ -2962,8 +2998,11 @@ func _process(frame_delta: float) -> void:
 	var delta := minf(frame_delta, 0.05)
 	_update_course_things(delta)
 	crowd.watch = car_pos
-	if vehicle == "boat":
-		buoys.update(delta, car_pos, vel, rivals)
+	if vehicle == "boat" and state == State.DRIVE:
+		if buoys.update(delta, car_pos, vel, rivals) > 0 and _buoy_cd <= 0.0:
+			_buoy_cd = 0.12                                # (a soft bonk: you're at the channel's edge)
+			_sfx("res://sounds/fx/water_boing.wav", -14.0, randf_range(1.5, 1.8))
+			Input.vibrate_handheld(10)
 	match state:
 		State.WAIT:
 			var before := ceili(countdown - 0.6)
@@ -3007,7 +3046,7 @@ func _drive(delta_real: float) -> void:
 	race_time += delta
 	var turn := (1.0 if _held(1) else 0.0) - (1.0 if _held(0) else 0.0)
 	if qa_autopilot:
-		turn = _autopilot()
+		turn = 0.0 if qa_hands_off else _autopilot()
 	var grip := 0.88 if rain else 1.0                                # (the rain: a wet road)
 	if air_t > 0.0:
 		grip *= 0.3                                                  # (in the air: hardly any steering)
@@ -3016,7 +3055,8 @@ func _drive(delta_real: float) -> void:
 	bank = move_toward(bank, turn if vehicle == "plane" else 0.0, delta * 4.0)
 	# the car on the curb: slowed down, rumbling; on a pad (the boat: a current): a boost that fades
 	var from_mid := car_pos.distance_to(centre[near])
-	var v := _speed() * (1.0 + BOOST * boost_t)
+	var v := _speed() * (1.0 + BOOST * boost_t) * (1.0 - BUMP_SLOW * bump_t)
+	bump_t = maxf(0.0, bump_t - delta / BUMP_TIME)
 	if vehicle == "car" and from_mid > half_w - CURB_TOUCH and air_t <= 0.0:
 		v *= CURB_SLOW
 		curb_t -= delta
@@ -3284,8 +3324,10 @@ func _brink() -> bool:
 					return true
 	return false
 
-## The car against a guard rail: held on the road (its middle RAIL_IN inside the edge), sliding
-## along it, slowed, a rattle and a spark
+## The car against a guard rail: a rubbery "boing" off the tyres (the user, 2026-10-18: holding
+## it on the road and turning it along made it drive itself round the corners): it's knocked back
+## onto the road, its heading bounced off the barrier (the part going into it turned back out),
+## and it loses speed a moment (bump_t); it never steers it for you
 func _rail_hold() -> void:
 	if air_t > 0.0 or not _rail_at(near):
 		return
@@ -3293,15 +3335,20 @@ func _rail_hold() -> void:
 	var lat := (car_pos - centre[near]).dot(n)
 	if signf(lat) != float(_rail[near]) or absf(lat) <= half_w - RAIL_IN:
 		return
-	car_pos -= n * signf(lat) * (absf(lat) - (half_w - RAIL_IN))
-	var road := (centre[(near + 2) % count] - centre[near]).angle()
-	heading = lerp_angle(heading, road, 0.35)
+	var out := n * signf(lat)
+	car_pos -= out * (absf(lat) - (half_w - RAIL_IN) + RAIL_KNOCK)
+	var dir := Vector2.from_angle(heading)
+	var into := dir.dot(out)
+	if into > 0.0:
+		heading = (dir - out * into * (1.0 + RAIL_BOUNCE)).angle()
+	bump_t = 1.0
 	boost_t = 0.0
 	if _buoy_cd <= 0.0:
-		_buoy_cd = 0.14
-		_sfx("res://sounds/fx/wood_tap.wav", -12.0, 1.3)
-		Input.vibrate_handheld(15)
-		trail.spray(car_pos + n * signf(lat) * 28.0, heading, 3)
+		_buoy_cd = 0.22
+		_sfx("res://sounds/fx/water_boing.wav", -9.0, 1.15)
+		_sfx("res://sounds/fx/wood_tap.wav", -14.0, 0.9)
+		Input.vibrate_handheld(25)
+		trail.spray(car_pos + out * 28.0, heading, 4)
 
 func _rail_at(i: int) -> bool:
 	return not _rail.is_empty() and _rail[i] != 0

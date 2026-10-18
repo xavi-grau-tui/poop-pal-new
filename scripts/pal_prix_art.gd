@@ -247,6 +247,28 @@ static func propeller(frame: int) -> Texture2D:
 
 # ------------------------------------------------------------------ THE WATER'S PIECES
 
+## A floating buoy as a little stack of slices (bottom first, like the toys): its dark waterline,
+## its body in two shades, a white band, its lit cap; drawn a few px apart up the screen it stands
+## up out of the water, and leans when the boat shoves it
+static func buoy_slices(red := true) -> Array[Texture2D]:
+	var key := "buoy_slices_%s" % red
+	if key not in _cache:
+		var c := Color8(226, 70, 64) if red else Color8(250, 196, 60)
+		var disc := [".###.", "#####", "#####", "#####", ".###."]
+		var side := [".###.", "#dcd#", "#ddd#", "#ddd#", ".###."]
+		var band := [".###.", "#wwg#", "#wgg#", "#ggg#", ".###."]
+		var top := [".###.", "#lcc#", "#ccc#", "#ccd#", ".###."]
+		var cap := [".....", ".lc..", ".cc..", ".....", "....."]
+		var cols := { "#": OUTLINE, "l": c.lightened(0.5), "c": c, "d": c.darkened(0.25), "w": Color8(255, 252, 244), "g": Color8(214, 208, 204) }
+		var out: Array[Texture2D] = []
+		out.append(_tex(rows_image(disc, { "#": Color8(30, 40, 60, 140) })))
+		out.append(_tex(rows_image(side, cols)))
+		out.append(_tex(rows_image(band, cols)))
+		out.append(_tex(rows_image(top, cols)))
+		out.append(_tex(rows_image(cap, { "l": Color8(255, 255, 255), "c": c.lightened(0.3) })))
+		_cache[key] = out
+	return _cache[key]
+
 ## A buoy on the channel's rope: a red and white float, 5 x 5 px
 static func buoy(red := true) -> Texture2D:
 	var key := "buoy_%s" % red

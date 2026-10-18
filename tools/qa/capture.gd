@@ -17,6 +17,7 @@ extends Node
 ##   menutest=N    drive the game's level menu: FORWARD N times, tap, hold; print what plays
 ##   bonus=1       a Lucky Pinch bonus right away, a screenshot `wait` s later
 ##   until=done    on to the next level as soon as this one is over (at most `wait` s)
+##   hands=off     (Pal Prix) the toy isn't steered at all: can it finish by itself?
 ## Prints "QA DONE" and quits when finished. The testing save is wiped at every launch anyway.
 
 var args := {}
@@ -108,6 +109,8 @@ func _run() -> void:
 			g.is_running = true
 			if "qa_autopilot" in g:
 				g.qa_autopilot = true
+			if "qa_hands_off" in g and args.get("hands", "") == "off":
+				g.qa_hands_off = true                          # (hands=off: nobody steers)
 			if "qa_skill" in g and args.has("skill"):
 				g.qa_skill = int(args["skill"])
 		for k in shots:
