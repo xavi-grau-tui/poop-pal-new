@@ -53,7 +53,7 @@ func _ready():
 		show_message("ITEM\nUNLOCKED!", UNLOCK_BLINKS * UNLOCK_STEP * 2.0, UNLOCK_BLINKS, UNLOCK_STEP)
 		_ding())
 	GameData.daily_bonus.connect(func(n):
-		show_message("DAILY\n+%d COINS" % n, UNLOCK_BLINKS * UNLOCK_STEP * 2.0, UNLOCK_BLINKS, UNLOCK_STEP))
+		show_message("+%d\nCOINS" % n, UNLOCK_BLINKS * UNLOCK_STEP * 2.0, UNLOCK_BLINKS, UNLOCK_STEP))
 	GameData.game_unlocked.connect(func(_idx):
 		show_message("GAME\nUNLOCKED!", UNLOCK_BLINKS * UNLOCK_STEP * 2.0, UNLOCK_BLINKS, UNLOCK_STEP)
 		_ding())
