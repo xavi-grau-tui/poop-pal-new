@@ -261,6 +261,9 @@ var _t := 0.0                          # (the race's own clock for the drifting 
 var pads: Array = []                   # boost pads: [centre (mat px), direction along the road]
 var boost_t := 0.0                     # the boost left (1 = just hit a pad)
 var bump_t := 0.0                      # just bounced off a barrier (1), fading
+var bounce_t := 0.0                    # (the bounce off a barrier: its time left, the way it turns to, its push)
+var bounce_to := 0.0
+var knock_v := Vector2.ZERO
 var curb_t := 0.0                      # (the rumble's ticks)
 var _on_pad := false
 var half_w := 70.0
@@ -1059,6 +1062,8 @@ func _begin(n: int) -> void:
 				_show_banner(hint, 1.2))
 	boost_t = 0.0
 	bump_t = 0.0
+	bounce_t = 0.0
+	knock_v = Vector2.ZERO
 	curb_t = 0.0
 	air_t = 0.0
 	slip_t = 0.0
@@ -1141,10 +1146,11 @@ func _build_circuit() -> void:
 ## the hairpins only, the tightest ("hairpins": two corners the same way, a short straight between)
 var _rail := PackedInt32Array()       # per centre point: 0, or the side its rail is on (+1 / -1: along the left normal or against it)
 const RAIL_IN := 34.0                 # the car's middle meets the barrier this far inside the road's edge
-const RAIL_KNOCK := 10.0              # ...and is knocked back this much farther in
-const RAIL_BOUNCE := 0.6              # how much of its heading into the barrier bounces back out
-const BUMP_SLOW := 0.45               # a bump off a barrier: this much slower, fading over BUMP_TIME
-const BUMP_TIME := 0.5
+const RAIL_KNOCK_V := 240.0           # ...and pushed back in at this (mat px/s), the push fading fast
+const RAIL_BOUNCE := 0.6              # how much of its heading into the barrier bounces back out...
+const BOUNCE_TIME := 0.28             # ...easing round to it over this long
+const BUMP_SLOW := 0.3                # a bump off a barrier: this much slower, fading over BUMP_TIME
+const BUMP_TIME := 0.6
 
 func _find_rails(kind: String) -> void:
 	_rail = PackedInt32Array()
@@ -3102,6 +3108,15 @@ func _drive(delta_real: float) -> void:
 		car_pos += vel * delta
 	else:
 		car_pos += dir * v * delta
+	# (a bounce off a barrier: the push back in fading, the heading easing round)
+	if knock_v != Vector2.ZERO:
+		car_pos += knock_v * delta
+		knock_v *= exp(-9.0 * delta)
+		if knock_v.length() < 4.0:
+			knock_v = Vector2.ZERO
+	if bounce_t > 0.0:
+		bounce_t -= delta
+		heading = lerp_angle(heading, bounce_to, minf(1.0, delta * 12.0))
 	if vehicle == "plane":
 		_blow(delta)
 	if air_t > 0.0:
@@ -3325,9 +3340,10 @@ func _brink() -> bool:
 	return false
 
 ## The car against a guard rail: a rubbery "boing" off the tyres (the user, 2026-10-18: holding
-## it on the road and turning it along made it drive itself round the corners): it's knocked back
+## it on the road and turning it along made it drive itself round the corners): it's pushed back
 ## onto the road, its heading bounced off the barrier (the part going into it turned back out),
-## and it loses speed a moment (bump_t); it never steers it for you
+## both over a moment (bounce_t, knock_v), and it loses a little speed (bump_t); it never steers
+## it for you
 func _rail_hold() -> void:
 	if air_t > 0.0 or not _rail_at(near):
 		return
@@ -3336,12 +3352,16 @@ func _rail_hold() -> void:
 	if signf(lat) != float(_rail[near]) or absf(lat) <= half_w - RAIL_IN:
 		return
 	var out := n * signf(lat)
-	car_pos -= out * (absf(lat) - (half_w - RAIL_IN) + RAIL_KNOCK)
+	car_pos -= out * (absf(lat) - (half_w - RAIL_IN))          # (held at the tyres this frame)
+	# the bounce plays out over a moment (the user, 2026-10-18: it was too sudden): a push back in
+	# that fades, the heading easing round to its bounced way, a gentle slow-down
 	var dir := Vector2.from_angle(heading)
 	var into := dir.dot(out)
-	if into > 0.0:
-		heading = (dir - out * into * (1.0 + RAIL_BOUNCE)).angle()
-	bump_t = 1.0
+	if into > 0.0 and bounce_t <= 0.0:
+		bounce_to = (dir - out * into * (1.0 + RAIL_BOUNCE)).angle()
+		bounce_t = BOUNCE_TIME
+		knock_v = -out * RAIL_KNOCK_V
+		bump_t = 1.0
 	boost_t = 0.0
 	if _buoy_cd <= 0.0:
 		_buoy_cd = 0.22
