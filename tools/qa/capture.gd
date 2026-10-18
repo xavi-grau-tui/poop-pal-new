@@ -101,7 +101,9 @@ func _run() -> void:
 		if g.has_method("uses_levels") and g.uses_levels():
 			if g.level_menu:
 				g.level_menu.close()
+			var t0 := Time.get_ticks_msec()
 			g.play_level(lvl)
+			print("QA level %d built in %d ms" % [lvl, Time.get_ticks_msec() - t0])
 			g.is_running = true
 			if "qa_autopilot" in g:
 				g.qa_autopilot = true

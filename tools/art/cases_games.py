@@ -104,27 +104,43 @@ def pattern(kind, h, w):
     return m
 
 
-# the menu buttons keep their own colours whatever the case (the user, 2026-10-17): only the case's
-# edge round each one, the light band below and to its right outside its dark outline (textures/
-# buttons/<name>.png), takes the case's colours, by its brightness along the bare device's ramp
+# the menu buttons with a case on (the user, 2026-10-17/18): the button's own face keeps its colours
+# (everything inside its dark outline: the face, the icon, the outline itself), and all of its frame
+# round it is the case's (the bezel ring and its bevel, the outer outline, the light band below and
+# to its right; nothing of the bare device's cream left), each px by its brightness along the bare
+# device's ramp onto the case's (outline - body - light), so the bevel keeps its light and shade
 BUTTONS = ['buttonfoodnormal', 'buttonfoodpressed', 'padbuttonnormal', 'padbuttonpressed', 'settingsbuttonnormal',
            'settingsbuttonpressed']
 DEVICE = {'outline': (54, 36, 31), 'body': (250, 237, 217)}
 
 
+def button_face(rgb, a):
+    """the button's face: the biggest dark ring that isn't the outer outline, filled"""
+    from scipy.ndimage import binary_fill_holes, binary_dilation, label
+    dark = (a > 0) & (rgb.sum(-1) < 330)
+    L, n = label(dark)
+    outer = set(np.unique(L[binary_dilation(a == 0, iterations=1) & dark])) - {0}
+    best, area = None, 0
+    for i in range(1, n + 1):
+        if i in outer:
+            continue
+        f = binary_fill_holes(L == i).sum()
+        if f > area:
+            best, area = i, f
+    return binary_fill_holes(L == best)
+
+
 def buttons(cid, theme):
-    from scipy.ndimage import binary_fill_holes
     lo, lb = lum(DEVICE['outline']), lum(DEVICE['body'])
     O, B = (np.array(theme[k], np.float32) for k in ('outline', 'body'))
     L_ = np.array(theme.get('light', theme['dots']), np.float32)
     for name in BUTTONS:
         src = np.asarray(Image.open(os.path.join(ROOT, 'textures', 'buttons', f'{name}.png')).convert('RGBA')).copy()
         rgb, a = src[..., :3].astype(np.float32), src[..., 3]
-        dark = (a > 0) & (rgb.sum(-1) < 330)
-        stripe = (a > 0) & ~binary_fill_holes(dark)            # (outside the button's outer outline)
+        frame = (a > 0) & ~button_face(src[..., :3].astype(int), a)
         t = ((lum(rgb) - lo) / (lb - lo))[..., None]
         new = np.where(t <= 1.0, O + (B - O) * np.clip(t, 0, 1), B + (L_ - B) * np.clip(t - 1.0, 0, 1))
-        rgb[stripe] = new[stripe]
+        rgb[frame] = new[frame]
         src[..., :3] = np.clip(rgb, 0, 255).astype(np.uint8)
         Image.fromarray(src, 'RGBA').save(os.path.join(DIR, f'{cid}_{name}.png'))
 

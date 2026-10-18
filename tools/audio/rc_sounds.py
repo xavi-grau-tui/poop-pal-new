@@ -7,8 +7,10 @@
     sounds/fx/rc_beep.wav    the start lights: a short beep for each red light (3, 2, 1)
     sounds/fx/rc_go.wav      ...and a higher, longer one when they all turn green: GO
     sounds/fx/rc_boost.wav   a boost pad: a rising whoosh
+    sounds/fx/crowd_gasp.wav the pals in the stand when a toy crashes near them: a little crowd's
+                             "waah!" (small voices on an "ah", up and down, a breath of noise)
 
-    <venv>/bin/python tools/audio/rc_sounds.py
+    <venv>/bin/python tools/audio/rc_sounds.py [names]   (no names: all of them)
 """
 import os
 import wave
@@ -100,11 +102,42 @@ def boost():
     return (low(chirp, 3000) + noise) * env
 
 
+def crowd_gasp():
+    """A dozen small voices, each its own pitch, starting a moment apart: a pulse wave through two
+    vowel formants ("ah"), the pitch jumping up then sliding down (a scream that turns into "oh"),
+    a little vibrato; a breathy noise under it"""
+    r = np.random.default_rng(23)
+    n = int(SR * 0.9)
+    t = np.arange(n) / SR
+    x = np.zeros(n)
+    for v in range(12):
+        f0 = r.uniform(330.0, 640.0)
+        d0 = r.uniform(0.0, 0.07)
+        tt = np.clip(t - d0, 0, None)
+        contour = 1.0 + 0.35 * np.clip(tt / 0.08, 0, 1) - 0.45 * np.clip((tt - 0.12) / 0.6, 0, 1)
+        f = f0 * contour * (1.0 + 0.02 * np.sin(2 * np.pi * r.uniform(5.0, 7.0) * tt))
+        ph = 2 * np.pi * np.cumsum(f) / SR
+        pulse = (np.sin(ph) + 0.5 * np.sin(2 * ph) + 0.3 * np.sin(3 * ph) + 0.2 * np.sin(4 * ph))
+        voice = band(pulse, 700, 1100) * 1.0 + band(pulse, 1300, 1900) * 0.6
+        env = np.clip(tt / 0.02, 0, 1) * np.clip(1.0 - (tt - 0.15) / 0.65, 0, 1) * (t >= d0)
+        x += voice * env * r.uniform(0.6, 1.0)
+    breath = band(r.standard_normal(n), 900, 4000) * 0.25 * np.clip(t / 0.02, 0, 1) * np.clip(1 - t / 0.8, 0, 1)
+    return low(x + breath, 5000)
+
+
+SOUNDS = {
+    'rc_boost.wav': lambda: (boost(), {}),
+    'rc_beep.wav': lambda: (beep(660.0, 0.22), {}),
+    'rc_go.wav': lambda: (beep(1320.0, 0.6), {}),
+    'rc_motor.wav': lambda: (motor(), {'peak': 0.6, 'fade': False}),
+    'rc_fall.wav': lambda: (fall(), {}),
+    'rc_land.wav': lambda: (land(), {}),
+    'crowd_gasp.wav': lambda: (crowd_gasp(), {'peak': 0.7}),
+}
+
 if __name__ == '__main__':
-    save('rc_boost.wav', boost())
-    save('rc_beep.wav', beep(660.0, 0.22))
-    save('rc_go.wav', beep(1320.0, 0.6))
-    save('rc_motor.wav', motor(), peak=0.6, fade=False)
-    save('rc_fall.wav', fall())
-    save('rc_land.wav', land())
+    import sys
+    for name in (sys.argv[1:] or list(SOUNDS)):
+        x, kw = SOUNDS[name]()
+        save(name, x, **kw)
     print('ok')

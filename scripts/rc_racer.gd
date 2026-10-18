@@ -1,40 +1,57 @@
 extends BaseMinigame
-## Pal Prix (Pipe Dream's rework, on its card) — your pal rides a little RC car round a toy
-## race track raised on blocks above the floor, seen from above at an angle and close up (Micro
-## Machines). The car drives by itself at a fixed speed; hold ORANGE to turn left, FORWARD to turn
-## right (all the way round: the circuits wind, double back and hairpin). Drive off the track and
-## the car falls to the floor: it's put back on the last checkpoint (the clock keeps going). 3 laps.
-## The car is "sprite-stacked": a pile of pixel slices (wheels, body, the lit top), each turned
-## with the car and drawn a little higher, so it shows its sides and looks solid as it turns.
+## Pal Prix (Pipe Dream's rework, on its card) — your pal rides a little RC toy round a race
+## course, seen from above at an angle and close up (Micro Machines): a CAR on a track raised above
+## the floor, a BOAT down a buoyed channel on the water, a PLANE through rings in the sky. It goes
+## by itself at its own speed; hold ORANGE to turn left, FORWARD to turn right (all the way round:
+## the courses wind, double back and hairpin). 3 laps. The toys are "sprite-stacked": a pile of
+## pixel slices, each turned with the toy and drawn a little higher, so it shows its sides and looks
+## solid as it turns.
 ##
-## Circuits: a random patch of grid squares (grown square by square from a seed), and the road
+## Courses: a random patch of grid squares (grown square by square from a seed), and the course
 ## runs round its outline, every corner rounded (a quarter circle of half a square: two corners a
-## square apart make a hairpin the car can just take). An outline never crosses itself, and any
-## two stretches of it are at least a square apart, so the road never touches itself. More
-## squares = more turns, U-turns and zig-zags; the best of SEED_TRIES patches (the most corners).
-## The mats are always bigger than the screen: the view follows the car and shows only part of
-## the circuit (Micro Machines), so you read the road as it comes.
+## square apart make a hairpin). An outline never crosses itself, and any two stretches of it are
+## at least a square apart, so the road never touches itself. More squares = more turns, U-turns
+## and zig-zags; the best of SEED_TRIES patches (the most corners). The mats are always bigger than
+## the screen, with room round the course (the user, 2026-10-17: bigger circuits, the edges not
+## too close): the view follows the toy and shows only part of it, so you read the road as it comes.
 ##
-## Levels (the level menu, BaseMinigame / LevelMenu): 6 worlds of 9, each with its own floor, its
-## light and one new thing (alone on its first levels; from the 7th the world before's joins in):
-##   1 Garden (a morning): the basics · 2 Kitchen: speed pads on the straights · 3 Sky (noon, the
-##   fields far below): JUMPS, a ramp before each gap (straight on it or you fall) · 4 Lagoon
-##   (sunset, over the water): CROSSOVERS, figure-8 circuits with a bridge · 5 Rain (a park):
-##   PUDDLES that spin the car round (wet road, spray off the wheels) · 6 Grand Prix (night, the
-##   lamps and your headlights): RIVALS, up to three cars to beat.
-## OIL slicks (a spin and a stop) join from world 3's 7th level, more as the game goes on.
-## Stars: 1 = finished, +1 = within the par time (Grand Prix: 1st place), +1 = never fell off.
+## Levels (the level menu, BaseMinigame / LevelMenu): 6 worlds of 9, two per toy (the user,
+## 2026-10-17), each with its own place, its light and its own things (alone on their first levels,
+## then mixed in):
+##   1 Garden (a morning, the car): the basics, guard rails on the corners · boost pads (4th) ·
+##     JUMPS, a ramp before each gap (7th: straight on it or you fall)
+##   2 Night Race (the lamps and your headlights): CROSSOVERS, figure-8s with a bridge · rain,
+##     PUDDLES that spin the car, OIL (4th) · RIVALS, up to three cars to beat (7th)
+##   3 Lagoon (sunset, the boat): it drifts (it carries on the way it was going a moment), bumps
+##     along the buoys, can't fall · CURRENTS that speed it on (4th) · RAMPS over sandbars (7th:
+##     straight on them, or it runs aground)
+##   4 Reef (noon, the boat): ROCKS and LOGS in the channel (a crash), WHIRLPOOLS (4th) · RIVALS (7th)
+##   5 Sky (noon above the fields, the plane): RINGS to fly through (a ring missed = a crash) ·
+##     GUSTS that blow it sideways (4th) · hot-air BALLOONS in the way (7th)
+##   6 Grand Prix (the masters' world, a sunset over a sea of clouds): rival planes, STORM clouds
+##     (a crash), everything of the sky mixed in
+## Guard rails (the car, the user 2026-10-17): on the outer side of the Garden's corners (from its
+## 5th level only round the hairpins, the tightest), and the Night Race's hairpins up to its 6th.
+## Lives (BaseMinigame): 3 hearts. A crash (a car off the track, a boat on a rock or a sandbar, a
+## plane missing a ring or into a balloon, a storm) breaks one and puts the toy back on the last
+## checkpoint (the clock keeps going); the last one ends the race (Out of lives!: retry from the
+## start). A SPLASH pal has a 4th, a water heart: its first crash is undone on the spot.
+## Stars: 1 = finished, +1 = within the par time (with rivals: 1st place), +1 = no crash at all.
 ## No points: the race's own clock and the laps say how it goes; the best time is saved.
-## Drinks: a SPLASH car is put back where it fell, no time lost (once) · FIZZ: a springboard's
-## jump (a secret: a gift on a balloon over the road) · FOCUS: time slows a moment as the car is
-## about to fall (once) · STURDY: no spinning on oil or puddles, rivals don't shove it, it breaks
-## through crates (a secret) · LUCKY: it sees the gift hidden on the road (a secret).
+## Drinks: SPLASH (above) · FIZZ: a springboard's (a ramp's) jump, a fizzy plane climbs (a secret:
+## a gift up on a balloon) · FOCUS: time slows a moment as a crash is coming (once) · STURDY: no
+## spinning on oil, puddles or in whirlpools, rivals don't shove it, it breaks through crates, a
+## sturdy plane flies through a storm (a secret) · LUCKY: it sees the gift hidden on the course (a
+## secret).
+## The crowd by the finish line are your own pals (the ones you've found), cheering; a crash near
+## them and they scream and scatter (the user, 2026-10-17).
 ## Desktop: Left / Right arrows (or A / D).
 
 const PX := 4                         # world px per board px (the games' chunky grid)
-const CELL := 300.0                   # a grid square, world px (the road stays a square from itself)
+## A grid square, world px (the road stays a square from itself), per toy: the faster, the roomier
+const CELLS := { "car": 360.0, "boat": 380.0, "plane": 440.0 }
 const EDGE := 10                      # the mat's wooden frame, board px
-const MARGIN := 24.0                  # road edge -> frame, world px
+const MARGIN := 150.0                 # road edge -> frame, world px (room round the course)
 const SPEED := 580.0                  # mat px/s, always
 const TURN := 6.2                     # rad/s while a button is held (a full turn in 1 s; turning
                                       # circle ~94 px, inside the circuits' 150 px corners)
@@ -44,7 +61,7 @@ const FALL_AT := 6.0                  # past the road's edge by this much: off t
 const TIP_OUT := 48.0                 # a falling car first tips this far out, clear of the edge
 const CHECKPOINTS := 10               # per lap: where a fallen car is put back
 const TRACK_SIDE := 6                 # the raised track's side face, board px (seen from the south)
-const LAYERS := 6                     # the car's slices
+const LAYERS := 6                     # the car's slices (the boat 5, the plane 4)
 const LAYER_UP := 2.5                 # each slice this much higher (mat px)
 const LAPS := 3
 const STEP := 8.0                     # centre-line points, every STEP px
@@ -58,75 +75,112 @@ const BOOST_TIME := 1.4               # ...fading out over this long
 const PAD_LEN := 64.0                 # a pad's length along the road (mat px)
 const PAD_SAVES := 0.35               # (par: seconds a pad saves, each lap)
 const COUNTDOWN := 3
+## The boat: a little slower, a wider turn, and it drifts (BOAT_GRIP: how fast it takes up the way it
+## points, per second); the buoys bounce it back in (BUOY_IN: their rope, in from the edge)
+const BOAT_SPEED := 520.0
+const BOAT_TURN := 5.0
+const BOAT_GRIP := 3.4
+const BUOY_IN := 26.0
+## The plane: faster, a wide turn, free in the sky (CORRIDOR: how far from the course's line it may
+## stray before it's turned back); its rings (RING_GAP apart along the course)
+const PLANE_SPEED := 660.0
+const PLANE_TURN := 4.3
+const CORRIDOR := 2.3
+const RING_GAP := 760.0
+const PARALLAX := 0.55                # the plane's ground scrolls this much as fast as the sky (far below)
 ## The view under the HUD (play-area px) and the HUD's band above it
 const VIEW := Rect2(27, 92, 896, 830)
 const HUD_BAND := Rect2(27, 26, 896, 66)
 
-const WORLDS := ["Garden", "Kitchen", "Sky", "Lagoon", "Rain", "Grand Prix"]
+const WORLDS := ["Garden", "Night Race", "Lagoon", "Reef", "Sky", "Grand Prix"]
+## Each world's toy and its place (the floor, the light: _paint)
+const VEHICLES := ["car", "car", "boat", "boat", "plane", "plane"]
+const LOOKS := ["garden", "night", "lagoon", "reef", "sky", "sunset"]
 ## What each world brings, said on its first level
-const WORLD_HINTS := ["", "speed boosts!", "jumps! ramps straight", "crossovers!", "puddles spin you!", "beat the rivals!"]
+const WORLD_HINTS := ["", "crossovers!", "a boat! it drifts", "rocks: steer clear!", "fly through the rings!", "the Grand Prix!"]
+## ...and what joins in later in a world (its 4th and its 7th level)
+const LATER_HINTS := [["boost pads!", "jumps! ramps straight"], ["rain! puddles spin you", "beat the rivals!"],
+	["currents!", "ramps! hit them straight"], ["whirlpools!", "beat the rivals!"], ["gusts blow you!", "balloons ahead!"], ["", ""]]
 ## Each world's page in the level menu
-const WORLD_BACKDROPS := [Color8(150, 196, 120), Color8(196, 214, 200), Color8(170, 204, 230), Color8(232, 150, 120), Color8(120, 140, 150), Color8(44, 46, 82)]
-## The circuits, 9 per world: [grid columns, rows, squares in the patch, road half-width px, a fixed
-## shape or null, corners wanted, boost pads, extras]. The first ones are fixed shapes, long straights and few turns:
-## an oval, an L, a U (its first hairpin); then grown patches, each level a bigger patch and more
-## corners (the patch closest to that many), so the circuits get longer and twistier step by step.
-## extras: "jumps" (gaps with a ramp), "oil" (slicks), "puddles", "rivals", "eight" (a figure-8:
-## [loop A's width, height, loop B's width, height, notches], in squares, instead of a patch).
+const WORLD_BACKDROPS := [Color8(150, 196, 120), Color8(44, 46, 82), Color8(232, 150, 120), Color8(110, 200, 196), Color8(170, 204, 230), Color8(236, 150, 110)]
+## The courses, 9 per world: [grid columns, rows, squares in the patch, road half-width px, a fixed
+## shape or null, corners wanted, boost pads (a boat: currents), extras]. The first ones of a toy's
+## first world are fixed shapes, long straights and few turns: an oval, an L, a U (its first
+## hairpin); then grown patches, each level a bigger patch and more corners (the patch closest to
+## that many), so the courses get longer and twistier step by step.
+## extras: "rails" ("all" corners / "hairpins": the car's guard rails), "jumps" (gaps with a ramp;
+## a boat: sandbars), "oil" (slicks), "puddles", "rain", "rivals", "eight" (a figure-8: [loop A's
+## width, height, loop B's width, height, notches], in squares, instead of a patch), "rocks", "logs",
+## "whirls" (the boat's), "ring_r" (a plane's rings' size), "gusts", "balloons", "storms".
 const LEVELS := [
-	# 1 Garden: the basics
-	[6, 2, 0, 100.0, [Rect2i(0, 0, 6, 2)], 0, 0],
-	[6, 4, 0, 98.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2)], 0, 0],
-	[6, 4, 0, 96.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2), Rect2i(4, 2, 2, 2)], 0, 0],
-	[8, 4, 14, 94.0, null, 10, 0], [8, 5, 16, 90.0, null, 12, 0], [9, 5, 18, 88.0, null, 14, 0],
-	[9, 6, 21, 84.0, null, 16, 0], [10, 6, 24, 80.0, null, 20, 0], [10, 7, 28, 76.0, null, 99, 0],
-	# 2 Kitchen: speed boosts on the straights (a boosted car takes the next turn wider: brake by
-	# turning early); it starts gentle again, an oval and an L, with pads to learn them
-	[7, 2, 0, 96.0, [Rect2i(0, 0, 7, 2)], 0, 2],
-	[7, 4, 0, 94.0, [Rect2i(0, 0, 7, 2), Rect2i(0, 2, 2, 2)], 0, 3],
-	[8, 4, 14, 92.0, null, 10, 2], [8, 5, 16, 90.0, null, 12, 3], [9, 5, 18, 88.0, null, 14, 3],
-	[9, 6, 21, 84.0, null, 16, 3], [10, 6, 24, 82.0, null, 18, 4], [10, 7, 27, 78.0, null, 20, 4],
-	[11, 7, 30, 76.0, null, 99, 5],
-	# 3 Sky: jumps over gaps (a ramp before each); the Kitchen's pads join from the 7th, oil too
-	[7, 2, 0, 98.0, [Rect2i(0, 0, 7, 2)], 0, 0, { "jumps": 1 }],
-	[7, 4, 0, 96.0, [Rect2i(0, 0, 7, 2), Rect2i(0, 2, 2, 2)], 0, 0, { "jumps": 2 }],
-	[8, 4, 14, 94.0, null, 10, 0, { "jumps": 2 }], [8, 5, 16, 92.0, null, 12, 0, { "jumps": 2 }],
-	[9, 5, 18, 90.0, null, 14, 0, { "jumps": 3 }], [9, 6, 21, 86.0, null, 16, 0, { "jumps": 3 }],
-	[10, 6, 24, 84.0, null, 18, 2, { "jumps": 3, "oil": 1 }], [10, 7, 27, 80.0, null, 20, 2, { "jumps": 4, "oil": 1 }],
-	[11, 7, 30, 78.0, null, 99, 3, { "jumps": 4, "oil": 2 }],
-	# 4 Lagoon: figure-8 circuits, the road over itself on a bridge; oil, then the Sky's jumps
-	[0, 0, 0, 96.0, null, 0, 0, { "eight": [2, 2, 2, 2, 0] }],
-	[0, 0, 0, 94.0, null, 0, 0, { "eight": [3, 2, 2, 2, 0] }],
-	[0, 0, 0, 92.0, null, 0, 0, { "eight": [3, 2, 3, 2, 0] }],
-	[0, 0, 0, 90.0, null, 0, 0, { "eight": [3, 3, 3, 2, 1], "oil": 1 }],
-	[0, 0, 0, 88.0, null, 0, 0, { "eight": [3, 3, 3, 3, 1], "oil": 1 }],
-	[0, 0, 0, 86.0, null, 0, 1, { "eight": [4, 3, 3, 3, 2], "oil": 2 }],
-	[0, 0, 0, 84.0, null, 0, 1, { "eight": [4, 3, 4, 3, 2], "oil": 2, "jumps": 1 }],
-	[0, 0, 0, 82.0, null, 0, 2, { "eight": [4, 4, 4, 3, 3], "oil": 2, "jumps": 2 }],
-	[0, 0, 0, 80.0, null, 0, 2, { "eight": [5, 4, 4, 4, 3], "oil": 3, "jumps": 2 }],
-	# 5 Rain: puddles that spin the car (the road wet all over); the Lagoon's crossovers from the 7th
-	[7, 2, 0, 96.0, [Rect2i(0, 0, 7, 2)], 0, 0, { "puddles": 2 }],
-	[7, 4, 0, 94.0, [Rect2i(0, 0, 7, 2), Rect2i(0, 2, 2, 2)], 0, 0, { "puddles": 3 }],
-	[8, 4, 14, 92.0, null, 10, 0, { "puddles": 3 }], [8, 5, 16, 90.0, null, 12, 1, { "puddles": 4 }],
-	[9, 5, 18, 88.0, null, 14, 1, { "puddles": 4, "oil": 1 }], [9, 6, 21, 86.0, null, 16, 2, { "puddles": 5, "oil": 1 }],
-	[0, 0, 0, 84.0, null, 0, 1, { "eight": [3, 3, 3, 3, 1], "puddles": 4 }],
-	[0, 0, 0, 82.0, null, 0, 2, { "eight": [4, 3, 3, 3, 2], "puddles": 5, "oil": 1 }],
-	[0, 0, 0, 80.0, null, 0, 2, { "eight": [4, 4, 4, 3, 3], "puddles": 6, "oil": 2, "jumps": 1 }],
-	# 6 Grand Prix (the masters' world): rivals to beat, everything mixed in by the end
-	[7, 2, 0, 96.0, [Rect2i(0, 0, 7, 2)], 0, 1, { "rivals": 1 }],
-	[8, 4, 14, 94.0, null, 10, 1, { "rivals": 1 }],
-	[8, 5, 16, 92.0, null, 12, 2, { "rivals": 2 }], [9, 5, 18, 90.0, null, 14, 2, { "rivals": 2, "oil": 1 }],
-	[9, 6, 21, 88.0, null, 16, 2, { "rivals": 3, "oil": 1 }], [10, 6, 24, 86.0, null, 18, 3, { "rivals": 3, "puddles": 2, "oil": 1 }],
-	[0, 0, 0, 86.0, null, 0, 2, { "eight": [4, 3, 3, 3, 2], "rivals": 3, "puddles": 2 }],
-	[10, 7, 27, 84.0, null, 20, 3, { "rivals": 3, "jumps": 2, "puddles": 3, "oil": 2 }],
-	[0, 0, 0, 82.0, null, 0, 3, { "eight": [5, 4, 4, 4, 3], "rivals": 3, "jumps": 2, "puddles": 3, "oil": 2 }],
+	# 1 Garden (the car): the basics, rails on every corner; pads from the 4th, jumps from the 7th
+	[6, 2, 0, 104.0, [Rect2i(0, 0, 6, 2)], 0, 0, { "rails": "all" }],
+	[6, 4, 0, 102.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2)], 0, 0, { "rails": "all" }],
+	[6, 4, 0, 100.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2), Rect2i(4, 2, 2, 2)], 0, 0, { "rails": "all" }],
+	[8, 4, 14, 98.0, null, 10, 2, { "rails": "all" }],
+	[8, 5, 16, 94.0, null, 12, 2, { "rails": "hairpins" }],
+	[9, 5, 18, 92.0, null, 14, 3, { "rails": "hairpins" }],
+	[9, 5, 18, 92.0, null, 14, 2, { "rails": "hairpins", "jumps": 1 }],
+	[9, 6, 21, 88.0, null, 16, 2, { "rails": "hairpins", "jumps": 2 }],
+	[10, 6, 24, 86.0, null, 18, 3, { "rails": "hairpins", "jumps": 2 }],
+	# 2 Night Race (the car): figure-8s; rain, puddles and oil from the 4th; rivals from the 7th
+	[0, 0, 0, 100.0, null, 0, 0, { "eight": [2, 2, 2, 2, 0], "rails": "hairpins" }],
+	[0, 0, 0, 98.0, null, 0, 0, { "eight": [3, 2, 2, 2, 0], "rails": "hairpins" }],
+	[0, 0, 0, 96.0, null, 0, 1, { "eight": [3, 2, 3, 2, 1], "rails": "hairpins" }],
+	[9, 5, 18, 92.0, null, 14, 1, { "rain": true, "puddles": 2, "rails": "hairpins" }],
+	[9, 6, 21, 90.0, null, 16, 1, { "rain": true, "puddles": 3, "oil": 1, "rails": "hairpins" }],
+	[0, 0, 0, 90.0, null, 0, 2, { "eight": [3, 3, 3, 3, 1], "rain": true, "puddles": 3, "oil": 1, "rails": "hairpins" }],
+	[9, 6, 21, 88.0, null, 16, 2, { "rivals": 1, "oil": 1 }],
+	[0, 0, 0, 86.0, null, 0, 2, { "eight": [4, 3, 3, 3, 2], "rain": true, "rivals": 2, "puddles": 2, "jumps": 1 }],
+	[10, 7, 27, 84.0, null, 20, 3, { "rain": true, "rivals": 3, "puddles": 3, "oil": 2, "jumps": 2 }],
+	# 3 Lagoon (the boat): it drifts; currents from the 4th, ramps over sandbars from the 7th
+	[6, 2, 0, 118.0, [Rect2i(0, 0, 6, 2)], 0, 0],
+	[6, 4, 0, 116.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2)], 0, 0],
+	[6, 4, 0, 114.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2), Rect2i(4, 2, 2, 2)], 0, 0],
+	[8, 4, 14, 112.0, null, 10, 2],
+	[8, 5, 16, 110.0, null, 12, 2],
+	[9, 5, 18, 108.0, null, 14, 3],
+	[9, 5, 18, 108.0, null, 14, 2, { "jumps": 1 }],
+	[9, 6, 21, 104.0, null, 16, 2, { "jumps": 2 }],
+	[10, 6, 24, 102.0, null, 18, 3, { "jumps": 2 }],
+	# 4 Reef (the boat): rocks and logs; whirlpools from the 4th; rivals from the 7th
+	[8, 4, 14, 112.0, null, 10, 0, { "rocks": 2 }],
+	[8, 5, 16, 110.0, null, 12, 1, { "rocks": 3 }],
+	[9, 5, 18, 108.0, null, 14, 1, { "rocks": 3, "logs": 1 }],
+	[9, 5, 18, 108.0, null, 14, 1, { "rocks": 2, "whirls": 1 }],
+	[9, 6, 21, 106.0, null, 16, 2, { "rocks": 3, "logs": 1, "whirls": 2 }],
+	[9, 6, 21, 104.0, null, 16, 2, { "rocks": 3, "whirls": 2 }],
+	[9, 6, 21, 104.0, null, 16, 2, { "rivals": 1, "rocks": 3 }],
+	[10, 6, 24, 102.0, null, 18, 2, { "rivals": 2, "rocks": 3, "logs": 1, "whirls": 2, "jumps": 1 }],
+	[10, 7, 27, 100.0, null, 20, 3, { "rivals": 3, "rocks": 4, "logs": 2, "whirls": 2, "jumps": 1 }],
+	# 5 Sky (the plane): rings; gusts from the 4th, balloons from the 7th
+	[6, 2, 0, 130.0, [Rect2i(0, 0, 6, 2)], 0, 0, { "ring_r": 124.0 }],
+	[6, 4, 0, 130.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2)], 0, 0, { "ring_r": 120.0 }],
+	[6, 4, 0, 130.0, [Rect2i(0, 0, 6, 2), Rect2i(0, 2, 2, 2), Rect2i(4, 2, 2, 2)], 0, 0, { "ring_r": 116.0 }],
+	[8, 4, 14, 130.0, null, 10, 0, { "ring_r": 112.0, "gusts": 1 }],
+	[8, 5, 16, 130.0, null, 12, 0, { "ring_r": 108.0, "gusts": 2 }],
+	[9, 5, 18, 130.0, null, 14, 0, { "ring_r": 104.0, "gusts": 2 }],
+	[9, 5, 18, 130.0, null, 14, 0, { "ring_r": 104.0, "gusts": 2, "balloons": 2 }],
+	[9, 6, 21, 130.0, null, 16, 0, { "ring_r": 100.0, "gusts": 2, "balloons": 3 }],
+	[10, 6, 24, 130.0, null, 18, 0, { "ring_r": 96.0, "gusts": 3, "balloons": 3 }],
+	# 6 Grand Prix (the plane, the masters' world): rival planes, storms, everything
+	[8, 5, 16, 130.0, null, 12, 0, { "ring_r": 104.0, "rivals": 1, "gusts": 1 }],
+	[9, 5, 18, 130.0, null, 14, 0, { "ring_r": 100.0, "rivals": 1, "storms": 1 }],
+	[9, 5, 18, 130.0, null, 14, 0, { "ring_r": 100.0, "rivals": 2, "storms": 2, "gusts": 1 }],
+	[0, 0, 0, 130.0, null, 0, 0, { "eight": [3, 3, 3, 3, 1], "ring_r": 96.0, "rivals": 2, "balloons": 2, "gusts": 2 }],
+	[9, 6, 21, 130.0, null, 16, 0, { "ring_r": 96.0, "rivals": 3, "storms": 2, "balloons": 2 }],
+	[9, 6, 21, 130.0, null, 16, 0, { "ring_r": 92.0, "rivals": 3, "storms": 2, "gusts": 2 }],
+	[0, 0, 0, 130.0, null, 0, 0, { "eight": [4, 3, 4, 3, 2], "ring_r": 92.0, "rivals": 3, "storms": 3, "balloons": 3 }],
+	[10, 6, 24, 130.0, null, 18, 0, { "ring_r": 88.0, "rivals": 3, "storms": 3, "gusts": 3, "balloons": 3 }],
+	[10, 7, 27, 130.0, null, 20, 0, { "ring_r": 86.0, "rivals": 3, "storms": 3, "gusts": 3, "balloons": 4 }],
 ]
-## Secrets (a world's 6th level; BaseMinigame): a gift up on a balloon over the road (a fizzy car
-## jumps the springboard to it), a gift behind a crate wall in a side bay (a sturdy car breaks
-## through), a gift on the road only a lucky car sees. Finales: Phoenix Pepper (5-9), the case (6-9).
+## Secrets (a world's 6th level; BaseMinigame): a gift up on a balloon over the course (a fizzy car
+## jumps the springboard to it, a fizzy plane climbs to it), a gift behind a crate wall in a side bay
+## (a sturdy boat rams through), a gift inside a storm cloud (a sturdy plane flies through), a gift
+## on the water only a lucky boat sees. Finales: Phoenix Pepper (5-9), the case (6-9).
 const SECRETS := {
-	15: ["fizzy", "food:Battery"], 24: ["milky", "food:Moon Rock"], 33: ["fruity", "sticker:traffic_cone"],
-	42: ["milky", "sticker:rubber_duck"], 51: ["fizzy", "sticker:gold_cup"],
+	15: ["fizzy", "sticker:traffic_cone"], 24: ["milky", "food:Battery"], 33: ["fruity", "sticker:rubber_duck"],
+	42: ["milky", "food:Moon Rock"], 51: ["fizzy", "sticker:gold_cup"],
 }
 const FINALES := { 45: "food:Phoenix Pepper", 54: "case:prix" }
 const GAP_LEN := 120.0                # a jump's gap along the road (mat px)
@@ -140,20 +194,22 @@ const CARPET := [Color8(118, 146, 176), Color8(108, 134, 164), Color8(130, 158, 
 const ROAD := [Color8(112, 108, 118), Color8(100, 96, 106)]
 const LINE := Color8(244, 240, 226)
 const CURB := [Color8(226, 70, 64), Color8(246, 242, 232)]
+## The guard rail: a row of tyres just outside the road's edge (dark rubber, a lit rim, the hole;
+## every other one painted red or white, like a race track's tyre wall)
+const TYRE := [Color8(40, 34, 44), Color8(62, 58, 70), Color8(96, 92, 104), Color8(24, 20, 28)]
+const TYRE_PAINT := [Color8(226, 70, 64), Color8(246, 242, 232)]
+const TYRE_R := 3.4                   # a tyre's radius, board px
+const TYRE_STEP := 7.0                # one every this far along the edge, board px
 const OUTLINE := Color8(40, 34, 44)
 const PAD := [Color8(252, 210, 64), Color8(226, 150, 40), Color8(70, 64, 78)]    # chevrons, their edge, the plate
 const SIDE := [Color8(236, 150, 64), Color8(198, 110, 44), Color8(150, 78, 34)]    # the track's orange plastic side
 const BLOCK := [Color8(246, 214, 92), Color8(206, 168, 60)]                          # the yellow toy blocks under it
-## The track's side face per world: [lit, mid, shade, a support, its shade] (the Garden's orange plastic
-## on yellow blocks; the sky's white on blue; the lagoon's wooden posts; wet grey; night's dark)
-const SIDES := [
-	[Color8(236, 150, 64), Color8(198, 110, 44), Color8(150, 78, 34), Color8(246, 214, 92), Color8(206, 168, 60)],
-	[Color8(236, 150, 64), Color8(198, 110, 44), Color8(150, 78, 34), Color8(246, 214, 92), Color8(206, 168, 60)],
-	[Color8(244, 246, 250), Color8(206, 216, 232), Color8(150, 166, 196), Color8(120, 170, 236), Color8(86, 130, 200)],
-	[Color8(206, 150, 96), Color8(168, 112, 68), Color8(120, 76, 46), Color8(140, 96, 60), Color8(104, 68, 42)],
-	[Color8(170, 176, 186), Color8(132, 138, 150), Color8(96, 100, 112), Color8(226, 186, 72), Color8(180, 140, 50)],
-	[Color8(92, 96, 132), Color8(70, 72, 104), Color8(48, 50, 76), Color8(236, 96, 84), Color8(170, 60, 56)],
-]
+## The track's side face per place: [lit, mid, shade, a support, its shade] (the Garden's orange
+## plastic on yellow blocks; the night's dark on red posts)
+const SIDES := {
+	"garden": [Color8(236, 150, 64), Color8(198, 110, 44), Color8(150, 78, 34), Color8(246, 214, 92), Color8(206, 168, 60)],
+	"night": [Color8(92, 96, 132), Color8(70, 72, 104), Color8(48, 50, 76), Color8(236, 96, 84), Color8(170, 60, 56)],
+}
 const MAT_EDGE := [Color8(214, 160, 100), Color8(132, 84, 48), Color8(74, 44, 32)]   # a wooden frame
 
 enum State { WAIT, DRIVE, FALL, DONE }
@@ -175,7 +231,19 @@ var focus_used := false                # the slow beat before a fall, once a lev
 var slow_t := 0.0                      # (focus: the slow-motion left)
 var place := 1                         # the race's position (Grand Prix)
 var qa_autopilot := false              # (tools/qa: the car drives itself, for screenshots)
-var world_no := 0                      # which world (0 Playroom, 1 Kitchen...)
+var world_no := 0                      # which world (0 Garden, 1 Night Race...)
+var vehicle := "car"                   # its toy: "car" / "boat" / "plane" (VEHICLES)
+var look := "garden"                   # its place (LOOKS): the floor, the light
+var cell := 360.0                      # a grid square for this toy (CELLS)
+var rain := false                      # (a wet Night Race)
+var vel := Vector2.ZERO                # the boat: where it's really going (it drifts)
+var bank := 0.0                        # the plane: its lean in the turns (-1 .. 1)
+var _buoy_cd := 0.0                    # (the bump on the buoys, a rail)
+var rings: Array = []                  # the plane's: { i (centre point), pos, n (across), r, lap (last judged), hit, back, front }
+var obstacles: Array = []              # rocks, logs (the boat), balloons, storms (the plane): { kind, i, pos, base, r, (a, b: a log), node }
+var gusts: Array = []                  # the plane's: [first centre point, last, the side it blows to]
+var _grace_t := 0.0                    # (just put back: nothing hits it for a moment)
+var _t := 0.0                          # (the race's own clock for the drifting balloons, the storms' flashes)
 var pads: Array = []                   # boost pads: [centre (mat px), direction along the road]
 var boost_t := 0.0                     # the boost left (1 = just hit a pad)
 var curb_t := 0.0                      # (the rumble's ticks)
@@ -210,6 +278,10 @@ var look_k := 0.0                      # how much the view looks ahead (0 at the
 var behind: Node2D                     # under the track: where a car falling off its far side goes
 var front: Node2D                      # over the track: the car
 var canopy: Sprite2D                   # the Garden's branches over everything
+var ring_back: Node2D                  # the plane's rings: their lower halves (under it)...
+var ring_front: Node2D                 # ...and their upper ones (over it)
+var gust_fx: GustFx                    # the wind's streaks across the course
+var sky_shadow: Sprite2D               # the plane's shadow on the ground far below (it moves with the ground)
 var car: Node2D
 var slices: Array[Sprite2D] = []       # the car, bottom slice first
 var driver: Sprite2D
@@ -237,40 +309,81 @@ var hint_right: HBoxContainer
 var lcd_font: Font
 var _stars_shown := 3
 
-## The little grandstand by the finish line: three wooden tiers and the crowd, tiny coloured dots
-## that hop when the car goes by (a wave that runs along the stand from the car), at GO, and
-## all together at the finish. Drawn on the floor, beside the start straight.
+## The little grandstand by the finish line and its crowd: pals of every kind (their balls, the
+## games' pal balls: a different mix every race, the user 2026-10-18), your own pals often among
+## them, in five rows stepping up away from the track. They hop when the car goes
+## by (a wave that runs along the stand from the car), at GO, and all together at the finish; a
+## crash near them and they scream (a jump, a shake, a "!") and scatter a little, then settle back
+## (the user, 2026-10-17). The stand per toy: wooden tiers under an awning (the car), the same on a
+## pier over the water (the boat), a cloud (the plane).
 class Crowd extends Node2D:
-	const DOT_COLS := [Color8(236, 96, 84), Color8(250, 210, 84), Color8(110, 170, 236), Color8(250, 250, 244),
-		Color8(186, 130, 226), Color8(120, 206, 130), Color8(250, 160, 190)]
 	const OUTLINE := Color8(40, 34, 44)
 	const TIERS := 5                      # rows of seats
 	const ROW := 24.0                     # a row's depth (px)
 	const BACK := 16.0                    # the awning
+	const SEAT := 30.0                    # a pal's seat along a row
 	var rect := Rect2()                  # the stand, mat px (axis-aligned)
 	var along_x := true                  # the stand runs left-right (else up-down)
-	var dots: Array = []                 # [position, colour, when it hops (s), how many hops]
+	var dots: Array = []                 # [position, its pal (pals index), when it hops (s), how many hops, scared until (s), its scatter]
+	var pals: Array[Texture2D] = []
 	var t := 0.0
 	var party := false                   # (the finish: everyone keeps bouncing)
 	var away := Vector2.UP                # from the track towards the stand's back
-	func setup(r: Rect2, horizontal: bool, seed_n: int, away_dir := Vector2.UP) -> void:
+	var style := "stand"                  # "stand" / "pier" / "cloud"
+	func setup(r: Rect2, horizontal: bool, seed_n: int, away_dir := Vector2.UP, kind := "stand") -> void:
 		rect = r
 		along_x = horizontal
 		away = away_dir
+		style = kind
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		dots.clear()
 		party = false
+		pals.clear()
 		var rng := RandomNumberGenerator.new()
 		rng.seed = seed_n
+		# your pals first (a seat in three is one of them), then a dozen others picked at random
+		var mine: Array[Texture2D] = []
+		for id in PetState.discovered:
+			var path := "res://textures/minigames/balls/%s.png" % id
+			if ResourceLoader.exists(path):
+				mine.append(load(path))
+		var others: Array = PetState.FORMS.keys().filter(func(id): return id not in PetState.discovered)
+		for i in range(others.size() - 1, 0, -1):
+			var j := rng.randi() % (i + 1)
+			var tmp = others[i]
+			others[i] = others[j]
+			others[j] = tmp
+		var crowd_mix: Array[Texture2D] = []
+		for id in others:
+			if crowd_mix.size() >= 14:
+				break
+			var path2 := "res://textures/minigames/balls/%s.png" % id
+			if ResourceLoader.exists(path2):
+				crowd_mix.append(load(path2))
+		pals.append_array(mine)
+		pals.append_array(crowd_mix)
+		if pals.is_empty():
+			pals.append(PalBall.texture())
+		var n_mine := mine.size()
 		var long := r.size.x if horizontal else r.size.y
 		for tier in TIERS:
-			var n := int((long - 36.0) / 24.0)
+			var n := int((long - 36.0) / SEAT)
 			for k in n:
-				if rng.randf() < 0.1:
+				if rng.randf() < 0.12:
 					continue                  # (a few empty seats)
-				var a := 22.0 + k * 24.0 + (12.0 if tier % 2 else 0.0)
-				var b := _tier_at(tier) + 12.0
+				var a := 26.0 + k * SEAT + (SEAT / 2.0 if tier % 2 else 0.0)
+				if a > long - 18.0:
+					continue
+				var b := _tier_at(tier) + 10.0
 				var p := r.position + (Vector2(a, b) if horizontal else Vector2(b, a))
-				dots.append([p.snapped(Vector2(4, 4)), DOT_COLS[rng.randi() % DOT_COLS.size()], -10.0, 1])
+				var who := rng.randi() % pals.size()
+				if n_mine > 0 and (rng.randf() < 0.33 or n_mine == pals.size()):
+					who = rng.randi() % n_mine
+				elif pals.size() > n_mine:
+					who = n_mine + rng.randi() % (pals.size() - n_mine)
+				dots.append([p.snapped(Vector2(4, 4)), who, -10.0, 1, -10.0, Vector2.ZERO])
+		# (drawn back to front: the far rows first)
+		dots.sort_custom(func(x, y): return x[0].y < y[0].y)
 		queue_redraw()
 	## A wave of hops along the stand, starting from `from` (mat px)
 	func cheer(from: Vector2, hops := 1) -> void:
@@ -278,6 +391,20 @@ class Crowd extends Node2D:
 			var dist: float = absf((d[0].x - from.x) if along_x else (d[0].y - from.y))
 			d[2] = t + dist / 520.0 + randf() * 0.06
 			d[3] = hops
+	## A crash near the stand: the pals near it scream and scatter (the farther ones just hop)
+	func scream(at: Vector2) -> void:
+		if not rect.grow(320.0).has_point(at):
+			return
+		for d in dots:
+			var off: Vector2 = d[0] - at
+			if off.length() < 300.0:
+				d[4] = t + 1.3 + randf() * 0.3
+				d[5] = off.normalized() * randf_range(10.0, 22.0)
+				d[2] = t + randf() * 0.1
+				d[3] = 3
+			else:
+				d[2] = t + off.length() / 900.0
+				d[3] = 1
 	func _process(delta: float) -> void:
 		t += delta
 		if party:
@@ -295,8 +422,37 @@ class Crowd extends Node2D:
 	func _draw() -> void:
 		if rect.size == Vector2.ZERO:
 			return
-		# the stand: outlined like the track (it's a toy too), three tiers stepping up away from
-		# the track (the back ones lighter: higher, nearer the light), lit lips
+		if style == "cloud":
+			_draw_cloud()
+		else:
+			_draw_stand()
+		# the crowd: your pals' balls (x2, on the 4 px grid), hopping up the screen; a scared one
+		# shakes, its "!" over it, and steps away from the crash a little
+		for d in dots:
+			var u: float = (t - d[2]) / 0.36
+			var up := 0.0
+			var scared: bool = t < d[4]
+			if u >= 0.0 and u < float(d[3]):
+				up = sin(fposmod(u, 1.0) * PI) * (30.0 if scared else 20.0)
+			var p: Vector2 = d[0] - Vector2(0, roundf(up / 4.0) * 4.0)
+			if scared:
+				var k := clampf((d[4] - t) / 1.3, 0.0, 1.0)
+				p += (d[5] as Vector2) * sin(k * PI) + Vector2(4.0 if int(t * 30.0) % 2 == 0 else -4.0, 0) * k
+			p = p.snapped(Vector2(4, 4))
+			draw_texture_rect(pals[d[1]], Rect2(p - Vector2(24, 28), Vector2(48, 48)), false)
+			if scared and int(d[1]) % 2 == 0:
+				draw_rect(Rect2(p + Vector2(-2, -46), Vector2(4, 10)), Color8(250, 246, 236))
+				draw_rect(Rect2(p + Vector2(-2, -32), Vector2(4, 4)), Color8(250, 246, 236))
+	func _draw_stand() -> void:
+		# the stand: outlined like the track (it's a toy too), five tiers stepping up away from the
+		# track (the back ones lighter: higher, nearer the light), lit lips; a pier: on posts
+		if style == "pier":
+			var posts := 6
+			for k in posts:
+				var f := (k + 0.5) / posts
+				var at := rect.position + (Vector2(rect.size.x * f, rect.size.y) if along_x else Vector2(rect.size.x, rect.size.y * f))
+				draw_rect(Rect2(at + Vector2(-6, 0), Vector2(12, 20)), OUTLINE)
+				draw_rect(Rect2(at + Vector2(-4, 0), Vector2(8, 16)), Color8(120, 78, 46))
 		draw_rect(rect.grow(4), OUTLINE)
 		draw_rect(rect, Color8(150, 106, 72))
 		var wood := [Color8(164, 116, 76), Color8(178, 130, 86), Color8(192, 144, 96), Color8(206, 158, 108), Color8(218, 172, 120)]
@@ -330,21 +486,30 @@ class Crowd extends Node2D:
 			draw_rect(tab, col)
 			a += 20.0
 			k += 1
-		# the crowd: 16 px round dots (on the 4 px grid), a darker lower half, a shine; they hop
-		# up the screen
-		for d in dots:
-			var u: float = (t - d[2]) / 0.36
-			var up := 0.0
-			if u >= 0.0 and u < float(d[3]):
-				up = sin(fposmod(u, 1.0) * PI) * 20.0
-			var p: Vector2 = d[0] - Vector2(0, roundf(up / 4.0) * 4.0)
-			var c: Color = d[1]
-			# a 20 px round dot on the 4 px grid: a darker lower half, a shine top-left
-			draw_rect(Rect2(p + Vector2(-10, -6), Vector2(20, 12)), c)
-			draw_rect(Rect2(p + Vector2(-6, -10), Vector2(12, 20)), c)
-			draw_rect(Rect2(p + Vector2(-10, 2), Vector2(20, 4)), c.darkened(0.18))
-			draw_rect(Rect2(p + Vector2(-6, 6), Vector2(12, 4)), c.darkened(0.18))
-			draw_rect(Rect2(p + Vector2(-6, -6), Vector2(4, 4)), c.lightened(0.45))     # its shine
+	func _draw_cloud() -> void:
+		# a fluffy cloud for the pals to sit on: lumps along its edge, lit top left, its shade below
+		var lumps: Array = []
+		var long := rect.size.x if along_x else rect.size.y
+		var n := int(long / 46.0) + 1
+		for k in n:
+			var f := (k + 0.5) / n
+			for side in [0.2, 0.8]:
+				var c := rect.position + (Vector2(rect.size.x * f, rect.size.y * side) if along_x else Vector2(rect.size.x * side, rect.size.y * f))
+				lumps.append([c, 44.0 + 10.0 * sin(k * 2.3 + side * 5.0)])
+		for pass_n in 3:
+			for lp in lumps:
+				var c: Vector2 = lp[0]
+				var r: float = lp[1]
+				var col: Color = [OUTLINE, Color8(206, 220, 240), Color8(250, 252, 255)][pass_n]
+				var rr := r + (4.0 if pass_n == 0 else (0.0 if pass_n == 1 else -6.0))
+				var off := Vector2(0, 0) if pass_n < 2 else Vector2(-4, -6)
+				_disc(c + off, rr, col)
+	func _disc(c: Vector2, r: float, col: Color) -> void:
+		var y := -r
+		while y <= r:
+			var half := sqrt(maxf(0.0, r * r - y * y))
+			draw_rect(Rect2((c + Vector2(-half, y)).snapped(Vector2(4, 4)), Vector2(half * 2.0, 4).snapped(Vector2(4, 4))), col)
+			y += 4.0
 
 
 ## Speed: short light streaks left on the road by the rear wheels, fading fast, and puffs from the
@@ -368,16 +533,59 @@ class Trail extends Node2D:
 			var side := Vector2.from_angle(heading + PI / 2.0) * (1.0 if k % 2 == 0 else -1.0)
 			var back := Vector2.from_angle(heading) * -30.0
 			marks.append([p + back + side * 22.0, 0.0, 2, side * randf_range(90, 220) + Vector2.from_angle(heading) * -randf_range(40, 120)])
+	## The boat's wake: foam left at its stern that spreads out to both sides and fades
+	func wake(p: Vector2, heading: float, delta: float, k: float) -> void:
+		puff_t -= delta
+		if puff_t > 0.0:
+			return
+		puff_t = 0.035
+		var back := Vector2.from_angle(heading) * -50.0
+		var side := Vector2.from_angle(heading + PI / 2.0)
+		for sd in [-1.0, 1.0]:
+			marks.append([p + back + side * sd * 14.0, 0.0, 3, side * sd * randf_range(40.0, 70.0) * k])
+		marks.append([p + back * 1.1, 0.0, 3, Vector2.ZERO])
+	## The plane's contrail: two thin white puffs off its wing tips, lingering a little
+	func contrail(p: Vector2, heading: float, delta: float) -> void:
+		puff_t -= delta
+		if puff_t > 0.0:
+			return
+		puff_t = 0.05
+		var side := Vector2.from_angle(heading + PI / 2.0) * 44.0
+		var back := Vector2.from_angle(heading) * -8.0
+		marks.append([p + back + side, 0.0, 4])
+		marks.append([p + back - side, 0.0, 4])
+	## A ring flown through: a burst of little stars
+	func sparkle(p: Vector2) -> void:
+		for k in 10:
+			var a := TAU * k / 10.0
+			marks.append([p, 0.0, 5, Vector2.from_angle(a) * randf_range(160.0, 260.0)])
+	func _life(kind: int) -> float:
+		return [LIFE, 0.45, 0.35, 0.9, 0.6, 0.5][kind]
 	func _process(delta: float) -> void:
 		for m in marks:
 			m[1] += delta
-			if m[2] == 2:
+			if m[2] == 2 or m[2] == 3 or m[2] == 5:
 				m[0] += (m[3] as Vector2) * delta
-		marks = marks.filter(func(m): return m[1] < (LIFE if m[2] == 0 else (0.45 if m[2] == 1 else 0.35)))
+				if m[2] == 3:
+					m[3] = (m[3] as Vector2) * maxf(0.0, 1.0 - delta * 2.0)
+		marks = marks.filter(func(m): return m[1] < _life(m[2]))
 		queue_redraw()
 	func _draw() -> void:
 		for m in marks:
 			var p: Vector2 = (m[0] as Vector2).snapped(Vector2(4, 4))
+			if m[2] == 3:
+				var f3: float = m[1] / 0.9
+				var sz3 := 4.0 if f3 < 0.4 else 8.0
+				draw_rect(Rect2(p - Vector2(sz3, sz3) / 2.0, Vector2(sz3, sz3)), Color(0.95, 0.98, 1.0, 0.75 * (1.0 - f3)))
+				continue
+			if m[2] == 4:
+				var f4: float = m[1] / 0.6
+				draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color(1, 1, 1, 0.5 * (1.0 - f4)))
+				continue
+			if m[2] == 5:
+				var f5: float = m[1] / 0.5
+				draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color(1.0, 0.95, 0.6, 1.0 - f5))
+				continue
 			if m[2] == 2:
 				draw_rect(Rect2(p - Vector2(2, 2), Vector2(4, 4)), Color(0.8, 0.9, 1.0, 0.8 * (1.0 - m[1] / 0.35)))
 			elif m[2] == 0:
@@ -386,6 +594,86 @@ class Trail extends Node2D:
 				var f: float = m[1] / 0.45
 				var sz := 4.0 + 8.0 * f
 				draw_rect(Rect2(p - Vector2(sz, sz) / 2.0 + Vector2(0, -f * 10.0), Vector2(sz, sz)).abs(), Color(0.85, 0.85, 0.9, 0.5 * (1.0 - f)))
+
+## A plane's ring: a hoop standing across the course, seen from above at an angle (an ellipse: its
+## width across the course, its height foreshortened, leaning the way the course goes). Drawn in two
+## halves: the upper one over the plane, the lower one under it, so the plane flies through. Red and
+## white bands, a dark outline; the next one to fly through glows, a ring flown through turns gold
+## and fades, one missed goes grey.
+class Ring extends Node2D:
+	var p := Vector2.ZERO
+	var n := Vector2.RIGHT
+	var d := Vector2.DOWN
+	var r := 100.0
+	var upper := true
+	var state := 0                        # 0 to come, 1 the next one, 2 flown through, 3 missed
+	var t := 0.0
+	const OUT := Color8(40, 30, 40)
+	func _process(delta: float) -> void:
+		t += delta
+		if state == 1:
+			queue_redraw()
+	func _point(a: float) -> Vector2:
+		# its width across the course (n), its depth foreshortened square to that
+		return p + n * r * cos(a) + Vector2(-n.y, n.x) * r * 0.42 * sin(a)
+	func _draw() -> void:
+		var cols := [Color8(226, 70, 64), Color8(250, 246, 236)]
+		var alpha := 1.0
+		match state:
+			1:
+				var g := 0.5 + 0.5 * sin(t * 7.0)
+				cols = [Color8(226, 70, 64).lerp(Color8(255, 220, 120), g * 0.6), Color8(255, 250, 200)]
+			2:
+				cols = [Color8(250, 204, 70), Color8(255, 240, 160)]
+				alpha = 0.35
+			3:
+				cols = [Color8(150, 140, 150), Color8(196, 190, 196)]
+				alpha = 0.5
+		# (this half: the points above the ring's middle on screen, or below it)
+		var steps := 80
+		var o := OUT
+		o.a = alpha
+		for pass_n in 2:
+			for k in steps:
+				var q := _point(TAU * float(k) / steps)
+				if (q.y <= p.y) != upper:
+					continue
+				q = q.snapped(Vector2(4, 4))
+				if pass_n == 0:
+					draw_rect(Rect2(q - Vector2(8, 8), Vector2(16, 16)), o)
+				else:
+					var col: Color = cols[(k / 5) % 2]
+					col.a = alpha
+					draw_rect(Rect2(q - Vector2(4, 4), Vector2(8, 8)), col)
+
+## The wind across the course in a gust: short white streaks blowing over it (on the 4 px grid)
+class GustFx extends Node2D:
+	var zones: Array = []                 # [points (the course there), the way it blows]
+	var bits: Array = []                  # [position, velocity, age]
+	func setup(z: Array) -> void:
+		zones = z
+		bits.clear()
+	func _process(delta: float) -> void:
+		if zones.is_empty():
+			return
+		for z in zones:
+			if randf() < delta * 26.0:
+				var pts: PackedVector2Array = z[0]
+				var at := pts[randi() % pts.size()]
+				var way: Vector2 = z[1]
+				bits.append([at - way * 260.0 + Vector2(randf_range(-60, 60), randf_range(-60, 60)), way * randf_range(380.0, 520.0), 0.0])
+		for b in bits:
+			b[0] += (b[1] as Vector2) * delta
+			b[2] += delta
+		bits = bits.filter(func(b): return b[2] < 1.1)
+		queue_redraw()
+	func _draw() -> void:
+		for b in bits:
+			var p: Vector2 = (b[0] as Vector2).snapped(Vector2(4, 4))
+			var v: Vector2 = (b[1] as Vector2).normalized()
+			var a := 0.55 * sin(b[2] / 1.1 * PI)
+			for k in 4:
+				draw_rect(Rect2((p - v * k * 6.0).snapped(Vector2(4, 4)), Vector2(4, 4)), Color(1, 1, 1, a))
 
 func _ready() -> void:
 	game_music_path = "res://sounds/music/Pixel Chase.ogg"     # (107.22 BPM, looped on bar lines: tools/audio/loop_track.py)
@@ -437,14 +725,19 @@ func play_level(n: int) -> void:
 func _begin(n: int) -> void:
 	level = clampi(n, 1, LEVELS.size())
 	world_no = (level - 1) / GameData.LEVELS_PER_WORLD
+	vehicle = VEHICLES[world_no]
+	look = LOOKS[world_no]
+	cell = CELLS[vehicle]
 	var spec0: Array = LEVELS[level - 1]
 	extras = spec0[7] if spec0.size() > 7 else {}
+	rain = bool(extras.get("rain", false))
+	_set_vehicle()
 	_build_circuit()
 	_place_crowd()
 	_place_features()
 	board.texture = ImageTexture.create_from_image(_paint())
 	track.texture = ImageTexture.create_from_image(track_image)
-	canopy.visible = world_no == 0 and not _trees.is_empty()
+	canopy.visible = look == "garden" and not _trees.is_empty()
 	if canopy.visible:
 		canopy.texture = ImageTexture.create_from_image(_paint_canopy(int(mat_size.x / PX), int(mat_size.y / PX)))
 	car_pos = centre[0]
@@ -454,6 +747,9 @@ func _begin(n: int) -> void:
 	lap = 1
 	race_time = 0.0
 	falls = 0
+	reset_lives()
+	vel = Vector2.from_angle(heading) * _speed()
+	bank = 0.0
 	trail.marks.clear()
 	last_cp = 0.0
 	car_drop = 0.0
@@ -476,14 +772,12 @@ func _begin(n: int) -> void:
 	_follow(1.0)
 	_refresh_hud()
 	var k := (level - 1) % GameData.LEVELS_PER_WORLD
-	if k == 0:
-		_show_banner(WORLDS[world_no], 1.2)
-		if WORLD_HINTS[world_no] != "":
-			get_tree().create_timer(1.4).timeout.connect(func():
-				if is_running and level == n:
-					_show_banner(WORLD_HINTS[world_no], 1.2))
-	else:
-		_show_banner("%d-%d" % [world_no + 1, k + 1], 0.8)
+	var hint: String = WORLD_HINTS[world_no] if k == 0 else (LATER_HINTS[world_no][0] if k == 3 else (LATER_HINTS[world_no][1] if k == 6 else ""))
+	_show_banner(WORLDS[world_no] if k == 0 else "%d-%d" % [world_no + 1, k + 1], 1.2 if k == 0 else 0.8)
+	if hint != "":
+		get_tree().create_timer(1.4 if k == 0 else 1.0).timeout.connect(func():
+			if is_running and level == n:
+				_show_banner(hint, 1.2))
 	boost_t = 0.0
 	curb_t = 0.0
 	air_t = 0.0
@@ -523,11 +817,11 @@ func _build_circuit() -> void:
 	for c in best:
 		lo = Vector2i(mini(lo.x, c.x), mini(lo.y, c.y))
 		hi = Vector2i(maxi(hi.x, c.x), maxi(hi.y, c.y))
-	mat_size = Vector2(hi - lo) * CELL + Vector2(pad, pad) * 2.0
+	mat_size = Vector2(hi - lo) * cell + Vector2(pad, pad) * 2.0
 	var pts: Array[Vector2] = []
 	for c in best:
-		pts.append(Vector2(c - lo) * CELL + Vector2(pad, pad))
-	_cross_pos = Vector2(_cross_grid - lo) * CELL + Vector2(pad, pad)
+		pts.append(Vector2(c - lo) * cell + Vector2(pad, pad))
+	_cross_pos = Vector2(_cross_grid - lo) * cell + Vector2(pad, pad)
 	centre = _resample(_rounded(pts))
 	count = centre.size()
 	lap_length = count * STEP
@@ -556,9 +850,100 @@ func _build_circuit() -> void:
 	for i in count:
 		rolled.append(centre[(best_i + i) % count])
 	centre = rolled
-	bridge_range = _find_bridge() if extras.has("eight") else Vector2i(-1, -1)
+	bridge_range = _find_bridge() if extras.has("eight") and vehicle == "car" else Vector2i(-1, -1)
+	_find_rails(str(extras.get("rails", "")) if vehicle == "car" else "")
 	_place_pads(spec[6])
 	par = ceilf(lap_length * LAPS / SPEED * PAR_SLACK + PAR_PLUS - pads.size() * LAPS * PAD_SAVES)
+
+## The car's guard rails (the user, 2026-10-17): on the outer side of the corners ("all") or of
+## the hairpins only, the tightest ("hairpins": two corners the same way, a short straight between)
+var _rail := PackedInt32Array()       # per centre point: 0, or the side its rail is on (+1 / -1: along the left normal or against it)
+const RAIL_IN := 34.0                 # the car's middle is held this far inside the road's edge
+
+func _find_rails(kind: String) -> void:
+	_rail = PackedInt32Array()
+	_rail.resize(count)
+	if kind == "":
+		return
+	# the corners: runs of points where the line turns (each its first and last point, its way)
+	var corners: Array = []           # [first, last, turn's sign]
+	var on := false
+	for i in count:
+		var a := centre[(i - 3 + count) % count]
+		var b := centre[i]
+		var c := centre[(i + 3) % count]
+		var t := (b - a).angle_to(c - b)
+		if absf(t) > 0.02:
+			if not on:
+				corners.append([i, i, signf(t)])
+				on = true
+			else:
+				corners[-1][1] = i
+		else:
+			on = false
+	if corners.size() > 1 and corners[0][0] == 0 and corners[-1][1] == count - 1 and corners[0][2] == corners[-1][2]:
+		corners[0][0] = corners[-1][0] - count                # (a corner across the start: one corner)
+		corners.pop_back()
+	for ci in corners.size():
+		var cr: Array = corners[ci]
+		var want := kind == "all"
+		if not want:
+			# a hairpin: the next corner (or the one before) turns the same way, close by
+			for o in [-1, 1]:
+				var other: Array = corners[(ci + o + corners.size()) % corners.size()]
+				var gap: int = (other[0] - cr[1]) if o == 1 else (cr[0] - other[1])
+				gap = posmod(gap, count)
+				if other[2] == cr[2] and gap * STEP < cell * 1.2:
+					want = true
+		if not want:
+			continue
+		# the outer side: a turn to the right (clockwise on screen) has it on the left
+		var outer := -int(cr[2])
+		for j in range(cr[0] - 6, cr[1] + 7):
+			_rail[posmod(j, count)] = outer
+
+## The left normal of the centre line at point i (screen: to the right when facing along it)
+func _normal(i: int) -> Vector2:
+	var d := (centre[(i + 1) % count] - centre[i]).normalized()
+	return Vector2(-d.y, d.x)
+
+## The tyre wall's px for the painter: 1 a tyre's dark rim, 2 its rubber, 3 its lit side, 4 its
+## hole, 5 / 6 a painted (red / white) tyre's band; just outside the road's edge on a rail's side
+func _rail_mask() -> PackedByteArray:
+	var m := PackedByteArray()
+	m.resize(_bw * _bh)
+	if _rail.is_empty() or not _rail.has(1) and not _rail.has(-1):
+		return m
+	var hw := half_w / PX
+	var mid := hw + 1.0 + TYRE_R
+	for i in m.size():
+		var d := _dist[i]
+		if d <= hw or d > mid + TYRE_R + 0.6:
+			continue
+		var c := _idx[i]
+		if _rail[c] == 0:
+			continue
+		var p := Vector2(i % _bw + 0.5, i / _bw + 0.5) * PX
+		var n := _normal(c)
+		if signf((p - centre[c]).dot(n)) != float(_rail[c]):
+			continue
+		# where along the edge (board px), then the nearest tyre's middle
+		var dir := Vector2(n.y, -n.x)
+		var u := (c * STEP + (p - centre[c]).dot(dir)) / PX * (mid / hw)
+		var k := roundf(u / TYRE_STEP)
+		var off := Vector2(u - k * TYRE_STEP, d - mid)
+		var r := off.length()
+		if r > TYRE_R + 0.6:
+			continue
+		if r > TYRE_R - 0.4:
+			m[i] = 1
+		elif r < 1.1:
+			m[i] = 4
+		elif int(k) % 2 == 0 and r > 1.9:
+			m[i] = 5 if int(k / 2) % 2 == 0 else 6
+		else:
+			m[i] = 3 if off.x + off.y * signf(float(_rail[c])) < -0.8 else 2
+	return m
 
 ## The stand beside the start straight, on whichever side has room (never near the road)
 func _place_crowd() -> void:
@@ -584,7 +969,7 @@ func _try_crowd(dir: Vector2, horizontal: bool, normal: Vector2, long: float) ->
 					ok = false
 					break
 		if ok:
-			crowd.setup(r, horizontal, level * 13 + 1, normal * side)
+			crowd.setup(r, horizontal, level * 13 + 1, normal * side, { "car": "stand", "boat": "pier", "plane": "cloud" }[vehicle])
 			crowd.visible = true
 			return true
 	return false
@@ -727,9 +1112,19 @@ func _place_features() -> void:
 			continue
 		gaps.append([g0, g1])
 		used.append([r0, g1])
-	# oil slicks, then puddles: anywhere on the road, a little off the middle
-	for kind in ["oil", "puddle"]:
-		var want := int(extras.get("oil" if kind == "oil" else "puddles", 0))
+	# the plane's rings first (the rest keeps clear of them): every RING_GAP along the course
+	rings.clear()
+	if vehicle == "plane":
+		var gap_pts := int(RING_GAP / STEP)
+		var i := 40
+		while i < count - 30:
+			rings.append({ "i": i, "pos": centre[i], "n": _normal(i), "r": float(extras.get("ring_r", 110.0)), "lap": 0, "hit": false })
+			used.append([i - 10, i + 10])
+			i += gap_pts
+	# oil slicks, puddles (the car), whirlpools (the boat): to one side of the road, never across it
+	# all (the user, 2026-10-17: there's always room to go round)
+	for kind in ["oil", "puddle", "whirl"]:
+		var want := int(extras.get({ "oil": "oil", "puddle": "puddles", "whirl": "whirls" }[kind], 0))
 		var tries := 0
 		var placed := 0
 		while placed < want and tries < 200:
@@ -737,11 +1132,58 @@ func _place_features() -> void:
 			var i := rng.randi_range(40, count - 40)
 			if not free_at.call(i - 6, i + 6):
 				continue
-			var dir := (centre[(i + 1) % count] - centre[i]).normalized()
-			var side := Vector2(-dir.y, dir.x) * rng.randf_range(-half_w * 0.35, half_w * 0.35)
-			slicks.append([centre[i] + side, kind])
+			var side := -1.0 if rng.randf() < 0.5 else 1.0
+			slicks.append([centre[i] + _normal(i) * side * rng.randf_range(0.42, 0.52) * half_w, kind])
 			used.append([i - 6, i + 6])
 			placed += 1
+	# the boat's rocks and logs, the plane's balloons and storm clouds: each to one side, room to
+	# go round the other way (a log reaches in from the buoys, under half way across)
+	obstacles.clear()
+	for kind in ["rock", "log", "balloon", "storm"]:
+		var want := int(extras.get(kind + "s", 0))
+		var tries := 0
+		var placed := 0
+		while placed < want and tries < 300:
+			tries += 1
+			var i := rng.randi_range(45, count - 40)
+			if not free_at.call(i - 8, i + 8):
+				continue
+			var side := -1.0 if rng.randf() < 0.5 else 1.0
+			var n := _normal(i)
+			var ob := { "kind": kind, "i": i, "side": side, "k": placed + level }
+			match kind:
+				"rock":
+					ob["r"] = rng.randf_range(28.0, 34.0)
+					ob["pos"] = centre[i] + n * side * rng.randf_range(0.38, 0.5) * half_w
+				"log":
+					var a := centre[i] + n * side * (half_w - 4.0)
+					ob["a"] = a
+					ob["b"] = a - (n * side).rotated(rng.randf_range(-0.25, 0.25)) * half_w * 0.85
+					ob["pos"] = (a + ob["b"]) / 2.0
+					ob["r"] = 13.0
+				"balloon":
+					ob["r"] = 44.0
+					ob["pos"] = centre[i] + n * side * rng.randf_range(0.35, 0.8) * half_w
+				"storm":
+					ob["r"] = 64.0
+					ob["pos"] = centre[i] + n * side * rng.randf_range(0.45, 0.7) * half_w
+			ob["base"] = ob["pos"]
+			obstacles.append(ob)
+			used.append([i - 8, i + 8])
+			placed += 1
+	# the plane's gusts: stretches of the course where the wind blows across it, one way
+	gusts.clear()
+	for k in int(extras.get("gusts", 0)):
+		for tries in 60:
+			var i := rng.randi_range(45, count - 100)
+			var len := int(520.0 / STEP)
+			var clash := false
+			for g in gusts:
+				if i < g[1] + 30 and i + len > g[0] - 30:
+					clash = true
+			if not clash:
+				gusts.append([i, i + len, -1.0 if rng.randf() < 0.5 else 1.0])
+				break
 	# the secret, if this level has one: a spot on a straight (or anywhere free)
 	secret = secret_of(level)
 	if not secret.is_empty():
@@ -878,7 +1320,7 @@ func _rounded(pts: Array[Vector2]) -> PackedVector2Array:
 		var p := pts[(i - 1 + n) % n]
 		var v := pts[i]
 		var q := pts[(i + 1) % n]
-		var r := minf(CELL * 0.5, minf(v.distance_to(p), v.distance_to(q)) * 0.5)
+		var r := minf(cell * 0.5, minf(v.distance_to(p), v.distance_to(q)) * 0.5)
 		var dp := (p - v).normalized()
 		var dq := (q - v).normalized()
 		var centre_pt := v + (dp + dq) * r
@@ -914,26 +1356,6 @@ func _resample(line: PackedVector2Array) -> PackedVector2Array:
 func _paint() -> Image:
 	var w := int(mat_size.x / PX)
 	var h := int(mat_size.y / PX)
-	# the distance from each board px to the centre line (stamped round every other point), and
-	# which point is nearest (for the curbs' stripes and the dashes)
-	var dist := PackedFloat32Array()
-	dist.resize(w * h)
-	dist.fill(1e9)
-	var idx := PackedInt32Array()
-	idx.resize(w * h)
-	var hw := half_w / PX
-	var reach := hw + 4.0
-	for s in range(0, count, 3):                     # (points 24 px apart: the discs overlap)
-		var c := centre[s] / PX
-		for y in range(maxi(0, int(c.y - reach)), mini(h, int(c.y + reach) + 1)):
-			for x in range(maxi(0, int(c.x - reach)), mini(w, int(c.x + reach) + 1)):
-				var d := Vector2(x + 0.5, y + 0.5).distance_to(c)
-				var i := y * w + x
-				if d < dist[i]:
-					dist[i] = d
-					idx[i] = s
-	# two layers: the floor (the carpet, the frame, the track's shadow) and the raised track (the
-	# road, its curbs, its side face): a car falling off the far side drops between them
 	_bw = w
 	_bh = h
 	if not _grass_noise:
@@ -944,17 +1366,45 @@ func _paint() -> Image:
 		_cloud_noise.frequency = 0.006
 	_grass_noise.seed = level
 	_cloud_noise.seed = level * 7 + 1
+	_distance_field(w, h)
+	match vehicle:
+		"boat":
+			return _paint_water(w, h)
+		"plane":
+			return _paint_sky(w, h)
+	return _paint_track(w, h)
+
+var _dist := PackedFloat32Array()      # every board px: its distance to the course's centre line
+var _idx := PackedInt32Array()         # ...and the centre point nearest it (the curbs' stripes, the dashes)
+
+## The distance from each board px to the centre line (stamped round every other point)
+func _distance_field(w: int, h: int) -> void:
+	_dist = PackedFloat32Array()
+	_dist.resize(w * h)
+	_dist.fill(1e9)
+	_idx = PackedInt32Array()
+	_idx.resize(w * h)
+	var hw := half_w / PX
+	var reach := hw + (14.0 if vehicle == "boat" else 4.0)       # (the boat's: the foam round its rocks too)
+	for s in range(0, count, 3):                     # (points 24 px apart: the discs overlap)
+		var c := centre[s] / PX
+		for y in range(maxi(0, int(c.y - reach)), mini(h, int(c.y + reach) + 1)):
+			for x in range(maxi(0, int(c.x - reach)), mini(w, int(c.x + reach) + 1)):
+				var d := Vector2(x + 0.5, y + 0.5).distance_to(c)
+				var i := y * w + x
+				if d < _dist[i]:
+					_dist[i] = d
+					_idx[i] = s
+
+## The car's world: two layers, the floor (the carpet, the frame, the track's shadow) and the raised
+## track (the road, its curbs, its rails, its side face): a car falling off drops between them
+func _paint_track(w: int, h: int) -> Image:
+	var dist := _dist
+	var idx := _idx
+	var hw := half_w / PX
 	_garden_decor(w, h, dist, hw)
-	_sandbars.clear()
 	_lamps.clear()
-	var frng := RandomNumberGenerator.new()
-	frng.seed = 77 * level + 5
-	if world_no == 3:
-		for k in int(w * h / 26000) + 2:
-			var p := Vector2(frng.randi_range(EDGE + 40, w - EDGE - 40), frng.randi_range(EDGE + 20, h - EDGE - 20))
-			if dist[int(p.y) * w + int(p.x)] > hw + 30.0:
-				_sandbars.append(p)
-	if world_no == 5:
+	if look == "night":
 		# a lamp every ~160 board px round the circuit, just off the road's outer side
 		for s2 in range(0, count, int(640.0 / STEP)):
 			var c2 := centre[s2] / PX
@@ -963,7 +1413,7 @@ func _paint() -> Image:
 			_lamps.append(c2 + out * (hw + 16.0))
 			_lamps.append(c2 - out * (hw + 16.0))
 	_lamp_light = PackedFloat32Array()
-	if world_no == 5:
+	if look == "night":
 		_lamp_light.resize(w * h)
 		_lamp_light.fill(0.0)
 		const LR := 58.0
@@ -973,12 +1423,33 @@ func _paint() -> Image:
 					var v2 := 1.0 - Vector2(xx, yy).distance_to(lp) / LR
 					if v2 > _lamp_light[yy * w + xx]:
 						_lamp_light[yy * w + xx] = v2
+	# below the road's south edge, column by column: how many rows down from the road (its side
+	# face, then its outline), and which road px it hangs from
+	var below := PackedByteArray()
+	below.resize(w * h)
+	var below_i := PackedInt32Array()
+	below_i.resize(w * h)
+	for x in w:
+		var run := 255
+		var from := 0
+		for y in h:
+			var i := y * w + x
+			if dist[i] <= hw + 2.0:
+				run = 0
+				from = idx[i]
+			elif run < 255:
+				run += 1
+			below[i] = run
+			below_i[i] = from
+	var rails := _rail_mask()
 	var data := PackedByteArray()
 	data.resize(w * h * 4)
 	var top := PackedByteArray()
 	top.resize(w * h * 4)
 	var k := 0
 	var curb := 3.0
+	var dark_road := look == "night"
+	var sd: Array = SIDES[look]
 	for y in h:
 		for x in w:
 			var i := y * w + x
@@ -995,7 +1466,7 @@ func _paint() -> Image:
 					col = MAT_EDGE[0]
 				else:
 					col = MAT_EDGE[1]
-			elif _in_gap(idx[i]) and d <= hw + 2.0:
+			elif d <= hw + 2.0 and _in_gap(idx[i]):
 				# a jump's gap: no road, the ground far below (its cut edges outlined)
 				on_track = false
 				col = _floor_px(x, y).darkened(0.12)
@@ -1003,40 +1474,45 @@ func _paint() -> Image:
 					col = OUTLINE
 			elif d <= hw - curb:
 				col = ROAD[0] if (x * 3 + y * 5) % 7 else ROAD[1]
-				if world_no == 4 or world_no == 5:
-					col = col.darkened(0.18)                     # (wet / night asphalt)
+				if dark_road:
+					col = col.darkened(0.18)                     # (night asphalt, wet or not)
 				if d < 0.8 and (idx[i] / 6) % 2 == 0:
 					col = LINE                                   # the dashed centre line
 				if _on_ramp(idx[i]):
 					# a ramp: yellow and dark chevrons, lighter as it rises towards the gap
 					var rise := float(idx[i] % int(RAMP_LEN / STEP)) / (RAMP_LEN / STEP)
 					col = (PAD[0] if ((idx[i] / 2) + int(d)) % 3 != 0 else PAD[2]).lightened(0.25 * rise)
-				var wp := Vector2(x + 0.5, y + 0.5) * PX
-				for sl in slicks:
-					var off: Vector2 = wp - sl[0]
-					var r := SLICK_R * (1.0 + 0.18 * sin(off.angle() * 3.0 + sl[0].x))
-					if off.length() < r:
-						if sl[1] == "oil":
-							# oil: a black glossy blob, a rainbow sheen at its top-left
-							col = Color8(30, 28, 36)
-							if off.length() > r - PX * 1.5:
-								col = Color8(20, 18, 24)
-							elif off.x + off.y < -r * 0.35 and off.x + off.y > -r * 0.6:
-								col = [Color8(120, 90, 180), Color8(80, 160, 170), Color8(190, 170, 90)][int(off.length() / 6.0) % 3]
-						else:
-							# a puddle: grey-blue water, the sky in it, a ripple ring
-							col = Color8(110, 132, 150)
-							if absf(off.length() - r * 0.55) < PX * 0.8:
-								col = Color8(170, 190, 204)
-							elif off.x + off.y < -r * 0.5:
-								col = Color8(150, 172, 188)
+				if not slicks.is_empty():
+					var wp := Vector2(x + 0.5, y + 0.5) * PX
+					for sl in slicks:
+						var off: Vector2 = wp - sl[0]
+						if off.length_squared() > SLICK_R * SLICK_R * 1.5:
+							continue
+						var r := SLICK_R * (1.0 + 0.18 * sin(off.angle() * 3.0 + sl[0].x))
+						if off.length() < r:
+							if sl[1] == "oil":
+								# oil: a black glossy blob, a rainbow sheen at its top-left
+								col = Color8(30, 28, 36)
+								if off.length() > r - PX * 1.5:
+									col = Color8(20, 18, 24)
+								elif off.x + off.y < -r * 0.35 and off.x + off.y > -r * 0.6:
+									col = [Color8(120, 90, 180), Color8(80, 160, 170), Color8(190, 170, 90)][int(off.length() / 6.0) % 3]
+							else:
+								# a puddle: grey-blue water, the sky in it, a ripple ring
+								col = Color8(110, 132, 150)
+								if absf(off.length() - r * 0.55) < PX * 0.8:
+									col = Color8(170, 190, 204)
+								elif off.x + off.y < -r * 0.5:
+									col = Color8(150, 172, 188)
 				if idx[i] <= 2 or idx[i] >= count - 2:
 					col = Color8(30, 30, 34) if ((x / 2) + (y / 2)) % 2 else LINE   # the start / finish
 				for pd in pads:
 					var loc := Vector2(x + 0.5, y + 0.5) * PX - (pd[0] as Vector2)
 					var u := loc.dot(pd[1])
+					if absf(u) >= PAD_LEN / 2.0:
+						continue
 					var v := loc.dot(Vector2(-pd[1].y, pd[1].x))
-					if absf(u) < PAD_LEN / 2.0 and absf(v) < half_w - 14.0:
+					if absf(v) < half_w - 14.0:
 						# a boost pad: yellow chevrons pointing down the road on a dark plate
 						var ch := fposmod(u / PX - absf(v) / PX * 0.8, 8.0)
 						col = PAD[0] if ch < 3.0 else (PAD[1] if ch < 4.0 else PAD[2])
@@ -1044,22 +1520,21 @@ func _paint() -> Image:
 							col = OUTLINE
 			elif d <= hw:
 				col = CURB[(idx[i] / 4) % 2]                     # red-and-white curbs
+			elif rails[i] != 0:
+				# the guard rail: a tyre wall along the edge
+				var tc := rails[i]
+				col = TYRE_PAINT[tc - 5] if tc >= 5 else TYRE[[0, 0, 1, 2, 3][tc]]
 			elif d <= hw + 2.0:
 				col = OUTLINE
 			else:
 				# below the road's south edge: the raised track's side (seen at an angle), on toy
-				# blocks every so often; then the floor, the carpet, in the track's shadow
-				var up_t := -1
-				for t in range(1, TRACK_SIDE + 2):
-					if y - t >= 0 and dist[(y - t) * w + x] <= hw + 2.0:
-						up_t = t
-						break
-				if up_t >= 1 and up_t <= TRACK_SIDE and _in_gap(idx[(y - up_t) * w + x]):
+				# blocks every so often; then the floor, in the track's shadow
+				var up_t := int(below[i])
+				if up_t >= 1 and up_t <= TRACK_SIDE and _in_gap(below_i[i]):
 					up_t = -1                                    # (no side under a gap)
 				if up_t >= 1 and up_t <= TRACK_SIDE:
-					var sd: Array = SIDES[world_no]
 					col = sd[0] if up_t <= 2 else (sd[1] if up_t < TRACK_SIDE else sd[2])
-					if up_t > 2 and (idx[(y - up_t) * w + x] / 10) % 3 == 0:
+					if up_t > 2 and (below_i[i] / 10) % 3 == 0:
 						col = sd[3] if up_t < TRACK_SIDE else sd[4]          # a block / post holding it up
 				elif up_t == TRACK_SIDE + 1:
 					col = OUTLINE
@@ -1076,25 +1551,344 @@ func _paint() -> Image:
 				top[k + 1] = col.g8
 				top[k + 2] = col.b8
 				top[k + 3] = 255
-				# (under the track the floor is just floor)
-				col = _lit(_floor_px(x, y), x, y)
+				# (under the track, the floor is never seen: left dark)
+				data[k + 3] = 255
+			else:
+				data[k] = col.r8
+				data[k + 1] = col.g8
+				data[k + 2] = col.b8
+				data[k + 3] = 255
+			k += 4
+	track_image = Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, top)
+	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
+
+## The mat's wooden frame round the edge: outlined both sides, lit top / left, shaded bottom / right
+func _frame_px(x: int, y: int, w: int, h: int, e: int) -> Color:
+	if e <= 1 or e >= EDGE - 2:
+		return MAT_EDGE[2]
+	if (y < h / 2 and y == e) or (x < w / 2 and x == e) or (y < x and y < h - 1 - x and y < h / 2) or (x <= y and x < w - 1 - y and x < w / 2):
+		return MAT_EDGE[0]
+	return MAT_EDGE[1]
+
+## Puts a small image into a layer's bytes (its clear px left as they are), board px
+static func _blit(dst: PackedByteArray, w: int, h: int, img: Image, at: Vector2i) -> void:
+	for yy in img.get_height():
+		for xx in img.get_width():
+			var c := img.get_pixel(xx, yy)
+			if c.a < 0.5:
+				continue
+			var x := at.x + xx
+			var y := at.y + yy
+			if x < 0 or y < 0 or x >= w or y >= h:
+				continue
+			var k := (y * w + x) * 4
+			dst[k] = c.r8
+			dst[k + 1] = c.g8
+			dst[k + 2] = c.b8
+			dst[k + 3] = 255
+
+## The boat's worlds: water all over (the Lagoon at sunset, the Reef at noon), the channel the boat
+## keeps to a little deeper between its two lines of buoys; shallows outside, sand, an island here
+## and there; on the channel the currents' foam arrows, the sandbars (a ramp's gap), the foam round
+## the rocks, the whirlpools. The buoys on their rope, the ramps and the start line float on the
+## track layer.
+func _paint_water(w: int, h: int) -> Image:
+	var dist := _dist
+	var idx := _idx
+	var hw := half_w / PX
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77 * level + 5
+	_sandbars.clear()
+	for k in int(w * h / 22000) + 2:
+		var p := Vector2(rng.randi_range(EDGE + 30, w - EDGE - 30), rng.randi_range(EDGE + 20, h - EDGE - 20))
+		if dist[int(p.y) * w + int(p.x)] > hw + 46.0:
+			_sandbars.append(p)
+	# the islands, stamped once: 1 grass, 2 sand, 3 its wet edge, 4 the shallows round it
+	_island = PackedByteArray()
+	_island.resize(w * h)
+	for sb in _sandbars:
+		for yy in range(maxi(0, int(sb.y - 22)), mini(h, int(sb.y + 23))):
+			for xx in range(maxi(0, int(sb.x - 40)), mini(w, int(sb.x + 41))):
+				var dd := Vector2((xx - sb.x) / 30.0, (yy - sb.y) / 16.0).length()
+				var v := 1 if dd < 0.45 else (2 if dd < 0.85 else (3 if dd < 1.0 else (4 if dd < 1.25 and DITHER[yy % 2][xx % 2] < 0.5 else 0)))
+				var ii := yy * w + xx
+				if v != 0 and (_island[ii] == 0 or v < _island[ii]):
+					_island[ii] = v
+	# the reef's coral in the shallows: clusters of round lumps (pink, orange, lilac), lit top left;
+	# per board px its colour (1-3) x 4 + its shade (1 light, 2 mid, 3 dark)
+	_coral = PackedByteArray()
+	_coral.resize(w * h)
+	if look == "reef":
+		for k in int(w * h / 900):
+			var cc := Vector2(rng.randi_range(EDGE + 8, w - EDGE - 8), rng.randi_range(EDGE + 8, h - EDGE - 8))
+			if dist[int(cc.y) * w + int(cc.x)] < hw + 12.0 or _island[int(cc.y) * w + int(cc.x)] != 0:
+				continue
+			var kind := rng.randi_range(1, 3)
+			for lump in rng.randi_range(3, 6):
+				var lc := cc + Vector2(rng.randf_range(-5, 5), rng.randf_range(-4, 4))
+				var r := rng.randf_range(1.8, 3.6)
+				for yy in range(int(lc.y - r - 1), int(lc.y + r + 2)):
+					for xx in range(int(lc.x - r - 1), int(lc.x + r + 2)):
+						if xx < 0 or yy < 0 or xx >= w or yy >= h:
+							continue
+						var o := Vector2(xx + 0.5, yy + 0.5) - lc
+						if o.length() > r:
+							continue
+						var shade := 2
+						if o.x + o.y < -r * 0.5:
+							shade = 1
+						elif o.x + o.y > r * 0.45 or o.length() > r - 0.8:
+							shade = 3
+						var ii2 := yy * w + xx
+						if _coral[ii2] == 0 or (_coral[ii2] & 3) > shade:
+							_coral[ii2] = kind * 4 + shade
+	var data := PackedByteArray()
+	data.resize(w * h * 4)
+	var k := 0
+	for y in h:
+		for x in w:
+			var i := y * w + x
+			var d := dist[i]
+			var e := mini(mini(x, y), mini(w - 1 - x, h - 1 - y))
+			var col: Color
+			if e < EDGE:
+				col = _frame_px(x, y, w, h, e)
+			else:
+				col = _water_px(x, y, d, hw)
+				if d <= hw + 2.0 and _in_gap(idx[i]):
+					# a sandbar across the channel: the boat must jump it (wet at its edges)
+					col = Color8(240, 210, 150) if _in_gap(idx[i] - 1) and _in_gap(idx[i] + 1) else Color8(206, 176, 120)
+			col = _lit(col, x, y)
 			data[k] = col.r8
 			data[k + 1] = col.g8
 			data[k + 2] = col.b8
 			data[k + 3] = 255
 			k += 4
+	# then the channel's own things, each over its own patch: a current's foam arrows down the
+	# channel, a whirlpool (water spiralling in, darker to its eye), the foam round a rock or a log
+	for pd in pads:
+		var c0: Vector2 = pd[0]
+		var dv: Vector2 = pd[1]
+		for q in _patch(c0, PAD_LEN + half_w, w, h):
+			var i2 := q.y * w + q.x
+			if dist[i2] > hw + 2.0 or _in_gap(idx[i2]):
+				continue
+			var loc := (Vector2(q) + Vector2(0.5, 0.5)) * PX - c0
+			var u := loc.dot(dv)
+			var v := absf(loc.dot(Vector2(-dv.y, dv.x)))
+			if absf(u) < PAD_LEN and v < half_w - 30.0 and fposmod(u / PX + v / PX * 0.7, 9.0) < 2.0:
+				_tint(data, i2, Color8(250, 252, 255), 0.7)
+	for sl in slicks:
+		var c1: Vector2 = sl[0]
+		for q in _patch(c1, SLICK_R, w, h):
+			var off := (Vector2(q) + Vector2(0.5, 0.5)) * PX - c1
+			var r := off.length()
+			if r >= SLICK_R:
+				continue
+			var i3 := q.y * w + q.x
+			_tint(data, i3, Color8(10, 40, 60), 0.25 * (1.0 - r / SLICK_R))
+			if fposmod(off.angle() * 3.0 + r * 0.16, TAU) < 0.9:
+				_tint(data, i3, Color8(240, 250, 255), 0.45 * (r / SLICK_R))
+	for ob in obstacles:
+		if ob["kind"] != "rock" and ob["kind"] != "log":
+			continue
+		var c2: Vector2 = ob["pos"]
+		var reach := float(ob["r"]) + 22.0 + (half_w * 0.45 if ob["kind"] == "log" else 0.0)
+		for q in _patch(c2, reach, w, h):
+			var wp := (Vector2(q) + Vector2(0.5, 0.5)) * PX
+			var dd: float
+			if ob["kind"] == "log":
+				dd = Geometry2D.get_closest_point_to_segment(wp, ob["a"], ob["b"]).distance_to(wp) - float(ob["r"])
+			else:
+				dd = wp.distance_to(c2) - float(ob["r"])
+			if dd > 0.0 and dd < 22.0 and ((q.x + q.y) % 2 == 0 or dd < 10.0):
+				_tint(data, q.y * w + q.x, Color8(250, 252, 255), 0.75 - dd / 40.0)
+	# the track layer: the buoys on their rope along both edges, the floating ramps, the start line
+	var top := PackedByteArray()
+	top.resize(w * h * 4)
+	var rope := Color8(250, 222, 120)
+	for s2 in count:
+		var c2 := centre[s2] / PX
+		var n2 := _normal(s2)
+		for sd in [-1.0, 1.0]:
+			var q: Vector2 = (c2 + n2 * sd * hw).round()
+			if q.x >= 0 and q.y >= 0 and q.x < w and q.y < h:
+				var kk := (int(q.y) * w + int(q.x)) * 4
+				top[kk] = rope.r8
+				top[kk + 1] = rope.g8
+				top[kk + 2] = rope.b8
+				top[kk + 3] = 255
+	for s3 in range(0, count, 5):
+		var c3 := centre[s3] / PX
+		var n3 := _normal(s3)
+		for sd in [-1.0, 1.0]:
+			var b := PalPrixArt.buoy((s3 / 5) % 2 == 0).get_image()
+			_blit(top, w, h, b, Vector2i((c3 + n3 * sd * hw).round()) - Vector2i(2, 2))
+	for i3 in count:
+		if _on_ramp(i3) or i3 <= 2 or i3 >= count - 2:
+			var c4 := centre[i3] / PX
+			var n4 := _normal(i3)
+			for o in range(-int(hw) + 5, int(hw) - 4):
+				var q4 := (c4 + n4 * o).round()
+				if q4.x < 0 or q4.y < 0 or q4.x >= w or q4.y >= h:
+					continue
+				var col4: Color
+				if _on_ramp(i3):
+					var rise := float(i3 % int(RAMP_LEN / STEP)) / (RAMP_LEN / STEP)
+					col4 = (PAD[0] if ((i3 / 2) + absi(o)) % 3 != 0 else PAD[2]).lightened(0.2 * rise)
+					if absi(o) >= int(hw) - 7:
+						col4 = Color8(176, 122, 74)                # (its wooden sides)
+				else:
+					col4 = Color8(30, 30, 34) if ((o / 2) + (i3 / 2)) % 2 else LINE   # the start line's floats
+				var k4 := (int(q4.y) * w + int(q4.x)) * 4
+				top[k4] = col4.r8
+				top[k4 + 1] = col4.g8
+				top[k4 + 2] = col4.b8
+				top[k4 + 3] = 255
 	track_image = Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, top)
 	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
 
+## The board px round a point (mat px) within `reach` mat px, inside the mat
+func _patch(c: Vector2, reach: float, w: int, h: int) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	var a := ((c - Vector2(reach, reach)) / PX).floor()
+	var b := ((c + Vector2(reach, reach)) / PX).ceil()
+	for y in range(maxi(0, int(a.y)), mini(h, int(b.y) + 1)):
+		for x in range(maxi(0, int(a.x)), mini(w, int(b.x) + 1)):
+			out.append(Vector2i(x, y))
+	return out
+
+## A painted px blended towards a colour
+static func _tint(data: PackedByteArray, i: int, col: Color, k: float) -> void:
+	var j := i * 4
+	data[j] = int(lerpf(data[j], col.r8, k))
+	data[j + 1] = int(lerpf(data[j + 1], col.g8, k))
+	data[j + 2] = int(lerpf(data[j + 2], col.b8, k))
+
+## The water at a board px (d: its distance to the course's line, board px): deeper in the channel,
+## lighter in the shallows outside, sand and islands farther out; the Lagoon's warm sunset, the
+## Reef's turquoise over coral
+var _island := PackedByteArray()       # the boat's worlds: the islands, per board px (_paint_water)
+var _coral := PackedByteArray()        # ...and the reef's coral
+const REEF := [Color8(30, 142, 178), Color8(62, 190, 200), Color8(132, 222, 214)]   # deep, the shallows, near the sand
+const CORAL := [Color8(236, 128, 150), Color8(250, 176, 104), Color8(184, 132, 214)]
+func _water_px(x: int, y: int, d: float, hw: float) -> Color:
+	match _island[y * _bw + x]:
+		1:
+			return Color8(120, 176, 92) if look == "reef" else Color8(150, 168, 96)   # an island's grass
+		2:
+			return Color8(244, 220, 166)
+		3:
+			return Color8(214, 180, 126)
+		4:
+			return Color8(170, 230, 220) if look == "reef" else Color8(250, 196, 150)  # the shallows round it
+	var shallow := clampf((d - hw - 2.0) / 12.0, 0.0, 1.0)
+	var in_channel := d <= hw + 2.0
+	if look == "reef":
+		var water: Color = REEF[0] if in_channel else (REEF[1] as Color).lerp(REEF[2], shallow)
+		if in_channel and d > hw - 4.0:
+			water = (REEF[0] as Color).lerp(REEF[1], 0.35)               # the channel's slope, its edge
+		var cr := _coral[y * _bw + x]
+		if cr != 0:
+			var base: Color = CORAL[cr / 4 - 1]
+			var sh: Color = [base.lightened(0.18), base, base.darkened(0.22)][(cr & 3) - 1]
+			return sh.lerp(water, 0.3)                                     # (seen through the water)
+		# soft sand ripples on the bottom, broken up; glints on the surface
+		if sin(x * 0.35 + sin(y * 0.15) * 2.5 + y * 0.12) > 0.93 and _grass_noise.get_noise_2d(x, y) > -0.1:
+			water = water.lerp(Color8(220, 250, 246), 0.2)
+		if (x + y * 3) % 5 < 2 and _cloud_noise.get_noise_2d(x * 3.0, y * 3.0) > 0.5:
+			water = water.lerp(Color8(250, 255, 255), 0.6)
+		return water
+	var lagoon := _lagoon_water(x, y)
+	if in_channel:
+		return lagoon.lerp(Color8(150, 90, 130), 0.28)                    # the channel: deeper
+	return lagoon.lerp(lagoon.lightened(0.12), shallow)
+
+## The plane's worlds: the ground far below (the fields at noon; at sunset, a sea of clouds), its
+## own smaller image (it scrolls slower: PARALLAX); the course itself is just the sky: faint guide
+## arrows along it and a few clouds at the plane's height (the track layer)
+func _paint_sky(w: int, h: int) -> Image:
+	var view := VIEW.size / ZOOM
+	var gw := int((PARALLAX * mat_size.x + (1.0 - PARALLAX) * view.x) / PX) + 4
+	var gh := int((PARALLAX * mat_size.y + (1.0 - PARALLAX) * view.y) / PX) + 4
+	_bw = gw
+	_bh = gh
+	_sandbars.clear()
+	var data := PackedByteArray()
+	data.resize(gw * gh * 4)
+	var k := 0
+	for y in gh:
+		for x in gw:
+			var col := _sky_floor(x, y) if look == "sky" else _cloudsea_px(x, y)
+			col = _lit(col, x, y)
+			data[k] = col.r8
+			data[k + 1] = col.g8
+			data[k + 2] = col.b8
+			data[k + 3] = 255
+			k += 4
+	_bw = w
+	_bh = h
+	var top := PackedByteArray()
+	top.resize(w * h * 4)
+	# the guide: a faint arrow every ~150 px along the course, pointing the way
+	var arrow := Color(1, 1, 1, 0.3) if look == "sky" else Color(1.0, 0.94, 0.82, 0.3)
+	for s2 in range(10, count, int(150.0 / STEP)):
+		var c := centre[s2] / PX
+		var dv := (centre[(s2 + 1) % count] - centre[s2]).normalized()
+		var nv := Vector2(-dv.y, dv.x)
+		for o in range(-4, 5):
+			var q := (c + nv * o - dv * absf(o) * 0.8).round()
+			for t in 2:
+				var q2 := q - dv * t
+				if q2.x < 0 or q2.y < 0 or q2.x >= w or q2.y >= h:
+					continue
+				var kk := (int(q2.y) * w + int(q2.x)) * 4
+				top[kk] = arrow.r8
+				top[kk + 1] = arrow.g8
+				top[kk + 2] = arrow.b8
+				top[kk + 3] = arrow.a8
+	# a few clouds at the plane's height, off the course (it flies past them: they show its speed)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 313 * level + 1
+	for c2 in int(w * h / 30000) + 3:
+		var p := Vector2i(rng.randi_range(EDGE, w - EDGE - 40), rng.randi_range(EDGE, h - EDGE - 30))
+		if _dist[p.y * w + p.x] < half_w / PX * 1.6:
+			continue
+		var img := PalPrixArt.cloud(rng.randi_range(8, 14), c2, false).get_image()
+		if look == "sunset":
+			img.adjust_bcs(1.0, 1.0, 1.0)
+		_blit(top, w, h, img, p)
+	track_image = Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, top)
+	return Image.create_from_data(gw, gh, false, Image.FORMAT_RGBA8, data)
+
+## The Grand Prix's sea of clouds far below at sunset: soft billows lit warm by the low sun, violet
+## in the hollows, a gap here and there down to the dusk land
+const CLOUDSEA := [Color8(126, 100, 156), Color8(186, 128, 168), Color8(232, 160, 160), Color8(250, 198, 164), Color8(255, 230, 196)]
+func _cloudsea_px(x: int, y: int) -> Color:
+	var n := _cloud_noise.get_noise_2d(x * 2.2, y * 2.2)
+	var n2 := _grass_noise.get_noise_2d(x * 0.8, y * 0.8)
+	if n < -0.5:
+		# a gap: the dusk land far below, a town's lights here and there
+		if ((x * 73856093) ^ (y * 19349663)) & 255 < 3 and n2 > -0.2:
+			return Color8(255, 214, 140)
+		return Color8(96, 82, 124).lerp(Color8(120, 100, 140), clampf(n2 + 0.5, 0.0, 1.0))
+	if n < -0.44:
+		return Color8(160, 118, 164) if DITHER[y % 2][x % 2] < 0.5 else Color8(186, 128, 168)   # (its misty edge)
+	var v := clampf((n * 0.75 + n2 * 0.35 + 0.9) / 1.8, 0.0, 0.999)
+	v = clampf(v + (1.0 - float(y) / maxf(_bh, 1)) * 0.18 - float(x) / maxf(_bw, 1) * 0.1, 0.0, 0.999)   # (the sun up and to the left)
+	var f := v * CLOUDSEA.size()
+	var band := int(f)
+	if f - band > 0.7 and DITHER[y % 2][x % 2] < (f - band - 0.7) * 3.3:
+		band += 1
+	return CLOUDSEA[clampi(band, 0, CLOUDSEA.size() - 1)]
+
 ## The floors, in the worlds' style (the user's Retry references, docs/mockups/palprix_worlds/v2):
 ## no outlines, few colours in steps with a 2x2 dither between them. The Garden (a morning): soft
-## grass, flower clusters, chunky bushes, soft cloud shadows; the Kitchen: cream and mint tiles in
-## the morning sun through the window
+## grass, flower clusters, chunky bushes, soft cloud shadows
 const DITHER := [[0.125, 0.625], [0.875, 0.375]]
 const GRASS := [Color8(116, 172, 82), Color8(130, 186, 90), Color8(146, 200, 98), Color8(162, 212, 110)]
 const BUSH := [Color8(60, 116, 56), Color8(80, 140, 62), Color8(104, 164, 72), Color8(132, 188, 86)]
 const FLOWERS := [Color8(250, 246, 232), Color8(248, 196, 206), Color8(252, 226, 140)]
-const KITCHEN := [Color8(240, 232, 214), Color8(214, 230, 218), Color8(206, 198, 184)]
 var _bw := 1                           # the mat being painted, board px
 var _bh := 1
 var _grass_noise: FastNoiseLite
@@ -1107,21 +1901,8 @@ const CANOPY := [Color8(34, 78, 44), Color8(48, 98, 50), Color8(66, 120, 58), Co
 func _floor_px(x: int, y: int) -> Color:
 	if _decor.has(y * _bw + x):
 		return _decor[y * _bw + x]
-	match world_no:
-		2:
-			return _sky_floor(x, y)
-		3:
-			return _lagoon_floor(x, y)
-		4:
-			return _rain_floor(x, y)
-		5:
-			return _night_floor(x, y)
-	if world_no == 1:
-		var lx := x % 16
-		var ly := y % 16
-		if lx == 0 or ly == 0:
-			return KITCHEN[2]                                # soft grout
-		return KITCHEN[0] if ((x / 16) + (y / 16)) % 2 == 0 else KITCHEN[1]
+	if look == "night":
+		return _rain_floor(x, y) if rain else _night_floor(x, y)
 	# the Garden: soft patches of grass in four greens, light mowing stripes over them
 	var v := (_grass_noise.get_noise_2d(x, y) + 1.0) * 0.5 * 0.85 + 0.08
 	var f := clampf(v, 0.0, 0.999) * GRASS.size()
@@ -1165,23 +1946,20 @@ func _sky_floor(x: int, y: int) -> Color:
 		c = c.lerp(Color8(250, 252, 255), 0.6)
 	return c
 
-## The Lagoon at sunset: warm water, gentle waves catching the light, sandbars with a palm
-func _lagoon_floor(x: int, y: int) -> Color:
+## The Lagoon at sunset: warm water, gentle waves catching the light (its islands: _water_px)
+func _lagoon_water(x: int, y: int) -> Color:
 	var t := clampf(float(y) / maxf(_bh, 1), 0.0, 1.0)
 	var water := Color8(236, 150, 116).lerp(Color8(176, 104, 140), t)
-	var wave := sin(x * 0.11 + sin(y * 0.05) * 2.0 + y * 0.31)
-	if wave > 0.93:
-		water = water.lerp(Color8(255, 214, 160), 0.6)    # a wave's lit crest
-	elif wave < -0.95 and DITHER[y % 2][x % 2] < 0.5:
-		water = water.darkened(0.08)
+	# short wave crests catching the low sun (little arcs here and there)
+	var wave := sin(x * 0.24 + sin(y * 0.14 + x * 0.05) * 2.0) * sin(y * 0.42 + x * 0.05)
+	if wave > 0.86:
+		water = water.lerp(Color8(255, 214, 160), 0.55)
+	elif wave < -0.9 and DITHER[y % 2][x % 2] < 0.5:
+		water = water.darkened(0.07)
 	# the sun's road of light across the water
 	var glit := absf((x - _bw * 0.25) - (y - _bh * 0.1) * 0.35)
 	if glit < 26.0 and ((x * 7 + y * 3) % 9 == 0):
 		water = water.lerp(Color8(255, 240, 190), 0.55)
-	for sb in _sandbars:
-		var d := Vector2((x - sb.x) / 34.0, (y - sb.y) / 16.0).length()
-		if d < 1.0:
-			return Color8(240, 206, 150) if d < 0.82 else Color8(206, 160, 110)
 	return water
 
 ## Rain over a park: wet grass gone dark and blue-grey, puddles on it with the sky in them
@@ -1208,7 +1986,7 @@ var _lamp_light := PackedFloat32Array() # ...and their light on every board px (
 
 ## The world's light over everything, the track too
 func _lit(c: Color, x: int, y: int) -> Color:
-	if world_no == 0:
+	if look == "garden":
 		# a bright morning: the trees' shade with flecks of sun through the leaves, a few soft sun
 		# shafts across, soft cloud shadows drifting over the garden (dithered edges)
 		var t := _tree_light[y * _bw + x] if _tree_light.size() == _bw * _bh else 0
@@ -1224,32 +2002,24 @@ func _lit(c: Color, x: int, y: int) -> Color:
 		if shade:
 			return c.lerp(Color8(56, 86, 110), 0.16)
 		return Color(minf(1.0, c.r * 1.02 + 0.015), minf(1.0, c.g * 1.02 + 0.01), c.b)
-	match world_no:
-		2:
-			# noon up in the sky: bright, a touch of blue (the clouds are below the track: _sky_floor)
+	match look:
+		"sky", "reef":
+			# noon: bright, a touch of blue (in the sky the clouds are below: _sky_floor)
 			return Color(minf(1.0, c.r * 1.03 + 0.01), minf(1.0, c.g * 1.03 + 0.01), minf(1.0, c.b * 1.04 + 0.02))
-		3:
+		"lagoon", "sunset":
 			# sunset: everything warm, the light low from the left
 			return c.lerp(Color8(255, 170, 110), 0.12)
-		4:
-			# rain: grey-blue and dim, a wet sheen on the lit side of things
-			return c.lerp(Color8(84, 100, 120), 0.22)
-		5:
-			# night: dark, but for the lamps' warm pools along the track (_lamp_light, stamped once)
+		"night":
+			# night: dark, but for the lamps' warm pools along the track (_lamp_light, stamped once);
+			# the rain makes it greyer, bluer
 			var best: float = _lamp_light[y * _bw + x] if _lamp_light.size() == _bw * _bh else 0.0
 			var k := clampf(best * 1.25, 0.0, 1.0)
 			var steps := k * 3.0
 			k = (floorf(steps) + (1.0 if steps - floorf(steps) > DITHER[y % 2][x % 2] else 0.0)) / 3.0
+			if rain:
+				c = c.lerp(Color8(84, 100, 120), 0.18)
 			return c.darkened(0.62 * (1.0 - k)).lerp(Color8(255, 220, 140), 0.12 * k)
-	# the Kitchen's morning: the window's slanted beams on pale tiles, the rest in shade
-	var s := x - y * 0.6
-	var ph := fposmod(s, 300.0)
-	var lit := ph > 20.0 and ph < 150.0 and absf(ph - 85.0) >= 2.5
-	if not lit and ((ph > 12.0 and ph <= 20.0) or (ph >= 150.0 and ph < 158.0)):
-		lit = DITHER[y % 2][x % 2] < 0.5
-	if lit:
-		return Color(minf(1.0, c.r * 1.03 + 0.02), minf(1.0, c.g * 1.03 + 0.02), minf(1.0, c.b * 1.03 + 0.01))
-	return c.lerp(Color8(96, 108, 140), 0.12)
+	return c
 
 ## The Garden's trees, just outside the mat: their branches hang over its edges (drawn in front of
 ## the car), and under them the shade, with flecks of sun through the leaves
@@ -1324,7 +2094,7 @@ func _garden_decor(w: int, h: int, dist: PackedFloat32Array, hw: float) -> void:
 	_decor.clear()
 	_trees.clear()
 	_tree_light = PackedByteArray()
-	if world_no != 0:
+	if look != "garden":
 		return
 	_plant_trees(w, h)
 	var rng := RandomNumberGenerator.new()
@@ -1468,6 +2238,11 @@ func _create_nodes() -> void:
 	board.scale = Vector2(PX, PX)
 	board.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	world.add_child(board)
+	sky_shadow = Sprite2D.new()
+	sky_shadow.scale = Vector2(PX, PX)
+	sky_shadow.modulate = Color(0.1, 0.08, 0.2, 0.28)
+	sky_shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	world.add_child(sky_shadow)                      # (the plane's shadow, on the ground far below)
 	crowd = Crowd.new()
 	world.add_child(crowd)                          # (on the floor, beside the track)
 	# drawn in this order: the floor, a car falling behind the track, the raised track, the car
@@ -1480,33 +2255,27 @@ func _create_nodes() -> void:
 	world.add_child(track)
 	trail = Trail.new()
 	world.add_child(trail)
+	ring_back = Node2D.new()
+	world.add_child(ring_back)                      # (a ring's lower half: under the plane)
 	front = Node2D.new()
 	world.add_child(front)
+	ring_front = Node2D.new()
+	world.add_child(ring_front)                     # (its upper half: over it, the plane goes through)
+	gust_fx = GustFx.new()
+	world.add_child(gust_fx)
 	canopy = Sprite2D.new()
 	canopy.centered = false
 	canopy.scale = Vector2(PX, PX)
 	canopy.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	world.add_child(canopy)                         # (over the car: the branches hang above it)
 	world.scale = Vector2(ZOOM, ZOOM)
-	var layers := car_slices()
 	shadow = Sprite2D.new()
-	shadow.texture = layers[2]
 	shadow.scale = Vector2(PX, PX)
 	shadow.modulate = Color(0.05, 0.04, 0.1, 0.35)
 	shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	front.add_child(shadow)
 	car = Node2D.new()
-	front.add_child(car)
-	for i in layers.size():
-		var sl := Sprite2D.new()
-		sl.texture = layers[i]
-		sl.scale = Vector2(PX, PX)
-		sl.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		# the lower slices darker: the car's sides in shade, its top in the light
-		var k := 0.62 + 0.38 * float(i) / (layers.size() - 1)
-		sl.modulate = Color(k, k, k)
-		car.add_child(sl)
-		slices.append(sl)
+	front.add_child(car)                            # (its slices: _set_vehicle, per world)
 	# the antenna: a thin dark wire (4 mat px) with a red ball on top
 	antenna = Line2D.new()
 	antenna.width = 4.0
@@ -1553,7 +2322,9 @@ func _create_nodes() -> void:
 		st.position = Vector2(HUD_BAND.position.x + 432 + i * 40, HUD_BAND.position.y + 10)
 		add_child(st)
 		hud_stars.append(st)
-	# the race's position (Grand Prix) and the pal's boost, on the band's right
+	# the lives, after the stars
+	build_lives(Vector2(HUD_BAND.position.x + 566, HUD_BAND.position.y + 15), 30.0, 33.0)
+	# the race's position (with rivals) and the pal's boost, on the band's right
 	hud_place = _label(Vector2(HUD_BAND.end.x - 190, HUD_BAND.position.y + 2), Vector2(120, 52), 32, HORIZONTAL_ALIGNMENT_RIGHT, light)
 	boost_icon = TextureRect.new()
 	boost_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -1652,29 +2423,85 @@ func _label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color)
 
 func _place_car() -> void:
 	car.position = car_pos.round() + Vector2(0, car_drop)
-	for i in slices.size():
+	var n := slices.size()
+	# (the plane banks in the turns: its wings foreshortened, the stack leaning out)
+	var tilt := Vector2.from_angle(heading + PI / 2.0) * bank * 6.0 if vehicle == "plane" else Vector2.ZERO
+	for i in n:
 		slices[i].rotation = heading
-		slices[i].position = Vector2(0, -i * LAYER_UP)          # (lifted on screen, not turned)
+		slices[i].position = (Vector2(0, -i * LAYER_UP) + tilt * float(i) / maxf(1.0, n - 1)).round()   # (lifted on screen, not turned)
+		slices[i].scale = Vector2(PX, PX * (1.0 - 0.42 * absf(bank))) if vehicle == "plane" else Vector2(PX, PX)
 	shadow.position = car_pos.round() + Vector2(5, 8 + car_drop * 0.3)
 	shadow.rotation = heading
-	shadow.visible = state != State.FALL
-	driver.position = car.position + Vector2.from_angle(heading) * -5.0 + Vector2(0, -LAYERS * LAYER_UP - 4.0)
-	# the antenna stands up from the car's back left corner, leaning back and out in the turns
-	var base := car.position + Vector2(-30, -22).rotated(heading) + Vector2(0, -LAYERS * LAYER_UP)
+	shadow.visible = state != State.FALL and vehicle != "plane"
+	var seat := -5.0
+	match vehicle:
+		"boat":
+			seat = PalPrixArt.BOAT_SEAT * PX
+		"plane":
+			seat = PalPrixArt.PLANE_SEAT * PX
+	driver.position = car.position + Vector2.from_angle(heading) * seat + Vector2(0, -n * LAYER_UP - 4.0) + tilt
+	# the antenna stands up from the toy's back left corner, leaning back and out in the turns
+	var corner := Vector2(-30, -22) if vehicle == "car" else Vector2(-46, -18)
+	var base := car.position + corner.rotated(heading) + Vector2(0, -n * LAYER_UP)
 	var lean := Vector2.from_angle(heading) * -10.0 + Vector2.from_angle(heading + PI / 2.0) * sway * 26.0
 	var top := base + Vector2(0, -46) + lean
 	antenna.points = PackedVector2Array([base.round(), (base.lerp(top, 0.5) + lean * 0.15).round(), top.round()])
 	antenna_tip.position = top.round()
-	antenna.visible = state != State.FALL
+	antenna.visible = state != State.FALL and vehicle != "plane"
 	antenna_tip.visible = antenna.visible
 	if headlight:
 		headlight.rotation = heading
 		headlight.position = car.position + Vector2.from_angle(heading) * 92.0
-		headlight.visible = world_no == 5 and state != State.FALL
+		headlight.visible = look == "night" and state != State.FALL
+	# the plane's shadow far below: where the point under it is on the ground (the ground nearer the
+	# middle of the view the farther down it is), a little off it (the sun), smaller
+	sky_shadow.visible = vehicle == "plane" and state != State.FALL
+	if sky_shadow.visible:
+		var mid := VIEW.get_center()
+		var on_screen := world.position + car.position * ZOOM
+		var under := mid + (on_screen - mid) * PARALLAX + Vector2(34, 58)
+		sky_shadow.position = ((under - world.position) / ZOOM).round()
+		sky_shadow.rotation = heading
+		sky_shadow.texture = slices[1].texture
+		sky_shadow.scale = Vector2(3, 3 * (1.0 - 0.42 * absf(bank)))
 	# (in the air: the car up, its shadow left behind on the road)
 	if car_drop < 0.0:
 		shadow.position = car_pos.round() + Vector2(5, 8)
 		shadow.modulate.a = 0.35 * (1.0 + car_drop / 120.0)
+
+## The world's toy: its slices (made again on the car's node, the lower ones darker: its sides in
+## shade, its top in the light), its shadow, the motor's voice (a boat's lower, a plane's buzzier)
+func _set_vehicle() -> void:
+	var layers: Array[Texture2D] = car_slices()
+	match vehicle:
+		"boat":
+			layers = PalPrixArt.boat_slices()
+		"plane":
+			layers = PalPrixArt.plane_slices()
+	for sl in slices:
+		sl.queue_free()
+	slices.clear()
+	for i in layers.size():
+		var sl := Sprite2D.new()
+		sl.texture = layers[i]
+		sl.scale = Vector2(PX, PX)
+		sl.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var k := (0.85 if vehicle == "plane" else 0.62) + (0.15 if vehicle == "plane" else 0.38) * float(i) / (layers.size() - 1)
+		sl.modulate = Color(k, k, k)
+		car.add_child(sl)
+		slices.append(sl)
+	shadow.texture = layers[2 if vehicle == "car" else 1]
+	_motor_pitch = { "car": 1.0, "boat": 0.7, "plane": 1.4 }[vehicle]
+	motor.pitch_scale = _motor_pitch
+
+var _motor_pitch := 1.0
+
+## The toy's speed and how fast it turns (a full turn: the car in 1 s, the boat and the plane wider)
+func _speed() -> float:
+	return { "car": SPEED, "boat": BOAT_SPEED, "plane": PLANE_SPEED }[vehicle]
+
+func _turn_rate() -> float:
+	return { "car": TURN, "boat": BOAT_TURN, "plane": PLANE_TURN }[vehicle]
 
 ## The view follows the car (a small mat just sits in the middle of it)
 func _follow(amount: float) -> void:
@@ -1691,6 +2518,8 @@ func _follow(amount: float) -> void:
 		else:
 			pos[ax] = clampf(want[ax], VIEW.end[ax] - shown[ax], VIEW.position[ax])
 	world.position = world.position.lerp(pos, amount).round()
+	if vehicle == "plane":
+		board.position = ((world.position - VIEW.position) * (PARALLAX - 1.0)).round() / ZOOM
 
 func _refresh_hud() -> void:
 	hud_lap.text = "LAP %d/%d" % [mini(lap, LAPS), LAPS]
@@ -1721,11 +2550,14 @@ func _stars_now() -> int:
 
 # ================================================================== LOOP
 
-func _process(delta: float) -> void:
+func _process(frame_delta: float) -> void:
 	if not is_running:
 		if motor.playing:
 			motor.stop()
 		return
+	# (one long frame, the app coming back from the background, never jumps the race on)
+	var delta := minf(frame_delta, 0.05)
+	_update_course_things(delta)
 	match state:
 		State.WAIT:
 			var before := ceili(countdown - 0.6)
@@ -1763,25 +2595,23 @@ func _process(delta: float) -> void:
 	_follow(minf(1.0, delta * 6.0))
 
 func _drive(delta_real: float) -> void:
-	# a focused car on the brink: time slows a moment (the clock too: no time lost for it)
+	# a focused toy on the brink: time slows a moment (the clock too: no time lost for it)
 	var delta := delta_real * (0.35 if slow_t > 0.0 else 1.0)
 	slow_t = maxf(0.0, slow_t - delta_real)
 	race_time += delta
 	var turn := (1.0 if _held(1) else 0.0) - (1.0 if _held(0) else 0.0)
 	if qa_autopilot:
-		# (QA only: steer at the road a little ahead, like a careful driver)
-		var aim := centre[(near + 14) % count] - car_pos
-		var diff := wrapf(aim.angle() - heading, -PI, PI)
-		turn = clampf(diff * 3.0, -1.0, 1.0) if absf(diff) > 0.03 else 0.0
-	var grip := 0.88 if world_no == 4 else 1.0                       # (the rain: a wet road)
+		turn = _autopilot()
+	var grip := 0.88 if rain else 1.0                                # (the rain: a wet road)
 	if air_t > 0.0:
 		grip *= 0.3                                                  # (in the air: hardly any steering)
 	if slip_t <= 0.0:
-		heading += turn * TURN * grip * delta
-	# on the curb: slowed down, rumbling; on a pad: a boost that fades
+		heading += turn * _turn_rate() * grip * delta
+	bank = move_toward(bank, turn if vehicle == "plane" else 0.0, delta * 4.0)
+	# the car on the curb: slowed down, rumbling; on a pad (the boat: a current): a boost that fades
 	var from_mid := car_pos.distance_to(centre[near])
-	var v := SPEED * (1.0 + BOOST * boost_t)
-	if from_mid > half_w - CURB_TOUCH and air_t <= 0.0:
+	var v := _speed() * (1.0 + BOOST * boost_t)
+	if vehicle == "car" and from_mid > half_w - CURB_TOUCH and air_t <= 0.0:
 		v *= CURB_SLOW
 		curb_t -= delta
 		if curb_t <= 0.0:
@@ -1794,11 +2624,11 @@ func _drive(delta_real: float) -> void:
 			on = true
 	if on and not _on_pad and air_t <= 0.0:
 		boost_t = 1.0
-		_sfx("res://sounds/fx/rc_boost.wav", -8.0)
+		_sfx("res://sounds/fx/rc_boost.wav", -8.0, 0.8 if vehicle == "boat" else 1.0)
 		Input.vibrate_handheld(30)
 	_on_pad = on
 	boost_t = maxf(0.0, boost_t - delta / BOOST_TIME)
-	# oil / a puddle: the car spins round once and stops for a moment, then goes on down the road
+	# oil / a puddle / a whirlpool: the toy spins round once and stops a moment, then goes on
 	var move_heading := heading
 	if slip_t > 0.0:
 		slip_t -= delta
@@ -1810,45 +2640,72 @@ func _drive(delta_real: float) -> void:
 			heading = (centre[(near + 2) % count] - centre[near]).angle()
 	elif air_t <= 0.0:
 		_check_slicks()
-	car_pos += Vector2.from_angle(move_heading) * v * delta
+	# the move: the car and the plane go where they point; the boat drifts (it takes up the way it
+	# points over a moment)
+	var dir := Vector2.from_angle(move_heading)
+	if vehicle == "boat":
+		vel = dir * v if slip_t > 0.0 else vel.lerp(dir * v, 1.0 - exp(-BOAT_GRIP * delta))
+		car_pos += vel * delta
+	else:
+		car_pos += dir * v * delta
+	if vehicle == "plane":
+		_blow(delta)
 	if air_t > 0.0:
 		air_t -= delta
 		if air_t <= 0.0:
 			_land()
 	else:
-		trail.add(car_pos, heading, delta)
-		if world_no == 4 and randf() < delta * 14.0:
-			trail.spray(car_pos, heading, 1)                       # (the wet road: a fine spray)
+		match vehicle:
+			"car":
+				trail.add(car_pos, heading, delta)
+				if rain and randf() < delta * 14.0:
+					trail.spray(car_pos, heading, 1)                   # (the wet road: a fine spray)
+			"boat":
+				trail.wake(car_pos, heading, delta, v / BOAT_SPEED)
+			"plane":
+				trail.contrail(car_pos + Vector2(0, -slices.size() * LAYER_UP), heading, delta)
 	_cheer_cd = maxf(0.0, _cheer_cd - delta)
+	_buoy_cd = maxf(0.0, _buoy_cd - delta)
+	_grace_t = maxf(0.0, _grace_t - delta)
 	if crowd.visible and _cheer_cd <= 0.0 and crowd.rect.grow(170.0).has_point(car_pos):
 		_cheer_cd = 2.5
 		crowd.cheer(car_pos)                             # (the wave runs from where the car is)
-	if boost_t > 0.3:
+	if boost_t > 0.3 and vehicle == "car":
 		trail.add(car_pos, heading, delta)                  # (more streaks while boosted)
 	var was_near := near
 	_find_near()
 	_update_bridge_order()
 	if progress >= last_cp + count / CHECKPOINTS:
 		last_cp = floorf(progress / (count / CHECKPOINTS)) * (count / CHECKPOINTS)
-	# a jump: off the end of a ramp, straight and on the road, the car flies over the gap
+	# a jump: off the end of a ramp, straight and on the road, the toy flies over the gap (a boat:
+	# over the sandbar)
 	if air_t <= 0.0 and _on_ramp(was_near) and not _on_ramp(near):
 		var road_dir := (centre[(near + 1) % count] - centre[near]).angle()
 		if absf(wrapf(heading - road_dir, -PI, PI)) < 0.5 and car_pos.distance_to(centre[near]) < half_w * 0.85:
 			_jump(AIR_TIME)
 	_update_secret(was_near)
 	_update_rivals(delta)
-	var off_road := car_pos.distance_to(centre[near]) > half_w + FALL_AT or (_in_gap(near) and air_t <= 0.0)
-	if not off_road and air_t <= 0.0 and car_pos.distance_to(centre[near]) > half_w + FALL_AT * 0.2 and not focus_used and PetState.boost_power("focus") > 0:
+	# the course's edges: the car's guard rails, the boat's buoys, the plane's corridor
+	match vehicle:
+		"car":
+			_rail_hold()
+		"boat":
+			_buoys()
+		"plane":
+			_corridor(delta)
+	var crash := _crash_now()
+	if crash == "" and not focus_used and PetState.boost_power("focus") > 0 and _brink():
 		focus_used = true
 		slow_t = 0.9                                    # (on the brink: a moment to steer back)
 		PetState.use_boost()
 		_show_banner("focus!", 0.4)
-	if off_road and air_t <= 0.0:
-		_fall()
-		return
+	if crash != "":
+		_crash(crash)
+		if state != State.DRIVE:
+			return
 	if motor.playing:
 		# (it strains a little in the turns)
-		motor.pitch_scale = lerpf(motor.pitch_scale, 1.0 - absf(turn) * 0.07, minf(1.0, delta * 5.0))
+		motor.pitch_scale = lerpf(motor.pitch_scale, _motor_pitch * (1.0 - absf(turn) * 0.07), minf(1.0, delta * 5.0))
 	if progress >= count * lap and lap <= LAPS:
 		lap += 1
 		if lap > LAPS:
@@ -1856,7 +2713,195 @@ func _drive(delta_real: float) -> void:
 			return
 		_show_banner("LAP %d" % lap if lap < LAPS else "FINAL LAP!", 0.7)
 		_sfx("res://sounds/fx/gamecoin.wav", -10.0)
+		_new_lap()
 	_refresh_hud()
+
+const RING_TOL := 0.86                # through a ring: within this much of its size from its middle
+const GUST_PUSH := 230.0              # px/s across the course (a sturdy plane: half)
+const TOY_R := { "car": 26.0, "boat": 24.0, "plane": 30.0 }
+
+## Does the toy touch this obstacle? (a log: anywhere along it)
+func _hits(ob: Dictionary) -> bool:
+	if _grace_t > 0.0:
+		return false
+	var reach: float = ob["r"] + TOY_R[vehicle]
+	if ob["kind"] == "log":
+		return Geometry2D.get_closest_point_to_segment(car_pos, ob["a"], ob["b"]).distance_to(car_pos) < reach
+	return car_pos.distance_to(ob["pos"]) < reach
+
+func _clear_obstacle_hit() -> void:
+	_grace_t = 1.2
+
+## The plane's next ring this lap (or {})
+func _next_ring() -> Dictionary:
+	for rg in rings:
+		if int(rg["lap"]) != lap:
+			return rg
+	return {}
+
+## The rings the plane has just gone past: through one (a ding, a sparkle) or beside it (true:
+## missed, a crash). Each is judged once a lap (a toy put back behind one doesn't fly it again).
+func _check_rings() -> bool:
+	var missed := false
+	for rg in rings:
+		if int(rg["lap"]) == lap:
+			continue
+		if progress < float((lap - 1) * count + int(rg["i"])):
+			break
+		rg["lap"] = lap
+		var off := absf((car_pos - (rg["pos"] as Vector2)).dot(rg["n"]))
+		if off < float(rg["r"]) * RING_TOL:
+			rg["hit"] = true
+			_sfx("res://sounds/fx/gamecoin.wav", -10.0, 1.3)
+			Input.vibrate_handheld(15)
+			trail.sparkle(rg["pos"])
+		else:
+			missed = true
+	_ring_fx_refresh()
+	return missed
+
+## The plane in a gust: blown across the course (a sturdy one only half as much)
+func _blow(delta: float) -> void:
+	for g in gusts:
+		if near >= int(g[0]) and near <= int(g[1]):
+			var k := 0.5 if PetState.boost_power("sturdy") > 0 else 1.0
+			car_pos += _normal(near) * float(g[2]) * GUST_PUSH * k * delta
+
+## QA only: the toy drives itself like a careful driver (steering at the course a little ahead;
+## a plane at its next ring)
+func _autopilot() -> float:
+	var ahead := 14 if vehicle == "car" else (18 if vehicle == "boat" else 20)
+	var ai := (near + ahead) % count
+	var aim := centre[ai]
+	# (round what's coming up: the lane on its other side)
+	var dodge := 0.0
+	var dodge_at := 1 << 20
+	for ob in obstacles:
+		var di := posmod(int(ob["i"]) - near, count)
+		if di > 0 and di < 55 and di < dodge_at:
+			dodge = -float(ob["side"])
+			dodge_at = di
+	for sl in slicks:
+		var to: Vector2 = (sl[0] as Vector2) - car_pos
+		if to.length() < 420.0 and to.dot(Vector2.from_angle(heading)) > 0.0:
+			dodge = -signf(((sl[0] as Vector2) - centre[near]).dot(_normal(near)))
+	if vehicle == "plane":
+		var rg := _next_ring()
+		if not rg.is_empty() and (rg["pos"] as Vector2).distance_to(car_pos) < 700.0:
+			var ring_at := posmod(int(rg["i"]) - near, count)
+			aim = rg["pos"]
+			if ring_at < dodge_at:
+				dodge = 0.0                                  # (the ring first)
+	if dodge != 0.0:
+		aim += _normal(ai) * dodge * half_w * 0.5
+	var want := (aim - car_pos).angle()
+	if vehicle == "boat":
+		want -= wrapf(vel.angle() - heading, -PI, PI) * 0.8            # (against its drift)
+	var diff := wrapf(want - heading, -PI, PI)
+	return clampf(diff * 3.0, -1.0, 1.0) if absf(diff) > 0.03 else 0.0
+
+## What crashed the toy just now ("" = nothing): the car off the road or into a gap; the boat
+## aground on a sandbar, on a rock or a log; the plane past a ring outside it, into a balloon or a
+## storm cloud
+func _crash_now() -> String:
+	if air_t > 0.0:
+		return ""
+	match vehicle:
+		"car":
+			if car_pos.distance_to(centre[near]) > half_w + FALL_AT or _in_gap(near):
+				return "fall"
+		"boat":
+			if _in_gap(near) and car_pos.distance_to(centre[near]) < half_w:
+				return "aground"
+			for ob in obstacles:
+				if _hits(ob):
+					return "rock"
+		"plane":
+			var missed := _check_rings()
+			if missed:
+				return "ring"
+			for ob in obstacles:
+				if _hits(ob):
+					return ob["kind"]
+	return ""
+
+## About to crash (a focused pal gets a slow moment): the car at the road's very edge, the boat
+## heading into a rock close ahead, the plane coming up to a ring off to the side
+func _brink() -> bool:
+	match vehicle:
+		"car":
+			return air_t <= 0.0 and car_pos.distance_to(centre[near]) > half_w + FALL_AT * 0.2 and not _rail_at(near)
+		"boat":
+			var ahead := car_pos + vel.normalized() * 70.0
+			for ob in obstacles:
+				if ahead.distance_to(ob["pos"]) < float(ob["r"]) + 24.0:
+					return true
+		"plane":
+			var rg := _next_ring()
+			if not rg.is_empty():
+				var to: Vector2 = rg["pos"] - car_pos
+				var dirv := Vector2.from_angle(heading)
+				if to.dot(dirv) > 0.0 and to.dot(dirv) < 110.0 and absf(to.dot(rg["n"])) > float(rg["r"]) * RING_TOL * 0.9:
+					return true
+	return false
+
+## The car against a guard rail: held on the road (its middle RAIL_IN inside the edge), sliding
+## along it, slowed, a rattle and a spark
+func _rail_hold() -> void:
+	if air_t > 0.0 or not _rail_at(near):
+		return
+	var n := _normal(near)
+	var lat := (car_pos - centre[near]).dot(n)
+	if signf(lat) != float(_rail[near]) or absf(lat) <= half_w - RAIL_IN:
+		return
+	car_pos -= n * signf(lat) * (absf(lat) - (half_w - RAIL_IN))
+	var road := (centre[(near + 2) % count] - centre[near]).angle()
+	heading = lerp_angle(heading, road, 0.35)
+	boost_t = 0.0
+	if _buoy_cd <= 0.0:
+		_buoy_cd = 0.14
+		_sfx("res://sounds/fx/wood_tap.wav", -12.0, 1.3)
+		Input.vibrate_handheld(15)
+		trail.spray(car_pos + n * signf(lat) * 28.0, heading, 3)
+
+func _rail_at(i: int) -> bool:
+	return not _rail.is_empty() and _rail[i] != 0
+
+## The boat against the buoys: bounced back into the channel (it can't leave it), slowed, a bonk
+func _buoys() -> void:
+	var n := _normal(near)
+	var lat := (car_pos - centre[near]).dot(n)
+	var limit := half_w - BUOY_IN
+	if absf(lat) <= limit:
+		return
+	var side := n * signf(lat)
+	car_pos -= side * (absf(lat) - limit)
+	var outward := vel.dot(side)
+	if outward > 0.0:
+		vel -= side * outward * 1.5                      # (a little bounce off the rope)
+		vel *= 0.86
+		if _buoy_cd <= 0.0 and outward > 60.0:
+			_buoy_cd = 0.2
+			_sfx("res://sounds/fx/water_boing.wav", -16.0, 1.5)
+			Input.vibrate_handheld(15)
+			trail.spray(car_pos + side * 30.0, heading, 4)
+
+## The plane strays too far from the course: the sky's edge turns it back towards it
+func _corridor(delta: float) -> void:
+	var n := _normal(near)
+	var lat := (car_pos - centre[near]).dot(n)
+	var limit := half_w * CORRIDOR
+	if absf(lat) <= limit:
+		return
+	car_pos -= n * signf(lat) * minf(absf(lat) - limit, 240.0 * delta)
+	var road := (centre[(near + 6) % count] - car_pos).angle()
+	heading = lerp_angle(heading, road, minf(1.0, delta * 2.5))
+
+## The course's next lap: the plane's rings stand ready again
+func _new_lap() -> void:
+	for rg in rings:
+		rg["hit"] = false
+	_ring_fx_refresh()
 
 ## Off a ramp (or a springboard): up in the air for `t` (the car lifts, its shadow drops away)
 func _jump(t: float) -> void:
@@ -1900,62 +2945,119 @@ func _update_bridge_order() -> void:
 	if bridge.get_index() != want:
 		world.move_child(bridge, clampi(want, 0, world.get_child_count() - 1))
 
-## Off the track: the car tips over the edge and drops to the floor, then it's back on the last
-## checkpoint, pointing down the road (the clock goes on; the no-fall star is gone)
-func _fall() -> void:
-	# a splashy car: put back on the road where it left it, no time lost (once a level)
+## A crash (_crash_now): a heart breaks (a splashy pal's water heart first: that one undoes it on
+## the spot, no time lost) and the crowd near it screams. The car tips over the edge and drops to the
+## floor (always under the track: never drawn over a road, the user 2026-10-17), the boat flips and
+## sinks, the plane spins down to the ground; then it's back on the last checkpoint, pointing down
+## the course (the clock goes on). A missed ring: the plane just flies on. The last heart: out.
+func _crash(kind: String) -> void:
 	if not splash_used and PetState.boost_power("splash") > 0:
 		splash_used = true
 		PetState.use_boost()
-		var i := near
-		car_pos = centre[i]
-		heading = (centre[(i + 2) % count] - centre[i]).angle()
-		slip_t = 0.0
+		spend_water_heart()
+		if kind != "ring":
+			var i := near
+			car_pos = centre[i]
+			heading = (centre[(i + 2) % count] - centre[i]).angle()
+			vel = Vector2.from_angle(heading) * _speed() * 0.6
+			slip_t = 0.0
+			_clear_obstacle_hit()
 		trail.spray(car_pos, heading, 14)
 		_sfx("res://sounds/fx/water_boing.wav", -8.0)
 		_show_banner("splash!", 0.5)
 		Input.vibrate_handheld(40)
 		return
-	state = State.FALL
 	falls += 1
-	# the car tips out over the edge it left, then drops to the floor, always UNDER the raised
-	# track: whichever side it went off, it's never drawn over a road (the user, 2026-10-17)
+	var last := lose_life()
+	if crowd.visible:
+		crowd.scream(car_pos)
+		if crowd.rect.grow(320.0).has_point(car_pos):
+			_sfx("res://sounds/fx/crowd_gasp.wav", -8.0, randf_range(0.95, 1.1))
+	if kind == "ring":
+		_show_banner("missed!", 0.5)
+		_sfx("res://sounds/fx/claw_miss.wav", -8.0)
+		Input.vibrate_handheld(60)
+		if last:
+			_out_of_lives()
+		return
+	state = State.FALL
 	for n in [car, antenna, antenna_tip, driver]:
 		n.reparent(behind, false)
 	var from := car_pos
 	var out := (car_pos - centre[near]).normalized()
 	motor.stop()
-	_sfx("res://sounds/fx/rc_fall.wav", -12.0)
 	Input.vibrate_handheld(80)
 	var t := create_tween()
-	t.tween_method(func(f: float):
-		car_pos = from + out * TIP_OUT * (1.0 - pow(1.0 - minf(1.0, f * 2.5), 2.0))
-		car_drop = f * f * TRACK_SIDE * PX * 3.0
-		car.modulate = Color(1, 1, 1).lerp(Color(0.4, 0.38, 0.45), f)
-		car.scale = Vector2.ONE * (1.0 - 0.15 * f), 0.0, 1.0, 0.45)
-	t.tween_callback(func(): _sfx("res://sounds/fx/rc_land.wav", -10.0))
+	match vehicle:
+		"car":
+			# it tips out over the edge it left, then drops
+			_sfx("res://sounds/fx/rc_fall.wav", -12.0)
+			t.tween_method(func(f: float):
+				car_pos = from + out * TIP_OUT * (1.0 - pow(1.0 - minf(1.0, f * 2.5), 2.0))
+				car_drop = f * f * TRACK_SIDE * PX * 3.0
+				car.modulate = Color(1, 1, 1).lerp(Color(0.4, 0.38, 0.45), f)
+				car.scale = Vector2.ONE * (1.0 - 0.15 * f), 0.0, 1.0, 0.45)
+			t.tween_callback(func(): _sfx("res://sounds/fx/rc_land.wav", -10.0))
+		"boat":
+			# a bump, it flips round and sinks a little (the water closes over it)
+			_sfx("res://sounds/fx/wood_tap.wav", -6.0, 0.6)
+			trail.spray(car_pos, heading, 16)
+			var h0 := heading
+			t.tween_method(func(f: float):
+				heading = h0 + f * TAU * 1.5
+				car.modulate = Color(1, 1, 1).lerp(Color(0.45, 0.6, 0.7, 0.0), f * f)
+				car.scale = Vector2.ONE * (1.0 - 0.3 * f), 0.0, 1.0, 0.6)
+			t.tween_callback(func(): _sfx("res://sounds/fx/water_boing.wav", -10.0, 0.6))
+		"plane":
+			# it spins down to the ground far below, smaller and smaller
+			_sfx("res://sounds/fx/sfx_sounds_falling4.wav", -10.0)
+			var h1 := heading
+			t.tween_method(func(f: float):
+				heading = h1 + f * TAU * 2.0
+				car_drop = f * f * 160.0
+				car.modulate = Color(1, 1, 1).lerp(Color(0.5, 0.5, 0.6, 0.0), f * f)
+				car.scale = Vector2.ONE * (1.0 - 0.6 * f), 0.0, 1.0, 0.8)
 	t.tween_interval(0.35)
-	t.tween_callback(func():
-		var i := int(fposmod(last_cp, count))
-		car_pos = centre[i]
-		heading = (centre[(i + 2) % count] - centre[i]).angle()
-		near = i
-		progress = last_cp
-		car_drop = 0.0
-		for n in [car, antenna, antenna_tip, driver]:
-			if n.get_parent() != front:
-				n.reparent(front, false)
-		front.move_child(shadow, 0)
-		trail.marks.clear()
-		car.modulate = Color(1, 1, 1)
-		car.scale = Vector2.ONE
-		held = [false, false]
-		state = State.DRIVE
-		motor.play()
-		var blink := create_tween()
-		for k in 3:
-			blink.tween_property(car, "modulate:a", 0.25, 0.08)
-			blink.tween_property(car, "modulate:a", 1.0, 0.08))
+	t.tween_callback(_out_of_lives if last else _respawn)
+
+## Back on the last checkpoint, pointing down the course, blinking
+func _respawn() -> void:
+	var i := int(fposmod(last_cp, count))
+	car_pos = centre[i]
+	heading = (centre[(i + 2) % count] - centre[i]).angle()
+	vel = Vector2.from_angle(heading) * _speed() * 0.5
+	near = i
+	progress = last_cp
+	car_drop = 0.0
+	bank = 0.0
+	for n in [car, antenna, antenna_tip, driver]:
+		if n.get_parent() != front:
+			n.reparent(front, false)
+	front.move_child(shadow, 0)
+	trail.marks.clear()
+	car.modulate = Color(1, 1, 1)
+	car.scale = Vector2.ONE
+	held = [false, false]
+	_clear_obstacle_hit()
+	state = State.DRIVE
+	motor.play()
+	var blink := create_tween()
+	for k in 3:
+		blink.tween_property(car, "modulate:a", 0.25, 0.08)
+		blink.tween_property(car, "modulate:a", 1.0, 0.08)
+
+## The last heart broke: the race is over (its result card: Out of lives!, retry from the start)
+func _out_of_lives() -> void:
+	state = State.DONE
+	motor.stop()
+	_show_banner("Out of lives!", 0.9)
+	_sfx("res://sounds/fx/error.mp3", -10.0)
+	get_tree().create_timer(1.4).timeout.connect(func():
+		if is_running:
+			finish_level(level, 0, race_time))
+
+func fail_title() -> String:
+	return "Out of lives!"
 
 ## The nearest centre-line point, searched near the last one; progress counts the points passed
 ## (forwards only adds up: driving the wrong way takes it back)
@@ -2005,6 +3107,7 @@ func _spawn_features() -> void:
 		bridge.texture = ImageTexture.create_from_image(_paint_bridge())
 		track.texture = ImageTexture.create_from_image(track_image)    # (the deck's shadow is on it now)
 	_spawn_secret()
+	_spawn_course_things()
 	_spawn_rivals()
 	if not headlight:
 		headlight = Sprite2D.new()
@@ -2015,12 +3118,12 @@ func _spawn_features() -> void:
 		headlight.material = m
 		headlight.scale = Vector2(PX, PX)
 		front.add_child(headlight)
-	headlight.visible = world_no == 5
-	rain_fx.visible = world_no == 4
+	headlight.visible = look == "night"
+	rain_fx.visible = rain
 	for n in _lamp_nodes:
 		n.queue_free()
 	_lamp_nodes.clear()
-	if world_no == 5:
+	if look == "night":
 		var tex := _lamp_post_texture()
 		for lp in _lamps:
 			var post := _px_sprite(tex, (lp as Vector2) * PX + Vector2(0, -20))
@@ -2028,6 +3131,81 @@ func _spawn_features() -> void:
 			world.move_child(post, track.get_index())        # (on the floor, under the track's level)
 			_lamp_nodes.append(post)
 	_refresh_hud()
+
+## The plane's rings (two halves each, round the plane), the obstacles' pieces (under the toy: a
+## rock, a log, a balloon, a storm cloud), the gusts' streaks
+var _thing_nodes: Array = []
+func _spawn_course_things() -> void:
+	for nd in _thing_nodes:
+		if is_instance_valid(nd):
+			nd.queue_free()
+	_thing_nodes.clear()
+	for rg in rings:
+		var i := int(rg["i"])
+		var d := (centre[(i + 1) % count] - centre[i]).normalized()
+		for upper in [false, true]:
+			var ring := Ring.new()
+			ring.p = rg["pos"]
+			ring.n = rg["n"]
+			ring.d = d
+			ring.r = rg["r"]
+			ring.upper = upper
+			(ring_front if upper else ring_back).add_child(ring)
+			rg["front" if upper else "back"] = ring
+			_thing_nodes.append(ring)
+	_ring_fx_refresh()
+	for ob in obstacles:
+		var spr: Sprite2D
+		match ob["kind"]:
+			"rock":
+				spr = _px_sprite(PalPrixArt.rock(int(ob["k"])), ob["pos"])
+			"log":
+				spr = _px_sprite(PalPrixArt.log_texture(), ob["pos"])
+				spr.rotation = ((ob["b"] as Vector2) - (ob["a"] as Vector2)).angle()
+			"balloon":
+				spr = _px_sprite(PalPrixArt.balloon(int(ob["k"])), (ob["pos"] as Vector2) + Vector2(0, -20))
+			_:
+				spr = _px_sprite(PalPrixArt.cloud(16, int(ob["k"]), true), ob["pos"])
+		front.add_child(spr)
+		front.move_child(spr, 0)                     # (under the toy)
+		ob["node"] = spr
+		_thing_nodes.append(spr)
+	var zones := []
+	for g in gusts:
+		var pts := PackedVector2Array()
+		for i in range(int(g[0]), int(g[1]), 4):
+			pts.append(centre[i % count])
+		zones.append([pts, _normal((int(g[0]) + int(g[1])) / 2) * float(g[2])])
+	gust_fx.setup(zones)
+
+## Which ring is next (it glows), which were flown through (gold, faded) or missed (grey) this lap
+func _ring_fx_refresh() -> void:
+	var nxt := _next_ring()
+	for rg in rings:
+		var st := 0
+		if int(rg["lap"]) == lap:
+			st = 2 if rg["hit"] else 3
+		elif is_same(rg, nxt):
+			st = 1
+		for key in ["back", "front"]:
+			if rg.has(key) and is_instance_valid(rg[key]):
+				rg[key].state = st
+				rg[key].queue_redraw()
+
+## The sky's things move: the balloons drift from side to side, the storm clouds flash
+func _update_course_things(delta: float) -> void:
+	_t += delta
+	for ob in obstacles:
+		if not ob.has("node") or not is_instance_valid(ob["node"]):
+			continue
+		match ob["kind"]:
+			"balloon":
+				ob["pos"] = (ob["base"] as Vector2) + _normal(int(ob["i"])) * sin(_t * 0.7 + float(ob["k"])) * 34.0
+				(ob["node"] as Sprite2D).position = ((ob["pos"] as Vector2) + Vector2(0, -20)).round()
+			"storm":
+				var ph := fposmod(_t + float(ob["k"]) * 0.9, 2.6)
+				var flash := ph < 0.07 or (ph > 0.15 and ph < 0.2)
+				(ob["node"] as Sprite2D).modulate = Color(2.0, 2.0, 2.4) if flash else Color(1, 1, 1)
 
 ## The deck over the crossing: the road of the bridge's stretch with white rails along it; its
 ## shadow darkens the road beneath (on the track's image)
@@ -2066,13 +3244,13 @@ func _paint_bridge() -> Image:
 		var col: Color
 		if d <= hw - 3.0:
 			col = ROAD[0] if (x * 3 + y * 5) % 7 else ROAD[1]
-			if world_no == 3:
+			if look == "lagoon":
 				# the Lagoon's bridge: a wooden deck, planks across it (a pier over the water)
 				var plank := int(t * axis.length() / 5.0)
 				col = Color8(196, 140, 88) if plank % 2 == 0 else Color8(176, 122, 74)
 				if int(t * axis.length()) % 5 == 0:
 					col = Color8(120, 78, 46)
-			elif world_no == 4 or world_no == 5:
+			elif look == "night":
 				col = col.darkened(0.18)
 		elif d <= hw - 1.0:
 			col = Color8(244, 240, 232) if ((x + y) / 3) % 2 == 0 else Color8(196, 190, 186)   # the rails
@@ -2106,9 +3284,10 @@ func _spawn_secret() -> void:
 	var taken: bool = secret["taken"]
 	match secret["gate"]:
 		"fizzy":
-			var spring := _px_sprite(_spring_texture(), centre[(at - 9 + count) % count])
-			spring.rotation = dir.angle()
-			node.add_child(spring)
+			if vehicle != "plane":
+				var spring := _px_sprite(_spring_texture(), centre[(at - 9 + count) % count])
+				spring.rotation = dir.angle()
+				node.add_child(spring)
 			secret["spring"] = (at - 9 + count) % count
 			if not taken:
 				var g := Node2D.new()
@@ -2120,6 +3299,15 @@ func _spawn_secret() -> void:
 				bob.tween_property(g, "position:y", g.position.y - 10.0, 0.7).set_trans(Tween.TRANS_SINE)
 				bob.tween_property(g, "position:y", g.position.y, 0.7).set_trans(Tween.TRANS_SINE)
 				secret["gift"] = g
+		"milky" when vehicle == "plane":
+			# a storm cloud on the course, the gift inside: a sturdy plane flies through it
+			if not taken:
+				var cl := _px_sprite(PalPrixArt.cloud(16, 7, true), centre[at])
+				node.add_child(cl)
+				secret["cloud"] = cl
+				var g4 := _px_sprite(Collection.prize_icon(secret["prize"]), centre[at], 2)
+				node.add_child(g4)
+				secret["gift"] = g4
 		"milky":
 			var crates: Array = []
 			if not taken:
@@ -2160,6 +3348,32 @@ func _update_secret(was_near: int) -> void:
 		return
 	var lvl: int = secret["lvl"]
 	match secret["gate"]:
+		"fizzy" when vehicle == "plane":
+			# under the balloon: a fizzy plane climbs up to it
+			if car_pos.distance_to(centre[secret["at"]]) < 80.0:
+				if gate_open("fizzy", lvl):
+					_jump(AIR_TIME * 1.2)
+					_take_secret()
+				elif not secret.get("hinted", false):
+					secret["hinted"] = true
+					_show_banner("fizzy planes climb!", 0.8)
+		"milky" when vehicle == "plane":
+			if car_pos.distance_to(centre[secret["at"]]) < 70.0 and not secret.get("bounced", false):
+				if gate_open("milky", lvl):
+					PetState.use_boost()
+					if secret.has("cloud") and is_instance_valid(secret["cloud"]):
+						var cl: Sprite2D = secret["cloud"]
+						var tw := cl.create_tween()
+						tw.tween_property(cl, "modulate:a", 0.0, 0.3)
+						tw.tween_callback(cl.queue_free)
+					_take_secret()
+				else:
+					secret["bounced"] = true
+					heading += PI * 0.5 * (1.0 if randf() < 0.5 else -1.0)    # (thrown off the cloud's edge)
+					_sfx("res://sounds/fx/thunder.wav", -14.0, 1.4)
+					_show_banner("sturdy planes fly through!", 0.8)
+			elif car_pos.distance_to(centre[secret["at"]]) > 200.0:
+				secret["bounced"] = false
 		"fizzy":
 			var sp: int = secret["spring"]
 			if was_near < sp and near >= sp and air_t <= 0.0 and car_pos.distance_to(centre[sp]) < half_w * 0.7:
@@ -2226,7 +3440,14 @@ func _spawn_rivals() -> void:
 		var node := Node2D.new()
 		front.add_child(node)
 		var sl: Array = []
-		var layers := _tinted_slices(RIVAL_COLS[j][0], RIVAL_COLS[j][1])
+		var layers: Array[Texture2D]
+		match vehicle:
+			"boat":
+				layers = PalPrixArt.boat_slices(RIVAL_COLS[j][0], RIVAL_COLS[j][1])
+			"plane":
+				layers = PalPrixArt.plane_slices(RIVAL_COLS[j][0], Color8(250, 246, 236))
+			_:
+				layers = _tinted_slices(RIVAL_COLS[j][0], RIVAL_COLS[j][1])
 		for li in layers.size():
 			var spr := Sprite2D.new()
 			spr.texture = layers[li]
@@ -2236,7 +3457,7 @@ func _spawn_rivals() -> void:
 			spr.modulate = Color(kk, kk, kk)
 			node.add_child(spr)
 			sl.append(spr)
-		var helmet := _px_sprite(_helmet_texture(RIVAL_COLS[j][0]), Vector2(0, -LAYERS * LAYER_UP - 4.0), 2)
+		var helmet := _px_sprite(_helmet_texture(RIVAL_COLS[j][0]), Vector2(0, -layers.size() * LAYER_UP - 4.0), 2)
 		node.add_child(helmet)
 		var light := Sprite2D.new()
 		light.texture = headlight.texture if headlight else _cone_texture()
@@ -2245,13 +3466,13 @@ func _spawn_rivals() -> void:
 		m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 		light.material = m
 		light.scale = Vector2(PX, PX)
-		light.visible = world_no == 5
+		light.visible = look == "night"
 		node.add_child(light)
 		# on the grid: just behind the line, the lanes either side of the middle
 		var lane: float = [-0.42, 0.42, 0.0][j]
 		var back_pts := 8 + j * 7
 		rivals.append({ "node": node, "slices": sl, "light": light, "progress": -float(back_pts), "lane": lane,
-			"speed": SPEED * (0.95 + 0.02 * j + 0.005 * k), "heading": 0.0, "pos": Vector2.ZERO, "done": false })
+			"speed": _speed() * (0.95 + 0.02 * j + 0.005 * k), "heading": 0.0, "pos": Vector2.ZERO, "done": false })
 	_place_rivals()
 
 ## A rival's place on the road from its progress (points along the centre line, laps included)
@@ -2294,9 +3515,9 @@ func _update_rivals(delta: float) -> void:
 				r["done"] = true
 		if r["progress"] > progress:
 			ahead += 1
-		# a bump
+		# a bump (the cars, the boats; planes keep apart)
 		var d: Vector2 = car_pos - r["pos"]
-		if d.length() < 46.0 and d.length() > 0.1 and air_t <= 0.0:
+		if vehicle != "plane" and d.length() < 46.0 and d.length() > 0.1 and air_t <= 0.0:
 			var push := d.normalized() * (46.0 - d.length())
 			if PetState.boost_power("sturdy") > 0:
 				r["lane"] = clampf(r["lane"] - signf(push.dot(Vector2(-sin(r["heading"]), cos(r["heading"])))) * 0.08, -0.6, 0.6)
