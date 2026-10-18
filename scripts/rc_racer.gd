@@ -252,7 +252,6 @@ var bank := 0.0                        # the plane: its lean in the turns (-1 ..
 var _buoy_cd := 0.0                    # (the scrape in the shallows, the bump on a rail)
 var rings: Array = []                  # the plane's: { i (centre point), pos, n (across), r, lap (last judged), hit, back, front }
 var obstacles: Array = []              # rocks, logs (the boat), balloons, storms (the plane): { kind, i, pos, base, r, (a, b: a log), node }
-var ring_streak := 0                   # rings flown through in a row (the chime climbs)
 var gusts: Array = []                  # the plane's: [first centre point, last, the side it blows to]
 var _grace_t := 0.0                    # (just put back: nothing hits it for a moment)
 var _t := 0.0                          # (the race's own clock for the drifting balloons, the storms' flashes)
@@ -918,7 +917,6 @@ func _begin(n: int) -> void:
 	lap = 1
 	race_time = 0.0
 	falls = 0
-	ring_streak = 0
 	reset_lives()
 	vel = Vector2.from_angle(heading) * _speed()
 	bank = 0.0
@@ -3021,15 +3019,22 @@ func _check_rings() -> bool:
 		var off := absf((car_pos - (rg["pos"] as Vector2)).dot(rg["n"]))
 		if off < float(rg["r"]) * RING_TOL:
 			rg["hit"] = true
-			ring_streak += 1                                 # (a chime a step higher for each in a row)
-			_sfx("res://sounds/fx/ring_chime.wav", -10.0, pow(2.0, minf(ring_streak - 1, 7) * 2.0 / 12.0))
+			_sfx("res://sounds/fx/ring_chime.wav", -10.0, _ring_pitch(rings.find(rg)))
 			Input.vibrate_handheld(15)
 			trail.sparkle(rg["pos"])
 		else:
 			missed = true
-			ring_streak = 0
-	_ring_fx_refresh()
+			_ring_fx_refresh()
 	return missed
+
+## Each ring of a lap its own note (the user, 2026-10-18: the climb topped out and repeated its
+## highest note): up a major scale from the lap's first ring to its last, the last one an octave
+## over the chime's own note (a long lap starts lower to fit them all); every lap starts again
+const SCALE := [0, 2, 4, 5, 7, 9, 11]
+func _ring_pitch(k: int) -> float:
+	var steps := func(j: int) -> int: return 12 * (j / 7) + int(SCALE[j % 7])
+	var top: int = steps.call(rings.size() - 1)
+	return pow(2.0, float(steps.call(k) - top + 12) / 12.0)
 
 ## The plane in a gust: blown across the course (a sturdy one only half as much)
 func _blow(delta: float) -> void:
