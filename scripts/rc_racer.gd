@@ -2130,6 +2130,9 @@ func _paint_water(w: int, h: int) -> Image:
 		var sc := rng.randf_range(0.7, 1.15)
 		# (clear of the channel, its shallows and its bank: never land where the boat may go)
 		var apart := true
+		# (never under the stand: the pier with the crowd sat on an island, the user 2026-10-18)
+		if crowd.visible and Rect2(crowd.rect.position / PX, crowd.rect.size / PX).grow(30.0 * sc * 1.4 + 6.0).has_point(p):
+			apart = false
 		for other in _sandbars:
 			if Vector2(((other[0] as Vector2) - p).x / 1.9, ((other[0] as Vector2) - p).y).length() < 22.0 * (sc + float(other[1])):
 				apart = false                            # (never two islands in one another)
