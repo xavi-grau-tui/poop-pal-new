@@ -747,6 +747,29 @@ static func rat(frame: int) -> Texture2D:
 				img.set_pixel(x, yy, cols[ch])
 	return _tex(key, img)
 
+## World 4: the rat's den, a little round sewer grate in the floor it pops out of and back into
+## (dark slots between grey bars, a lit rim); 15 x 15 px
+static func rat_den() -> Texture2D:
+	if "den" in _cache:
+		return _cache["den"]
+	var img := _img(15, 15)
+	var c := Vector2(7.5, 7.5)
+	for y in 15:
+		for x in 15:
+			var off := Vector2(x + 0.5, y + 0.5) - c
+			var d := off.length()
+			if d > 7.0:
+				continue
+			var col := Color8(96, 98, 104)
+			if d > 6.0:
+				col = Color8(36, 34, 40)
+			elif d > 5.0:
+				col = Color8(150, 152, 158) if off.x + off.y < 0.0 else Color8(110, 112, 118)
+			elif y % 3 == 1:
+				col = Color8(24, 22, 28)                          # the slots
+			img.set_pixel(x, y, col)
+	return _tex("den", img)
+
 ## World 5: a fire jet's burner plate in the floor (a round grate with a hazard ring); 15 x 15 px
 static func burner() -> Texture2D:
 	if "burner" in _cache:

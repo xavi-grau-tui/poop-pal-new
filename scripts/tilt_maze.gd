@@ -24,9 +24,12 @@ extends BaseMinigame
 ##
 ## BLOCKERS (from a world's 4th level, more as it goes on; the finale adds the world before's):
 ## one kind per world, each telegraphed before it bites: 1 wooden pegs that pop up in a doorway ·
-## 2 a rubber duck sliding across a corridor · 3 gut valves that squeeze shut · 4 a sewer rat
-## running up and down the route · 5 fire jets that flare up in a doorway (burnt = a fall) · 6
-## meteors that land on the route (a shadow first; hit = a fall).
+## 2 a rubber duck crossing a corridor (it rests against a wall between crossings) · 3 gut valves
+## that squeeze shut · 4 a sewer rat that pops out of its grate, runs up the route and back in · 5
+## fire jets that flare up in a doorway · 6 meteors that land on the route (a shadow first).
+## The pegs and the valves are doors (wait for them); the duck, the rat, a flame and a meteor are
+## ENEMIES (the user, 2026-10-18): touching one knocks the ball back in a little hop (over any hole),
+## it blinks a moment (nothing hurts it meanwhile, so it gets past) and a heart breaks.
 ##
 ## Vaults (VAULTS): a dead end off the route holds a prize, visible from the first visit, behind
 ## a gate only the right boost opens (at least the gate's level: worlds 1-2 = 1, 3-4 = 2, 5-6 = 3;
@@ -167,6 +170,12 @@ var respawn_pos := Vector2.ZERO
 var ball_pos := Vector2.ZERO
 var vel := Vector2.ZERO
 var bump_cooldown := 0.0
+var hit_t := 0.0                      # after an enemy's hit: the hop back (in the air), then the blink
+var qa_autopilot := false             # (tools/qa: the ball rolls itself along the route, for screenshots)
+var _qa_step := 0
+const HIT_HOP := 0.35                 # the hop: over any hole
+const HIT_BLINK := 1.2                # ...then a blink: no enemy hurts it
+const KNOCK := 560.0                  # how hard it's knocked back, px/s
 
 var board: Sprite2D
 var finish_sprite: Sprite2D           # the flush swirl, under the trapdoor
@@ -332,6 +341,8 @@ func _build_level() -> void:
 	vel = Vector2.ZERO
 	level_time = 0.0
 	falls = 0
+	hit_t = 0.0
+	_qa_step = 0
 	reset_lives()
 	marbles_taken = 0
 	splash_used = false
@@ -1113,6 +1124,7 @@ func _process(delta: float) -> void:
 	locked_hint_cd = maxf(0.0, locked_hint_cd - delta)
 	fence_hint_cd = maxf(0.0, fence_hint_cd - delta)
 	bump_cooldown = maxf(0.0, bump_cooldown - delta)
+	hit_t = maxf(0.0, hit_t - delta)
 	_move_holes(delta)
 	_update_blockers(delta)
 	_update_gate(delta)
@@ -1143,12 +1155,20 @@ func _process(delta: float) -> void:
 			_check_checkpoints()
 			_check_prize()
 			_check_finish()
-			_check_holes()
+			if hit_t <= HIT_BLINK:
+				_check_holes()                  # (in the air after a hit: over the holes)
 			_check_hazards()
 		_refresh_hud()
 
 	if state == State.PLAY:                 # (falling / hopping / flushed: the tweens move the ball)
 		ball.position = ball_pos
+		if hit_t > 0.0:
+			# the hop back (bigger: up in the air, its shadow left below), then the blink
+			var hop := clampf((hit_t - HIT_BLINK) / HIT_HOP, 0.0, 1.0)
+			ball.scale = Vector2(BALL_SCALE, BALL_SCALE) * (1.0 + 0.32 * sin(hop * PI))
+			ball.modulate.a = 1.0 if hop > 0.0 or int(hit_t * 12.0) % 2 == 0 else 0.3
+		elif ball.modulate.a < 1.0 and state == State.PLAY:
+			ball.modulate.a = 1.0
 	shadow.position = ball.position + Vector2(8, 20) * (ball.scale.x / BALL_SCALE)
 	shadow.visible = state != State.FALLING
 
@@ -1511,12 +1531,12 @@ func _place_blockers(rng: RandomNumberGenerator, k: int) -> void:
 		var dir := Vector2(b - a)
 		var bl := { "kind": kind, "door": door, "pos": door.get_center(), "dir": dir, "t": rng.randf() * 3.0, "solid": false, "hot": false }
 		match kind:
-			"duck":                                     # slides across the corridor of cell b
+			"duck":                                     # crosses the corridor of cell b, wall to wall
 				var side := Vector2(dir.y, dir.x)
 				var c := _cell_center(b)
-				bl["a"] = c - side * TILE * 0.5
-				bl["b"] = c + side * TILE * 0.5
-				bl["pos"] = c
+				bl["a"] = c - side * (TILE - MOVER_R * 0.8)
+				bl["b"] = c + side * (TILE - MOVER_R * 0.8)
+				bl["pos"] = bl["a"]
 			"rat":                                      # runs along the route, up to 2 cells
 				var to: Vector2i = b
 				if pick + 2 < path_cells.size() and path_cells[pick + 2] - b == b - a and not _check_cells.has(path_cells[pick + 2]):
@@ -1553,6 +1573,10 @@ func _spawn_blockers() -> void:
 					lips.append(lip)
 				bl["lips"] = lips
 			"rat":
+				var den := _sprite(TiltMazeArt.rat_den(), Vector2.ZERO, blocker_layer)
+				den.position = (bl["a"] as Vector2).snapped(Vector2(DETAIL, DETAIL))
+				blocker_layer.move_child(den, 0)
+				bl["den"] = den
 				bl["sprite"] = _sprite(TiltMazeArt.rat(0), Vector2.ZERO, node)
 			"fire":
 				_sprite(TiltMazeArt.burner(), Vector2.ZERO, node)
@@ -1575,6 +1599,10 @@ func _spawn_blockers() -> void:
 const PEG_CYCLE := 3.2                # up for 1.2 s, then down; it wobbles 0.4 s before popping up
 const VALVE_CYCLE := 3.0              # closing 0.3, shut 1.2, opening 0.3, open 1.2 (pulses before)
 const FIRE_CYCLE := 3.4               # pilot flame 0.6 s (the warning), flame 1.0 s, off
+const DUCK_REST := 1.1                # the duck against a wall (the way past it, on its other side)...
+const DUCK_CROSS := 1.0               # ...and its waddle across
+const DUCK_CYCLE := (DUCK_REST + DUCK_CROSS) * 2.0
+const RAT_HIDE := 1.8                 # the rat in its grate between runs
 const METEOR_CYCLE := 3.6             # the shadow and the ring 0.9 s, the hit 0.25 s, the crater
 
 func _update_blockers(delta: float) -> void:
@@ -1593,13 +1621,30 @@ func _update_blockers(delta: float) -> void:
 				if up and ph < delta * 1.5:
 					_sfx("res://sounds/fx/wood_tap.wav", -24.0, 0.0, 1.5)
 			"duck":
-				var f := (sin(t * 1.5) + 1.0) / 2.0
+				# rests against one wall, waddles across, rests against the other (room to pass it)
+				var ph := fposmod(t, DUCK_CYCLE)
+				var f := 0.0
+				var going := 0.0
+				if ph < DUCK_REST:
+					f = 0.0
+				elif ph < DUCK_REST + DUCK_CROSS:
+					f = smoothstep(0.0, 1.0, (ph - DUCK_REST) / DUCK_CROSS)
+					going = 1.0
+				elif ph < DUCK_REST * 2.0 + DUCK_CROSS:
+					f = 1.0
+				else:
+					f = 1.0 - smoothstep(0.0, 1.0, (ph - DUCK_REST * 2.0 - DUCK_CROSS) / DUCK_CROSS)
+					going = -1.0
 				var p: Vector2 = (bl["a"] as Vector2).lerp(bl["b"], f)
-				bl["vel"] = ((bl["b"] as Vector2) - (bl["a"] as Vector2)) * cos(t * 1.5) * 0.75
+				bl["vel"] = ((bl["b"] as Vector2) - (bl["a"] as Vector2)).normalized() * going
 				bl["pos"] = p
 				bl["node"].position = p.snapped(Vector2(DETAIL, DETAIL))
-				(bl["sprite"] as Sprite2D).scale.x = DETAIL * (1.0 if (bl["vel"] as Vector2).dot(Vector2(1, 1)) >= 0.0 else -1.0)
-				bl["solid"] = true
+				var sp_d: Sprite2D = bl["sprite"]
+				if going != 0.0:
+					sp_d.scale.x = DETAIL * (1.0 if (bl["vel"] as Vector2).dot(Vector2(1, 1)) >= 0.0 else -1.0)
+					sp_d.rotation = sin(t * 18.0) * 0.08              # (a waddle)
+				else:
+					sp_d.rotation = 0.0
 			"valve":
 				var ph := fposmod(t, VALVE_CYCLE)
 				var shut := 0.0                           # 0 = open, 1 = shut
@@ -1620,31 +1665,37 @@ func _update_blockers(delta: float) -> void:
 					var off := side * (half - 4.0 * DETAIL * (shut + pulse) - 2.0 * DETAIL)
 					(lips[i] as Sprite2D).position = (Vector2(0, off) if vertical else Vector2(off, 0)).snapped(Vector2(DETAIL, DETAIL))
 			"rat":
+				# in its grate a while (its eyes in the dark before it pops out), out up the route,
+				# a sniff at the end, back and in again
 				var a: Vector2 = bl["a"]
 				var b: Vector2 = bl["b"]
 				var run := a.distance_to(b)
 				var leg := run / 170.0                   # seconds a way
-				var cyc := fposmod(t, (leg + 0.4) * 2.0)
+				var cyc := fposmod(t, RAT_HIDE + (leg + 0.4) * 2.0)
 				var f := 0.0
 				var dir_sign := 1.0
-				if cyc < leg:
-					f = cyc / leg
-				elif cyc < leg + 0.4:
-					f = 1.0                              # (a sniff at the end)
-				elif cyc < leg * 2.0 + 0.4:
-					f = 1.0 - (cyc - leg - 0.4) / leg
-					dir_sign = -1.0
-				else:
+				var out := cyc >= RAT_HIDE
+				var c2 := cyc - RAT_HIDE
+				if not out:
 					f = 0.0
-				var p := a.lerp(b, f)
-				bl["vel"] = (b - a).normalized() * 170.0 * dir_sign if (f > 0.0 and f < 1.0) else Vector2.ZERO
+				elif c2 < leg:
+					f = c2 / leg
+				elif c2 < leg + 0.4:
+					f = 1.0                              # (a sniff at the end)
+				else:
+					f = 1.0 - (c2 - leg - 0.4) / leg
+					dir_sign = -1.0
+				var p := a.lerp(b, clampf(f, 0.0, 1.0))
+				bl["vel"] = (b - a).normalized() * 170.0 * dir_sign if (out and f > 0.0 and f < 1.0) else Vector2.ZERO
 				bl["pos"] = p
+				bl["out"] = out
 				bl["node"].position = p.snapped(Vector2(DETAIL, DETAIL))
 				var sp: Sprite2D = bl["sprite"]
 				sp.texture = TiltMazeArt.rat(int(t * 8.0) % 2)
 				var face := (b - a) * dir_sign
 				sp.rotation = snappedf(face.angle(), PI / 2.0)
-				bl["solid"] = true
+				sp.visible = out or cyc > RAT_HIDE - 0.5
+				sp.modulate = Color(1, 1, 1, 1) if out else Color(0.2, 0.2, 0.25, 0.85)   # (in the dark of its grate)
 			"fire":
 				var ph := fposmod(t, FIRE_CYCLE)
 				var sp: Sprite2D = bl["sprite"]
@@ -1693,22 +1744,46 @@ func _collide_blockers() -> void:
 				var k := 0.3
 				var bar := door.grow_individual(-door.size.x * k, 0, -door.size.x * k, 0) if (bl["dir"] as Vector2).x != 0.0 else door.grow_individual(0, -door.size.y * k, 0, -door.size.y * k)
 				_push_out(bar, BOUNCE * 1.6)
-			"duck", "rat":
-				if _push_out_circle(bl["pos"], MOVER_R, 0.6 if bl["kind"] == "duck" else 1.0):
-					vel += bl.get("vel", Vector2.ZERO) * (0.6 if bl["kind"] == "duck" else 1.4)
-					if bl["kind"] == "rat" and bump_cooldown <= 0.0:
-						bump_cooldown = 0.3
-						_sfx("res://sounds/fx/water_boing.wav", -18.0, 0.0, 2.2)
 
-## Fire and meteors: touching one at its moment is a fall (back on the last marble)
+## The enemies: the duck and the rat (when it's out of its grate) touched, a flame or a meteor at
+## its moment: a hit (_hit)
 func _check_hazards() -> void:
+	if hit_t > 0.0:
+		return
 	for bl in blockers:
-		if not bl["hot"]:
-			continue
-		var r := PEG_R if bl["kind"] == "fire" else METEOR_R
-		if ball_pos.distance_to(bl["pos"]) < r + BALL_R * 0.4:
-			_hurt(bl["pos"], bl["kind"])
-			return
+		match bl["kind"]:
+			"duck", "rat":
+				if bl.get("out", true) and ball_pos.distance_to(bl["pos"]) < MOVER_R * 0.75 + BALL_R * 0.7:
+					_hit(bl["pos"])
+					return
+			"fire", "meteor":
+				if bl["hot"] and ball_pos.distance_to(bl["pos"]) < (PEG_R if bl["kind"] == "fire" else METEOR_R) + BALL_R * 0.4:
+					_hit(bl["pos"])
+					return
+
+## An enemy's hit: the ball is knocked back and hops (over any hole), blinks a moment (nothing hurts
+## it meanwhile, so it can get past) and a heart breaks (a splashy pal's water heart first); the no-
+## fall star is gone; the last heart: the level is over
+func _hit(from: Vector2) -> void:
+	var away := ball_pos - from
+	if away.length() < 1.0:
+		away = -vel if vel.length() > 1.0 else Vector2.UP
+	vel = away.normalized() * KNOCK
+	hit_t = HIT_HOP + HIT_BLINK
+	_sfx("res://sounds/fx/water_boing.wav", -10.0, 0.0, 0.8)
+	Input.vibrate_handheld(70)
+	_debris(ball_pos, Color8(250, 226, 160))
+	if not splash_used and PetState.boost_power("splash") > 0:
+		splash_used = true
+		PetState.use_boost()
+		spend_water_heart()
+		_float_text("Splash!", ball_pos)
+		return
+	falls += 1
+	if lose_life():
+		state = State.FALLING
+		vel = Vector2.ZERO
+		get_tree().create_timer(0.4).timeout.connect(_out_of_lives)
 
 ## Pushes the ball out of a circle (a peg, the duck...); true if they touched
 func _push_out_circle(c: Vector2, r: float, b: float) -> bool:
@@ -1726,26 +1801,6 @@ func _push_out_circle(c: Vector2, r: float, b: float) -> bool:
 			_sfx("res://sounds/fx/wood_tap.wav", clampf(-34.0 + (-vn) / 50.0, -30.0, -16.0), 0.0, randf_range(0.92, 1.08))
 			Input.vibrate_handheld(12)
 	return true
-
-## Burnt by a fire jet / hit by a meteor: like a fall (back on the last marble, no-fall star gone)
-func _hurt(at: Vector2, kind: String) -> void:
-	if _splash_save(at):
-		return
-	state = State.FALLING
-	vel = Vector2.ZERO
-	falls += 1
-	var last := lose_life()
-	_sfx("res://sounds/fx/hole_plop.wav", -12.0, 0.0, 0.8)
-	Input.vibrate_handheld(90)
-	var t := create_tween()
-	if kind == "fire":
-		t.tween_property(ball, "modulate", Color(0.25, 0.15, 0.1, 1), 0.15)
-		t.tween_property(ball, "scale", Vector2(1.2, 0.8) * BALL_SCALE, 0.12)
-	else:
-		t.tween_property(ball, "scale", Vector2(1.4, 0.6) * BALL_SCALE, 0.1)
-		t.tween_property(ball, "modulate:a", 0.2, 0.2)
-	t.tween_interval(0.25)
-	t.tween_callback(_out_of_lives if last else _respawn)
 
 ## A splashy pal's one bounce back out of a fall (a hole, a fire jet, a meteor): no fall counted,
 ## the boost is spent. True if it saved the pal.
@@ -1831,6 +1886,16 @@ func _sensor_tilt() -> Vector2:
 	return -v if INVERT_TILT else v
 
 func _read_tilt() -> Vector2:
+	if qa_autopilot and not path_cells.is_empty():
+		# (QA only: towards the next cell of the route, gently)
+		var best := _qa_step
+		for i in range(maxi(0, _qa_step - 2), mini(path_cells.size(), _qa_step + 4)):
+			if _cell_center(path_cells[i]).distance_to(ball_pos) < _cell_center(path_cells[best]).distance_to(ball_pos):
+				best = i
+		_qa_step = best
+		var target := _cell_center(path_cells[mini(best + 1, path_cells.size() - 1)])
+		var want := (target - ball_pos).limit_length(120.0) / 120.0 * 0.55
+		return (want - vel / 900.0).limit_length(1.0)
 	var t := Vector2.ZERO
 	if _has_tilt_sensor():
 		t = _sensor_tilt() * TILT_GAIN
