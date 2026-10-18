@@ -1,4 +1,4 @@
-# HaraTomo (Poop Pal): roadmap and design notes
+# HaraTomo: roadmap and design notes
 
 Living document (started 2026-10-01, last big update 2026-10-11). It holds the aim, the decisions
 made, and what's still missing, so any new conversation can pick the work up from here.
