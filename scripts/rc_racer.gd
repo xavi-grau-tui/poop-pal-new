@@ -22,8 +22,8 @@ extends BaseMinigame
 ##     JUMPS, a ramp before each gap (7th: straight on it or you fall)
 ##   2 Night Race (the lamps and your headlights): CROSSOVERS, figure-8s with a bridge · rain,
 ##     PUDDLES that spin the car, OIL (4th) · RIVALS, up to three cars to beat (7th)
-##   3 Lagoon (sunset, the boat): it drifts (it carries on the way it was going a moment), bumps
-##     along the buoys, can't fall · CURRENTS that speed it on (4th) · RAMPS over sandbars (7th:
+##   3 Lagoon (sunset, the boat): it drifts (it carries on the way it was going a moment), the
+##     buoys mark the channel, the shallows past them slow it, the sandbank beyond is a crash · CURRENTS that speed it on (4th) · RAMPS over sandbars (7th:
 ##     straight on them, or it runs aground)
 ##   4 Reef (noon, the boat): ROCKS and LOGS in the channel (a crash), WHIRLPOOLS (4th) · RIVALS (7th)
 ##   5 Sky (noon above the fields, the plane): RINGS to fly through (a ring missed = a crash) ·
@@ -68,9 +68,9 @@ const STEP := 8.0                     # centre-line points, every STEP px
 const SEED_TRIES := 30
 const PAR_SLACK := 1.03               # par time = a clean drive's time x this, + PAR_PLUS: the
 const PAR_PLUS := 1.0                 # 2nd star only for a near-perfect run (no curbs, clean lines)
-## ...per toy (the boat drifts and bumps the buoys; the plane cuts the corners), and the seconds each
+## ...per toy (the boat drifts wide; the plane cuts the corners), and the seconds each
 ## thing in the way costs a lap (going round it)
-const PAR_SLACKS := { "car": 1.03, "boat": 1.2, "plane": 1.06 }
+const PAR_SLACKS := { "car": 1.03, "boat": 1.12, "plane": 1.06 }
 const PAR_PER_THING := { "rock": 0.6, "log": 0.6, "whirl": 0.5, "balloon": 0.4, "storm": 0.5 }
 const CURB_TOUCH := 26.0              # the car's body on the curb (this close to the road's edge)...
 const CURB_SLOW := 0.72               # ...slows it to this
@@ -80,11 +80,18 @@ const PAD_LEN := 64.0                 # a pad's length along the road (mat px)
 const PAD_SAVES := 0.35               # (par: seconds a pad saves, each lap)
 const COUNTDOWN := 3
 ## The boat: a little slower, a wider turn, and it drifts (BOAT_GRIP: how fast it takes up the way it
-## points, per second); the buoys bounce it back in (BUOY_IN: their rope, in from the edge)
+## points, per second). The buoys only mark the channel's edge (the user, 2026-10-18: the boat
+## could never leave the course nor lose a heart): past them the shallows slow it (SHALLOW_SLOW,
+## its hull SHALLOW_IN inside the buoys), and SHORE_AT past them it runs onto the bank (the
+## Lagoon's sand, the Reef's coral): a crash. The bank is painted SHORE_PAINT past the buoys (the
+## bow reaches it as the boat's middle reaches SHORE_AT).
 const BOAT_SPEED := 520.0
 const BOAT_TURN := 5.0
 const BOAT_GRIP := 3.4
-const BUOY_IN := 26.0
+const SHALLOW_IN := 10.0
+const SHALLOW_SLOW := 0.7
+const SHORE_AT := 36.0
+const SHORE_PAINT := 52.0
 ## The plane: faster, a wide turn, free in the sky (CORRIDOR: how far from the course's line it may
 ## stray before it's turned back); its rings (RING_GAP apart along the course)
 const PLANE_SPEED := 660.0
@@ -242,9 +249,10 @@ var cell := 360.0                      # a grid square for this toy (CELLS)
 var rain := false                      # (a wet Night Race)
 var vel := Vector2.ZERO                # the boat: where it's really going (it drifts)
 var bank := 0.0                        # the plane: its lean in the turns (-1 .. 1)
-var _buoy_cd := 0.0                    # (the bump on the buoys, a rail)
+var _buoy_cd := 0.0                    # (the scrape in the shallows, the bump on a rail)
 var rings: Array = []                  # the plane's: { i (centre point), pos, n (across), r, lap (last judged), hit, back, front }
 var obstacles: Array = []              # rocks, logs (the boat), balloons, storms (the plane): { kind, i, pos, base, r, (a, b: a log), node }
+var ring_streak := 0                   # rings flown through in a row (the chime climbs)
 var gusts: Array = []                  # the plane's: [first centre point, last, the side it blows to]
 var _grace_t := 0.0                    # (just put back: nothing hits it for a moment)
 var _t := 0.0                          # (the race's own clock for the drifting balloons, the storms' flashes)
@@ -285,6 +293,8 @@ var canopy: Sprite2D                   # the Garden's branches over everything
 var ring_back: Node2D                  # the plane's rings: their lower halves (under it)...
 var ring_front: Node2D                 # ...and their upper ones (over it)
 var gust_fx: GustFx                    # the wind's streaks across the course
+var guide: FlightGuide                  # the plane's: the sparkles to its next rings
+var pointer: RingPointer                # ...and the arrow to the next one off the screen
 var sky_shadow: Sprite2D               # the plane's shadow on the ground far below (it moves with the ground)
 var car: Node2D
 var slices: Array[Sprite2D] = []       # the car, bottom slice first
@@ -326,9 +336,11 @@ class Crowd extends Node2D:
 	const ROW := 24.0                     # a row's depth (px)
 	const BACK := 16.0                    # the awning
 	const SEAT := 30.0                    # a pal's seat along a row
+	const FLAGS := [Color8(226, 70, 64), Color8(252, 210, 64), Color8(90, 160, 230), Color8(120, 196, 110)]   # the little flags some wave
 	var rect := Rect2()                  # the stand, mat px (axis-aligned)
 	var along_x := true                  # the stand runs left-right (else up-down)
-	var dots: Array = []                 # [position, its pal (pals index), when it hops (s), how many hops, scared until (s), its scatter]
+	var dots: Array = []                 # [position, its pal (pals index), when it hops (s), how many hops, scared until (s), its scatter, the hop's height, its own beat, its next idle hop (s), its flag (-1: none)]
+	var watch := Vector2.ZERO             # where the toy is (mat px): they lean its way, hop more when it's near
 	var pals: Array[Texture2D] = []
 	var t := 0.0
 	var party := false                   # (the finish: everyone keeps bouncing)
@@ -385,7 +397,8 @@ class Crowd extends Node2D:
 					who = rng.randi() % n_mine
 				elif pals.size() > n_mine:
 					who = n_mine + rng.randi() % (pals.size() - n_mine)
-				dots.append([p.snapped(Vector2(4, 4)), who, -10.0, 1, -10.0, Vector2.ZERO])
+				var flag := rng.randi_range(0, FLAGS.size() - 1) if rng.randf() < 0.22 else -1
+				dots.append([p.snapped(Vector2(4, 4)), who, -10.0, 1, -10.0, Vector2.ZERO, 20.0, rng.randf() * TAU, rng.randf() * 3.0, flag])
 		# (drawn back to front: the far rows first)
 		dots.sort_custom(func(x, y): return x[0].y < y[0].y)
 		queue_redraw()
@@ -395,6 +408,7 @@ class Crowd extends Node2D:
 			var dist: float = absf((d[0].x - from.x) if along_x else (d[0].y - from.y))
 			d[2] = t + dist / 520.0 + randf() * 0.06
 			d[3] = hops
+			d[6] = 20.0
 	## A crash near the stand: the pals near it scream and scatter (the farther ones just hop)
 	func scream(at: Vector2) -> void:
 		if not rect.grow(320.0).has_point(at):
@@ -406,16 +420,28 @@ class Crowd extends Node2D:
 				d[5] = off.normalized() * randf_range(10.0, 22.0)
 				d[2] = t + randf() * 0.1
 				d[3] = 3
+				d[6] = 30.0
 			else:
 				d[2] = t + off.length() / 900.0
 				d[3] = 1
+				d[6] = 20.0
 	func _process(delta: float) -> void:
 		t += delta
-		if party:
-			for d in dots:
-				if t > d[2] + 0.36 * d[3]:
-					d[2] = t + randf() * 0.25
-					d[3] = 1
+		# never still (the user, 2026-10-18: the crowd didn't seem to move): now and then each one
+		# gives a little hop of its own, more often with the toy close by; at the finish they all
+		# keep bouncing
+		var near_k := clampf(1.0 - (watch.distance_to(rect.get_center()) - 300.0) / 700.0, 0.0, 1.0)
+		for d in dots:
+			var busy: bool = t < d[2] + 0.36 * d[3]
+			if party and not busy:
+				d[2] = t + randf() * 0.25
+				d[3] = 1
+				d[6] = 20.0
+			elif not busy and t > d[8]:
+				d[2] = t
+				d[3] = 2 if near_k > 0.5 and randf() < 0.4 else 1
+				d[6] = 8.0 + 8.0 * near_k
+				d[8] = t + lerpf(randf_range(2.0, 5.5), randf_range(0.5, 1.4), near_k)
 		queue_redraw()
 	## Where a tier starts across the stand (px from its top / left): tier 0 next to the track,
 	## the awning at the far side
@@ -437,12 +463,21 @@ class Crowd extends Node2D:
 			var up := 0.0
 			var scared: bool = t < d[4]
 			if u >= 0.0 and u < float(d[3]):
-				up = sin(fposmod(u, 1.0) * PI) * (30.0 if scared else 20.0)
+				up = sin(fposmod(u, 1.0) * PI) * float(d[6])
 			var p: Vector2 = d[0] - Vector2(0, roundf(up / 4.0) * 4.0)
+			# a sway on its own beat, leaning the toy's way when it's about
+			var lean := watch.x - (d[0] as Vector2).x
+			p.x += 4.0 * (signf(lean) if along_x and absf(lean) > 40.0 and watch != Vector2.ZERO else roundf(sin(t * 1.7 + float(d[7]))))
 			if scared:
 				var k := clampf((d[4] - t) / 1.3, 0.0, 1.0)
 				p += (d[5] as Vector2) * sin(k * PI) + Vector2(4.0 if int(t * 30.0) % 2 == 0 else -4.0, 0) * k
 			p = p.snapped(Vector2(4, 4))
+			if int(d[9]) >= 0:
+				# its little flag on a stick, flapping
+				var flap := 4.0 if int(t * 4.0 + float(d[7])) % 2 == 0 else 0.0
+				draw_rect(Rect2(p + Vector2(16, -44), Vector2(4, 32)), OUTLINE)
+				draw_rect(Rect2(p + Vector2(20, -44 + flap * 0.5), Vector2(16 - flap, 12)), OUTLINE)
+				draw_rect(Rect2(p + Vector2(20, -40 + flap * 0.5), Vector2(12 - flap, 4)), FLAGS[d[9]])
 			draw_texture_rect(pals[d[1]], Rect2(p - Vector2(24, 28), Vector2(48, 48)), false)
 			if scared and int(d[1]) % 2 == 0:
 				draw_rect(Rect2(p + Vector2(-2, -46), Vector2(4, 10)), Color8(250, 246, 236))
@@ -600,55 +635,182 @@ class Trail extends Node2D:
 				draw_rect(Rect2(p - Vector2(sz, sz) / 2.0 + Vector2(0, -f * 10.0), Vector2(sz, sz)).abs(), Color(0.85, 0.85, 0.9, 0.5 * (1.0 - f)))
 
 ## A plane's ring: a hoop standing across the course, seen from above at an angle (an ellipse: its
-## width across the course, its height foreshortened, leaning the way the course goes). Drawn in two
-## halves: the upper one over the plane, the lower one under it, so the plane flies through. Red and
-## white bands, a dark outline; the next one to fly through glows, a ring flown through turns gold
-## and fades, one missed goes grey.
+## width across the course, its depth foreshortened). Drawn in two halves: the upper one over the
+## plane, the lower one under it, so the plane flies through. A round tube (the user, 2026-10-18:
+## the rings should be more beautiful): candy red and white bands, lit from the top left, a dark
+## outline, painted once per look on the 4 px grid. The next one is gold, pulsing, sparkles running
+## round it; the one after it plain; the farther ones faint (the way reads ring
+## by ring); flown through it pops (bigger, fading), a missed one goes grey.
 class Ring extends Node2D:
-	var p := Vector2.ZERO
 	var n := Vector2.RIGHT
-	var d := Vector2.DOWN
 	var r := 100.0
 	var upper := true
-	var state := 0                        # 0 to come, 1 the next one, 2 flown through, 3 missed
+	var state := 0                        # 0 farther on, 1 the next one, 2 flown through, 3 missed, 4 the one after the next
 	var t := 0.0
+	var _shown := -1
+	var _pop: Tween
+	var _tex := {}                         # its look -> [texture, top left (px)]
 	const OUT := Color8(40, 30, 40)
+	const TUBE := 14.0                    # the tube's half thickness (px)
+	const LOOKS := {
+		"candy": [[Color8(168, 40, 48), Color8(226, 70, 64), Color8(255, 150, 130)], [Color8(190, 180, 196), Color8(246, 242, 232), Color8(255, 255, 255)]],
+		"gold": [[Color8(200, 96, 40), Color8(244, 146, 52), Color8(255, 196, 110)], [Color8(206, 150, 30), Color8(252, 210, 70), Color8(255, 244, 170)]],
+		"grey": [[Color8(110, 104, 116), Color8(150, 144, 156), Color8(190, 184, 194)], [Color8(130, 124, 136), Color8(176, 170, 180), Color8(206, 200, 210)]],
+	}
 	func _process(delta: float) -> void:
 		t += delta
 		if state == 1:
+			modulate = Color(1, 1, 1).lerp(Color(1.25, 1.2, 1.05), 0.5 + 0.5 * sin(t * 7.0))
 			queue_redraw()
+	## Its new state: the look, and the pop when it's flown through
+	func show_state(st: int) -> void:
+		if st == _shown:
+			return
+		var was := _shown
+		_shown = st
+		state = st
+		if _pop:
+			_pop.kill()
+		scale = Vector2.ONE
+		match st:
+			0:
+				modulate = Color(1, 1, 1, 0.32)
+			4:
+				modulate = Color(1, 1, 1, 0.9)
+			1:
+				modulate = Color(1, 1, 1)
+			2:
+				if was == 1 or was == 4 or was == 0:
+					modulate = Color(1.4, 1.3, 1.0)
+					_pop = create_tween()
+					_pop.tween_property(self, "scale", Vector2.ONE * 1.3, 0.4).set_ease(Tween.EASE_OUT)
+					_pop.parallel().tween_property(self, "modulate", Color(1.4, 1.3, 1.0, 0.0), 0.4)
+				else:
+					modulate.a = 0.0
+			3:
+				modulate = Color(1, 1, 1, 0.55)
+		queue_redraw()
 	func _point(a: float) -> Vector2:
 		# its width across the course (n), its depth foreshortened square to that
-		return p + n * r * cos(a) + Vector2(-n.y, n.x) * r * 0.42 * sin(a)
-	func _draw() -> void:
-		var cols := [Color8(226, 70, 64), Color8(250, 246, 236)]
-		var alpha := 1.0
-		match state:
-			1:
-				var g := 0.5 + 0.5 * sin(t * 7.0)
-				cols = [Color8(226, 70, 64).lerp(Color8(255, 220, 120), g * 0.6), Color8(255, 250, 200)]
-			2:
-				cols = [Color8(250, 204, 70), Color8(255, 240, 160)]
-				alpha = 0.35
-			3:
-				cols = [Color8(150, 140, 150), Color8(196, 190, 196)]
-				alpha = 0.5
-		# (this half: the points above the ring's middle on screen, or below it)
-		var steps := 80
-		var o := OUT
-		o.a = alpha
-		for pass_n in 2:
-			for k in steps:
-				var q := _point(TAU * float(k) / steps)
-				if (q.y <= p.y) != upper:
+		return n * r * cos(a) + Vector2(-n.y, n.x) * r * 0.42 * sin(a)
+	## Its half, painted: per 4 px cell, where it is on the tube (across: its shade, round: its band)
+	func _paint(look: String) -> Array:
+		var m := Vector2(-n.y, n.x)
+		var ext := ceilf((r + TUBE + 4.0) / 4.0) * 4.0
+		var cells := int(ext * 2.0 / 4.0)
+		var img := Image.create(cells, cells, false, Image.FORMAT_RGBA8)
+		var pal: Array = LOOKS[look]
+		var light := Vector2(-0.6, -0.8)
+		for cy in cells:
+			for cx in cells:
+				var q := Vector2(cx * 4.0 + 2.0 - ext, cy * 4.0 + 2.0 - ext)
+				if (q.y <= 0.0) != upper:
 					continue
-				q = q.snapped(Vector2(4, 4))
-				if pass_n == 0:
-					draw_rect(Rect2(q - Vector2(8, 8), Vector2(16, 16)), o)
+				var a := q.dot(n) / r
+				var b := q.dot(m) / (r * 0.42)
+				var rho := sqrt(a * a + b * b)
+				# (across the tube: on screen its depth is squashed, so measure along the ellipse's normal)
+				var g := Vector2(q.dot(n) / (r * r), q.dot(m) / (r * r * 0.1764))
+				var across := (rho - 1.0) / maxf(0.0001, g.length() / maxf(0.0001, rho))
+				var k := across / TUBE
+				if absf(k) > 1.0:
+					continue
+				var col: Color
+				if absf(k) > 0.7:
+					col = OUT
 				else:
-					var col: Color = cols[(k / 5) % 2]
-					col.a = alpha
-					draw_rect(Rect2(q - Vector2(4, 4), Vector2(8, 8)), col)
+					var band := int(floorf((atan2(b, a) + PI) / TAU * 18.0)) % 2
+					var outward := q.normalized() * signf(k if k != 0.0 else 1.0)
+					var lit := (1.0 - absf(k) * 1.1) * 0.6 + outward.dot(light) * absf(k) * 0.9 + (0.25 if q.y < 0.0 else -0.05)
+					var shade := 2 if lit > 0.55 else (1 if lit > 0.1 else 0)
+					col = pal[band][shade]
+				img.set_pixel(cx, cy, col)
+		return [ImageTexture.create_from_image(img), Vector2(-ext, -ext)]
+	func _draw() -> void:
+		var look := "gold" if state == 1 else ("grey" if state == 3 else "candy")
+		if not _tex.has(look):
+			_tex[look] = _paint(look)
+		var tx: Array = _tex[look]
+		var tex: Texture2D = tx[0]
+		draw_texture_rect(tex, Rect2(tx[1], tex.get_size() * 4.0), false)
+		if state != 1:
+			return
+		# the next one: sparkles running round it
+		for k2 in 4:
+			var a2 := t * 1.6 + k2 * TAU / 4.0
+			var sp := _point(a2)
+			if (sp.y <= 0.0) != upper:
+				continue
+			sp = sp.snapped(Vector2(4, 4))
+			var tw := 1.0 if int(t * 10.0 + k2) % 2 == 0 else 0.0
+			draw_rect(Rect2(sp - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1))
+			draw_rect(Rect2(sp - Vector2(2, 6 + 4 * tw), Vector2(4, 4)), Color(1, 1, 0.85, 0.85))
+			draw_rect(Rect2(sp - Vector2(2, -2 - 4 * tw), Vector2(4, 4)), Color(1, 1, 0.85, 0.85))
+			draw_rect(Rect2(sp - Vector2(6 + 4 * tw, 2), Vector2(4, 4)), Color(1, 1, 0.85, 0.85))
+			draw_rect(Rect2(sp - Vector2(-2 - 4 * tw, 2), Vector2(4, 4)), Color(1, 1, 0.85, 0.85))
+
+## The plane's way to fly (the user, 2026-10-18: hard to see how to follow the rings): a trail of
+## little sparkles from the plane along the course to the next ring (gold), and on to the one after
+## it (white, fainter), marching ahead; on the 4 px grid, under the plane
+class FlightGuide extends Node2D:
+	var pts := PackedVector2Array()       # the way, mat px (every few course points)
+	var to_next := 0                      # how many of them lead to the next ring
+	var t := 0.0
+	func _process(delta: float) -> void:
+		t += delta
+		queue_redraw()
+	func _draw() -> void:
+		var march := fposmod(t * 2.5, 1.0)
+		for k in range(pts.size() - 1):
+			var p: Vector2 = pts[k].lerp(pts[k + 1], march)
+			var gold := k < to_next
+			var a := clampf(1.2 - float(k) / float(maxi(1, pts.size())), 0.35, 1.0) * (1.0 if gold else 0.6)
+			var c := Color8(255, 220, 90) if gold else Color8(255, 255, 255)
+			c.a = a
+			var o := Color8(120, 60, 40) if gold else Color8(90, 90, 130)
+			o.a = a * 0.8
+			p = p.snapped(Vector2(4, 4))
+			# a little four-point sparkle, a bigger one every third, outlined
+			var arm := 8.0 if k % 3 == 0 else 4.0
+			draw_rect(Rect2(p - Vector2(6, 6 + arm), Vector2(12, 12 + arm * 2.0)), o)
+			draw_rect(Rect2(p - Vector2(6 + arm, 6), Vector2(12 + arm * 2.0, 12)), o)
+			draw_rect(Rect2(p - Vector2(2, 2 + arm), Vector2(4, 4 + arm * 2.0)), c)
+			draw_rect(Rect2(p - Vector2(2 + arm, 2), Vector2(4 + arm * 2.0, 4)), c)
+			draw_rect(Rect2(p - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, a))
+
+## The next ring off the screen: a gold arrow at the view's edge pointing to it, bobbing that way
+class RingPointer extends Node2D:
+	var view := Rect2()
+	var target := Vector2.ZERO            # the ring, play-area px
+	var on := false
+	var t := 0.0
+	func _process(delta: float) -> void:
+		t += delta
+		queue_redraw()
+	func _draw() -> void:
+		if not on:
+			return
+		var inner := view.grow(-44.0)
+		if view.has_point(target):
+			return
+		var c := inner.get_center()
+		var dir := (target - c).normalized()
+		# where the line to it leaves the inner box
+		var k := INF
+		if dir.x != 0.0:
+			k = minf(k, ((inner.end.x if dir.x > 0.0 else inner.position.x) - c.x) / dir.x)
+		if dir.y != 0.0:
+			k = minf(k, ((inner.end.y if dir.y > 0.0 else inner.position.y) - c.y) / dir.y)
+		var at := c + dir * k + dir * 6.0 * sin(t * 8.0)
+		var side := Vector2(-dir.y, dir.x)
+		var tip := at + dir * 26.0
+		var l := at - dir * 10.0 + side * 22.0
+		var r := at - dir * 10.0 - side * 22.0
+		var notch := at
+		var out := PackedVector2Array([tip + dir * 6.0, l + side * 6.0 - dir * 4.0, notch - dir * 6.0, r - side * 6.0 - dir * 4.0])
+		draw_colored_polygon(out, Color8(40, 30, 40))
+		draw_colored_polygon(PackedVector2Array([tip, l, notch, r]), Color8(255, 210, 70))
+		draw_colored_polygon(PackedVector2Array([tip, l.lerp(tip, 0.35), notch.lerp(tip, 0.4)]), Color8(255, 244, 180))
 
 ## The wind across the course in a gust: short white streaks blowing over it (on the 4 px grid)
 class GustFx extends Node2D:
@@ -751,6 +913,7 @@ func _begin(n: int) -> void:
 	lap = 1
 	race_time = 0.0
 	falls = 0
+	ring_streak = 0
 	reset_lives()
 	vel = Vector2.from_angle(heading) * _speed()
 	bank = 0.0
@@ -974,14 +1137,15 @@ func _place_crowd() -> void:
 
 func _try_crowd(dir: Vector2, horizontal: bool, normal: Vector2, long: float) -> bool:
 	var size := Vector2(long, 136) if horizontal else Vector2(136, long)
+	var gap := SHORE_PAINT + 10.0 if vehicle == "boat" else 30.0        # (the boat's pier: past the shallows)
 	for side in [1.0, -1.0]:
-		var c: Vector2 = centre[0] + normal * side * (half_w + 30.0 + 68.0)   # (on the finish line)
+		var c: Vector2 = centre[0] + normal * side * (half_w + gap + 68.0)   # (on the finish line)
 		var r := Rect2(c - size / 2.0, size)
 		var ok := r.position.x > EDGE * PX + 8 and r.position.y > EDGE * PX + 8 and r.end.x < mat_size.x - EDGE * PX - 8 and r.end.y < mat_size.y - EDGE * PX - 8
 		if ok:
 			for p in centre:
 				var q := p.clamp(r.position, r.end)
-				if p.distance_to(q) < half_w + 24.0:
+				if p.distance_to(q) < half_w + gap - 6.0:
 					ok = false
 					break
 		if ok:
@@ -1653,29 +1817,18 @@ func _paint_water(w: int, h: int) -> Image:
 	_coral = PackedByteArray()
 	_coral.resize(w * h)
 	if look == "reef":
+		# the bank along the channel: coral packed tight just past the shallows (a crash)
+		var bank := SHORE_PAINT / PX
+		for s0 in range(0, count, 2):
+			var c0 := centre[s0] / PX
+			var n0 := _normal(s0)
+			for sd in [-1.0, 1.0]:
+				_coral_clump(c0 + n0 * sd * (hw + bank + rng.randf_range(2.0, 7.0)), rng, w, h, 2, 4)
 		for k in int(w * h / 900):
 			var cc := Vector2(rng.randi_range(EDGE + 8, w - EDGE - 8), rng.randi_range(EDGE + 8, h - EDGE - 8))
-			if dist[int(cc.y) * w + int(cc.x)] < hw + 12.0 or _island[int(cc.y) * w + int(cc.x)] != 0:
+			if dist[int(cc.y) * w + int(cc.x)] < hw + SHORE_PAINT / PX or _island[int(cc.y) * w + int(cc.x)] != 0:
 				continue
-			var kind := rng.randi_range(1, 3)
-			for lump in rng.randi_range(3, 6):
-				var lc := cc + Vector2(rng.randf_range(-5, 5), rng.randf_range(-4, 4))
-				var r := rng.randf_range(1.8, 3.6)
-				for yy in range(int(lc.y - r - 1), int(lc.y + r + 2)):
-					for xx in range(int(lc.x - r - 1), int(lc.x + r + 2)):
-						if xx < 0 or yy < 0 or xx >= w or yy >= h:
-							continue
-						var o := Vector2(xx + 0.5, yy + 0.5) - lc
-						if o.length() > r:
-							continue
-						var shade := 2
-						if o.x + o.y < -r * 0.5:
-							shade = 1
-						elif o.x + o.y > r * 0.45 or o.length() > r - 0.8:
-							shade = 3
-						var ii2 := yy * w + xx
-						if _coral[ii2] == 0 or (_coral[ii2] & 3) > shade:
-							_coral[ii2] = kind * 4 + shade
+			_coral_clump(cc, rng, w, h, 3, 6)
 	var data := PackedByteArray()
 	data.resize(w * h * 4)
 	var k := 0
@@ -1737,26 +1890,14 @@ func _paint_water(w: int, h: int) -> Image:
 				dd = wp.distance_to(c2) - float(ob["r"])
 			if dd > 0.0 and dd < 22.0 and ((q.x + q.y) % 2 == 0 or dd < 10.0):
 				_tint(data, q.y * w + q.x, Color8(250, 252, 255), 0.75 - dd / 40.0)
-	# the track layer: the buoys on their rope along both edges, the floating ramps, the start line
+	# the track layer: the buoys marking both edges of the channel, the floating ramps, the start line
 	var top := PackedByteArray()
 	top.resize(w * h * 4)
-	var rope := Color8(250, 222, 120)
-	for s2 in count:
-		var c2 := centre[s2] / PX
-		var n2 := _normal(s2)
-		for sd in [-1.0, 1.0]:
-			var q: Vector2 = (c2 + n2 * sd * hw).round()
-			if q.x >= 0 and q.y >= 0 and q.x < w and q.y < h:
-				var kk := (int(q.y) * w + int(q.x)) * 4
-				top[kk] = rope.r8
-				top[kk + 1] = rope.g8
-				top[kk + 2] = rope.b8
-				top[kk + 3] = 255
-	for s3 in range(0, count, 5):
+	for s3 in range(0, count, 6):
 		var c3 := centre[s3] / PX
 		var n3 := _normal(s3)
 		for sd in [-1.0, 1.0]:
-			var b := PalPrixArt.buoy((s3 / 5) % 2 == 0).get_image()
+			var b := PalPrixArt.buoy((s3 / 6) % 2 == 0).get_image()
 			_blit(top, w, h, b, Vector2i((c3 + n3 * sd * hw).round()) - Vector2i(2, 2))
 	for i3 in count:
 		if _on_ramp(i3) or i3 <= 2 or i3 >= count - 2:
@@ -1792,6 +1933,29 @@ func _patch(c: Vector2, reach: float, w: int, h: int) -> Array[Vector2i]:
 			out.append(Vector2i(x, y))
 	return out
 
+## A clump of coral (the Reef): a few round lumps of one colour round `cc` (board px), lit top
+## left, into _coral (its colour 1-3 x 4 + its shade: 1 light, 2 mid, 3 dark)
+func _coral_clump(cc: Vector2, rng: RandomNumberGenerator, w: int, h: int, lo: int, hi: int) -> void:
+	var kind := rng.randi_range(1, 3)
+	for lump in rng.randi_range(lo, hi):
+		var lc := cc + Vector2(rng.randf_range(-5, 5), rng.randf_range(-4, 4))
+		var r := rng.randf_range(1.8, 3.6)
+		for yy in range(int(lc.y - r - 1), int(lc.y + r + 2)):
+			for xx in range(int(lc.x - r - 1), int(lc.x + r + 2)):
+				if xx < 0 or yy < 0 or xx >= w or yy >= h:
+					continue
+				var o := Vector2(xx + 0.5, yy + 0.5) - lc
+				if o.length() > r:
+					continue
+				var shade := 2
+				if o.x + o.y < -r * 0.5:
+					shade = 1
+				elif o.x + o.y > r * 0.45 or o.length() > r - 0.8:
+					shade = 3
+				var ii2 := yy * w + xx
+				if _coral[ii2] == 0 or (_coral[ii2] & 3) > shade:
+					_coral[ii2] = kind * 4 + shade
+
 ## A painted px blended towards a colour
 static func _tint(data: PackedByteArray, i: int, col: Color, k: float) -> void:
 	var j := i * 4
@@ -1818,10 +1982,30 @@ func _water_px(x: int, y: int, d: float, hw: float) -> Color:
 			return Color8(170, 230, 220) if look == "reef" else Color8(250, 196, 150)  # the shallows round it
 	var shallow := clampf((d - hw - 2.0) / 12.0, 0.0, 1.0)
 	var in_channel := d <= hw + 2.0
+	# past the buoys: the shallows (lighter, foam breaking at their far side), then the bank (the
+	# Lagoon's sand, the Reef's coral: a crash), then the open shallows beyond
+	var bank := hw + SHORE_PAINT / PX + _grass_noise.get_noise_2d(x * 3.0, y * 3.0) * 1.5
+	var bank_w := (10.0 if look != "reef" else 7.0) + _cloud_noise.get_noise_2d(x * 2.0, y * 2.0) * 3.0
+	var in_shallows := not in_channel and d < bank
+	var on_bank := d >= bank and d < bank + bank_w
+	if on_bank and look != "reef":
+		if d < bank + 1.2:
+			return Color8(214, 180, 126)                                  # (its wet edge)
+		if (x * 7 + y * 13) % 41 == 0:
+			return Color8(250, 238, 214)                                  # (a shell)
+		if d > bank + bank_w - 1.0 and DITHER[y % 2][x % 2] < 0.5:
+			return Color8(226, 196, 140)
+		return Color8(244, 220, 166)
 	if look == "reef":
 		var water: Color = REEF[0] if in_channel else (REEF[1] as Color).lerp(REEF[2], shallow)
 		if in_channel and d > hw - 4.0:
 			water = (REEF[0] as Color).lerp(REEF[1], 0.35)               # the channel's slope, its edge
+		if in_shallows:
+			water = (REEF[1] as Color).lerp(REEF[2], 0.3 + 0.5 * (d - hw) / (bank - hw))
+			if d > bank - 2.0 and (x + y) % 2 == 0:
+				return Color8(244, 252, 250)                              # (the foam on the reef's edge)
+		elif on_bank and _coral[y * _bw + x] == 0:
+			water = Color8(196, 230, 210)                                 # (between the coral: the reef flat)
 		var cr := _coral[y * _bw + x]
 		if cr != 0:
 			var base: Color = CORAL[cr / 4 - 1]
@@ -1836,6 +2020,10 @@ func _water_px(x: int, y: int, d: float, hw: float) -> Color:
 	var lagoon := _lagoon_water(x, y)
 	if in_channel:
 		return lagoon.lerp(Color8(150, 90, 130), 0.28)                    # the channel: deeper
+	if in_shallows:
+		if d > bank - 2.0 and (x + y) % 2 == 0:
+			return Color8(255, 240, 226)                                  # (the foam at the sand)
+		return lagoon.lerp(Color8(255, 214, 170), 0.18 + 0.32 * (d - hw) / (bank - hw))
 	return lagoon.lerp(lagoon.lightened(0.12), shallow)
 
 ## The plane's worlds: the ground far below (the fields at noon; at sunset, a sea of clouds), its
@@ -2289,6 +2477,8 @@ func _create_nodes() -> void:
 	world.add_child(track)
 	trail = Trail.new()
 	world.add_child(trail)
+	guide = FlightGuide.new()
+	world.add_child(guide)                          # (the plane's way, under it)
 	ring_back = Node2D.new()
 	world.add_child(ring_back)                      # (a ring's lower half: under the plane)
 	front = Node2D.new()
@@ -2372,6 +2562,10 @@ func _create_nodes() -> void:
 	rain_fx.visible = false
 	add_child(rain_fx)
 	move_child(rain_fx, world.get_index() + 1)
+	pointer = RingPointer.new()
+	pointer.view = VIEW
+	add_child(pointer)
+	move_child(pointer, world.get_index() + 1)
 
 	# the start lights: a dark gantry with three lamps, hanging under the HUD
 	lights = Node2D.new()
@@ -2592,6 +2786,7 @@ func _process(frame_delta: float) -> void:
 	# (one long frame, the app coming back from the background, never jumps the race on)
 	var delta := minf(frame_delta, 0.05)
 	_update_course_things(delta)
+	crowd.watch = car_pos
 	match state:
 		State.WAIT:
 			var before := ceili(countdown - 0.6)
@@ -2651,6 +2846,14 @@ func _drive(delta_real: float) -> void:
 		if curb_t <= 0.0:
 			curb_t = 0.09
 			Input.vibrate_handheld(6)
+	# the boat past the buoys: in the shallows, slowed, its hull scraping the sand (a spray, a rumble)
+	if vehicle == "boat" and from_mid > half_w - SHALLOW_IN and air_t <= 0.0:
+		v *= SHALLOW_SLOW
+		curb_t -= delta
+		if curb_t <= 0.0:
+			curb_t = 0.11
+			Input.vibrate_handheld(6)
+			trail.spray(car_pos + (car_pos - centre[near]).normalized() * 18.0, heading, 2)
 	var on := false
 	for pd in pads:
 		var loc: Vector2 = car_pos - pd[0]
@@ -2723,8 +2926,6 @@ func _drive(delta_real: float) -> void:
 	match vehicle:
 		"car":
 			_rail_hold()
-		"boat":
-			_buoys()
 		"plane":
 			_corridor(delta)
 	var crash := _crash_now()
@@ -2786,11 +2987,13 @@ func _check_rings() -> bool:
 		var off := absf((car_pos - (rg["pos"] as Vector2)).dot(rg["n"]))
 		if off < float(rg["r"]) * RING_TOL:
 			rg["hit"] = true
-			_sfx("res://sounds/fx/gamecoin.wav", -10.0, 1.3)
+			ring_streak += 1                                 # (a chime a step higher for each in a row)
+			_sfx("res://sounds/fx/ring_chime.wav", -10.0, pow(2.0, minf(ring_streak - 1, 7) * 2.0 / 12.0))
 			Input.vibrate_handheld(15)
 			trail.sparkle(rg["pos"])
 		else:
 			missed = true
+			ring_streak = 0
 	_ring_fx_refresh()
 	return missed
 
@@ -2839,7 +3042,7 @@ func _autopilot() -> float:
 		if not rg.is_empty() and (rg["pos"] as Vector2).distance_to(car_pos) < 320.0 and posmod(int(rg["i"]) - near, count) < first:
 			aim = rg["pos"]
 			lat = 0.0                                # (the ring first)
-	var limit: float = half_w * (CORRIDOR - 0.4) if vehicle == "plane" else half_w - (BUOY_IN + 10.0 if vehicle == "boat" else 36.0)
+	var limit: float = half_w * (CORRIDOR - 0.4) if vehicle == "plane" else half_w - (SHALLOW_IN + 34.0 if vehicle == "boat" else 36.0)
 	aim += _normal(ai) * clampf(lat, -limit, limit)
 	var want := (aim - car_pos).angle()
 	if vehicle == "boat":
@@ -2848,7 +3051,7 @@ func _autopilot() -> float:
 	return clampf(diff * 3.0, -1.0, 1.0) if absf(diff) > 0.03 else 0.0
 
 ## What crashed the toy just now ("" = nothing): the car off the road or into a gap; the boat
-## aground on a sandbar, on a rock or a log; the plane past a ring outside it, into a balloon or a
+## aground on a sandbar or the bank, on a rock or a log; the plane past a ring outside it, into a balloon or a
 ## storm cloud
 func _crash_now() -> String:
 	if air_t > 0.0:
@@ -2860,6 +3063,8 @@ func _crash_now() -> String:
 		"boat":
 			if _in_gap(near) and car_pos.distance_to(centre[near]) < half_w:
 				return "aground"
+			if car_pos.distance_to(centre[near]) > half_w + SHORE_AT:
+				return "shore"
 			for ob in obstacles:
 				if _hits(ob):
 					return "rock"
@@ -2880,6 +3085,8 @@ func _brink() -> bool:
 			return air_t <= 0.0 and car_pos.distance_to(centre[near]) > half_w + FALL_AT * 0.2 and not _rail_at(near)
 		"boat":
 			var ahead := car_pos + vel.normalized() * 70.0
+			if car_pos.distance_to(centre[near]) > half_w + SHORE_AT * 0.5 and vel.dot(car_pos - centre[near]) > 0.0:
+				return true
 			for ob in obstacles:
 				if ahead.distance_to(ob["pos"]) < float(ob["r"]) + 24.0:
 					return true
@@ -2913,25 +3120,6 @@ func _rail_hold() -> void:
 
 func _rail_at(i: int) -> bool:
 	return not _rail.is_empty() and _rail[i] != 0
-
-## The boat against the buoys: bounced back into the channel (it can't leave it), slowed, a bonk
-func _buoys() -> void:
-	var n := _normal(near)
-	var lat := (car_pos - centre[near]).dot(n)
-	var limit := half_w - BUOY_IN
-	if absf(lat) <= limit:
-		return
-	var side := n * signf(lat)
-	car_pos -= side * (absf(lat) - limit)
-	var outward := vel.dot(side)
-	if outward > 0.0:
-		vel -= side * outward * 1.5                      # (a little bounce off the rope)
-		vel *= 0.86
-		if _buoy_cd <= 0.0 and outward > 60.0:
-			_buoy_cd = 0.2
-			_sfx("res://sounds/fx/water_boing.wav", -16.0, 1.5)
-			Input.vibrate_handheld(15)
-			trail.spray(car_pos + side * 30.0, heading, 4)
 
 ## The plane strays too far from the course: the sky's edge turns it back towards it
 func _corridor(delta: float) -> void:
@@ -3047,6 +3235,16 @@ func _crash(kind: String) -> void:
 				car.modulate = Color(1, 1, 1).lerp(Color(0.4, 0.38, 0.45), f)
 				car.scale = Vector2.ONE * (1.0 - 0.15 * f), 0.0, 1.0, 0.45)
 			t.tween_callback(func(): _sfx("res://sounds/fx/rc_land.wav", -10.0))
+		"boat" when kind == "shore":
+			# it runs up onto the bank: a lurch out of the water, a rock side to side, a puff of sand
+			_sfx("res://sounds/fx/wood_tap.wav", -6.0, 0.5)
+			_sfx("res://sounds/fx/rc_land.wav", -10.0, 0.8)
+			trail.spray(car_pos, heading, 10)
+			var h2 := heading
+			t.tween_method(func(f: float):
+				car_pos = from + out * 30.0 * (1.0 - pow(1.0 - minf(1.0, f * 3.0), 2.0))
+				heading = h2 + sin(f * TAU * 2.0) * 0.35 * (1.0 - f)
+				car.modulate = Color(1, 1, 1).lerp(Color(1, 1, 1, 0.0), maxf(0.0, f - 0.6) / 0.4), 0.0, 1.0, 0.75)
 		"boat":
 			# a bump, it flips round and sinks a little (the water closes over it)
 			_sfx("res://sounds/fx/wood_tap.wav", -6.0, 0.6)
@@ -3195,12 +3393,10 @@ func _spawn_course_things() -> void:
 	_thing_nodes.clear()
 	for rg in rings:
 		var i := int(rg["i"])
-		var d := (centre[(i + 1) % count] - centre[i]).normalized()
 		for upper in [false, true]:
 			var ring := Ring.new()
-			ring.p = rg["pos"]
+			ring.position = rg["pos"]
 			ring.n = rg["n"]
-			ring.d = d
 			ring.r = rg["r"]
 			ring.upper = upper
 			(ring_front if upper else ring_back).add_child(ring)
@@ -3231,23 +3427,60 @@ func _spawn_course_things() -> void:
 		zones.append([pts, _normal((int(g[0]) + int(g[1])) / 2) * float(g[2])])
 	gust_fx.setup(zones)
 
-## Which ring is next (it glows), which were flown through (gold, faded) or missed (grey) this lap
+## Which ring is next (gold, it glows), the one after it, the farther ones (faint), which were
+## flown through (they pop) or missed (grey) this lap
 func _ring_fx_refresh() -> void:
 	var nxt := _next_ring()
+	var after := {}
+	if not nxt.is_empty():
+		var at := rings.find(nxt)
+		if at + 1 < rings.size():
+			after = rings[at + 1]
 	for rg in rings:
 		var st := 0
 		if int(rg["lap"]) == lap:
 			st = 2 if rg["hit"] else 3
 		elif is_same(rg, nxt):
 			st = 1
+		elif is_same(rg, after):
+			st = 4
 		for key in ["back", "front"]:
 			if rg.has(key) and is_instance_valid(rg[key]):
-				rg[key].state = st
-				rg[key].queue_redraw()
+				rg[key].show_state(st)
+
+## The plane's guide: the course from the plane to the next ring and on to the one after (the
+## sparkles start where the plane is and join the course's line over a few steps), and the arrow
+## when that ring is off the screen
+func _update_guide() -> void:
+	var nxt := _next_ring() if vehicle == "plane" and state == State.DRIVE else {}
+	guide.visible = not nxt.is_empty()
+	pointer.on = guide.visible
+	if nxt.is_empty():
+		return
+	var at := rings.find(nxt)
+	var i1 := int(nxt["i"])
+	var i2 := int(rings[at + 1]["i"]) if at + 1 < rings.size() else i1
+	var to1 := posmod(i1 - near, count)
+	var to2 := posmod(i2 - near, count) if i2 != i1 else to1
+	var off := car_pos - centre[near]
+	var p := PackedVector2Array()
+	var first := 0
+	var step := 6
+	var k := 4
+	while k <= mini(to2, 260):
+		var f := clampf(1.0 - float(k) / 40.0, 0.0, 1.0)
+		p.append(centre[(near + k) % count] + off * f)
+		if k <= to1:
+			first = p.size()
+		k += step
+	guide.pts = p
+	guide.to_next = first
+	pointer.target = world.position + (nxt["pos"] as Vector2) * ZOOM
 
 ## The sky's things move: the balloons drift from side to side, the storm clouds flash
 func _update_course_things(delta: float) -> void:
 	_t += delta
+	_update_guide()
 	for ob in obstacles:
 		if not ob.has("node") or not is_instance_valid(ob["node"]):
 			continue

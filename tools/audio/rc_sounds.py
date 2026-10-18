@@ -125,7 +125,21 @@ def crowd_gasp():
     return low(x + breath, 5000)
 
 
+def ring_chime():
+    """Through a plane's ring: a bright little bell (C6 with its partials, struck, ringing out) and a
+    shimmer of a fifth above coming in just after; the game raises its pitch for each ring in a row"""
+    n = int(SR * 0.7)
+    t = np.arange(n) / SR
+    f = 1046.5
+    bell = sum(a * np.sin(2 * np.pi * f * m * t) * np.exp(-t * d) for m, a, d in
+               [(1.0, 1.0, 6.0), (2.0, 0.45, 9.0), (3.0, 0.2, 14.0), (4.2, 0.12, 20.0)])
+    t2 = np.clip(t - 0.06, 0, None)
+    shimmer = 0.5 * np.sin(2 * np.pi * f * 1.5 * t2) * np.exp(-t2 * 8.0) * (t >= 0.06)
+    return (bell + shimmer) * np.clip(t / 0.003, 0, 1)
+
+
 SOUNDS = {
+    'ring_chime.wav': lambda: (ring_chime(), {'peak': 0.6}),
     'rc_boost.wav': lambda: (boost(), {}),
     'rc_beep.wav': lambda: (beep(660.0, 0.22), {}),
     'rc_go.wav': lambda: (beep(1320.0, 0.6), {}),
