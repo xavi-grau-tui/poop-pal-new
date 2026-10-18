@@ -1265,10 +1265,11 @@ func _build_circuit() -> void:
 var _rail := PackedInt32Array()       # per centre point: 0, or the side its rail is on (+1 / -1: along the left normal or against it)
 const RAIL_IN := 34.0                 # the car's middle meets the barrier this far inside the road's edge
 const RAIL_KNOCK_V := 240.0           # ...and pushed back in at this (mat px/s), the push fading fast
-const RAIL_BOUNCE := 0.6              # how much of its heading into the barrier bounces back out...
+const RAIL_BOUNCE := 1.0              # how much of its heading into the barrier bounces back out...
+const RAIL_INWARD := 0.9              # ...and turned this much more towards the road's other side
 const BOUNCE_TIME := 0.28             # ...easing round to it over this long
-const BUMP_SLOW := 0.3                # a bump off a barrier: this much slower, fading over BUMP_TIME
-const BUMP_TIME := 0.6
+const BUMP_SLOW := 0.45               # a bump off a barrier: this much slower, fading over BUMP_TIME
+const BUMP_TIME := 0.7
 
 func _find_rails(kind: String) -> void:
 	_rail = PackedInt32Array()
@@ -3693,7 +3694,9 @@ func _rail_hold() -> void:
 	var dir := Vector2.from_angle(heading)
 	var into := dir.dot(out)
 	if into > 0.0 and bounce_t <= 0.0:
-		bounce_to = (dir - out * into * (1.0 + RAIL_BOUNCE)).angle()
+		# (bounced back in across the road, not along the barrier: the user, 2026-10-18, a mirror
+		# off the tyres still carried a car nobody steered round the corners)
+		bounce_to = ((dir - out * into * (1.0 + RAIL_BOUNCE)).normalized() - out * RAIL_INWARD).angle()
 		bounce_t = BOUNCE_TIME
 		knock_v = -out * RAIL_KNOCK_V
 		bump_t = 1.0
