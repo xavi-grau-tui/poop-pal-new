@@ -4428,6 +4428,8 @@ func _take_secret() -> void:
 
 ## The rivals on the grid (behind the start line, side by side): toy cars in their own colours,
 ## a little helmeted driver each
+const PLANE_BODY := Color8(250, 210, 84)          # (every plane's yellow body: yours and the rivals')
+const RIVAL_PLANE_COLS := [Color8(70, 130, 220), Color8(150, 100, 210), Color8(110, 190, 110)]   # the rival planes' wings: blue, purple, green
 const RIVAL_COLS := [[Color8(70, 130, 220), Color8(46, 92, 170)], [Color8(240, 200, 70), Color8(196, 150, 40)], [Color8(110, 190, 110), Color8(70, 140, 76)]]
 func _spawn_rivals() -> void:
 	for r in rivals:
@@ -4444,7 +4446,9 @@ func _spawn_rivals() -> void:
 			"boat":
 				layers = PalPrixArt.boat_slices(RIVAL_COLS[j][0], RIVAL_COLS[j][1])
 			"plane":
-				layers = PalPrixArt.plane_slices(RIVAL_COLS[j][0], Color8(250, 246, 236))
+				# (the user, 2026-10-18: the same plane as yours, only its colour: the same yellow
+				# body, its own spinning propeller, banking into the turns like yours)
+				layers = PalPrixArt.plane_slices(RIVAL_PLANE_COLS[j], PLANE_BODY, false)
 			_:
 				layers = _tinted_slices(RIVAL_COLS[j][0], RIVAL_COLS[j][1])
 		for li in layers.size():
@@ -4452,12 +4456,18 @@ func _spawn_rivals() -> void:
 			spr.texture = layers[li]
 			spr.scale = Vector2(PX, PX)
 			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			var kk := 0.62 + 0.38 * float(li) / (layers.size() - 1)
+			var kk := (0.85 + 0.15 * float(li) / (layers.size() - 1)) if vehicle == "plane" else (0.62 + 0.38 * float(li) / (layers.size() - 1))
 			spr.modulate = Color(kk, kk, kk)
 			node.add_child(spr)
 			sl.append(spr)
-		var helmet := _px_sprite(_helmet_texture(RIVAL_COLS[j][0]), Vector2(0, -layers.size() * LAYER_UP - 4.0), 2)
+		var helmet := _px_sprite(_helmet_texture(RIVAL_COLS[j][0] if vehicle != "plane" else RIVAL_PLANE_COLS[j]), Vector2(0, -layers.size() * LAYER_UP - 4.0), 2)
 		node.add_child(helmet)
+		var rprop: Sprite2D = null
+		if vehicle == "plane":
+			rprop = Sprite2D.new()
+			rprop.scale = Vector2(PX, PX)
+			rprop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			node.add_child(rprop)
 		var light := Sprite2D.new()
 		light.texture = headlight.texture if headlight else _cone_texture()
 		light.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -4470,7 +4480,7 @@ func _spawn_rivals() -> void:
 		# on the grid: just behind the line, the lanes either side of the middle
 		var lane: float = [-0.42, 0.42, 0.0][j]
 		var back_pts := 8 + j * 7
-		rivals.append({ "node": node, "slices": sl, "light": light, "progress": -float(back_pts), "lane": lane,
+		rivals.append({ "node": node, "slices": sl, "light": light, "helmet": helmet, "prop": rprop, "layers": layers, "bank": 0.0, "col": RIVAL_PLANE_COLS[j], "progress": -float(back_pts), "lane": lane,
 			"speed": _speed() * (0.95 + 0.02 * j + 0.005 * k) * (0.88 if vehicle == "boat" else 1.0), "heading": 0.0, "pos": Vector2.ZERO, "done": false })
 	_place_rivals()
 
@@ -4485,11 +4495,41 @@ func _place_rivals() -> void:
 		var dir := (b - a).normalized()
 		var p := a.lerp(b, f) + Vector2(-dir.y, dir.x) * half_w * float(r["lane"])
 		r["pos"] = p
-		r["heading"] = dir.angle()
 		var node: Node2D = r["node"]
 		node.position = p.round()
 		var air := _in_gap((i % count + count) % count)
+		if vehicle == "plane":
+			# a plane like yours: it eases round (no snapping from one bit of the course to the
+			# next), rolls into the turn (its wings foreshortened and shaded, the stack leaning in),
+			# its propeller spinning
+			if not r.get("placed", false):
+				r["placed"] = true
+				r["heading"] = dir.angle()                 # (on the grid: facing down the course)
+			var was: float = r["heading"]
+			var to := lerp_angle(was, dir.angle(), 0.18)
+			r["heading"] = to
+			r["bank"] = lerpf(float(r["bank"]), clampf(wrapf(to - was, -PI, PI) * 40.0, -1.0, 1.0), 0.12)
+			var bk: float = r["bank"]
+			var n_sl: int = r["slices"].size()
+			var tilt := Vector2.from_angle(to + PI / 2.0) * bk * 14.0
+			var dip := 0 if absf(bk) < 0.3 else int(signf(bk))
+			for li in n_sl:
+				var spr: Sprite2D = r["slices"][li]
+				spr.rotation = to
+				spr.position = (Vector2(0, -li * LAYER_UP) + tilt * float(li) / maxf(1.0, n_sl - 1)).round()
+				spr.scale = Vector2(PX, PX * (1.0 - 0.42 * absf(bk)))
+			(r["slices"][1] as Sprite2D).texture = PalPrixArt.plane_wings(r["col"], PLANE_BODY, dip) if dip != 0 else (r["layers"] as Array)[1]
+			(r["helmet"] as Sprite2D).position = Vector2.from_angle(to) * PalPrixArt.PLANE_SEAT * PX + Vector2(0, -n_sl * LAYER_UP - 4.0) + tilt
+			var pr2: Sprite2D = r["prop"]
+			pr2.texture = PalPrixArt.propeller(_prop_frame)
+			pr2.rotation = to
+			pr2.scale = Vector2(PX, PX * (1.0 - 0.42 * absf(bk)))
+			pr2.position = (Vector2.from_angle(to) * 46.0 + Vector2(0, -2.0 * LAYER_UP) + tilt * 0.66).round()
+		else:
+			r["heading"] = dir.angle()
 		for li in r["slices"].size():
+			if vehicle == "plane":
+				break
 			(r["slices"][li] as Sprite2D).rotation = r["heading"]
 			(r["slices"][li] as Sprite2D).position = Vector2(0, -li * LAYER_UP - (40.0 if air else 0.0))
 		(r["light"] as Sprite2D).rotation = r["heading"]
