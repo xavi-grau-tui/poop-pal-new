@@ -2,6 +2,10 @@
 
     sounds/fx/rc_motor.wav   the toy car's electric motor: a buzzy whine, a seamless 1 s loop
                              (the game raises its pitch with the speed and the turns)
+    sounds/fx/boat_motor.wav the boat's outboard: a low putt-putt, water gurgling with each pulse,
+                             a seamless 1 s loop
+    sounds/fx/plane_motor.wav the plane's engine: a propeller's drone, its blades' throb, a breath
+                             of air rushing past, a seamless 1 s loop
     sounds/fx/rc_fall.wav    driving off the track: a cartoon whistle sliding down
     sounds/fx/rc_land.wav    ...and the toy landing on the floor: a plastic clatter and a bump
     sounds/fx/rc_beep.wav    the start lights: a short beep for each red light (3, 2, 1)
@@ -54,6 +58,42 @@ def motor():
     x = low(x, 2600) + whine
     x *= 1.0 + 0.12 * np.sin(2 * np.pi * 9.0 * t)   # a little rattle, 9 Hz (whole: loops)
     return x
+
+
+def circ_band(x, lo, hi):
+    """A band-pass done round the loop (in the frequency domain): no seam where it wraps"""
+    f = np.fft.rfft(x)
+    hz = np.fft.rfftfreq(len(x), 1.0 / SR)
+    f *= ((hz >= lo) & (hz <= hi)) * 1.0
+    return np.fft.irfft(f, len(x))
+
+
+def boat_motor():
+    """1 s: an outboard ticking over, 16 pulses a second (whole: loops), each a low thump with
+    the water gurgling after it; a hum under it"""
+    n = SR
+    t = np.arange(n) / SR
+    r = np.random.default_rng(5)
+    rate = 16
+    ph = (t * rate) % 1.0
+    env = np.exp(-ph * 9.0)                         # (each pulse dies away before the next)
+    thump = np.sin(2 * np.pi * 62.0 * t) * env
+    gurgle = circ_band(r.standard_normal(n), 180.0, 900.0) * (0.35 + env) * 0.5
+    hum = 0.35 * np.sin(2 * np.pi * 31.0 * t) + 0.2 * np.sin(2 * np.pi * 124.0 * t)
+    return circ_band(thump * 1.2 + gurgle + hum, 20.0, 2400.0)
+
+
+def plane_motor():
+    """1 s: a little propeller plane: a buzzy drone (98 Hz, whole: loops), the blades' throb
+    (28 a second), the air rushing past"""
+    n = SR
+    t = np.arange(n) / SR
+    r = np.random.default_rng(9)
+    base = 98.0
+    saw = sum((1.0 / k) * np.sin(2 * np.pi * base * k * t) for k in range(1, 12))
+    throb = 1.0 + 0.35 * np.sin(2 * np.pi * 28.0 * t)
+    air = circ_band(r.standard_normal(n), 900.0, 3200.0) * 0.18 * (1.0 + 0.5 * np.sin(2 * np.pi * 28.0 * t))
+    return circ_band(saw * throb * 0.6, 40.0, 3000.0) + air
 
 
 def fall():
@@ -144,6 +184,8 @@ SOUNDS = {
     'rc_beep.wav': lambda: (beep(660.0, 0.22), {}),
     'rc_go.wav': lambda: (beep(1320.0, 0.6), {}),
     'rc_motor.wav': lambda: (motor(), {'peak': 0.6, 'fade': False}),
+    'boat_motor.wav': lambda: (boat_motor(), {'peak': 0.6, 'fade': False}),
+    'plane_motor.wav': lambda: (plane_motor(), {'peak': 0.6, 'fade': False}),
     'rc_fall.wav': lambda: (fall(), {}),
     'rc_land.wav': lambda: (land(), {}),
     'crowd_gasp.wav': lambda: (crowd_gasp(), {'peak': 0.7}),

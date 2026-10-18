@@ -301,6 +301,7 @@ var ring_front: Node2D                 # ...and their upper ones (over it)
 var gust_fx: GustFx                    # the wind's streaks across the course
 var guide: FlightGuide                  # the plane's: the sparkles to its next rings
 var buoys: FloatingBuoys                # the boat's: the buoys along the channel
+var water_fx: WaterFx                   # ...the water's glints, its whirlpools turning
 var pointer: RingPointer                # ...and the arrow to the next one off the screen
 var sky_shadow: Sprite2D               # the plane's shadow on the ground far below (it moves with the ground)
 var car: Node2D
@@ -581,17 +582,22 @@ class Trail extends Node2D:
 			var side := Vector2.from_angle(heading + PI / 2.0) * (1.0 if k % 2 == 0 else -1.0)
 			var back := Vector2.from_angle(heading) * -30.0
 			marks.append([p + back + side * 22.0, 0.0, 2, side * randf_range(90, 220) + Vector2.from_angle(heading) * -randf_range(40, 120)])
-	## The boat's wake: foam left at its stern that spreads out to both sides and fades
+	## The boat's wake (the user, 2026-10-18: more marked): a V of foam from its stern spreading
+	## out to both sides, the churned water right behind it, spray off its bow; it lingers
 	func wake(p: Vector2, heading: float, delta: float, k: float) -> void:
 		puff_t -= delta
 		if puff_t > 0.0:
 			return
-		puff_t = 0.035
-		var back := Vector2.from_angle(heading) * -50.0
+		puff_t = 0.03
+		var fwd := Vector2.from_angle(heading)
+		var back := fwd * -48.0
 		var side := Vector2.from_angle(heading + PI / 2.0)
 		for sd in [-1.0, 1.0]:
-			marks.append([p + back + side * sd * 14.0, 0.0, 3, side * sd * randf_range(40.0, 70.0) * k])
-		marks.append([p + back * 1.1, 0.0, 3, Vector2.ZERO])
+			marks.append([p + back + side * sd * 16.0, 0.0, 3, (side * sd * randf_range(70.0, 110.0) - fwd * 30.0) * k])
+		marks.append([p + back * 1.1 + side * randf_range(-6.0, 6.0), 0.0, 3, -fwd * 20.0 * k])
+		if randf() < 0.5 * k:
+			var sd2 := 1.0 if randf() < 0.5 else -1.0
+			marks.append([p + fwd * 40.0 + side * sd2 * 14.0, 0.0, 2, side * sd2 * randf_range(80.0, 160.0)])
 	## The plane's contrail: two thin white puffs off its wing tips, lingering a little
 	func contrail(p: Vector2, heading: float, delta: float) -> void:
 		puff_t -= delta
@@ -608,7 +614,7 @@ class Trail extends Node2D:
 			var a := TAU * k / 10.0
 			marks.append([p, 0.0, 5, Vector2.from_angle(a) * randf_range(160.0, 260.0)])
 	func _life(kind: int) -> float:
-		return [LIFE, 0.45, 0.35, 0.9, 0.6, 0.5][kind]
+		return [LIFE, 0.45, 0.35, 1.5, 0.6, 0.5][kind]
 	func _process(delta: float) -> void:
 		for m in marks:
 			m[1] += delta
@@ -622,9 +628,11 @@ class Trail extends Node2D:
 		for m in marks:
 			var p: Vector2 = (m[0] as Vector2).snapped(Vector2(4, 4))
 			if m[2] == 3:
-				var f3: float = m[1] / 0.9
-				var sz3 := 4.0 if f3 < 0.4 else 8.0
-				draw_rect(Rect2(p - Vector2(sz3, sz3) / 2.0, Vector2(sz3, sz3)), Color(0.95, 0.98, 1.0, 0.75 * (1.0 - f3)))
+				# (foam: a little shadow under it so it stands out on light water, growing as it spreads)
+				var f3: float = m[1] / 1.5
+				var sz3 := 4.0 if f3 < 0.15 else (8.0 if f3 < 0.55 else 12.0)
+				draw_rect(Rect2(p - Vector2(sz3, sz3) / 2.0 + Vector2(4, 4), Vector2(sz3, sz3)), Color(0.1, 0.2, 0.35, 0.18 * (1.0 - f3)))
+				draw_rect(Rect2(p - Vector2(sz3, sz3) / 2.0, Vector2(sz3, sz3)), Color(0.97, 0.99, 1.0, 0.9 * (1.0 - f3)))
 				continue
 			if m[2] == 4:
 				var f4: float = m[1] / 0.6
@@ -915,7 +923,73 @@ class FloatingBuoys extends Node2D:
 				var tx: Texture2D = sl[k]
 				var f := float(k) / float(sl.size() - 1)
 				var at := p + Vector2(0, bob * f - k * UP) + lean[i] * f
-				draw_texture_rect(tx, Rect2(at.round() - Vector2(10, 10), tx.get_size() * 4.0), false)
+				draw_texture_rect(tx, Rect2(at.round() - Vector2(14, 14), tx.get_size() * 4.0), false)
+
+## The water moving (the user, 2026-10-18): glints drifting on it, short light strokes on the
+## 4 px grid that come and go across the view (never on the sand or the islands); and the
+## whirlpools turning, foam arms spiralling in to a dark eye that pulses
+class WaterFx extends Node2D:
+	var rc: Node                          # the race (where the water is, what the view shows)
+	var glints: Array = []                # [position, age, life, length]
+	var whirls: Array = []                # whirlpools' middles (mat px)
+	var t := 0.0
+	var tint := Color(1, 1, 1)
+	func setup(race: Node, whirl_at: Array, light: Color) -> void:
+		rc = race
+		whirls = whirl_at
+		glints.clear()
+		tint = light
+	func _process(delta: float) -> void:
+		if not visible or rc == null:
+			return
+		t += delta
+		var view: Rect2 = rc.view_rect()
+		for k in 3:
+			if randf() < delta * 30.0 and glints.size() < 70:
+				var p := Vector2(randf_range(view.position.x, view.end.x), randf_range(view.position.y, view.end.y))
+				if rc.is_open_water(p):
+					glints.append([p.snapped(Vector2(4, 4)), 0.0, randf_range(0.8, 1.6), 4 * randi_range(2, 4)])
+		for g in glints:
+			g[1] += delta
+			g[0] += Vector2(6.0 * delta, 0)                # (a slow drift)
+		glints = glints.filter(func(g): return g[1] < g[2])
+		queue_redraw()
+	func _draw() -> void:
+		for g in glints:
+			var f: float = g[1] / g[2]
+			var c := tint
+			c.a = sin(f * PI) * 0.55
+			var p: Vector2 = (g[0] as Vector2).snapped(Vector2(4, 4))
+			var ln := float(g[3]) * (0.5 + 0.5 * sin(f * PI))
+			draw_rect(Rect2(p - Vector2(roundf(ln / 8.0) * 4.0, 0), Vector2(maxf(4.0, roundf(ln / 4.0) * 4.0), 4)), c)
+		for wc in whirls:
+			var cen: Vector2 = wc
+			# (the user: more visible, with an animation) the water darker down its funnel, rings of
+			# it deeper and deeper to a dark eye that pulses
+			for ring in 4:
+				var rr := 64.0 - ring * 14.0
+				var yy := -rr
+				while yy <= rr:
+					var half := sqrt(maxf(0.0, rr * rr - yy * yy))
+					draw_rect(Rect2((cen + Vector2(-half, yy)).snapped(Vector2(4, 4)), Vector2(half * 2.0, 4).snapped(Vector2(4, 4))), Color(0.02, 0.1, 0.2, 0.13))
+					yy += 4.0
+			var eye := 8.0 + 4.0 * roundf(sin(t * 3.0))
+			draw_rect(Rect2((cen - Vector2(eye, eye)).snapped(Vector2(4, 4)), Vector2(eye, eye) * 2.0), Color(0.02, 0.08, 0.16, 0.6))
+			# three thick foam arms spiralling in, turning fast
+			for arm in 3:
+				for k in 18:
+					var r := 12.0 + k * 3.0
+					var ang := -t * 3.2 + arm * TAU / 3.0 + r * 0.07
+					var q := (cen + Vector2.from_angle(ang) * r).snapped(Vector2(4, 4))
+					var a2 := 0.45 + 0.55 * (float(k) / 18.0)
+					var sz := 8.0 if k > 9 else 4.0
+					draw_rect(Rect2(q - Vector2(sz, sz) / 2.0, Vector2(sz, sz)), Color(1, 1, 1, a2))
+			# its rim of foam, turning slower
+			for k2 in 20:
+				if k2 % 2 == 0:
+					var ang2 := -t * 1.2 + k2 * TAU / 20.0
+					var q2 := (cen + Vector2.from_angle(ang2) * 68.0).snapped(Vector2(4, 4))
+					draw_rect(Rect2(q2 - Vector2(4, 2), Vector2(8, 4)), Color(1, 1, 1, 0.6))
 
 ## The wind across the course in a gust: short white streaks blowing over it (on the 4 px grid)
 class GustFx extends Node2D:
@@ -1010,6 +1084,8 @@ func _begin(n: int) -> void:
 	board.texture = ImageTexture.create_from_image(_paint())
 	track.texture = ImageTexture.create_from_image(track_image)
 	buoys.setup(_buoy_spots)
+	water_fx.visible = vehicle == "boat"
+	water_fx.setup(self, slicks.filter(func(sl): return sl[1] == "whirl").map(func(sl): return sl[0]), Color8(255, 236, 214) if look == "lagoon" else Color8(236, 255, 252))
 	canopy.visible = look == "garden" and not _trees.is_empty()
 	if canopy.visible:
 		canopy.texture = ImageTexture.create_from_image(_paint_canopy(int(mat_size.x / PX), int(mat_size.y / PX)))
@@ -1970,21 +2046,60 @@ func _paint_water(w: int, h: int) -> Image:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 77 * level + 5
 	_sandbars.clear()
-	for k in int(w * h / 22000) + 2:
+	_palms.clear()
+	for k in int(w * h / 16000) + 3:
 		var p := Vector2(rng.randi_range(EDGE + 30, w - EDGE - 30), rng.randi_range(EDGE + 20, h - EDGE - 20))
-		if dist[int(p.y) * w + int(p.x)] > hw + 46.0:
-			_sandbars.append(p)
-	# the islands, stamped once: 1 grass, 2 sand, 3 its wet edge, 4 the shallows round it
+		var sc := rng.randf_range(0.7, 1.15)
+		# (clear of the channel, its shallows and its bank: never land where the boat may go)
+		var apart := true
+		for other in _sandbars:
+			if Vector2(((other[0] as Vector2) - p).x / 1.9, ((other[0] as Vector2) - p).y).length() < 22.0 * (sc + float(other[1])):
+				apart = false                            # (never two islands in one another)
+		if apart and dist[int(p.y) * w + int(p.x)] > hw + SHORE_PAINT / PX + 12.0 + 30.0 * sc:
+			_sandbars.append([p, sc])
+	# the islands, stamped once (the user, 2026-10-18: more beautiful, like the car's tracks, the
+	# Retry look): a beach outlined dark against the water and lit from the top left, a raised
+	# grass top (its own outline, an earthy side face below it), its shadow on the water to the
+	# bottom right, the shallows round it; palm trees on the bigger ones (_paint_palm)
 	_island = PackedByteArray()
 	_island.resize(w * h)
-	for sb in _sandbars:
-		for yy in range(maxi(0, int(sb.y - 22)), mini(h, int(sb.y + 23))):
-			for xx in range(maxi(0, int(sb.x - 40)), mini(w, int(sb.x + 41))):
-				var dd := Vector2((xx - sb.x) / 30.0, (yy - sb.y) / 16.0).length()
-				var v := 1 if dd < 0.45 else (2 if dd < 0.85 else (3 if dd < 1.0 else (4 if dd < 1.25 and DITHER[yy % 2][xx % 2] < 0.5 else 0)))
+	for sbi in _sandbars:
+		var sb: Vector2 = sbi[0]
+		var sc: float = sbi[1]
+		var ax := 30.0 * sc
+		var by := 16.0 * sc
+		for yy in range(maxi(0, int(sb.y - by * 1.4 - 4)), mini(h, int(sb.y + by * 1.4 + 6))):
+			for xx in range(maxi(0, int(sb.x - ax * 1.4 - 4)), mini(w, int(sb.x + ax * 1.4 + 6))):
+				var o := Vector2((xx + 0.5 - sb.x) / ax, (yy + 0.5 - sb.y) / by)
+				var dd := o.length()
+				var v := 0
+				if dd < 1.0:
+					var g := Vector2((xx + 0.5 - sb.x) / (ax * 0.62), (yy + 0.5 - sb.y + 2.0) / (by * 0.62)).length()
+					var g_low := Vector2((xx + 0.5 - sb.x) / (ax * 0.62), (yy + 0.5 - sb.y) / (by * 0.62)).length()
+					var lean := o.x + o.y
+					if g < 1.0:
+						v = ISLE_GRASS_RIM if g > 0.88 else (ISLE_GRASS_LIT if lean < -0.45 else (ISLE_GRASS_DARK if lean > 0.5 or (xx * 7 + yy * 3) % 23 == 0 else ISLE_GRASS))
+					elif g_low < 1.0 and yy + 0.5 > sb.y - 2.0:
+						v = ISLE_GRASS_RIM if g_low > 0.86 else ISLE_CLIFF          # (the grass top's side)
+					elif dd > 0.93:
+						v = ISLE_RIM
+					elif dd > 0.84:
+						v = ISLE_WET
+					else:
+						v = ISLE_SAND_LIT if lean < -0.7 else (ISLE_SAND_DARK if lean > 0.7 and DITHER[yy % 2][xx % 2] < 0.5 else ISLE_SAND)
+				else:
+					var sh := Vector2((xx + 0.5 - sb.x - 3.0) / ax, (yy + 0.5 - sb.y - 3.0) / by).length()
+					if sh < 1.0:
+						v = ISLE_SHADOW
+					elif dd < 1.3 and DITHER[yy % 2][xx % 2] < 0.5:
+						v = ISLE_SHALLOW
 				var ii := yy * w + xx
-				if v != 0 and (_island[ii] == 0 or v < _island[ii]):
+				if v != 0 and ISLE_PRIO[v] > ISLE_PRIO[_island[ii]]:
 					_island[ii] = v
+		if sc > 0.85:
+			_palms.append(Vector2i(sb.round()) + Vector2i(rng.randi_range(-4, 4), -3))
+		if sc > 1.05:
+			_palms.append(Vector2i(sb.round()) + Vector2i(rng.randi_range(5, 9), -1))
 	# the reef's coral in the shallows: clusters of round lumps (pink, orange, lilac), lit top left;
 	# per board px its colour (1-3) x 4 + its shade (1 light, 2 mid, 3 dark)
 	_coral = PackedByteArray()
@@ -2024,6 +2139,8 @@ func _paint_water(w: int, h: int) -> Image:
 			data[k + 2] = col.b8
 			data[k + 3] = 255
 			k += 4
+	for pf in _palms:
+		_paint_palm(data, w, h, pf)
 	# then the channel's own things, each over its own patch: a current's foam arrows down the
 	# channel, a whirlpool (water spiralling in, darker to its eye), the foam round a rock or a log
 	for pd in pads:
@@ -2107,6 +2224,56 @@ func _paint_water(w: int, h: int) -> Image:
 	track_image = Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, top)
 	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
 
+## A palm tree on an island (foot: board px): its shadow on the sand, a curved trunk with rings,
+## five fronds drooping out from its top, outlined, two coconuts
+func _paint_palm(data: PackedByteArray, w: int, h: int, foot: Vector2i) -> void:
+	var put := func(q: Vector2i, c: Color) -> void:
+		if q.x >= 0 and q.y >= 0 and q.x < w and q.y < h:
+			var cc := _lit(c, q.x, q.y)
+			var j := (q.y * w + q.x) * 4
+			data[j] = cc.r8
+			data[j + 1] = cc.g8
+			data[j + 2] = cc.b8
+	var top := foot + Vector2i(2, -7)
+	# its shadow first
+	for sy in range(-2, 3):
+		for sx in range(-4, 5):
+			if Vector2(sx / 4.0, sy / 2.0).length() <= 1.0:
+				var q := top + Vector2i(sx + 4, sy + 8)
+				if q.x >= 0 and q.y >= 0 and q.x < w and q.y < h:
+					_tint(data, q.y * w + q.x, Color8(60, 50, 40), 0.35)
+	var trunk: Array[Vector2i] = []
+	for k in 8:
+		trunk.append(foot + Vector2i(int(roundf(sin(k * 0.28) * 2.0)), -k))
+	for q in trunk:
+		for o in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1)]:
+			put.call(q + o, OUTLINE)
+	for k in trunk.size():
+		put.call(trunk[k], Color8(196, 140, 86) if k % 2 == 0 else Color8(160, 108, 66))
+	# the fronds: two px thick (a lit upper side, a shaded lower one), outlined round the outside
+	var fronds: Array = []
+	for ang in [-2.95, -2.15, -1.25, -0.3, 0.6]:
+		var pts: Array = []
+		for j in range(1, 8):
+			var fp := Vector2(trunk[trunk.size() - 1]) + Vector2.from_angle(ang) * j * 1.1 + Vector2(0, j * j * 0.08)
+			var q := Vector2i(fp.round())
+			pts.append([q, 0, j])
+			if j < 6:
+				pts.append([q + Vector2i(0, 1), 1, j])
+		fronds.append(pts)
+	for pts in fronds:
+		for e in pts:
+			for o in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
+				put.call((e[0] as Vector2i) + o, OUTLINE)
+	for pts in fronds:
+		for e in pts:
+			var tip: bool = int(e[2]) >= 6
+			put.call(e[0], Color8(84, 150, 70) if tip else (Color8(172, 226, 112) if int(e[1]) == 0 else Color8(108, 182, 82)))
+	var crown := trunk[trunk.size() - 1]
+	put.call(crown, Color8(110, 176, 80))
+	put.call(crown + Vector2i(-1, 1), Color8(120, 78, 46))
+	put.call(crown + Vector2i(1, 1), Color8(120, 78, 46))
+
 ## The board px round a point (mat px) within `reach` mat px, inside the mat
 func _patch(c: Vector2, reach: float, w: int, h: int) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
@@ -2150,21 +2317,55 @@ static func _tint(data: PackedByteArray, i: int, col: Color, k: float) -> void:
 ## The water at a board px (d: its distance to the course's line, board px): deeper in the channel,
 ## lighter in the shallows outside, sand and islands farther out; the Lagoon's warm sunset, the
 ## Reef's turquoise over coral
-var _island := PackedByteArray()       # the boat's worlds: the islands, per board px (_paint_water)
+var _island := PackedByteArray()       # the boat's worlds: the islands, per board px (_paint_water: ISLE_*)
+var _palms: Array[Vector2i] = []       # ...their palm trees' feet (board px)
+const ISLE_GRASS := 1
+const ISLE_SAND := 2
+const ISLE_WET := 3
+const ISLE_SHALLOW := 4
+const ISLE_GRASS_LIT := 5
+const ISLE_GRASS_DARK := 6
+const ISLE_GRASS_RIM := 7
+const ISLE_CLIFF := 8
+const ISLE_RIM := 9
+const ISLE_SAND_LIT := 10
+const ISLE_SAND_DARK := 11
+const ISLE_SHADOW := 12
+const ISLE_PRIO := [0, 3, 3, 3, 1, 3, 3, 3, 3, 3, 3, 3, 2]
 var _buoy_spots: Array = []            # ...and where its buoys float: [mat px, red]
 var _coral := PackedByteArray()        # ...and the reef's coral
 const REEF := [Color8(30, 142, 178), Color8(62, 190, 200), Color8(132, 222, 214)]   # deep, the shallows, near the sand
 const CORAL := [Color8(236, 128, 150), Color8(250, 176, 104), Color8(184, 132, 214)]
 func _water_px(x: int, y: int, d: float, hw: float) -> Color:
+	var reef := look == "reef"
 	match _island[y * _bw + x]:
-		1:
-			return Color8(120, 176, 92) if look == "reef" else Color8(150, 168, 96)   # an island's grass
-		2:
-			return Color8(244, 220, 166)
-		3:
+		ISLE_GRASS:
+			return Color8(120, 180, 92) if reef else Color8(140, 186, 96)       # an island's grass top
+		ISLE_GRASS_LIT:
+			return Color8(158, 208, 106) if reef else Color8(178, 212, 114)
+		ISLE_GRASS_DARK:
+			return Color8(88, 144, 74) if reef else Color8(106, 152, 78)
+		ISLE_GRASS_RIM:
+			return Color8(52, 92, 56)
+		ISLE_CLIFF:
+			return Color8(170, 124, 80) if reef else Color8(176, 122, 82)       # (its earthy side)
+		ISLE_SAND:
+			return Color8(246, 222, 168)
+		ISLE_SAND_LIT:
+			return Color8(254, 240, 200)
+		ISLE_SAND_DARK:
+			return Color8(226, 196, 142)
+		ISLE_WET:
 			return Color8(214, 180, 126)
-		4:
-			return Color8(170, 230, 220) if look == "reef" else Color8(250, 196, 150)  # the shallows round it
+		ISLE_RIM:
+			return Color8(118, 82, 58)                                          # (the beach's dark outline)
+		ISLE_SHALLOW:
+			return Color8(170, 230, 220) if reef else Color8(250, 196, 150)     # the shallows round it
+		ISLE_SHADOW:
+			_island[y * _bw + x] = 0
+			var under := _water_px(x, y, d, hw)                                 # (the water, in the island's shadow)
+			_island[y * _bw + x] = ISLE_SHADOW
+			return under.darkened(0.16)
 	var shallow := clampf((d - hw - 2.0) / 12.0, 0.0, 1.0)
 	var in_channel := d <= hw + 2.0
 	# past the buoys: the shallows (lighter, foam breaking at their far side), then the bank (the
@@ -2645,6 +2846,8 @@ func _create_nodes() -> void:
 	board.scale = Vector2(PX, PX)
 	board.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	world.add_child(board)
+	water_fx = WaterFx.new()
+	world.add_child(water_fx)                       # (on the water, under everything)
 	sky_shadow = Sprite2D.new()
 	sky_shadow.scale = Vector2(PX, PX)
 	sky_shadow.modulate = Color(0.1, 0.08, 0.2, 0.28)
@@ -2794,12 +2997,7 @@ func _create_nodes() -> void:
 	banner.modulate.a = 0.0
 
 	motor = AudioStreamPlayer.new()
-	var hum: AudioStreamWAV = load("res://sounds/fx/rc_motor.wav").duplicate()
-	hum.loop_mode = AudioStreamWAV.LOOP_FORWARD      # (the motor hums the whole race: a seamless 1 s loop)
-	hum.loop_end = hum.get_length() * hum.mix_rate
-	motor.stream = hum
-	motor.volume_db = -30.0                           # (in the background, under the music)
-	add_child(motor)
+	add_child(motor)                                  # (its sound per toy: _set_vehicle)
 
 ## A start lamp, 16 x 16 px (x4): a round glass in a dark rim, its glint top-left; the colour
 ## is set with modulate (off = grey, red, green)
@@ -2935,10 +3133,26 @@ func _set_vehicle() -> void:
 		slices.append(sl)
 	shadow.texture = layers[2 if vehicle == "car" else 1]
 	_plane_layers = layers
-	_motor_pitch = { "car": 1.0, "boat": 0.7, "plane": 1.4 }[vehicle]
+	# each toy its own engine (the user, 2026-10-18: they should sound a little different, not too
+	# loud): the car's electric buzz, the boat's putt-putt outboard, the plane's propeller drone;
+	# each a seamless 1 s loop humming the whole race, under the music
+	var was_playing := motor.playing
+	var hum: AudioStreamWAV = load(MOTORS[vehicle][0]).duplicate()
+	hum.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	hum.loop_end = hum.get_length() * hum.mix_rate
+	motor.stream = hum
+	motor.volume_db = MOTORS[vehicle][1]
+	if was_playing:
+		motor.play()
+	_motor_pitch = 1.0
 	motor.pitch_scale = _motor_pitch
 
 var _motor_pitch := 1.0
+const MOTORS := {
+	"car": ["res://sounds/fx/rc_motor.wav", -24.0],
+	"boat": ["res://sounds/fx/boat_motor.wav", -21.0],
+	"plane": ["res://sounds/fx/plane_motor.wav", -25.0],
+}
 var _plane_layers: Array[Texture2D] = []   # (the toy's own slices: the plane's level wings)
 
 ## The toy's speed and how fast it turns (a full turn: the car in 1 s, the boat and the plane wider)
@@ -3703,6 +3917,22 @@ func _ring_fx_refresh() -> void:
 		for key in ["back", "front"]:
 			if rg.has(key) and is_instance_valid(rg[key]):
 				rg[key].show_state(st)
+
+## What the view shows now (mat px)
+func view_rect() -> Rect2:
+	return Rect2((VIEW.position - world.position) / ZOOM, VIEW.size / ZOOM)
+
+## Open water at a point (mat px): the boat's worlds, not on an island or the bank
+func is_open_water(p: Vector2) -> bool:
+	var b := Vector2i(p / PX)
+	if b.x < EDGE or b.y < EDGE or b.x >= _bw - EDGE or b.y >= _bh - EDGE or _island.size() != _bw * _bh:
+		return false
+	var i := b.y * _bw + b.x
+	if _island[i] != 0 and _island[i] != ISLE_SHALLOW and _island[i] != ISLE_SHADOW:
+		return false
+	var d := _dist[i]
+	var bank := half_w / PX + SHORE_PAINT / PX
+	return d < bank - 1.0 or d > bank + 13.0
 
 ## The plane's guide: the course from the plane to the next ring and on to the one after (the
 ## sparkles start where the plane is and join the course's line over a few steps), and the arrow

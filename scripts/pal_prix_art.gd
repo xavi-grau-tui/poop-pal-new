@@ -247,25 +247,44 @@ static func propeller(frame: int) -> Texture2D:
 
 # ------------------------------------------------------------------ THE WATER'S PIECES
 
-## A floating buoy as a little stack of slices (bottom first, like the toys): its dark waterline,
-## its body in two shades, a white band, its lit cap; drawn a few px apart up the screen it stands
-## up out of the water, and leans when the boat shoves it
+## A floating buoy as a little stack of round slices (bottom first, like the toys; the user,
+## 2026-10-18: completely round): its dark waterline, its body, a white band, its lit top, a
+## glint on its cap; 7 px across, drawn a few px apart up the screen it stands up out of the water,
+## and leans when the boat shoves it
 static func buoy_slices(red := true) -> Array[Texture2D]:
 	var key := "buoy_slices_%s" % red
 	if key not in _cache:
 		var c := Color8(226, 70, 64) if red else Color8(250, 196, 60)
-		var disc := [".###.", "#####", "#####", "#####", ".###."]
-		var side := [".###.", "#dcd#", "#ddd#", "#ddd#", ".###."]
-		var band := [".###.", "#wwg#", "#wgg#", "#ggg#", ".###."]
-		var top := [".###.", "#lcc#", "#ccc#", "#ccd#", ".###."]
-		var cap := [".....", ".lc..", ".cc..", ".....", "....."]
-		var cols := { "#": OUTLINE, "l": c.lightened(0.5), "c": c, "d": c.darkened(0.25), "w": Color8(255, 252, 244), "g": Color8(214, 208, 204) }
+		var w := Color8(255, 252, 244)
 		var out: Array[Texture2D] = []
-		out.append(_tex(rows_image(disc, { "#": Color8(30, 40, 60, 140) })))
-		out.append(_tex(rows_image(side, cols)))
-		out.append(_tex(rows_image(band, cols)))
-		out.append(_tex(rows_image(top, cols)))
-		out.append(_tex(rows_image(cap, { "l": Color8(255, 255, 255), "c": c.lightened(0.3) })))
+		# kind: 0 the waterline, 1 the body, 2 the band, 3 the top, 4 the cap
+		for kind in 5:
+			var img := Image.create(7, 7, false, Image.FORMAT_RGBA8)
+			var rr := 3.6 if kind < 4 else 1.7
+			var cen := Vector2(3.5, 3.5) if kind < 4 else Vector2(3.0, 3.0)
+			for y in 7:
+				for x in 7:
+					var o := Vector2(x + 0.5, y + 0.5) - cen
+					var d := o.length()
+					if d > rr:
+						continue
+					var rim := d > rr - 1.0
+					var col: Color
+					var lit := o.x + o.y < -1.2
+					var shade := o.x + o.y > 1.6
+					match kind:
+						0:
+							col = Color8(30, 40, 60, 140)
+						1:
+							col = OUTLINE if rim else c.darkened(0.25)
+						2:
+							col = OUTLINE if rim else (w if lit else (Color8(214, 208, 204) if shade else Color8(236, 232, 226)))
+						3:
+							col = OUTLINE if rim else (c.lightened(0.45) if lit else (c.darkened(0.2) if shade else c))
+						_:
+							col = Color8(255, 255, 255) if o.x + o.y < 0.0 else c.lightened(0.3)
+					img.set_pixel(x, y, col)
+			out.append(_tex(img))
 		_cache[key] = out
 	return _cache[key]
 
