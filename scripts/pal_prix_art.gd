@@ -212,27 +212,29 @@ static func plane_wings(main: Color, body: Color, dip: int) -> Texture2D:
 	_cache[key] = _tex(img)
 	return _cache[key]
 
-## The plane's propeller seen from above as it spins (frame 0-3): a blade across the nose, long,
-## shorter, edge on, shorter, outlined dark so it shows against the sky, over a faint blur of its
-## sweep, a red hub; the game steps a frame every frame drawn (a fast spin)
+## The plane's propeller spinning, seen from above (frame 0-3, a new one every frame drawn): its
+## sweep, a see-through bar across the nose with a soft dark edge (it shows on a light sky), and a
+## white mark at each tip flicking from one side to the other (the blades going round), a red hub
+## (the user, 2026-10-18: option D of propellers.gif)
 static func propeller(frame: int) -> Texture2D:
 	var key := "prop_%d" % frame
 	if key not in _cache:
-		var half: int = [5, 3, 1, 3][frame % 4]
-		var img := Image.create(5, 13, false, Image.FORMAT_RGBA8)
-		for y in range(1, 12):
-			img.set_pixel(2, y, Color(0.92, 0.94, 1.0, 0.35))          # (the sweep's blur)
-		for y in range(6 - half - 1, 6 + half + 2):
-			for x in range(1, 4):
+		var img := Image.create(5, 15, false, Image.FORMAT_RGBA8)
+		var cy := 7
+		for y in 15:
+			var tip := absi(y - cy) >= 7
+			img.set_pixel(1, y, Color8(70, 70, 100, 66))
+			img.set_pixel(3, y, Color8(70, 70, 100, 66))
+			img.set_pixel(2, y, Color8(250, 252, 255, 105 if tip else 190))
+		var side := 1 if frame % 2 == 0 else -1
+		for m in [[cy - 7, side], [cy - 6, side * 2], [cy - 5, side * 2], [cy + 7, -side], [cy + 6, -side * 2], [cy + 5, -side * 2]]:
+			img.set_pixel(2 + int(m[1]), int(m[0]), Color8(255, 255, 255))
+		for y in [cy - 1, cy, cy + 1]:
+			for x in 5:
 				img.set_pixel(x, y, OUTLINE)
-		for y in range(6 - half, 6 + half + 1):
-			img.set_pixel(2, y, Color8(240, 242, 248) if (y < 6) == (frame % 2 == 0) else Color8(196, 200, 214))
-		for y in [5, 6, 7]:
-			for x in range(0, 5):
-				img.set_pixel(x, y, OUTLINE)
-		img.set_pixel(1, 6, Color8(226, 70, 64))
-		img.set_pixel(2, 6, Color8(255, 150, 130))
-		img.set_pixel(3, 6, Color8(190, 46, 50))
+		img.set_pixel(1, cy, Color8(226, 70, 64))
+		img.set_pixel(2, cy, Color8(255, 150, 130))
+		img.set_pixel(3, cy, Color8(190, 46, 50))
 		_cache[key] = _tex(img)
 	return _cache[key]
 
