@@ -299,6 +299,7 @@ var sky_shadow: Sprite2D               # the plane's shadow on the ground far be
 var car: Node2D
 var slices: Array[Sprite2D] = []       # the car, bottom slice first
 var driver: Sprite2D
+var prop: Sprite2D                     # the plane's propeller, spinning at its nose
 var shadow: Sprite2D
 var car_drop := 0.0                    # how far the car has fallen (screen down, mat px)
 var antenna: Line2D                    # a thin wire at the car's back, a ball on its tip
@@ -2521,6 +2522,10 @@ func _create_nodes() -> void:
 	driver.scale = Vector2(2, 2)
 	driver.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	front.add_child(driver)
+	prop = Sprite2D.new()
+	prop.scale = Vector2(PX, PX)
+	prop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	front.add_child(prop)
 
 	# the HUD on a wooden band above the view: the lap, the clock / par, the stars, the coins
 	var band := ColorRect.new()
@@ -2652,8 +2657,12 @@ func _label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color)
 func _place_car() -> void:
 	car.position = car_pos.round() + Vector2(0, car_drop)
 	var n := slices.size()
-	# (the plane banks in the turns: its wings foreshortened, the stack leaning out)
-	var tilt := Vector2.from_angle(heading + PI / 2.0) * bank * 6.0 if vehicle == "plane" else Vector2.ZERO
+	# (the plane rolls into the turns: its wings foreshortened, the stack leaning into the turn,
+	# the lower wing in shade and the raised one in the light: you see which way it banks)
+	var tilt := Vector2.from_angle(heading + PI / 2.0) * bank * 14.0 if vehicle == "plane" else Vector2.ZERO
+	if vehicle == "plane" and n > 1:
+		var dip := 0 if absf(bank) < 0.3 else int(signf(bank))
+		slices[1].texture = PalPrixArt.plane_wings(Color8(226, 70, 64), Color8(250, 210, 84), dip) if dip != 0 else _plane_layers[1]
 	for i in n:
 		slices[i].rotation = heading
 		slices[i].position = (Vector2(0, -i * LAYER_UP) + tilt * float(i) / maxf(1.0, n - 1)).round()   # (lifted on screen, not turned)
@@ -2668,6 +2677,12 @@ func _place_car() -> void:
 		"plane":
 			seat = PalPrixArt.PLANE_SEAT * PX
 	driver.position = car.position + Vector2.from_angle(heading) * seat + Vector2(0, -n * LAYER_UP - 4.0) + tilt
+	prop.visible = vehicle == "plane" and state != State.FALL
+	if prop.visible:
+		prop.texture = PalPrixArt.propeller(int(Time.get_ticks_msec() / 30) % 4)
+		prop.rotation = heading
+		prop.scale = Vector2(PX, PX * (1.0 - 0.42 * absf(bank)))
+		prop.position = (car.position + Vector2.from_angle(heading) * 46.0 + Vector2(0, -2.0 * LAYER_UP) + tilt * 0.66).round()
 	# the antenna stands up from the toy's back left corner, leaning back and out in the turns
 	var corner := Vector2(-30, -22) if vehicle == "car" else Vector2(-46, -18)
 	var base := car.position + corner.rotated(heading) + Vector2(0, -n * LAYER_UP)
@@ -2705,7 +2720,7 @@ func _set_vehicle() -> void:
 		"boat":
 			layers = PalPrixArt.boat_slices()
 		"plane":
-			layers = PalPrixArt.plane_slices()
+			layers = PalPrixArt.plane_slices(Color8(226, 70, 64), Color8(250, 210, 84), false)
 	for sl in slices:
 		sl.queue_free()
 	slices.clear()
@@ -2719,10 +2734,12 @@ func _set_vehicle() -> void:
 		car.add_child(sl)
 		slices.append(sl)
 	shadow.texture = layers[2 if vehicle == "car" else 1]
+	_plane_layers = layers
 	_motor_pitch = { "car": 1.0, "boat": 0.7, "plane": 1.4 }[vehicle]
 	motor.pitch_scale = _motor_pitch
 
 var _motor_pitch := 1.0
+var _plane_layers: Array[Texture2D] = []   # (the toy's own slices: the plane's level wings)
 
 ## The toy's speed and how fast it turns (a full turn: the car in 1 s, the boat and the plane wider)
 func _speed() -> float:

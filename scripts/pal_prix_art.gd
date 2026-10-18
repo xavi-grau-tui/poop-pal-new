@@ -136,8 +136,9 @@ const PLANE_SEAT := 1.0
 
 ## The plane's slices, bottom first: its dark underside, the wings (wide), the fuselage, its lit
 ## top with the cockpit, and the tail fin standing up at the back
-static func plane_slices(main := Color8(226, 70, 64), body := Color8(250, 210, 84)) -> Array[Texture2D]:
-	var key := "plane_%s_%s" % [main.to_html(), body.to_html()]
+## (with_prop false: no blur at the nose, the plane wears its own spinning propeller: propeller())
+static func plane_slices(main := Color8(226, 70, 64), body := Color8(250, 210, 84), with_prop := true) -> Array[Texture2D]:
+	var key := "plane_%s_%s_%s" % [main.to_html(), body.to_html(), with_prop]
 	if key in _cache:
 		return _cache[key]
 	var cols := PLANE_COLS.duplicate()
@@ -167,8 +168,8 @@ static func plane_slices(main := Color8(226, 70, 64), body := Color8(250, 210, 8
 					2:
 						if on_body and ch != "P":
 							col = c
-						elif ch == "P":
-							col = Color(c.r, c.g, c.b, 0.55)               # the propeller's blur
+						elif ch == "P" and with_prop:
+							col = Color(c.r, c.g, c.b, 0.8)                # the propeller's blur
 					_:
 						if ch == "F":
 							col = main.darkened(0.3)                       # the tail fin, up top
@@ -181,6 +182,56 @@ static func plane_slices(main := Color8(226, 70, 64), body := Color8(250, 210, 8
 		out.append(_tex(img))
 	_cache[key] = out
 	return out
+
+## The plane's wings rolled into a turn (dip: +1 the right wing down, -1 the left): the lowered
+## wing in shade, the raised one catching the light (the user, 2026-10-18: turning left and right
+## looked the same)
+static func plane_wings(main: Color, body: Color, dip: int) -> Texture2D:
+	var key := "wings_%s_%s_%d" % [main.to_html(), body.to_html(), dip]
+	if key in _cache:
+		return _cache[key]
+	var cols := PLANE_COLS.duplicate()
+	cols["R"] = main
+	cols["r"] = main.darkened(0.16)
+	cols["F"] = main.darkened(0.16)
+	cols["Y"] = body
+	var top := rows_image(PLANE, cols)
+	var img := Image.create(top.get_width(), top.get_height(), false, Image.FORMAT_RGBA8)
+	var mid := top.get_height() / 2.0
+	for y in top.get_height():
+		for x in top.get_width():
+			var c := top.get_pixel(x, y)
+			var ch := String(PLANE[y])[x]
+			if c.a == 0.0 or ch == "P":
+				continue
+			var col := c.darkened(0.22) if ch in ["R", "r", "W", "w"] else c
+			var right := y + 0.5 > mid                                     # (the nose to the right: +y is the right wing)
+			if ch != "#" and absf(y + 0.5 - mid) > 4.0:
+				col = col.darkened(0.3) if right == (dip > 0) else col.lightened(0.28)
+			img.set_pixel(x, y, col)
+	_cache[key] = _tex(img)
+	return _cache[key]
+
+## The plane's propeller seen from above as it spins (frame 0-3): a blade across the nose, long,
+## shorter, edge on, shorter, outlined dark so it shows against the sky, a red hub
+static func propeller(frame: int) -> Texture2D:
+	var key := "prop_%d" % frame
+	if key not in _cache:
+		var half: int = [5, 3, 1, 3][frame % 4]
+		var img := Image.create(5, 13, false, Image.FORMAT_RGBA8)
+		for y in range(6 - half - 1, 6 + half + 2):
+			for x in range(1, 4):
+				img.set_pixel(x, y, OUTLINE)
+		for y in range(6 - half, 6 + half + 1):
+			img.set_pixel(2, y, Color8(240, 242, 248) if (y < 6) == (frame % 2 == 0) else Color8(196, 200, 214))
+		for y in [5, 6, 7]:
+			for x in range(0, 5):
+				img.set_pixel(x, y, OUTLINE)
+		img.set_pixel(1, 6, Color8(226, 70, 64))
+		img.set_pixel(2, 6, Color8(255, 150, 130))
+		img.set_pixel(3, 6, Color8(190, 46, 50))
+		_cache[key] = _tex(img)
+	return _cache[key]
 
 # ------------------------------------------------------------------ THE WATER'S PIECES
 
