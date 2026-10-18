@@ -940,11 +940,17 @@ class WaterFx extends Node2D:
 	var rc: Node                          # the race (where the water is, what the view shows)
 	var glints: Array = []                # [position, age, life, length]
 	var whirls: Array = []                # whirlpools' middles (mat px)
+	var currents: Array = []              # boost currents: [middle, the way it flows]
+	var cur_len := 64.0
+	var cur_w := 60.0
 	var t := 0.0
 	var tint := Color(1, 1, 1)
-	func setup(race: Node, whirl_at: Array, light: Color) -> void:
+	func setup(race: Node, whirl_at: Array, light: Color, pads: Array = [], pad_len := 64.0, width := 60.0) -> void:
 		rc = race
 		whirls = whirl_at
+		currents = pads
+		cur_len = pad_len
+		cur_w = width
 		glints.clear()
 		tint = light
 	func _process(delta: float) -> void:
@@ -970,6 +976,24 @@ class WaterFx extends Node2D:
 			var p: Vector2 = (g[0] as Vector2).snapped(Vector2(4, 4))
 			var ln := float(g[3]) * (0.5 + 0.5 * sin(f * PI))
 			draw_rect(Rect2(p - Vector2(roundf(ln / 8.0) * 4.0, 0), Vector2(maxf(4.0, roundf(ln / 4.0) * 4.0), 4)), c)
+		# the boost currents (the user, 2026-10-18: another colour): yellow chevrons like the car's
+		# boost pads, outlined dark, flowing down the channel, fading in and out at the ends
+		for cu in currents:
+			var c0: Vector2 = cu[0]
+			var dv: Vector2 = cu[1]
+			var side := Vector2(-dv.y, dv.x)
+			var shift := fposmod(t * 140.0, 32.0)
+			var u := -cur_len - 32.0 + shift
+			while u < cur_len:
+				var fade := clampf(1.0 - absf(u) / cur_len, 0.0, 1.0)
+				var vv := -cur_w
+				while vv <= cur_w:
+					var q := (c0 + dv * (u - absf(vv) * 0.6) + side * vv).snapped(Vector2(4, 4))
+					draw_rect(Rect2(q - Vector2(4, 4) + Vector2(0, 4), Vector2(8, 8)), Color(0.16, 0.1, 0.12, 0.45 * fade))
+					draw_rect(Rect2(q - Vector2(4, 4), Vector2(8, 8)), Color(1.0, 0.82, 0.25, 0.95 * fade))
+					draw_rect(Rect2(q - Vector2(4, 4), Vector2(4, 4)), Color(1.0, 0.95, 0.6, 0.95 * fade))
+					vv += 4.0
+				u += 32.0
 		for wc in whirls:
 			var cen: Vector2 = wc
 			# (the user: more visible, with an animation) the water darker down its funnel, rings of
@@ -1096,7 +1120,7 @@ func _begin(n: int) -> void:
 	track.texture = ImageTexture.create_from_image(track_image)
 	buoys.setup(_buoy_spots)
 	water_fx.visible = vehicle == "boat"
-	water_fx.setup(self, slicks.filter(func(sl): return sl[1] == "whirl").map(func(sl): return sl[0]), Color8(255, 236, 214) if look == "lagoon" else Color8(236, 255, 252))
+	water_fx.setup(self, slicks.filter(func(sl): return sl[1] == "whirl").map(func(sl): return sl[0]), Color8(255, 236, 214) if look == "lagoon" else Color8(236, 255, 252), pads if vehicle == "boat" else [], PAD_LEN, half_w - 34.0)
 	canopy.visible = look == "garden" and not _trees.is_empty()
 	if canopy.visible:
 		canopy.texture = ImageTexture.create_from_image(_paint_canopy(int(mat_size.x / PX), int(mat_size.y / PX)))
@@ -2066,7 +2090,7 @@ func _paint_water(w: int, h: int) -> Image:
 		for other in _sandbars:
 			if Vector2(((other[0] as Vector2) - p).x / 1.9, ((other[0] as Vector2) - p).y).length() < 22.0 * (sc + float(other[1])):
 				apart = false                            # (never two islands in one another)
-		if apart and dist[int(p.y) * w + int(p.x)] > hw + SHORE_PAINT / PX + 12.0 + 30.0 * sc:
+		if apart and dist[int(p.y) * w + int(p.x)] > hw + SHORE_PAINT / PX + 16.0 + 40.0 * sc:
 			_sandbars.append([p, sc])
 	# the islands, stamped once (the user, 2026-10-18: more beautiful, like the car's tracks, the
 	# Retry look): a beach outlined dark against the water and lit from the top left, a raised
@@ -2164,8 +2188,8 @@ func _paint_water(w: int, h: int) -> Image:
 			var loc := (Vector2(q) + Vector2(0.5, 0.5)) * PX - c0
 			var u := loc.dot(dv)
 			var v := absf(loc.dot(Vector2(-dv.y, dv.x)))
-			if absf(u) < PAD_LEN and v < half_w - 30.0 and fposmod(u / PX + v / PX * 0.7, 9.0) < 2.0:
-				_tint(data, i2, Color8(250, 252, 255), 0.7)
+			if absf(u) < PAD_LEN and v < half_w - 30.0:
+				_tint(data, i2, Color8(255, 236, 160), 0.1 * clampf(1.0 - absf(u) / PAD_LEN, 0.0, 1.0) * 2.0)   # (a faint warm glow, fading to its ends: its arrows flow over it, WaterFx)
 	for sl in slicks:
 		var c1: Vector2 = sl[0]
 		for q in _patch(c1, SLICK_R, w, h):
