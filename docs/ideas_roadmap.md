@@ -35,6 +35,14 @@ light, playful and visually intuitive: icons over text, learn by doing. Asia fir
   every level of every game.
 - Boosts (complete-games): all five work in the games they matter in (docs/progression.md
   section 4's table); Lucky also grips firmer in Lucky Pinch.
+- After the user's review (2026-10-17/18, on complete-games): Pal Prix reworked into two worlds per
+  toy (car, boat, plane), with guard rails (tyre walls), bigger courses, things in the way always
+  to one side, a crowd of every kind of pal that screams at a crash; lives in Tilt Maze and Pal Prix
+  (3 hearts, a water one for a splashy pal); Tilt Maze's enemies hurt (knock back, blink, a heart)
+  instead of blocking the way; the cases from simple to fancy (Taro, the first, early; a print
+  each), the menu buttons' frames in the case's colours, the case's side in its colours as the
+  device turns; the food menu's specials page only once a special food is yours; Tilt Maze's
+  sticker prizes are your own pals'.
 
 ## Where things stood (2026-10-07)
 - Built and playable: the pet (feeding, drinks, evolution tree of 120 pals, Pal Pedia, flush),
@@ -68,43 +76,44 @@ To decide:
   tracks per minigame. Leaning: main screen.
 - The 5 special foods and the legendary pals: one legendary food per world-ending challenge (a
   world's last vault, a Paper Sumo boss...)? Later.
-- Lives in Tilt Maze: removed (falls cost time + the no-fall star). If the tension is missed: a fall
-  limit on later worlds (e.g. 5 falls = restart).
+- Lives: DECIDED (user, 2026-10-17): 3 hearts in Tilt Maze and Pal Prix (a splashy pal a 4th),
+  out of lives = the level again from the start; the other games without. To feel on the phone.
 - Menu legend: an arrow down instead of "next" in every menu except the Pal Pedia ("next pal");
   the Pedia's FORWARD (next family) next to dots that are its pages (confusing).
 - Teaching the logo double-tap turn (see Onboarding: the logo's tap-tap pulse etc.).
 - The skeleton's 8 decisions (docs/progression.md, section 8): the meal clock by what the meal did,
-  no points (the LCD shows coins), no lives, no pal stats or punishments, prices 5/30/50/70/100,
-  special foods found first then sold, the worlds of the last three games, the 9-level shape.
+  no points (the LCD shows coins), lives only in Tilt Maze and Pal Prix, no pal stats or
+  punishments, prices 5/30/50/70/100, special foods found first then sold, the worlds of the last
+  three games, the 9-level shape.
 - DECIDED (user, 2026-10-16; in code): Pal Prix is the 3rd game, Paper Sumo the 4th (it was the
   open question "RC Racer and Top Spin feel the coolest").
 To build:
 - Tilt Maze: tune physics and par times on the phone; the vaults of the other boosts once they
   exist (see "Boost-gated prizes"); the world map showing vaults; a tutorial per world's thing.
 - Splash Hoops: more polish (it has the skeleton).
-- Pal Prix (Pipe Dream's rework, branch `pipe-dream`, 2026-10-15): the pal on an RC car round a
-  raised toy track (angled close-up view, sprite-stacked 3D car, fixed speed 500, orange = left,
-  forward = right, falling off = back on the last checkpoint; the far side: the car drops behind
-  the track). Curbs slow the car; par = a clean run +3% +1 s (the 2nd star needs a near-perfect
-  run). Look (2026-10-16, after the user's Retry references, docs/mockups/palprix_worlds/v2): no
-  outlines in the background, one small palette and a time of day per world, each world's light
-  over the track too; a little grandstand by the finish line, its crowd of coloured dots hopping
-  as the car passes. WORLDS (user, 2026-10-15/16), one new thing each, its own floor:
-  1 Garden, morning (BUILT; it replaced the Playroom, whose floor didn't read close up): soft
-    grass, flowers, bushes, cloud shadows; the basics (an oval, an L, a U, then grown patches).
-  2 Kitchen (BUILT): cream and mint tiles in the window's sun; SPEED BOOST pads on the straights.
-  3 Sky, noon: JUMPS, ramps over gaps (fall if not straight on the ramp); hazy fields far below.
-  4 Lagoon, sunset: CROSSOVERS, the road passing under itself on a bridge (figure-8 circuits).
-  5 Grand Prix, night: RIVALS, the last world with 3 of them (a rival pal earlier, at some point).
-  To add incrementally across worlds (user, 2026-10-16): SLIP obstacles (oil, puddles: the car
-  spins a full 360° and stops for a moment), more boosts, obstacles. Its song: see "Music prompts".
+- Pal Prix (BUILT on complete-games, reworked 2026-10-17 after the user: "2 car, 2 boat, 2
+  plane"): the pal on an RC toy round a course seen close up at an angle (sprite-stacked toys,
+  orange = left, forward = right). Car: Garden (the basics, tyre walls on the corners, pads, jumps)
+  and Night Race (figure-8s, rain, puddles, oil, rival cars). Boat (it drifts, bumps along a buoyed
+  channel, can't fall): Lagoon (currents, ramps over sandbars) and Reef (rocks, logs, whirlpools,
+  rival boats). Plane (free in the sky, through rings; the ground far below scrolls slower): Sky
+  (gusts, hot-air balloons) and Grand Prix (a sunset over a sea of clouds: storm clouds, rival
+  planes). Lives (3 hearts): a crash breaks one. Balanced with the QA autopilot (tools/qa
+  until=done: every race's result and crashes printed). Its song: see "Music prompts".
+  LATER (the user, 2026-10-18: "we can figure that out after"):
+  - More places per toy, so the worlds keep the variety they had (the Kitchen, the Rain park, the
+    old Sky track, a bathtub or a river for the boat, space for the plane...).
+  - Or boats and planes in every world: each world a place, its levels mixing the toys.
+  - Mixed levels: the car turns into a boat or a plane mid-race (a ramp into the water, a cliff
+    to take off from). "Amazing", maybe too complex: think it through first.
 - The other launch games onto levels and worlds (Paper Sumo, Pipe Dream / RC car, Top Spin, Tummy
   Tunes), each world with its own look and new mechanic, prizes from where they belong.
 - The other 3 boosts (Focus, Sturdy, Lucky) in the games (boost table in Drinks).
 - Release builds on the real save; the testing switches off (Before release).
-- Cases for real: the Shop's CASES and STICKERS sections, saving the case and the stickers' places
-  (now only for the launch), a generator for more cases (the Melon Soda rules kept in
-  tools/art/case_melon*.py, to generalise).
+- Cases (BUILT on complete-games): 11 cases from simple to fancy (Taro first and early, Melon Soda,
+  4 prints in the Shop, 5 games' fancy ones: tools/art/cases_games.py + case_prints.py), the Shop's
+  CASES and STICKERS sections, a CASES page in the gear menu. To check: the stickers' places saved
+  across launches; more fancy ones later (glitter, clear, glow-in-the-dark?).
 - The booklet; Japanese localisation; the art pass (mutants, legends, hunger faces).
 
 ## Music prompts (Suno; the templates that worked)

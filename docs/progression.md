@@ -30,8 +30,9 @@ tracks, Pal Pedia milestones, Lucky Pinch, secrets), never the point of a coin.
 What is NOT in the game, and why:
 - Points / score: they mean nothing across games and nobody plans around them. Each game shows its
   own measure (time, accuracy, bouts) and the stars. The LCD's number becomes the coins.
-- Lives: levels are short and retry is instant; lives only add a second way to fail. The one
-  "extra life" is the Splash drink, which comes from caring for the pal.
+- Lives, except where falling is the game's danger: Tilt Maze and Pal Prix have 3 hearts (the user,
+  2026-10-17), see "Failing". Elsewhere levels are short and retry is instant; the one "extra life"
+  is the Splash drink, which comes from caring for the pal.
 - Pal stats that change winning: the pal you have is decided by the collection (and the meal
   clock), not by the game you want to play. If a pal were better at a game, players would keep it
   instead of collecting. The pal is in every game as itself (ball, driver, wrestler, rider).
@@ -106,13 +107,21 @@ and its finale; the details are in each game's script header.)
   lights).
 - Tilt Maze (BUILT): 1 Wooden Toy · 2 Bath Tiles (slippery) · 3 The Gut (bouncy walls, drifting
   holes) · 4 Sewer (currents) · 5 Factory (magnets) · 6 Space (low gravity, goo). From each world's
-  4th level a blocker, telegraphed (pegs that pop up, a rubber duck, gut valves, a sewer rat, fire
-  jets, meteors); a vault gate for every drink (fence, cracked wall, channel, shutter, chest).
-- Pal Prix (BUILT): 1 Garden (the basics) · 2 Kitchen (speed pads) · 3 Sky (jumps over gaps, a
-  ramp before each) · 4 Lagoon (figure-8s: the road over itself on a bridge) · 5 Rain (puddles that
-  spin the car, spray off the wheels) · 6 Grand Prix, night (lamps and headlights, up to three
-  rivals: 1st place for the 2nd star). Oil slicks from the Sky's 7th level on. Phoenix Pepper on
-  5-9, the Grand Prix case on 6-9.
+  4th level a blocker, telegraphed: pegs that pop up and gut valves are doors (wait for them); the
+  rubber duck, the sewer rat, fire jets and meteors are ENEMIES (the user, 2026-10-18): a touch
+  knocks the ball back in a hop, it blinks a moment (nothing hurts it, so it gets past) and a heart
+  breaks; the duck rests against a wall between crossings, the rat hides in its grate between runs
+  (always a way past). A vault gate for every drink (fence, cracked wall, channel, shutter, chest);
+  its sticker prizes are stickers of your own pals (never one you haven't met: "sticker:pal").
+- Pal Prix (BUILT, reworked 2026-10-17 after the user: two worlds per toy): 1 Garden (the car: the
+  basics, tyre walls on the corners; boost pads; jumps over gaps) · 2 Night Race (figure-8s with a
+  bridge; rain, puddles and oil; up to three rival cars) · 3 Lagoon (the boat: it drifts down a
+  buoyed channel and can't fall; currents; ramps over sandbars) · 4 Reef (rocks and logs, whirlpools,
+  rival boats) · 5 Sky (the plane through rings, the ground far below scrolling slower; gusts;
+  hot-air balloons) · 6 Grand Prix (a sunset over a sea of clouds: storm clouds, rival planes, all
+  of the sky). Bigger courses with room round them; puddles, oil, rocks, balloons and storms always
+  to one side of the course, on straights. The crowd is pals of every kind, your own among them;
+  they scream and scatter at a crash near them. Phoenix Pepper on 5-9, the Grand Prix case on 6-9.
 - Paper Sumo (BUILT; the rivals are critters of the pals' world, not pals, drawn by the pal
   renderer: tools/art/sumo_rivals.py, after the user's note that the first paper dolls, cereal
   mascots and origami didn't fit): 1 Wooden Box (frogs: hop, lean, push out) · 2 Pond Garden, a
@@ -143,15 +152,19 @@ and its finale; the details are in each game's script header.)
 |--------------|-----------------|-----------------------------|---------------------------------|
 | Splash Hoops | every basket    | 20% of the time left (built)| 45% left (built)                |
 | Tilt Maze    | out the flush   | within par (built)          | no fall (built)                 |
-| Pal Prix     | 3 laps          | within par (built)          | never off the road (built)      |
+| Pal Prix     | 3 laps          | within par / 1st (built)    | no crash (built)                |
 | Paper Sumo   | win the match   | 2-0                         | 2-0 within par time             |
 | Top Spin     | win             | 40% spin left               | 70% spin left                   |
 | Tummy Tunes  | finish the song | 85% of the notes            | 95% of the notes                |
 
 ### Failing (the answer to "lives?")
-- No lives. A level is one self-contained try of 30-90 s; finales up to ~2 min.
-- Soft failure in the traversal games (Tilt Maze, Pal Prix): a fall costs time and the "clean"
-  star, and you're back on the last checkpoint; you never restart for a mistake (as built).
+- A level is one self-contained try of 30-90 s; finales up to ~2 min.
+- Lives in the traversal games (Tilt Maze, Pal Prix; the user, 2026-10-17): 3 hearts on the HUD
+  (BaseMinigame). A fall, an enemy's touch, a crash (a car off the track, a boat on a rock, a plane
+  missing a ring or into a balloon) breaks one, costs time and the "clean" star, and you're back on
+  the last checkpoint (an enemy: knocked back; a missed ring: the plane flies on); the third ends
+  the level: "Out of lives!", retry starts it again from the beginning. A splashy pal (Splash) has a
+  4th, a water heart: its first fall is undone on the spot.
 - Hard failure only where the game is a contest: time's up (Splash Hoops), a match lost (Paper
   Sumo, Top Spin; best of 3 bouts already forgives one), the groove empty (Tummy Tunes).
 - Retry is instant: one press on the result card (RETRY first after a fail), no loading. Short
@@ -221,9 +234,9 @@ and each family's legendary food on its ULTRA Dai (5 legends).
 
 | Special food   | Kind      | Found first                                                   |
 |----------------|-----------|---------------------------------------------------------------|
-| Battery        | tech      | Pal Prix 2-6 (Kitchen: off a ramp) · Tilt Maze 5-3 (Factory)  |
+| Battery        | tech      | Pal Prix 3-6 (Lagoon: behind crates) · Tilt Maze 5-3 (Factory) |
 | Microchip      | tech      | Tilt Maze 4-3 (Sewer) · Paper Sumo 4-9 (beat the tin robot)   |
-| Moon Rock      | cosmic    | Pal Prix 3-6 (Sky: a floating island) · Tilt Maze 6-3 (Space) |
+| Moon Rock      | cosmic    | Pal Prix 5-6 (Sky: in a storm cloud) · Tilt Maze 6-3 (Space)  |
 | Alien Goo      | cosmic    | Tilt Maze 6-8 (Space)                                         |
 | Kraken Brine   | legendary | Splash Hoops 5-9 (the Storm)                                  |
 | Phoenix Pepper | legendary | Pal Prix 5-9 (the Phoenix Cup)                                |
@@ -308,8 +321,8 @@ you can do; a gift always comes from somewhere (a game, a secret, a milestone).
 | Accessories (dress)          | each game's gift track (30 stars) · Pal Pedia milestones · Lucky Pinch · secrets (e.g. Tilt Maze's world accessories: snorkel, headlamp, hard hat, space helmet) | never |
 | Gut decor (colour + add-on)  | gift tracks (15 and 60 stars) · Lucky Pinch · secrets        | never       |
 | Backgrounds (sky + scene)    | gift tracks (5 and 100 stars) · Pal Pedia milestones · secrets | never     |
-| Stickers                     | secrets (themed, rare) · Lucky Pinch · the first star        | a sticker of every pal you've found, ~5 each (grows with the Pal Pedia) |
-| Cases                        | the first one free (a gift track) · secrets in worlds 5-6 (themed: each game's case in its masters' world) | plain colours, ~40 |
+| Stickers                     | secrets (themed, rare) · Lucky Pinch · Tilt Maze's vaults (your own pals') | a sticker of every pal you've found, ~5 each (grows with the Pal Pedia) |
+| Cases                        | simple to fancy (the user, 2026-10-17): the first one plain and early (Taro: Splash Hoops 1-5, or with your first sticker) · Melon Soda (100 stars in all) · each game's own fancy case in its masters' world (6-9) | a print each (sakura, lemon, sky, cocoa), 40 |
 | Foods                        | special foods in secrets and finales                         | food packs · special foods (the daily shelf) · drink levels |
 
 - Counts: 36 gift-track items (6 games x 6: one more step, 150 stars, for the 6th world) · Pal
@@ -393,6 +406,11 @@ The user asked for the first five games as complete as possible, then to decide 
    the Shop for 40: tools/art/cases_games.py) and a CASES page in the gear menu; every game's gift
    track (5 / 15 / 30 / 60 / 100 / 150 stars; Tummy Tunes' later). Still to make: the Pal Pedia's
    milestones past 10 pals, Lucky Pinch's own exclusives.
+   After the user's review (2026-10-17/18): Pal Prix in two worlds per toy (car, boat, plane);
+   lives in Tilt Maze and Pal Prix; Tilt Maze's enemies hurt instead of blocking; the cases from
+   simple to fancy (Taro first, early; a print each: tools/art/case_prints.py) with the menu
+   buttons' frames in the case's colours; the food menu's specials page only once a special food
+   has been yours; the crowd of every kind of pal.
 4. The dev launcher: BOOT + PROGRESSION starts from zero with everything in it; STRAIGHT TO GAMES
    becomes ALL UNLOCKED (a random pal, every game, level, item, sticker and case, the whole Shop).
 Then measure on the phone and replace the model's ASSUMED numbers.
@@ -406,4 +424,9 @@ clock (new pal 3 / 10 / 30 min, known pal straight away) · no lives (the Splash
 extra life) · no pal stats or punishments (hunger and boost the only states) · prices 5 / 30 /
 50 / 70 / 100 and drink levels 10 / 20 · special foods found first, then the daily shelf (or
 350 / 450 stars) · the 9-level world shape · the collectables rule (5b).
-OPEN: Tummy Tunes' 6th world (Toy Trumpet or The Tummy).
+DECIDED (user, 2026-10-17/18): Pal Prix 2 car + 2 boat + 2 plane worlds (the car's progression in
+its two) · lives in Tilt Maze and Pal Prix (3, +1 for a splashy pal; out = the level again) · guard
+rails to try · the crowd: pals of every kind, screaming at a crash · the first case early and
+simple, then fancier ones · the specials page once a special food is yours.
+OPEN: Tummy Tunes' 6th world (Toy Trumpet or The Tummy) · Pal Prix's places (see the roadmap: more
+places per toy, boats and planes in every world, a toy that changes mid-race).
