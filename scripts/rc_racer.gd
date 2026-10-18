@@ -2677,10 +2677,13 @@ func _place_car() -> void:
 			seat = PalPrixArt.BOAT_SEAT * PX
 		"plane":
 			seat = PalPrixArt.PLANE_SEAT * PX
-	driver.position = car.position + Vector2.from_angle(heading) * seat + Vector2(0, -n * LAYER_UP - 4.0) + tilt
+	# (the pal goes with its toy: smaller and fading as it falls or sinks)
+	driver.position = car.position + (Vector2.from_angle(heading) * seat + Vector2(0, -n * LAYER_UP - 4.0) + tilt) * car.scale.x
+	driver.scale = Vector2(2, 2) * car.scale.x
+	driver.modulate = car.modulate
 	prop.visible = vehicle == "plane" and state != State.FALL
 	if prop.visible:
-		_prop_frame = (_prop_frame + 1) % 4                 # (a new blur every frame: a fast spin)
+		_prop_frame = (_prop_frame + 1) % 4                 # (a step of its turn every frame: a fast spin)
 		prop.texture = PalPrixArt.propeller(_prop_frame)
 		prop.rotation = heading
 		prop.scale = Vector2(PX, PX * (1.0 - 0.42 * absf(bank)))
