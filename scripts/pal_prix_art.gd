@@ -212,24 +212,28 @@ static func plane_wings(main: Color, body: Color, dip: int) -> Texture2D:
 	_cache[key] = _tex(img)
 	return _cache[key]
 
-## The plane's propeller seen from above as it spins (frame 0-3): a blade across the nose, long,
-## shorter, edge on, shorter, outlined dark so it shows against the sky, a red hub
+## The plane's propeller spinning fast, seen from above (frame 0-3, a new one every frame): its
+## blur, a see-through bar across the nose with a dark rim, and glints flicking along it at
+## places that jump about (never a blade you could follow: it reads as a fast spin), a red hub
 static func propeller(frame: int) -> Texture2D:
 	var key := "prop_%d" % frame
 	if key not in _cache:
-		var half: int = [5, 3, 1, 3][frame % 4]
-		var img := Image.create(5, 13, false, Image.FORMAT_RGBA8)
-		for y in range(6 - half - 1, 6 + half + 2):
-			for x in range(1, 4):
-				img.set_pixel(x, y, OUTLINE)
-		for y in range(6 - half, 6 + half + 1):
-			img.set_pixel(2, y, Color8(240, 242, 248) if (y < 6) == (frame % 2 == 0) else Color8(196, 200, 214))
-		for y in [5, 6, 7]:
+		var img := Image.create(5, 15, false, Image.FORMAT_RGBA8)
+		for y in range(0, 15):
+			img.set_pixel(1, y, Color(OUTLINE.r, OUTLINE.g, OUTLINE.b, 0.35 if y == 0 or y == 14 else 0.5))
+			img.set_pixel(3, y, Color(OUTLINE.r, OUTLINE.g, OUTLINE.b, 0.35 if y == 0 or y == 14 else 0.5))
+			if y > 0 and y < 14:
+				img.set_pixel(2, y, Color(0.92, 0.94, 1.0, 0.45))
+		var glints: Array = [[2, 9], [11, 5], [4, 12], [8, 1]][frame % 4]
+		for g in glints:
+			img.set_pixel(2, g, Color(1, 1, 1, 0.95))
+			img.set_pixel(2, g + 1, Color(1, 1, 1, 0.6))
+		for y in [6, 7, 8]:
 			for x in range(0, 5):
 				img.set_pixel(x, y, OUTLINE)
-		img.set_pixel(1, 6, Color8(226, 70, 64))
-		img.set_pixel(2, 6, Color8(255, 150, 130))
-		img.set_pixel(3, 6, Color8(190, 46, 50))
+		img.set_pixel(1, 7, Color8(226, 70, 64))
+		img.set_pixel(2, 7, Color8(255, 150, 130))
+		img.set_pixel(3, 7, Color8(190, 46, 50))
 		_cache[key] = _tex(img)
 	return _cache[key]
 

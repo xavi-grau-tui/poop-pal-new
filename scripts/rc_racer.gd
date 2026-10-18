@@ -300,6 +300,7 @@ var car: Node2D
 var slices: Array[Sprite2D] = []       # the car, bottom slice first
 var driver: Sprite2D
 var prop: Sprite2D                     # the plane's propeller, spinning at its nose
+var _prop_frame := 0
 var shadow: Sprite2D
 var car_drop := 0.0                    # how far the car has fallen (screen down, mat px)
 var antenna: Line2D                    # a thin wire at the car's back, a ball on its tip
@@ -2679,18 +2680,27 @@ func _place_car() -> void:
 	driver.position = car.position + Vector2.from_angle(heading) * seat + Vector2(0, -n * LAYER_UP - 4.0) + tilt
 	prop.visible = vehicle == "plane" and state != State.FALL
 	if prop.visible:
-		prop.texture = PalPrixArt.propeller(int(Time.get_ticks_msec() / 30) % 4)
+		_prop_frame = (_prop_frame + 1) % 4                 # (a new blur every frame: a fast spin)
+		prop.texture = PalPrixArt.propeller(_prop_frame)
 		prop.rotation = heading
 		prop.scale = Vector2(PX, PX * (1.0 - 0.42 * absf(bank)))
 		prop.position = (car.position + Vector2.from_angle(heading) * 46.0 + Vector2(0, -2.0 * LAYER_UP) + tilt * 0.66).round()
-	# the antenna stands up from the toy's back left corner, leaning back and out in the turns
-	var corner := Vector2(-30, -22) if vehicle == "car" else Vector2(-46, -18)
-	var base := car.position + corner.rotated(heading) + Vector2(0, -n * LAYER_UP)
-	var lean := Vector2.from_angle(heading) * -10.0 + Vector2.from_angle(heading + PI / 2.0) * sway * 26.0
-	var top := base + Vector2(0, -46) + lean
-	antenna.points = PackedVector2Array([base.round(), (base.lerp(top, 0.5) + lean * 0.15).round(), top.round()])
-	antenna_tip.position = top.round()
-	antenna.visible = state != State.FALL and vehicle != "plane"
+	# the antenna stands up from the toy's back left corner, leaning back and out in the turns; the
+	# plane's is a wire from behind its cockpit to the top of its tail fin, the ball on the fin's tip
+	if vehicle == "plane":
+		var up := Vector2(0, -(n - 1) * LAYER_UP)
+		var from_pt := car.position + Vector2.from_angle(heading) * -6.0 + up + tilt
+		var fin_top := car.position + Vector2.from_angle(heading) * -40.0 + up + tilt * 1.4 + Vector2(0, -22)
+		antenna.points = PackedVector2Array([from_pt.round(), fin_top.round()])
+		antenna_tip.position = fin_top.round()
+	else:
+		var corner := Vector2(-30, -22) if vehicle == "car" else Vector2(-46, -18)
+		var base := car.position + corner.rotated(heading) + Vector2(0, -n * LAYER_UP)
+		var lean := Vector2.from_angle(heading) * -10.0 + Vector2.from_angle(heading + PI / 2.0) * sway * 26.0
+		var top := base + Vector2(0, -46) + lean
+		antenna.points = PackedVector2Array([base.round(), (base.lerp(top, 0.5) + lean * 0.15).round(), top.round()])
+		antenna_tip.position = top.round()
+	antenna.visible = state != State.FALL
 	antenna_tip.visible = antenna.visible
 	if headlight:
 		headlight.rotation = heading
