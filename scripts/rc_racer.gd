@@ -4428,6 +4428,14 @@ func _take_secret() -> void:
 
 ## The rivals on the grid (behind the start line, side by side): toy cars in their own colours,
 ## a little helmeted driver each
+## The rivals' tiers: their pace (x the toy's speed), how much they brake in the bends, how far
+## they wander off their line, how often they make a mistake (a moment slow, off the line; s, 0 =
+## never), and how long they take to go at the green light (s)
+const RIVAL_TIERS := [
+	{ "name": "rookie", "speed": 0.9, "corner": 0.55, "wander": 0.24, "slip_every": 9.0, "react": 0.5 },
+	{ "name": "average", "speed": 0.95, "corner": 0.35, "wander": 0.14, "slip_every": 16.0, "react": 0.3 },
+	{ "name": "ace", "speed": 1.0, "corner": 0.15, "wander": 0.05, "slip_every": 0.0, "react": 0.12 },
+]
 const PLANE_BODY := Color8(250, 210, 84)          # (every plane's yellow body: yours and the rivals')
 const RIVAL_PLANE_COLS := [Color8(70, 130, 220), Color8(150, 100, 210), Color8(110, 190, 110)]   # the rival planes' wings: blue, purple, green
 const RIVAL_COLS := [[Color8(70, 130, 220), Color8(46, 92, 170)], [Color8(240, 200, 70), Color8(196, 150, 40)], [Color8(110, 190, 110), Color8(70, 140, 76)]]
@@ -4480,8 +4488,15 @@ func _spawn_rivals() -> void:
 		# on the grid: just behind the line, the lanes either side of the middle
 		var lane: float = [-0.42, 0.42, 0.0][j]
 		var back_pts := 8 + j * 7
+		# each rival a driver of its own (the user, 2026-10-18: they all drove the same, perfectly,
+		# in step): a rookie, an average one, an ace (RIVAL_TIERS); one rival: an average one, two:
+		# a rookie and an ace, three: one of each
+		var tier: int = [[1], [0, 2], [0, 1, 2]][clampi(n, 1, 3) - 1][j]
+		var tr: Dictionary = RIVAL_TIERS[tier]
 		rivals.append({ "node": node, "slices": sl, "light": light, "helmet": helmet, "prop": rprop, "layers": layers, "bank": 0.0, "col": RIVAL_PLANE_COLS[j], "progress": -float(back_pts), "lane": lane,
-			"speed": _speed() * (0.95 + 0.02 * j + 0.005 * k) * (0.88 if vehicle == "boat" else 1.0), "heading": 0.0, "pos": Vector2.ZERO, "done": false })
+			"speed": _speed() * float(tr["speed"]) * (1.0 + 0.004 * k) * (0.88 if vehicle == "boat" else 1.0), "heading": 0.0, "pos": Vector2.ZERO, "done": false,
+			"tier": tier, "lane_now": lane, "phase": randf() * TAU, "wander_hz": randf_range(0.25, 0.5), "slip_t": 0.0,
+			"next_slip": randf_range(float(tr["slip_every"]) * 0.5, float(tr["slip_every"]) * 1.5), "react": float(tr["react"]) + randf_range(0.0, 0.15), "gone": false })
 	_place_rivals()
 
 ## A rival's place on the road from its progress (points along the centre line, laps included)
@@ -4493,7 +4508,7 @@ func _place_rivals() -> void:
 		var a := centre[(i % count + count) % count]
 		var b := centre[((i + 1) % count + count) % count]
 		var dir := (b - a).normalized()
-		var p := a.lerp(b, f) + Vector2(-dir.y, dir.x) * half_w * float(r["lane"])
+		var p := a.lerp(b, f) + Vector2(-dir.y, dir.x) * half_w * float(r.get("lane_now", r["lane"]))
 		r["pos"] = p
 		var node: Node2D = r["node"]
 		node.position = p.round()
@@ -4542,21 +4557,44 @@ func _update_rivals(delta: float) -> void:
 		return
 	var ahead := 0
 	for r in rivals:
-		if not r["done"]:
+		var tr: Dictionary = RIVAL_TIERS[int(r["tier"])]
+		if not r["done"] and race_time >= float(r["react"]):
 			var gap: float = r["progress"] - progress
 			var k := 1.0
 			if gap > count * 0.12:
 				k = 0.94
 			elif gap < -count * 0.12:
 				k = 1.06
+			# slower through the bends (a rookie much more), and its mistakes: now and then a
+			# moment slow, off its line
+			var ri := posmod(int(r["progress"]), count)
+			var bend := absf(wrapf((centre[(ri + 7) % count] - centre[(ri + 6) % count]).angle() - (centre[(ri + 1) % count] - centre[ri]).angle(), -PI, PI))
+			k *= 1.0 - float(tr["corner"]) * clampf(bend, 0.0, 1.0)
+			if float(tr["slip_every"]) > 0.0:
+				r["next_slip"] = float(r["next_slip"]) - delta
+				if float(r["next_slip"]) <= 0.0:
+					r["slip_t"] = 0.8
+					r["next_slip"] = randf_range(float(tr["slip_every"]) * 0.6, float(tr["slip_every"]) * 1.4)
+			if float(r["slip_t"]) > 0.0:
+				r["slip_t"] = float(r["slip_t"]) - delta
+				k *= 0.55
 			r["progress"] += r["speed"] * k * delta / STEP
 			if r["progress"] >= count * LAPS:
 				r["done"] = true
+				# (over the line: it fades away, never parked in your way at the finish)
+				var fade := (r["node"] as Node2D).create_tween()
+				fade.tween_interval(0.6)
+				fade.tween_property(r["node"], "modulate:a", 0.0, 0.5)
+				fade.tween_callback(func(): r["gone"] = true)
+		# its own line: wandering about its lane on its own rhythm, jolted aside by a mistake
+		var wob := sin(race_time * TAU * float(r["wander_hz"]) + float(r["phase"])) * float(tr["wander"])
+		var jolt := sin(float(r["slip_t"]) / 0.8 * PI) * 0.25 * (1.0 if int(r["phase"] * 10.0) % 2 == 0 else -1.0) if float(r["slip_t"]) > 0.0 else 0.0
+		r["lane_now"] = clampf(float(r["lane"]) + wob + jolt, -0.62, 0.62)
 		if r["progress"] > progress:
 			ahead += 1
-		# a bump (the cars, the boats; planes keep apart)
+		# a bump (the cars, the boats; planes keep apart; a finished one is out of the way)
 		var d: Vector2 = car_pos - r["pos"]
-		if vehicle != "plane" and d.length() < 46.0 and d.length() > 0.1 and air_t <= 0.0:
+		if vehicle != "plane" and not r["done"] and d.length() < 46.0 and d.length() > 0.1 and air_t <= 0.0:
 			var push := d.normalized() * (46.0 - d.length())
 			if PetState.boost_power("sturdy") > 0:
 				r["lane"] = clampf(r["lane"] - signf(push.dot(Vector2(-sin(r["heading"]), cos(r["heading"])))) * 0.08, -0.6, 0.6)
