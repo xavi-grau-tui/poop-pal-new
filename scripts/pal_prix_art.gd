@@ -212,23 +212,30 @@ static func plane_wings(main: Color, body: Color, dip: int) -> Texture2D:
 	_cache[key] = _tex(img)
 	return _cache[key]
 
-## The plane's propeller spinning, seen from above (frame 0-3, a new one every frame drawn): its
-## sweep, a see-through bar across the nose with a soft dark edge (it shows on a light sky), and a
-## white mark at each tip flicking from one side to the other (the blades going round), a red hub
-## (the user, 2026-10-18: option D of propellers.gif)
+## The plane's propeller spinning, seen from above (frame 0-11): its sweep, a see-through bar
+## across the nose with a soft dark edge (it shows on a light sky), shimmering frame to frame, and
+## the blades' two bright glints sweeping along it from the tips through the hub and out the other
+## side (the user, 2026-10-18: it has to look like it's moving, not a fixed piece), a red hub. The
+## game shows a new frame every frame drawn: the glints step every second frame (30 a second)
 static func propeller(frame: int) -> Texture2D:
 	var key := "prop_%d" % frame
 	if key not in _cache:
 		var img := Image.create(5, 15, false, Image.FORMAT_RGBA8)
 		var cy := 7
+		var shimmer := frame % 2 == 0
 		for y in 15:
 			var tip := absi(y - cy) >= 7
-			img.set_pixel(1, y, Color8(70, 70, 100, 66))
-			img.set_pixel(3, y, Color8(70, 70, 100, 66))
-			img.set_pixel(2, y, Color8(250, 252, 255, 105 if tip else 190))
-		var side := 1 if frame % 2 == 0 else -1
-		for m in [[cy - 7, side], [cy - 6, side * 2], [cy - 5, side * 2], [cy + 7, -side], [cy + 6, -side * 2], [cy + 5, -side * 2]]:
-			img.set_pixel(2 + int(m[1]), int(m[0]), Color8(255, 255, 255))
+			img.set_pixel(1, y, Color8(70, 70, 100, 70))
+			img.set_pixel(3, y, Color8(70, 70, 100, 70))
+			img.set_pixel(2, y, Color8(250, 252, 255, (110 if tip else 200) if shimmer else (80 if tip else 150)))
+		var d: int = [6, 4, 2, -2, -4, -6][(frame / 2) % 6]
+		for g: int in [cy + d, cy - d]:
+			img.set_pixel(2, g, Color8(255, 255, 255))
+			for x in [1, 3]:
+				img.set_pixel(x, g, Color8(255, 255, 255, 170))
+			var trail: int = g - signi(d) if g > cy else g + signi(d)
+			if trail >= 0 and trail < 15:
+				img.set_pixel(2, trail, Color8(255, 255, 255, 220))
 		for y in [cy - 1, cy, cy + 1]:
 			for x in 5:
 				img.set_pixel(x, y, OUTLINE)

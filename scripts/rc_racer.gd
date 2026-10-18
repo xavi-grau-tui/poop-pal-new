@@ -2683,7 +2683,7 @@ func _place_car() -> void:
 	driver.modulate = car.modulate
 	prop.visible = vehicle == "plane" and state != State.FALL
 	if prop.visible:
-		_prop_frame = (_prop_frame + 1) % 4                 # (a new one every frame: a fast spin)
+		_prop_frame = (_prop_frame + 1) % 12                # (a new one every frame: a fast spin)
 		prop.texture = PalPrixArt.propeller(_prop_frame)
 		prop.rotation = heading
 		prop.scale = Vector2(PX, PX * (1.0 - 0.42 * absf(bank)))
