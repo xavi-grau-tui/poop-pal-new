@@ -305,6 +305,8 @@ var canopy: Sprite2D                   # the Garden's branches over everything
 var ring_back: Node2D                  # the plane's rings: their lower halves (under it)...
 var ring_front: Node2D                 # ...and their upper ones (over it)
 var gust_fx: GustFx                    # the wind's streaks across the course
+var air_fx: AirFx                      # the plane's: the air rushing past it
+var sky_dock: SkyDock                  # ...and the deck its race starts from
 var guide: FlightGuide                  # the plane's: the sparkles to its next rings
 var buoys: FloatingBuoys                # the boat's: the buoys along the channel
 var water_fx: WaterFx                   # ...the water's glints, its whirlpools turning
@@ -1062,6 +1064,126 @@ class WaterFx extends Node2D:
 					var q2 := (cen + Vector2.from_angle(ang2) * 68.0).snapped(Vector2(4, 4))
 					draw_rect(Rect2(q2 - Vector2(4, 2), Vector2(8, 4)), Color(1, 1, 1, 0.6))
 
+## The air rushing past the plane (the user, 2026-10-18: a wind layer always against its front,
+## very subtle, the race still the picture): faint thin streaks coming at it from ahead and
+## sliding past on both sides, faster than it flies, along its heading; on the 4 px grid
+class AirFx extends Node2D:
+	var rc: Node
+	var streaks: Array = []               # [position, velocity, age, life, length]
+	func _process(delta: float) -> void:
+		if not visible or rc == null:
+			return
+		var fwd := Vector2.from_angle(float(rc.heading))
+		var side := Vector2(-fwd.y, fwd.x)
+		var at: Vector2 = rc.car_pos
+		if rc.state == 1 and streaks.size() < 26 and randf() < delta * 22.0:      # (racing only: State.DRIVE)
+			var off := side * randf_range(60.0, 340.0) * (1.0 if randf() < 0.5 else -1.0)
+			var p := at + fwd * randf_range(260.0, 520.0) + off
+			streaks.append([p, -fwd * randf_range(900.0, 1200.0), 0.0, randf_range(0.35, 0.6), randf_range(24.0, 48.0)])
+		for st in streaks:
+			st[0] += (st[1] as Vector2) * delta
+			st[2] += delta
+		streaks = streaks.filter(func(st): return st[2] < st[3])
+		queue_redraw()
+	func _draw() -> void:
+		for st in streaks:
+			var f: float = st[2] / st[3]
+			var a := sin(f * PI) * 0.3
+			var dir: Vector2 = (st[1] as Vector2).normalized()
+			var ln: float = st[4]
+			var k := 0.0
+			while k < ln:
+				var q := ((st[0] as Vector2) - dir * k).snapped(Vector2(4, 4))
+				draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, a * (1.0 - k / ln * 0.6)))
+				k += 4.0
+
+## The planes' start (the user, 2026-10-18: not just floating): a wooden deck hanging in the sky
+## under the grid, outlined, its planks lit from the top left, its side face below it, the
+## checkered start line across it, held up by two balloons at its back corners (bobbing on their
+## strings); painted once (1 px = 4 mat px), under the planes
+class SkyDock extends Node2D:
+	var tex: Texture2D
+	var top_left := Vector2.ZERO
+	var balloons: Array = []              # [anchor (mat px), its sprite]
+	var t := 0.0
+	func build(c0: Vector2, dir: Vector2, back: float, ahead: float, half: float, balloon_tex: Array) -> void:
+		for b in balloons:
+			(b[1] as Node).queue_free()
+		balloons.clear()
+		var side := Vector2(-dir.y, dir.x)
+		var corners := [c0 - dir * back - side * half, c0 - dir * back + side * half, c0 + dir * ahead - side * half, c0 + dir * ahead + side * half]
+		var lo: Vector2 = corners[0]
+		var hi: Vector2 = corners[0]
+		for q in corners:
+			lo = lo.min(q)
+			hi = hi.max(q)
+		hi += Vector2(0, 24)                                  # (room for the side face)
+		lo = (lo / 4.0).floor() * 4.0
+		var w := int((hi.x - lo.x) / 4.0) + 2
+		var h := int((hi.y - lo.y) / 4.0) + 2
+		var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+		var out := Color8(40, 30, 40)
+		var wood := [Color8(150, 104, 66), Color8(178, 128, 82), Color8(204, 152, 100), Color8(222, 172, 118)]
+		var inside := func(q: Vector2) -> Vector2:
+			var o: Vector2 = q - c0
+			return Vector2(o.dot(dir), o.dot(side))
+		for y in h:
+			for x in w:
+				var q := lo + Vector2(x * 4 + 2, y * 4 + 2)
+				var uv: Vector2 = inside.call(q)
+				var on := uv.x > -back and uv.x < ahead and absf(uv.y) < half
+				if on:
+					var edge := uv.x < -back + 6.0 or uv.x > ahead - 6.0 or absf(uv.y) > half - 6.0
+					var col: Color
+					if edge:
+						col = out
+					elif absf(uv.x) < 12.0:
+						col = Color8(30, 30, 34) if (int(floorf(uv.x / 8.0)) + int(floorf(uv.y / 8.0))) % 2 == 0 else Color8(244, 240, 226)
+					else:
+						var plank := int(floorf((uv.y + half) / 16.0)) % 2
+						var lit := (uv.y < -half + 14.0) or (uv.x < -back + 14.0)
+						col = wood[3] if lit else wood[1 + plank]
+						if int(floorf(uv.x / 40.0)) % 3 == 0 and absf(fposmod(uv.x, 40.0)) < 4.0:
+							col = wood[0]                         # (the planks' joints)
+					img.set_pixel(x, y, col)
+				else:
+					# its side face: below the deck on the screen (thick wood, then its outline)
+					for dy in [8.0, 16.0]:
+						var uv2: Vector2 = inside.call(q - Vector2(0, dy))
+						if uv2.x > -back and uv2.x < ahead and absf(uv2.y) < half:
+							img.set_pixel(x, y, out if dy > 12.0 else wood[0].darkened(0.25))
+							break
+		tex = ImageTexture.create_from_image(img)
+		top_left = lo
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		for k in 2:
+			var anchor: Vector2 = c0 - dir * (back - 14.0) + side * (half - 14.0) * (1.0 if k == 0 else -1.0)
+			var spr := Sprite2D.new()
+			spr.texture = balloon_tex[k]
+			spr.scale = Vector2(4, 4)
+			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			add_child(spr)
+			balloons.append([anchor, spr])
+		queue_redraw()
+	func _process(delta: float) -> void:
+		if not visible:
+			return
+		t += delta
+		for k in balloons.size():
+			var b: Array = balloons[k]
+			(b[1] as Sprite2D).position = ((b[0] as Vector2) + Vector2(0, -96.0 + 6.0 * sin(t * 1.3 + k * 2.0))).round()
+		queue_redraw()
+	func _draw() -> void:
+		if tex:
+			draw_texture_rect(tex, Rect2(top_left, tex.get_size() * 4.0), false)
+		for b in balloons:
+			var a: Vector2 = b[0]
+			var top: Vector2 = (b[1] as Sprite2D).position + Vector2(0, 30)
+			var k2 := 0.0
+			while k2 < 1.0:
+				draw_rect(Rect2(a.lerp(top, k2).snapped(Vector2(4, 4)) - Vector2(2, 2), Vector2(4, 4)), Color8(40, 30, 40))
+				k2 += 0.08
+
 ## The wind across the course in a gust: short white streaks blowing over it (on the 4 px grid)
 class GustFx extends Node2D:
 	var zones: Array = []                 # [points (the course there), the way it blows]
@@ -1159,6 +1281,12 @@ func _begin(n: int) -> void:
 	board.texture = ImageTexture.create_from_image(_paint())
 	track.texture = ImageTexture.create_from_image(track_image)
 	buoys.setup(_buoy_spots)
+	air_fx.visible = vehicle == "plane"
+	air_fx.streaks.clear()
+	sky_dock.visible = vehicle == "plane"
+	if vehicle == "plane":
+		var d0 := (centre[2] - centre[0]).normalized()
+		sky_dock.build(centre[0], d0, 30.0 * STEP, 8.0 * STEP, half_w * 1.05, [_balloon_texture(), _balloon_texture()])   # (party balloons: the hot-air ones are things in the way)
 	water_fx.visible = vehicle == "boat"
 	water_fx.setup(self, slicks.filter(func(sl): return sl[1] == "whirl").map(func(sl): return sl[0]), Color8(255, 236, 214) if look == "lagoon" else Color8(236, 255, 252), pads if vehicle == "boat" else [], PAD_LEN, half_w - 34.0)
 	canopy.visible = look == "garden" and not _trees.is_empty()
@@ -3079,6 +3207,8 @@ func _create_nodes() -> void:
 	world.add_child(crowd)
 	buoys = FloatingBuoys.new()
 	world.add_child(buoys)                          # (on the water, under the boat)
+	sky_dock = SkyDock.new()
+	world.add_child(sky_dock)                       # (the planes' start deck, under them)
 	trail = Trail.new()
 	world.add_child(trail)
 	guide = FlightGuide.new()
@@ -3091,6 +3221,9 @@ func _create_nodes() -> void:
 	world.add_child(ring_front)                     # (its upper half: over it, the plane goes through)
 	gust_fx = GustFx.new()
 	world.add_child(gust_fx)
+	air_fx = AirFx.new()
+	air_fx.rc = self
+	world.add_child(air_fx)                         # (over the plane: the air between it and you)
 	canopy = Sprite2D.new()
 	canopy.centered = false
 	canopy.scale = Vector2(PX, PX)
