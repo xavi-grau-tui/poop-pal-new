@@ -335,7 +335,7 @@ class Flames extends Node2D:
 				draw_rect(Rect2(p - Vector2(w, w) / 2.0, Vector2(w, w)), c)
 
 func _ready() -> void:
-	game_music_path = "res://sounds/music/Pixel Chase.ogg"     # (placeholder: Pal Prix's song until Pal Prix 2 has its own)
+	game_music_path = _song_for(GameData.last_level(GAME_INDEX))
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	_create_nodes()
 	intro_text = "Race your turbo craft"
@@ -389,6 +389,7 @@ func _begin(n: int) -> void:
 	var spec: Array = LEVELS[level - 1]
 	extras = spec[7] if spec.size() > 7 else {}
 	ice = bool(extras.get("ice", false))
+	_play_song()
 	var t0 := Time.get_ticks_msec()
 	course = PalPrix2Course.new()
 	course.margin = 340.0
@@ -463,6 +464,22 @@ func _begin(n: int) -> void:
 		get_tree().create_timer(1.4 if k == 0 else 1.0).timeout.connect(func():
 			if is_running and level == n:
 				_show_banner(hint, 1.2))
+
+## Its two songs (the user, 2026-10-19): "Turbo Circuit" for the first three worlds, "Racer X"
+## for the last three (looped on bar lines: tools/audio/loop_track.py)
+const SONGS := ["res://sounds/music/Turbo Circuit.ogg", "res://sounds/music/Racer X.ogg"]
+func _song_for(lvl: int) -> String:
+	return SONGS[0] if (maxi(lvl, 1) - 1) / GameData.LEVELS_PER_WORLD < 3 else SONGS[1]
+
+## A level's world has its song: switched on the game screen if it isn't the one playing
+func _play_song() -> void:
+	var want := _song_for(level)
+	if want == game_music_path:
+		return
+	game_music_path = want
+	var gs = get_node_or_null("/root/PoopPal/Main UI/GameScreen")
+	if gs and gs.has_method("_start_music_for_game"):
+		gs._start_music_for_game()
 
 ## The par time (a clean drive, a little slack: no boosts needed) and the turbo time (the boosts'
 ## time: plates, drifts, perfect transforms)

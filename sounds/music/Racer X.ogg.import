@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://d2ggixwvi8l3c"
+path="res://.godot/imported/Racer X.ogg-657c7cf0afe09e0becca36a86513c347.oggvorbisstr"
+
+[deps]
+
+source_file="res://sounds/music/Racer X.ogg"
+dest_files=["res://.godot/imported/Racer X.ogg-657c7cf0afe09e0becca36a86513c347.oggvorbisstr"]
+
+[params]
+
+loop=true
+loop_offset=0.428
+bpm=106.75
+beat_count=0
+bar_beats=4

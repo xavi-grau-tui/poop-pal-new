@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://dp5kolv27ce4w"
+path="res://.godot/imported/Turbo Circuit.ogg-a75d2781625c7aec78eff864169e20b1.oggvorbisstr"
+
+[deps]
+
+source_file="res://sounds/music/Turbo Circuit.ogg"
+dest_files=["res://.godot/imported/Turbo Circuit.ogg-a75d2781625c7aec78eff864169e20b1.oggvorbisstr"]
+
+[params]
+
+loop=true
+loop_offset=0.189
+bpm=112.44
+beat_count=0
+bar_beats=4

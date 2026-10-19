@@ -143,7 +143,10 @@ To build:
   step), 3-6 (sturdy: crates on the road), 4-6 (lucky), 5-6 Moon Rock (sturdy), 6-6 Stardust Sugar
   (lucky). QA: tools/qa/shoot.sh game=11 ... at=jump|step|pad|ring|rock|berg|asteroid|well|sling|
   gust|gate|secret starts the race just before that thing.
-  STILL TO DO: its own song (prompt in "Music prompts"; Pal Prix's "Pixel Chase" stands in), its
+  ITS SONGS (the user, 2026-10-19): "Turbo Circuit" (worlds 1-3, 112.44 BPM, loop 0.189 ->
+  117.585 s) and "Racer X" (worlds 4-6, 106.75 BPM, loop 0.428 -> 117.342 s); Suno's m4a is Opus
+  in MP4 (afconvert can't read it: decoded with PyAV first), originals in sounds/music/originals.
+  STILL TO DO: its
   own sounds (the hover hum, the transform's puff, the boost: Pal Prix's for now), its gift track
   and prizes (a Turbo case for 6-9, stickers: coins stand in), tuning the speed, the drift and the
   par / turbo times on the phone.
