@@ -19,6 +19,9 @@ light, playful and visually intuitive: icons over text, learn by doing. Asia fir
 ## Where things stand (2026-10-16, late)
 - 2026-10-19: Pal Prix 2177 (the Turbo League) built on branch `pal-prix-2`, for the user to try:
   see "PAL PRIX 2177" under "To build" (what's in it, what's still to do).
+- 2026-10-19 (later): THE GAMES' LOOK, one suite (branch `suite-look`, NOT merged): Top Spin redone
+  as the trial (Beyblades, its places, the band, the effects, the 3D tilt), for the user to judge
+  before Tilt Maze, Splash Hoops and Paper Sumo follow: see "The games' look: one suite".
 - Branch `complete-games` (not merged, for the user to review: what stays, what changes): the
   skeleton's systems (meal clock, coins on the LCD, every boost, drink levels, the daily special
   shelf, Lucky Pinch every 4th new pal); the first five games each at 6 worlds x 9 levels with a
@@ -1137,6 +1140,44 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   certain to drop, or guaranteed after a few tries, never a long chain of random drops).
 - Games feed each other: game A drops the drink whose boost opens game B's secrets.
 
+## The games' look: one suite (2026-10-19, TRIAL on branch `suite-look`: Top Spin first)
+- The aim (the user, 2026-10-19): Splash Hoops, Tilt Maze, Top Spin and Paper Sumo at the race
+  games' quality, so all of them feel part of the same thing, Pal Prix 2177 the most advanced (its
+  nature). Their ideas and gameplay stay; Tilt Maze needs the least. A middle point between Pal
+  Prix (the base) and Pal Prix 2177 (the light and motion), applied first to Top Spin, to see it
+  before confirming the rest.
+- THE RULES (every game; the shared kit is scripts/game_fx.gd, GameFx):
+  - The base (Pal Prix, after the Retry references): hard pixels on the 4 px grid; the dark
+    outline (Color8(40, 30, 40)) on the play pieces only; lit from the top left; raised pieces with
+    a side face and a drop shadow; toys "sprite-stacked" in slices (they lean, wobble, bob); the
+    pal as its ball, x2, riding / driving / set in its toy.
+  - The places (the user: "no random stuff in the backgrounds"): each world ONE place with its own
+    small palette and a time of day; no outlines in the background, few colours in steps with a 2x2
+    dither, depth by haze; the world's light lies over everything, the play pieces too; nothing
+    scattered about to fill it: what's there belongs to the place, and something in it lives (dust
+    in a sunbeam, flecks of sun through leaves, a lamp swaying, lanterns flickering, fireworks'
+    flashes, light rippling on water).
+  - The light and motion (2177's, measured): glows on what matters (a soft halo, a bright core, a
+    white-hot pixel), sparks with tails, bursts, shockwave rings, light ribbons behind fast things,
+    a shake and a tiny freeze on the big hits. Words only for the rare big moments (world names,
+    GO!, WIN!, a rival out); the frequent ones are said by the sparks and the chime (2177: "a bit
+    annoying").
+  - The 3D tilt (the user: like the iPhone's 3D photos; Pal Prix first): tilting the phone shifts
+    the layers by their depth, the play plane still (what you see is where things are).
+  - The HUD: the race games' band across the top (GameFx.HUD_BAND): the level on the left, the
+    game's measure in the middle, the 3 stars (each dims the moment it's lost), lives if any, the
+    game's own things on the right, the boost at the far right; the band in the game's own
+    material, its foot line in the world's accent (a timer or a charge can run along it). The
+    button legend in the bottom corners, the banner (72 px, outlined) across the middle.
+- TOP SPIN (built on `suite-look`, for the user to judge): see its section. Tools: tools/qa/preview
+  (an art preview from a scratch script, with the autoloads), Top Spin's QA autopilot,
+  tools/audio/top_sounds.py.
+- NEXT, once the user confirms (proposed): Tilt Maze (the band and the stars like the races, the 3D
+  tilt: the holes' depth below, the walls raised; the board's places calmer, its pieces moving),
+  Splash Hoops (the band in the toy's plastic, the tank as one scene with its light and life, the
+  baskets and the pal stacked, splashes and bubbles as bursts), Paper Sumo (the band, the stage's
+  light over the wrestlers, hops and pushes as bursts and dust, a shake on a fall).
+
 ## Tilt Maze (the model for the others)
 - BUILT (2026-10-15, branch `tilt-maze`, to tune on the phone): 6 worlds x 9 levels in the level menu
   (scripts/tilt_maze.gd; the art in scripts/tilt_maze_art.gd, every world on the first one's grid:
@@ -1209,17 +1250,39 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   team matches with an ally top, stars, boosts (Sturdy = heavier, Fizz = stronger dash or easier
   winding, Focus = wider perfect window), pal traits.
 - Watch: readability on a small screen. Max 3 rivals plus obstacles, big tops, a clear wobble.
-- Look: painted wooden koma (Edo-koma: bright concentric rings, lathe-turned) in a turned wooden
-  bowl with grain and lathe rings. The rings blur into bands when fast and become stripes as the
-  top slows, so spin reads at a glance.
+- LOOK (2026-10-19, branch `suite-look`, the games' shared look; scripts/top_spin_art.gd): the tops
+  are Beyblades (the user: "they should have blades"), stacked in slices (the tip, the driver, the
+  wheel, the blades' side, the blade ring), ridden by pals set right in the middle like their
+  vehicle (the user). The rivals' blade rings tell how they fight, the same in every world
+  (rookie: 3 little fins, charger: 3 hooks, wall: a round shield, heavy: 4 lugs, a champion: 4
+  scythes; their riders: kappa, karakasa, komainu, oo_daruma, and each world's champion from its
+  place: kaguya, tengu, kyubi, ningyo, mecha_oni, hou_ou); yours is new in each world, always orange
+  (4 blades, a star, petals, waves, gear teeth, a dragon). The blades turn in step with the spin
+  (fast and smooth at full spin, a haze between them, light arcs at the rim; visibly slowing as it
+  runs down), a slow top wobbles and shows its body, a guarding one squats, a spun-out one lies
+  down. While winding: your top in close-up, twice as fine, the light gathering round it (red-hot
+  over-wound), each gold pull a jolt, sparks off its blades and the ripcord's zip; its whir climbs
+  with the spin (sounds/fx/top_whir.wav, top_zip.wav). The bowl is raised (its near rim over the
+  tops, its shadow on the place, the ways out as dark pockets with lights that turn red while a
+  top is near), each world one place in its light: a tatami room in the morning sun (dust in it),
+  a veranda in a tree's shade (flecks of sun), a lacquered table by lamplight (gold glints), a
+  bathroom in daylight (light rippling on the water), a workbench under a swaying lamp, a
+  festival stage at night (lanterns, fireworks' flashes). The race games' band: the level, your
+  pal and spin, the stars dimming as your spin drops below 70% and 40%, the rivals' spins, the
+  winding's clock along its foot. The 3D tilt: the place below one way, the rim the other.
+  Effects: sparks both ways along a clash, rings of light, a shake and a tiny freeze on the big
+  hits, a white shockwave and sparkles for a perfect guard, a light ribbon behind a dash, dust on
+  a landing and a fall, confetti for a win; no GOOD / PERFECT words.
+  Older notes: painted wooden koma (Edo-koma: bright concentric rings, lathe-turned) in a turned
+  wooden bowl with grain and lathe rings.
   Colour (2026-10-08): wooden but NOT brown: blue-grey tones (indigo-stained / aizome wood,
   weathered grey wood, or whitewashed ash with the grain showing). Wood reads through grain and
   lathe rings, not colour. The bowl stays calm blue-grey; the tops are painted Edo-koma with
   bright rings that pop against it (each rival its own ring colours). Fits the slate card and the
   chiptune music ("Pixel Battle"); if the track then feels too futuristic, regenerate it with a
   few traditional touches (koto-like square lead, soft taiko), the same recipe as Pixel Sumo.
-- Feel to add: screen shake and a short freeze on big hits, a bigger spark burst; a whirring hum
-  that drops in pitch as the top slows, wooden clacks, the ripcord sound while winding.
+- Feel: DONE on `suite-look` (a shake and a short freeze on big hits, sparks, the whir that follows
+  the spin, the ripcord's zip). Still: wooden clacks; maybe a metal clash for the hits.
 - Check on the phone: tilt directions (INVERT_TILT), winding speed, damage, match length.
 
 ## Paper Sumo (prototype: scripts/paper_sumo.gd)

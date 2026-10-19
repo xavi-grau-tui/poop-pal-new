@@ -689,9 +689,9 @@ func _start_match() -> void:
 	phase = Phase.WIND
 	dropping = false
 	forward_held = false
-	player.root.position = C
 	player.root.hi = true                            # (the close-up: twice the size, twice as fine)
 	player.root.scale = Vector2.ONE
+	player.root.position = C - player.root.face_offset()   # (its face right in the dial's middle: the user)
 	practice = tut != Tut.NONE
 	calibrate_tilt()                                 # (the 3D tilt's level, until the drop sets the steering's)
 	var per := GameData.LEVELS_PER_WORLD
@@ -845,8 +845,8 @@ func _wind_pull() -> void:
 		jolt.tween_property(player.root, "scale", Vector2.ONE, 0.14)
 		for k in 10:
 			var a := TAU * k / 10.0 + randf() * 0.3
-			fx.spray(C + Vector2(0, -36) + Vector2.from_angle(a) * 80.0, Vector2.from_angle(a + PI / 2.0 * player.dir), 1, [GOLD, Color(1, 1, 1)], 0.3, 1.2)
-		fx.ring(C + Vector2(0, -36), Color8(255, 222, 120), 70.0, 150.0 + combo * 8.0, 0.3, 6.0)
+			fx.spray(C + Vector2.from_angle(a) * 80.0, Vector2.from_angle(a + PI / 2.0 * player.dir), 1, [GOLD, Color(1, 1, 1)], 0.3, 1.2)
+		fx.ring(C, Color8(255, 222, 120), 70.0, 150.0 + combo * 8.0, 0.3, 6.0)
 		_kick(0.08 + 0.02 * mini(combo, 5))
 		if tut == Tut.WIND:
 			tut_good += 1
@@ -886,8 +886,10 @@ func _drop_step(delta: float) -> void:
 	var off := aim - C
 	if off.length() > R - 80.0:
 		aim = C + off.limit_length(R - 80.0)
-	player.root.position = GameFx.snap(aim + Vector2(0, -110.0 * lift))
 	player.root.scale = Vector2.ONE * lerpf(1.0, 0.8, lift)
+	# (it rises from the dial's middle, where its face was, into the drop pose over its shadow)
+	var centred := -player.root.face_offset() * player.root.scale.x * (1.0 - lift)
+	player.root.position = GameFx.snap(aim + Vector2(0, -110.0 * lift) + centred)
 	if tut != Tut.DROP:
 		drop_left -= delta
 	if drop_left <= 0.0:
