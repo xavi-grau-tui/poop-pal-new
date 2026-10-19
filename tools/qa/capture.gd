@@ -19,6 +19,7 @@ extends Node
 ##   until=done    on to the next level as soon as this one is over (at most `wait` s)
 ##   hands=off     (Pal Prix) the toy isn't steered at all: can it finish by itself?
 ##   intro=1       the game's how-to card over each level
+##   depth=x,y     (Pal Prix) a pretend phone tilt for the 3D layers, -1..1 each
 ## Prints "QA DONE" and quits when finished. The testing save is wiped at every launch anyway.
 
 var args := {}
@@ -114,6 +115,8 @@ func _run() -> void:
 				g.qa_hands_off = true                          # (hands=off: nobody steers)
 			if "qa_skill" in g and args.has("skill"):
 				g.qa_skill = int(args["skill"])
+			if "qa_depth_tilt" in g and args.has("depth"):
+				g.qa_depth_tilt = Vector2(float(str(args["depth"]).get_slice(",", 0)), float(str(args["depth"]).get_slice(",", 1)))   # (depth=x,y: a pretend tilt)
 			if args.get("intro", "") == "1" and g.has_method("_show_intro"):
 				g.is_running = false
 				g._show_intro()                                  # (intro=1: its how-to card)

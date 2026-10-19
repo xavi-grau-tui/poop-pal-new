@@ -1097,6 +1097,35 @@ class AirFx extends Node2D:
 				draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, a * (1.0 - k / ln * 0.6)))
 				k += 4.0
 
+## EXPERIMENT (the user, 2026-10-18: "like the iPhone's 3D photos"): tilting the phone shifts
+## the layers by their depth, the toys and the track still: the far ones (the floor under the
+## raised track, the plane's ground far below) one way, the near ones (the Garden's branches, the
+## air rushing past) the other; measured from the pose at the race's start, smoothed; off with
+## DEPTH_3D. Pixels per full tilt, on the screen:
+const DEPTH_3D := true
+const DEPTH_FAR := { "car": 18.0, "boat": 8.0, "plane": 46.0 }
+const DEPTH_NEAR := { "car": 16.0, "boat": 0.0, "plane": 10.0 }
+var _depth_tilt := Vector2.ZERO
+var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, the Mac has no sensor)
+func _depth_3d() -> void:
+	var want := qa_depth_tilt
+	if DEPTH_3D and has_tilt_sensor() and state != State.DONE:
+		want = device_tilt().limit_length(0.6) / 0.6
+	_depth_tilt = _depth_tilt.lerp(want, 0.12)
+	var far := (_depth_tilt * float(DEPTH_FAR[vehicle]) / ZOOM).round()
+	var near := (-_depth_tilt * float(DEPTH_NEAR[vehicle]) / ZOOM).round()
+	if vehicle == "plane":
+		board.position += far
+		sky_shadow.position += far
+	else:
+		board.position = far
+		behind.position = far
+		water_fx.position = far
+		if vehicle == "car":
+			crowd.position = far                  # (the stand stands on the floor)
+	canopy.position = near
+	air_fx.position = near
+
 ## The planes' start (the user, 2026-10-18: not just floating): a wooden deck hanging in the sky
 ## under the grid, outlined, its planks lit from the top left, its side face below it, the
 ## checkered start line across it, held up by two balloons at its back corners (bobbing on their
@@ -1283,6 +1312,9 @@ func _begin(n: int) -> void:
 	buoys.setup(_buoy_spots)
 	air_fx.visible = vehicle == "plane"
 	air_fx.streaks.clear()
+	calibrate_tilt()                                 # (the 3D layers: the pose now is "level")
+	_depth_tilt = Vector2.ZERO
+	crowd.position = Vector2.ZERO
 	sky_dock.visible = vehicle == "plane"
 	if vehicle == "plane":
 		var d0 := (centre[2] - centre[0]).normalized()
@@ -3524,6 +3556,7 @@ func _follow(amount: float) -> void:
 	world.position = world.position.lerp(pos, amount).round()
 	if vehicle == "plane":
 		board.position = ((world.position - VIEW.position) * (PARALLAX - 1.0)).round() / ZOOM
+	_depth_3d()
 
 func _refresh_hud() -> void:
 	hud_lap.text = "LAP %d/%d" % [mini(lap, LAPS), LAPS]
