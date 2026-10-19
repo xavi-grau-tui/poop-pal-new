@@ -11,32 +11,42 @@ extends BaseMinigame
 ## through one of the gaps in the rim. Last top spinning wins.
 ##
 ## Levels (the level menu): 6 worlds of 9, a match each (no lives: lose and you retry it). Every
-## world is its own bowl in its own room, and brings one new thing (from its 7th level the world
+## world is its own bowl in its own place, and brings one new thing (from its 7th level the world
 ## before's joins in):
-##   1 Wooden Bowl (a tatami room): the basics · 2 Bumper Bowl (a festival stall): bumpers to
-##   bounce off, chargers that flash before they dash (the guard) · 3 Lacquer Tray (a lacquered
-##   table): wider gaps in the rim, ring-outs · 4 Toilet Bowl (a bathroom): it FLUSHES halfway, a
-##   whirlpool pulling every top to the middle; soap puddles · 5 Clockwork Bowl (a workshop):
-##   turning gears in the floor carry the tops round · 6 Dragon Festival (night, lanterns): three
-##   rivals at once, the dragon top.
+##   1 Wooden Bowl (a tatami room in the morning sun): the basics · 2 Bumper Bowl (a veranda in a
+##   tree's shade): bumpers to bounce off, chargers that flash before they dash (the guard) ·
+##   3 Lacquer Tray (a lacquered table by lamplight): wider gaps in the rim, ring-outs · 4 Toilet
+##   Bowl (a bathroom in daylight): it FLUSHES halfway, a whirlpool pulling every top to the
+##   middle; soap puddles · 5 Clockwork Bowl (a workbench under a hanging lamp): turning gears in
+##   the floor carry the tops round · 6 Dragon Festival (a stage at night, lanterns, fireworks):
+##   three rivals at once, the phoenix's top.
 ## Each world's 9th level is its champion. Stars: 1 = win, 2 = win with 40% of your spin left,
-## 3 = with 70% left. No points.
+## 3 = with 70% left (the band's stars dim as your spin drops). No points.
 ## Drinks: a SPLASH top comes back once (out of a gap or spun out, it's put back in with some
 ## spin) · FIZZ: a stronger dash and easier winding · FOCUS: a wider perfect guard, longer
 ## warnings · STURDY: a heavier top. A world's 6th level hides a golden prize top only the right
 ## drink can beat (fizzy dashes, focused perfect guards, a sturdy shove out of the rim).
 ##
+## The look (the user, 2026-10-19: the toy games at the race games' quality, one suite; GameFx,
+## docs/ideas_roadmap.md "The games' look"): the tops are Beyblade-like, stacked in slices like Pal
+## Prix's toys (they lean and wobble), their blade rings turning (slower as the spin runs out, a
+## haze behind them when it's strong): the rivals' blades tell how they fight, yours are new in
+## every world; ridden by pals (the rivals too: their balls); the bowl is raised (its near rim over the tops), each
+## world one place with its own light and something alive in it (TopSpinArt); Pal Prix 2177's
+## light and motion for the moments that matter (sparks, shockwaves, light ribbons on a dash,
+## glowing guard and warning rings, a shake and a tiny freeze on the big hits); the race games'
+## HUD band. Words only for the rare big moments (the chimes and the sparks say the rest).
+##
 ## Desktop: arrows / WASD tilt, Space = MAIN, Shift or X = FORWARD.
 
 const GAME_INDEX := 8
 
-# --- Stadium (play-area coordinates, 950x948) ---
-const C_FULL := Vector2(475, 500)     # bowl centre
+# --- Stadium (play-area coordinates, 950x948; on the 4 px grid) ---
+const C_FULL := Vector2(476, 520)     # bowl centre
 const R_FULL := 370.0                 # bowl radius (inside the rim; room for the controls below)
-const C_TUT := Vector2(475, 620)      # the tutorial's bowl: smaller and lower, so the coach's
+const C_TUT := Vector2(476, 620)      # the tutorial's bowl: smaller and lower, so the coach's
 const R_TUT := 262.0                  # card above it never covers the action
-const PX := 4                         # world px per stadium pixel
-const DETAIL := 3                     # world px per texture px for the tops
+const PX := 4                         # world px per board pixel
 const GAP_HALF := 0.17                # half-width of a rim gap (radians)
 
 # --- Physics ---
@@ -69,56 +79,74 @@ const WIND_GOOD := 16.0
 const WIND_SLIP := 6.0                # a tap off the gold slips the cord: spin lost...
 const WIND_JAM := 0.35                # ...and it jams this long (taps do nothing): mashing never pays
 const ZONE_HALF := 0.32
+const DIAL_R := 172.0                 # the winding dial's radius
+const DROP_TIME := 3.5
 
-# --- Palette (a ceramic bowl, slate blue like the card) ---
+# --- Look ---
 const BG := Color8(58, 66, 84)
-const OUTLINE := Color8(36, 40, 54)
-# --- the bowl: blue-grey turned wood (wood reads by its grain and lathe rings, not by brown) ---
-const WOOD := Color8(170, 184, 198)          # the floor
-const WOOD_GRAIN := Color8(154, 170, 188)    # grain lines
-const WOOD_LIGHT := Color8(186, 198, 210)    # lighter grain / the lit far side
-const LATHE := Color8(140, 156, 176)         # the turned rings
-const RIM := Color8(92, 110, 136)            # indigo-stained rim
-const RIM_HI := Color8(128, 146, 172)        # its lit bevel (top-left)
-const RIM_DARK := Color8(66, 80, 104)        # its shaded edge / grain streaks
-const RIM_W := 44.0                          # the rim's thickness (world px), outside R
-const GAP := Color8(22, 24, 32)
-const SLIME := Color8(140, 186, 92)
-const SLIME_DARK := Color8(96, 138, 60)
+const OUTLINE := Color8(40, 30, 40)
+const RIM_W := 40.0                   # the rim's width (world px), outside R
+const RIM_H := 12.0                   # ...and its height: the far inner wall, the near side face
+const BAND := Color8(48, 54, 82)      # the HUD band: Top Spin's indigo lacquer...
+const BAND_FOOT := Color8(28, 30, 50) # ...and its foot line
+const HUD_TEXT := Color(0.94, 0.95, 1.0)
 const GOLD := Color8(240, 196, 80)
-const PLAYER_COLOR := Color8(232, 140, 64)
+const PLAYER_COLOR := Color8(240, 136, 56)
+const GUARD_COL := Color8(140, 220, 255)
+const WARN_COL := Color8(255, 76, 64)
 
-## Rival styles: how they move and fight
+## Rival styles: how they move and fight (their tops' paint: "color")
 const STYLES := {
-	"rookie":  { "color": Color8(150, 190, 120), "mass": 0.9, "attack": 0.7, "seek": 0.25, "dash_every": 0.0, "brace": 0.0, "center": 0.0, "size": 1.0 },
-	"charger": { "color": Color8(214, 92, 92), "mass": 1.0, "attack": 1.1, "seek": 1.0, "dash_every": 1.8, "brace": 0.0, "center": 0.0, "size": 1.0 },
-	"wall":    { "color": Color8(120, 150, 210), "mass": 1.3, "attack": 0.9, "seek": 0.15, "dash_every": 0.0, "brace": 0.6, "center": 1.0, "size": 1.0 },
-	"heavy":   { "color": Color8(150, 120, 100), "mass": 1.9, "attack": 1.3, "seek": 0.5, "dash_every": 3.5, "brace": 0.2, "center": 0.3, "size": 1.15 },
-	"boss":    { "color": Color8(170, 100, 200), "mass": 1.6, "attack": 1.3, "seek": 0.8, "dash_every": 2.2, "brace": 0.4, "center": 0.2, "size": 1.35 },
+	"rookie":  { "color": Color8(120, 196, 96), "mass": 0.9, "attack": 0.7, "seek": 0.25, "dash_every": 0.0, "brace": 0.0, "center": 0.0, "size": 1.0 },
+	"charger": { "color": Color8(230, 80, 76), "mass": 1.0, "attack": 1.1, "seek": 1.0, "dash_every": 1.8, "brace": 0.0, "center": 0.0, "size": 1.0 },
+	"wall":    { "color": Color8(88, 140, 228), "mass": 1.3, "attack": 0.9, "seek": 0.15, "dash_every": 0.0, "brace": 0.6, "center": 1.0, "size": 1.0 },
+	"heavy":   { "color": Color8(176, 122, 82), "mass": 1.9, "attack": 1.3, "seek": 0.5, "dash_every": 3.5, "brace": 0.2, "center": 0.3, "size": 1.15 },
+	"boss":    { "color": Color8(170, 92, 220), "mass": 1.6, "attack": 1.3, "seek": 0.8, "dash_every": 2.2, "brace": 0.4, "center": 0.2, "size": 1.35 },
 }
+## Who rides each rival top: pals (their balls, from the pal renderer, at the pal's own scale)
+const RIDERS := { "rookie": "kappa", "charger": "karakasa", "wall": "komainu", "heavy": "oo_daruma" }
+## Each world's champion (its 9th level), from its place: the moon princess in the tatami room, a
+## tengu on the veranda, the nine-tailed fox at the lacquered table, a mermaid in the bathroom, a
+## clockwork oni in the workshop, the phoenix at the dragon festival
+const CHAMPIONS := ["kaguya", "tengu", "kyubi", "ningyo", "mecha_oni", "hou_ou"]
+const SPARE_RIDERS := ["peapod", "daruma", "ramune", "bruin", "nebula_nug"]
+## The blade rings (TopSpinArt.BLADES): each rival style's, the same in every world, so its shape
+## tells how it fights (light fins, attacking hooks, a round shield, heavy lugs, a champion's
+## scythes); yours, new in each world (4 blades, a star, petals, waves, gear teeth, a dragon)
+const RIVAL_BLADES := { "rookie": "fins3", "charger": "hooks3", "wall": "shield", "heavy": "lugs4", "boss": "scythe4" }
+const PLAYER_BLADES := ["blades4", "star5", "petals6", "wave5", "gear10", "dragon3"]
+const PRIZE_BLADES := "petals6"
+const SPIN_SHOWN := 2.4               # how fast a top's blades seem to turn at full spin (blades a second)
 
-## The worlds: each its own bowl (floor, grain, rings, rim) in its own room (the backdrop round it)
+## The worlds: each its own bowl (floor, grain, rings, rim) in its own place (TopSpinArt's room:
+## its surface and its light) and its accent (the band's foot line, the lights in the rim)
 const WORLDS := ["Wooden Bowl", "Bumper Bowl", "Lacquer Tray", "Toilet Bowl", "Clockwork Bowl", "Dragon Festival"]
 const WORLD_HINTS := ["", "bumpers bounce!", "mind the gaps!", "it flushes!", "the gears turn!", "three at once!"]
 const BOWLS := [
-	{ # 1 Wooden Bowl: blue-grey turned wood (the prototype's), a tatami room
+	{ # 1 Wooden Bowl: blue-grey turned wood (the prototype's), a tatami room in the morning sun
 		"floor": Color8(170, 184, 198), "grain": Color8(154, 170, 188), "light": Color8(186, 198, 210), "lathe": Color8(140, 156, 176),
-		"rim": Color8(92, 110, 136), "rim_hi": Color8(128, 146, 172), "rim_dark": Color8(66, 80, 104), "room": "tatami", "menu": Color8(120, 136, 160) },
-	{ # 2 Bumper Bowl: honey maple, a red rim, at a festival stall
+		"rim": Color8(92, 110, 136), "rim_hi": Color8(128, 146, 172), "rim_dark": Color8(66, 80, 104), "room": "tatami", "menu": Color8(120, 136, 160),
+		"accent": Color8(255, 216, 120) },
+	{ # 2 Bumper Bowl: honey maple, a red rim, on a veranda in a tree's shade
 		"floor": Color8(226, 190, 132), "grain": Color8(208, 168, 112), "light": Color8(240, 210, 156), "lathe": Color8(194, 152, 98),
-		"rim": Color8(196, 70, 64), "rim_hi": Color8(232, 112, 96), "rim_dark": Color8(140, 44, 44), "room": "stall", "menu": Color8(210, 120, 96) },
-	{ # 3 Lacquer Tray: black lacquer with gold swirls, a vermilion rim, on a lacquered table
-		"floor": Color8(52, 44, 52), "grain": Color8(70, 58, 66), "light": Color8(84, 70, 76), "lathe": Color8(150, 120, 60),
-		"rim": Color8(196, 60, 52), "rim_hi": Color8(230, 100, 84), "rim_dark": Color8(130, 34, 34), "room": "lacquer", "menu": Color8(110, 52, 56), "swirls": true },
-	{ # 4 Toilet Bowl: white porcelain, pale water in the middle, in a tiled bathroom
+		"rim": Color8(196, 70, 64), "rim_hi": Color8(232, 112, 96), "rim_dark": Color8(140, 44, 44), "room": "veranda", "menu": Color8(210, 120, 96),
+		"accent": Color8(160, 236, 120) },
+	{ # 3 Lacquer Tray: black lacquer with gold swirls, a vermilion rim, on a lacquered table by lamplight
+		"floor": Color8(52, 44, 52), "grain": Color8(64, 54, 62), "light": Color8(80, 66, 72), "lathe": Color8(112, 90, 54),
+		"rim": Color8(196, 60, 52), "rim_hi": Color8(230, 100, 84), "rim_dark": Color8(130, 34, 34), "room": "lacquer", "menu": Color8(110, 52, 56), "swirls": true,
+		"accent": Color8(255, 196, 90) },
+	{ # 4 Toilet Bowl: white porcelain, pale water in the middle, in a tiled bathroom in daylight
 		"floor": Color8(196, 226, 236), "grain": Color8(176, 212, 228), "light": Color8(216, 238, 246), "lathe": Color8(160, 200, 220),
-		"rim": Color8(236, 238, 240), "rim_hi": Color8(255, 255, 255), "rim_dark": Color8(196, 202, 210), "room": "bathroom", "menu": Color8(150, 200, 210) },
-	{ # 5 Clockwork Bowl: a brass plate, an iron rim with rivets, in a workshop
+		"rim": Color8(236, 238, 240), "rim_hi": Color8(255, 255, 255), "rim_dark": Color8(186, 194, 206), "room": "bathroom", "menu": Color8(150, 200, 210),
+		"accent": Color8(110, 222, 240) },
+	{ # 5 Clockwork Bowl: a brass plate, an iron rim with rivets, on a workbench under a hanging lamp
 		"floor": Color8(204, 170, 96), "grain": Color8(186, 150, 80), "light": Color8(222, 192, 120), "lathe": Color8(160, 126, 66),
-		"rim": Color8(96, 100, 112), "rim_hi": Color8(136, 140, 152), "rim_dark": Color8(64, 66, 78), "room": "workshop", "menu": Color8(160, 130, 80) },
-	{ # 6 Dragon Festival: red lacquer and gold scales, a gold rim, at a night festival
-		"floor": Color8(170, 48, 48), "grain": Color8(150, 36, 40), "light": Color8(196, 66, 60), "lathe": Color8(236, 186, 80),
-		"rim": Color8(226, 178, 70), "rim_hi": Color8(252, 220, 120), "rim_dark": Color8(176, 126, 40), "room": "festival", "menu": Color8(60, 40, 70), "scales": true },
+		"rim": Color8(96, 100, 112), "rim_hi": Color8(136, 140, 152), "rim_dark": Color8(64, 66, 78), "room": "workshop", "menu": Color8(160, 130, 80),
+		"accent": Color8(255, 170, 70) },
+	{ # 6 Dragon Festival: red lacquer and gold scales, a gold rim, on a festival stage at night
+		"floor": Color8(124, 36, 44), "grain": Color8(114, 32, 40), "light": Color8(140, 44, 50), "lathe": Color8(156, 58, 56),
+		"rim": Color8(226, 178, 70), "rim_hi": Color8(252, 220, 120), "rim_dark": Color8(176, 126, 40), "room": "festival", "menu": Color8(60, 40, 70), "scales": true,
+		"accent": Color8(255, 120, 180) },
 ]
 ## A world's 9 matches: rivals [style, starting spin], bumpers, puddles, rim gaps. The levels of a
 ## world follow one pattern (the new thing alone, then pushed, then the world before's joins in,
@@ -164,13 +192,196 @@ class Top:
 	var unsteady := 0.0               # over-wound: wobbly, hard to steer
 	var ai_t := 0.0
 	var windup := 0.0                 # (rivals) about to dash
-	var trail := PackedVector2Array() # recent positions while dashing
 	var wob := 0.0                    # (a random phase for its wobble)
 	var prize := false                # the golden prize top (a secret): not a rival, it never attacks
-	var root: Node2D
-	var body: Sprite2D
-	var cap: Sprite2D
-	var shadow: Sprite2D
+	var root: TopView
+
+## A top on screen (TopSpinArt.top_parts): its slices stacked bottom first (the tip, the driver,
+## the wheel), the blades' side, then the blade ring on top turning frame by frame (a haze behind
+## it when it spins fast, light arcs round its edge), the pal set in its middle. It leans (a wobble when
+## slow or over-wound, into a dash), squats while guarding, lies down when it falls
+class TopView extends Node2D:
+	var rf := 9.5                     # the blades' reach (board px)
+	var slices: Array[Texture2D] = []
+	var faces: Array[Texture2D] = []
+	var unders: Array[Texture2D] = []
+	var period := TAU / 4.0           # (one blade's turn)
+	var blur: Texture2D
+	var arcs: Array[Texture2D] = []
+	var rider: Texture2D
+	var cap_tex: Texture2D            # (the golden top: its prize instead of a rider)
+	var cap_px := 44.0
+	var angle := 0.0
+	var fast := 0.0                   # 0..1 how fast it spins
+	var dir := 1.0
+	var lean := Vector2.ZERO          # px: the face off the tip
+	var squat := 0.0                  # 0..1 guarding
+	var fall := 0.0                   # 0..1 toppled
+	var fall_dir := Vector2.RIGHT
+	var flash := 0.0                  # a hit's flash
+	var t := 0.0
+	func face_offset() -> Vector2:
+		var n := slices.size() + 1
+		var off := Vector2(0, -n * 4.0 * (1.0 - 0.5 * squat)) + lean
+		if fall > 0.0:
+			off = off.lerp(fall_dir * n * 7.0 + Vector2(0, -6), fall)
+		return off.snapped(Vector2(4, 4))
+	func _draw() -> void:
+		var n := slices.size() + 1                     # (the static slices and the blades' side; the face on top)
+		var step := 4.0 * (1.0 - 0.5 * squat)
+		var fi := int(fposmod(angle, period) / period * faces.size()) % faces.size()
+		for k in n + 1:
+			var f := float(k) / float(n)
+			var off := Vector2(0, -k * step) + lean * f
+			if fall > 0.0:
+				off = off.lerp(fall_dir * k * 7.0 + Vector2(0, -k * 1.5), fall)
+			off = off.snapped(Vector2(4, 4))
+			var tex: Texture2D = slices[k] if k < slices.size() else (unders[fi] if k == slices.size() else faces[fi])
+			if k == n and fast > 0.0 and blur and fall == 0.0:
+				var bsz := blur.get_size() * 4.0                # (spinning hard: a haze between the blades)
+				draw_texture_rect(blur, Rect2(off - bsz / 2.0, bsz), false, Color(1, 1, 1, clampf(fast, 0.0, 1.0)))
+			var sz := tex.get_size() * 4.0
+			draw_texture_rect(tex, Rect2(off - sz / 2.0, sz), false)
+		var face := face_offset()
+		if fast > 0.3 and fall == 0.0 and not arcs.is_empty():
+			var ai := int(t * 30.0) % arcs.size()
+			if dir < 0.0:
+				ai = arcs.size() - 1 - ai
+			var at: Texture2D = arcs[ai]
+			var asz := at.get_size() * 4.0
+			draw_texture_rect(at, Rect2(face - asz / 2.0, asz), false, Color(1, 1, 1, clampf((fast - 0.3) * 2.0, 0.0, 0.9)))
+		if flash > 0.0:
+			GameFx.disc(self, face, rf * 4.0 - 10.0, Color(1, 1, 1, 0.55 * flash))
+		# the pal set right in the middle, its vehicle round it (its face kept upright: it looks at you)
+		if rider:
+			draw_texture_rect(rider, Rect2(face - Vector2(24, 24), Vector2(48, 48)), false)
+		elif cap_tex:
+			var s := cap_tex.get_size()
+			var k2 := cap_px / maxf(s.x, s.y)
+			draw_texture_rect(cap_tex, Rect2(face - s * k2 / 2.0, s * k2), false)
+
+## A bumper peg on the floor: its slices, bottom first; it flashes and pops up when hit
+class PegView extends Node2D:
+	var slices: Array[Texture2D] = []
+	var flash := 0.0
+	var pop := 0.0
+	func _process(delta: float) -> void:
+		if flash > 0.0 or pop > 0.0:
+			flash = maxf(0.0, flash - delta * 4.0)
+			pop = maxf(0.0, pop - delta * 5.0)
+			queue_redraw()
+	func _draw() -> void:
+		for k in slices.size():
+			var tex := slices[k]
+			var up := 4.0 if k == slices.size() - 1 and pop > 0.0 else 0.0
+			var sz := tex.get_size() * 4.0
+			draw_texture_rect(tex, Rect2(Vector2(0, -k * 4.0 - up) - sz / 2.0, sz), false)
+		if flash > 0.0:
+			GameFx.disc(self, Vector2(0, -8), 24.0, Color(1, 1, 1, 0.75 * flash))
+
+## The place's living light (drawn added on, over the bowl and the tops): dust in the morning sun,
+## flecks of sun through the leaves, glints in the lacquer, light rippling on the water, a lamp
+## swaying on its cord, lanterns flickering and the fireworks' flashes at night
+class RoomFx extends Node2D:
+	var kind := ""
+	var c := Vector2.ZERO
+	var r := 370.0
+	var t := 0.0
+	var motes: Array = []             # [position, velocity, phase]
+	var flash := 0.0
+	var flash_col := Color(1, 1, 1)
+	var flash_at := Vector2.ZERO
+	var next_flash := 4.0
+	const W := 950.0
+	const H := 948.0
+	func setup(k: String, centre: Vector2, radius: float) -> void:
+		kind = k
+		c = centre
+		r = radius
+		motes.clear()
+		var n: int = { "tatami": 30, "veranda": 18, "lacquer": 12, "workshop": 22, "festival": 16 }.get(k, 0)
+		for i in n:
+			motes.append([Vector2(randf() * W, randf() * H), Vector2(randf_range(-4.0, 10.0), randf_range(-16.0, -4.0)), randf() * TAU])
+		flash = 0.0
+		next_flash = randf_range(3.0, 6.0)
+	func _process(delta: float) -> void:
+		t += delta
+		for m in motes:
+			m[0] += (m[1] as Vector2) * delta + Vector2(sin(t * 0.7 + m[2]) * 6.0, 0) * delta
+			if m[0].y < 90.0:
+				m[0] = Vector2(randf() * W, H)
+			if m[0].x > W:
+				m[0].x = 0.0
+		if kind == "festival":
+			next_flash -= delta
+			if next_flash <= 0.0:
+				next_flash = randf_range(4.0, 8.0)
+				flash = 1.0
+				flash_col = [Color8(255, 120, 180), Color8(255, 210, 110), Color8(120, 220, 255), Color8(170, 255, 140)][randi() % 4]
+				flash_at = Vector2(randf_range(0.0, W), randf_range(-100.0, 200.0))
+			flash = maxf(0.0, flash - delta * 1.6)
+		queue_redraw()
+	func _draw() -> void:
+		match kind:
+			"tatami":
+				# dust drifting through the slanting sun (only where the sun falls)
+				for m in motes:
+					var p: Vector2 = m[0]
+					var into := clampf(1.0 - absf(p.x + p.y * 0.55 - W * 0.42) / (W * 0.22), 0.0, 1.0)
+					if into > 0.2:
+						var a := (0.22 + 0.18 * sin(t * 2.0 + m[2])) * into
+						draw_rect(Rect2(GameFx.snap(p), Vector2(4, 4)), Color(1, 0.95, 0.8, a))
+			"veranda":
+				# flecks of sun through the leaves, breathing as the leaves move
+				for m in motes:
+					var p2: Vector2 = GameFx.snap((m[0] as Vector2) * Vector2(1, 0) + Vector2(0, fposmod(m[2] * 150.0, H)) + Vector2(sin(t * 0.5 + m[2]) * 10.0, 0))
+					var a2 := maxf(0.0, sin(t * 1.1 + m[2] * 3.0)) * 0.22
+					draw_rect(Rect2(p2 - Vector2(4, 4), Vector2(8, 8)), Color(1, 0.96, 0.75, a2))
+					draw_rect(Rect2(p2 - Vector2(8, 0), Vector2(16, 4)), Color(1, 0.96, 0.75, a2 * 0.4))
+			"lacquer":
+				# the lamp's pool breathing, glints of gold in the lacquer
+				var k := 0.03 + 0.012 * sin(t * 1.7) + 0.006 * sin(t * 7.3)
+				GameFx.disc(self, c, r * 0.95, Color(1, 0.8, 0.5, k))
+				for m in motes:
+					var on := sin(t * 1.6 + m[2] * 5.0)
+					if on > 0.8:
+						var q: Vector2 = GameFx.snap(Vector2(fposmod(m[2] * 977.0, W), fposmod(m[2] * 613.0, H)))
+						var a3 := (on - 0.8) * 4.0
+						draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 0.85, 0.45, a3))
+						draw_rect(Rect2(q - Vector2(6, 2), Vector2(12, 4)), Color(1, 0.85, 0.45, a3 * 0.4))
+						draw_rect(Rect2(q - Vector2(2, 6), Vector2(4, 12)), Color(1, 0.85, 0.45, a3 * 0.4))
+			"bathroom":
+				# light rippling on the water in the middle of the bowl
+				for ring in 4:
+					var rr := 40.0 + ring * 28.0
+					for k2 in 18:
+						var a4 := k2 * TAU / 18.0 + t * (0.4 + ring * 0.12) * (1.0 if ring % 2 == 0 else -1.0)
+						var wob := sin(a4 * 3.0 + t * 2.2) * 6.0
+						var q2 := GameFx.snap(c + Vector2.from_angle(a4) * (rr + wob))
+						var al := 0.1 + 0.08 * sin(a4 * 2.0 + t * 3.0)
+						draw_rect(Rect2(q2, Vector2(8, 4)), Color(0.85, 1.0, 1.0, al))
+			"workshop":
+				# the hanging lamp sways on its cord: its pool of light moves a little; dust in it
+				var lc := c + Vector2(sin(t * 0.8) * 26.0, cos(t * 0.8) * 6.0)
+				GameFx.disc(self, lc, r * 0.8, Color(1, 0.86, 0.6, 0.035))
+				GameFx.disc(self, lc, r * 0.5, Color(1, 0.86, 0.6, 0.03))
+				for m in motes:
+					var p3: Vector2 = m[0]
+					if p3.distance_to(lc) < r * 0.85:
+						draw_rect(Rect2(GameFx.snap(p3), Vector2(4, 4)), Color(1, 0.9, 0.7, 0.18 + 0.12 * sin(t * 2.0 + m[2])))
+			"festival":
+				# the lanterns' warm light flickering round the stage, a firework's flash now and then
+				for i in 4:
+					var lp := Vector2([90.0, 860.0, 120.0, 830.0][i], [150.0, 170.0, 900.0, 880.0][i])
+					var fl := 0.05 + 0.02 * sin(t * 9.0 + i * 1.7) + 0.015 * sin(t * 23.0 + i)
+					GameFx.disc(self, lp, 150.0, Color(1, 0.6, 0.3, fl))
+					GameFx.disc(self, lp, 70.0, Color(1, 0.7, 0.4, fl))
+				if flash > 0.0:
+					draw_rect(Rect2(0, 0, W, H), Color(flash_col.r, flash_col.g, flash_col.b, 0.1 * flash))
+					GameFx.disc(self, flash_at, 360.0, Color(flash_col.r, flash_col.g, flash_col.b, 0.07 * flash))
+				for m in motes:
+					var p4: Vector2 = m[0]
+					draw_rect(Rect2(GameFx.snap(p4), Vector2(4, 4)), Color(1, 0.6, 0.3, 0.3 + 0.2 * sin(t * 5.0 + m[2])))
 
 enum Phase { WIND, DROP, BATTLE, RESULT }
 var C := C_FULL                       # (the bowl in use: full size, or the tutorial's)
@@ -185,12 +396,11 @@ var time := 0.0
 var world := 0
 var bowl: Dictionary = BOWLS[0]
 var match_t := 0.0                    # this match's time (the flush's clock, the best time)
-var gears: Array = []                 # the Clockwork Bowl: { pos, node }
+var gears: Array = []                 # the Clockwork Bowl: { pos, angle }
 var flush_in := 0.0                   # the Toilet Bowl: seconds to the next flush
 var flushing := 0.0                   # ...and how long the whirlpool still pulls
-var swirl: Sprite2D
-var gear_layer: Node2D
-var backdrop: Sprite2D                # the room round the bowl
+var swirl_a := 0.0                    # (the whirlpool's turn)
+var backdrop: Sprite2D                # the place round the bowl
 var prize_top: Top = null             # the secret's golden top (null = none on this level)
 var secret := {}
 var splash_used := false
@@ -203,6 +413,7 @@ var gap_half := GAP_HALF              # (wider in the Lacquer Tray)
 var tops: Array[Top] = []
 var player: Top
 var bumpers: Array[Vector2] = []
+var bumper_views: Array[PegView] = []
 var slimes: Array[Vector2] = []
 var gap_angles: Array[float] = []
 var perfects := 0
@@ -214,6 +425,7 @@ var needle := 0.0
 var zone := 0.0
 var combo := 0
 var wind_jam := 0.0
+var needle_trail: Array[float] = []   # (the needle's last angles: its comet tail)
 # drop
 var aim := C_FULL
 var drop_left := 0.0
@@ -233,28 +445,43 @@ var bar_flash := 0.0                  # your spin bar blinks (the tutorial point
 var hint_main: HBoxContainer          # control legend: main button + what it does now
 var hint_fwd: HBoxContainer           # ...and the forward button
 
+# the layers (bottom to top): the place, the bowl, the floor's things, scuffs, dash ribbons, the
+# tops and pegs (sorted by depth), the near rim, the rim's lights, bursts, the place's light, the
+# rings and the dial; all in `scene` (it shakes), then the HUD band over it
+var scene: Node2D
 var stadium: Sprite2D
-var bumper_nodes: Node2D
+var stadium_front: Sprite2D
+var floor_layer: Node2D
+var marks: GameFx.Burst
+var trails: GameFx.Burst
 var top_nodes: Node2D
-var fx: Node2D
+var rim_fx: Node2D
+var fx: GameFx.Burst
+var room_fx: RoomFx
+var dim_layer: Node2D                 # (while winding: the bowl dimmed...)
+var held: Node2D                      # (...under your top, held up while it's wound and dropped)
 var overlay: Node2D
+var hud: Node2D
 var hud_level: Label
-var under: Node2D                     # (dash trails, drawn under the tops)
+var hud_stars: Array[TextureRect] = []
+var _stars_shown := 3
+var band_bar: ColorRect
 var banner: Label
 var lives_box: HBoxContainer
 var lcd_font: Font
 var ball_texture: Texture2D
-var shadow_tex: Texture2D
+var shake := 0.0
+var hitstop := 0.0
+var _bowl_cache := {}
 
 func _ready() -> void:
 	game_music_path = "res://sounds/music/Pixel Battle.ogg"     # (100 BPM, loops on the beat: 0.163 s → 127.363 s)
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	ball_texture = PalBall.texture()
-	shadow_tex = _make_shadow_texture()
 	_create_static_nodes()
 	if GameData.intro_seen(GAME_INDEX):
 		intro_text = "Wind it up, drop it, knock them out!"
-		intro_icon = _make_top_texture(PLAYER_COLOR)
+		intro_icon = TopSpinArt.top_icon(PLAYER_COLOR, TOP_R / PX + 1.5, PLAYER_BLADES[0], ball_texture)
 	else:
 		tut = Tut.WIND                     # first time: a short tutorial instead of the card
 	super._ready()
@@ -358,7 +585,6 @@ func _start_match() -> void:
 	loop = 0
 	C = C_TUT if tut != Tut.NONE else C_FULL         # (the tutorial's bowl is smaller and lower)
 	R = R_TUT if tut != Tut.NONE else R_FULL
-	stadium.position = C
 	world = clampi((level - 1) / GameData.LEVELS_PER_WORLD, 0, WORLDS.size() - 1)
 	bowl = BOWLS[world if tut == Tut.NONE else 0]
 	var data := _level_data()
@@ -375,37 +601,25 @@ func _start_match() -> void:
 		n = 0                                        # the tutorial bowl has no gaps: nobody flies out
 	for i in n:
 		gap_angles.append(PI / 2.0 + i * TAU / n)
-	stadium.texture = ImageTexture.create_from_image(_paint_stadium())
-	backdrop.texture = ImageTexture.create_from_image(_paint_room(bowl["room"]))
+	_paint_scene(data)
 	# the Clockwork Bowl's gears, the Toilet Bowl's flush
-	for g in gear_layer.get_children():
-		g.queue_free()
 	gears.clear()
 	if tut == Tut.NONE:
-		var gtex := _make_gear_texture()
 		for gp in data.get("gears", []):
-			var gs := Sprite2D.new()
-			gs.texture = gtex
-			gs.scale = Vector2(PX, PX)
-			gs.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			gs.position = C + gp
-			gear_layer.add_child(gs)
-			gears.append({ "pos": C + gp, "node": gs })
+			gears.append({ "pos": C + gp, "angle": randf() * TAU })
 	flush_in = 10.0 if data.get("flush", false) and tut == Tut.NONE else -1.0
 	flushing = 0.0
-	swirl.visible = false
-	swirl.position = C
 	match_t = 0.0
-	for c in bumper_nodes.get_children():
-		c.queue_free()
-	var btex := _make_bumper_texture()
+	for v in bumper_views:
+		v.queue_free()
+	bumper_views.clear()
+	var pegs := TopSpinArt.peg_slices(bowl)
 	for b in bumpers:
-		var s := Sprite2D.new()
-		s.texture = btex
-		s.scale = Vector2(DETAIL, DETAIL)
-		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		s.position = b
-		bumper_nodes.add_child(s)
+		var pv := PegView.new()
+		pv.slices = pegs
+		pv.position = GameFx.snap(b)
+		top_nodes.add_child(pv)
+		bumper_views.append(pv)
 
 	for t in tops:
 		if is_instance_valid(t.root):
@@ -440,29 +654,62 @@ func _start_match() -> void:
 		prize_top.mass = 6.0 if secret["gate"] == "milky" else 2.2
 		prize_top.attack = 0.0
 		prize_top.spin = 100.0
-		prize_top.cap.texture = Collection.prize_icon(secret["prize"])
-		prize_top.cap.scale = Vector2(DETAIL, DETAIL) * (0.75 * 20.0 / maxf(prize_top.cap.texture.get_width(), 1.0))
+		prize_top.root.rider = null
+		prize_top.root.cap_tex = Collection.prize_icon(secret["prize"])
 		prize_top.pos = C + Vector2(0, R * 0.45)
 		tops.append(prize_top)
 	perfects = 0
 	wind_spin = WIND_START
 	wind_left = WIND_TIME
 	needle = 0.0
+	needle_trail.clear()
 	zone = randf() * TAU
 	combo = 0
 	phase = Phase.WIND
 	dropping = false
 	forward_held = false
 	player.root.position = C
-	player.root.scale = Vector2(2.2, 2.2)
-	player.shadow.visible = false
+	player.root.scale = Vector2(2, 2)
 	practice = tut != Tut.NONE
 	var per := GameData.LEVELS_PER_WORLD
 	hud_level.text = "TUTORIAL" if practice else "%d-%d" % [(level - 1) / per + 1, (level - 1) % per + 1]
+	hud_level.add_theme_font_size_override("font_size", 22 if practice else 32)
+	for i in hud_stars.size():
+		hud_stars[i].visible = not practice
+		hud_stars[i].texture = UiArt.star(i < 1)    # (what the winding's first spin gives: one)
+	_stars_shown = 1
 	_set_legend("PULL", "DONE")
 	_refresh_lives()
 	if tut == Tut.WIND:
 		show_coach("Press when the needle is on GOLD", 0, "FORWARD: skip tutorial")
+
+## The place and the bowl for this match (the bowl's pictures kept per world, size and ways out)
+func _paint_scene(data: Dictionary) -> void:
+	var key := "%d_%s_%d_%s_%s" % [world if tut == Tut.NONE else 0, R, gap_angles.size(), gap_half, data["slime"]]
+	if not _bowl_cache.has(key):
+		var rel: Array = []
+		for s in slimes:
+			rel.append(s - C)
+		var imgs := TopSpinArt.bowl_images(bowl, R, RIM_W, RIM_H, gap_angles, gap_half, rel)
+		# the world's light over the bowl too (like the place under it)
+		for img: Image in imgs:
+			var half := img.get_width() / 2.0
+			for y in img.get_height():
+				for x in img.get_width():
+					var c: Color = img.get_pixel(x, y)
+					if c.a > 0.0:
+						var bp := C / PX + Vector2(x - half, y - half)
+						img.set_pixel(x, y, TopSpinArt.lit(bowl["room"], c, bp, int(PLAY_WIDTH / PX) + 1, int(PLAY_HEIGHT / PX) + 1))
+		_bowl_cache[key] = [ImageTexture.create_from_image(imgs[0]), ImageTexture.create_from_image(imgs[1])]
+	stadium.texture = _bowl_cache[key][0]
+	stadium_front.texture = _bowl_cache[key][1]
+	stadium.position = C
+	stadium_front.position = C
+	var bw := int(PLAY_WIDTH / PX) + 1
+	var bh := int(PLAY_HEIGHT / PX) + 1
+	backdrop.texture = ImageTexture.create_from_image(TopSpinArt.room_image(bowl["room"], bw, bh, C / PX, (R + RIM_W) / PX))
+	room_fx.setup(bowl["room"], C, R)
+	band_bar.color = bowl["accent"]
 
 func _make_top(is_player: bool, style: String, color: Color) -> Top:
 	var t := Top.new()
@@ -478,36 +725,50 @@ func _make_top(is_player: bool, style: String, color: Color) -> Top:
 		t.attack = st["attack"]
 		size = st["size"]
 	t.r = TOP_R * size
-	t.root = Node2D.new()
-	t.root.scale = Vector2(size, size)
-	top_nodes.add_child(t.root)
-	t.shadow = Sprite2D.new()
-	t.shadow.texture = shadow_tex
-	t.shadow.scale = Vector2(DETAIL, DETAIL) * 1.4
-	t.shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	t.shadow.position = Vector2(8, 16)
-	t.root.add_child(t.shadow)
-	t.body = Sprite2D.new()
-	t.body.texture = _make_top_texture(color)
-	t.body.scale = Vector2(DETAIL, DETAIL)
-	t.body.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	t.root.add_child(t.body)
-	t.cap = Sprite2D.new()
-	t.cap.texture = ball_texture if is_player else _make_rival_face(color)
-	t.cap.scale = Vector2(DETAIL, DETAIL) * 0.85
-	t.cap.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	t.root.add_child(t.cap)
+	var v := TopView.new()
+	v.rf = t.r / PX + 1.5                            # (the blades' tips a little past its round: the circle is about their mean reach)
+	var kind: String = PLAYER_BLADES[world if tut == Tut.NONE else 0] if is_player else (PRIZE_BLADES if color == GOLD else String(RIVAL_BLADES.get(style, "fins3")))
+	var parts := TopSpinArt.top_parts(color, v.rf, kind)
+	v.slices = parts["slices"]
+	v.faces = parts["faces"]
+	v.unders = parts["unders"]
+	v.blur = parts["blur"]
+	v.period = parts["period"]
+	v.arcs = TopSpinArt.speed_arc_frames(v.rf)
+	v.rider = ball_texture if is_player else _rider(style)
+	v.dir = t.dir
+	(held if is_player else top_nodes).add_child(v)
+	t.root = v
 	return t
+
+## The pal riding a rival's top (a champion: its world's own); never the same as yours
+func _rider(style: String) -> Texture2D:
+	var id: String = CHAMPIONS[world] if style == "boss" else String(RIDERS.get(style, "classic"))
+	if PetState.has_poop() and id == PetState.form_id:
+		id = SPARE_RIDERS[(world + style.length()) % SPARE_RIDERS.size()]
+	var path := "res://textures/minigames/balls/%s.png" % id
+	return load(path) if ResourceLoader.exists(path) else ball_texture
 
 # ================================================================== LOOP
 
 func _process(delta: float) -> void:
 	overlay.queue_redraw()
-	under.queue_redraw()
+	dim_layer.queue_redraw()
+	floor_layer.queue_redraw()
+	rim_fx.queue_redraw()
+	hud.queue_redraw()
+	# a shake on the big hits (the HUD stays put)
+	shake = maxf(0.0, shake - delta * 3.0)
+	scene.position = Vector2(randi_range(-1, 1), randi_range(-1, 1)) * 4.0 * ceilf(shake * 2.0) if shake > 0.0 else Vector2.ZERO
 	if not is_running:
 		return
 	time += delta
 	bar_flash = maxf(0.0, bar_flash - delta)
+	if hitstop > 0.0:
+		hitstop -= delta                             # (a tiny freeze on a big hit: everything holds)
+		return
+	if qa_autopilot:
+		_qa_play(delta)
 	match phase:
 		Phase.WIND:
 			_wind_step(delta)
@@ -517,9 +778,13 @@ func _process(delta: float) -> void:
 			_battle_step(delta)
 	_animate_tops(delta)
 	_update_legend()
+	_update_hud()
 
 func _wind_step(delta: float) -> void:
 	needle = fposmod(needle + (2.6 + wind_spin * 0.025) * (0.8 if tut == Tut.WIND else 1.0) * delta, TAU)
+	needle_trail.push_front(needle)
+	if needle_trail.size() > 6:
+		needle_trail.pop_back()
 	wind_jam = maxf(0.0, wind_jam - delta)
 	if tut != Tut.WIND:
 		wind_left -= delta
@@ -531,12 +796,15 @@ func _wind_pull() -> void:
 	if wind_jam > 0.0:
 		return                                         # (still jammed from a slip)
 	var off := absf(angle_difference(needle, zone))
+	var tip := C + Vector2.from_angle(needle) * DIAL_R
 	if off >= ZONE_HALF:
 		combo = 0
 		wind_jam = WIND_JAM
 		wind_spin = maxf(WIND_START, wind_spin - WIND_SLIP)
 		_sfx("res://sounds/fx/click-5.mp3", -12.0, 0.0, 0.6)
-		_float_text("SLIP!", C + Vector2(0, -230))
+		fx.puff(tip, 8, Color8(120, 110, 130), 0.6)      # (the cord slips: a grey puff, the dial goes red)
+		fx.flash(tip, 20.0, WARN_COL)
+		_kick(0.15)
 		Input.vibrate_handheld(40)
 		return                                         # (the gold zone stays put: try again)
 	var gain := 0.0
@@ -544,7 +812,9 @@ func _wind_pull() -> void:
 		combo += 1
 		gain = WIND_GOOD + combo * 2.0 + 3.0 * fizz
 		_sfx("res://sounds/fx/click-6.mp3", -8.0, 0.0, 1.0 + combo * 0.08)
-		_float_text("GOOD!" if combo < 3 else "GREAT!", C + Vector2(0, -230))
+		fx.sparks(tip, 8 + mini(combo, 5) * 2, [GOLD, Color(1, 1, 1), Color8(255, 236, 160)], 0.8)
+		fx.ring(tip, GOLD, 10.0, 56.0 + combo * 6.0, 0.3, 6.0)
+		player.root.flash = 0.6
 		if tut == Tut.WIND:
 			tut_good += 1
 			if tut_good == 1:
@@ -563,7 +833,7 @@ func _begin_drop() -> void:
 	phase = Phase.DROP
 	player.spin = minf(wind_spin, 100.0)
 	player.unsteady = maxf(0.0, wind_spin - 100.0) * 0.06     # over-wound: wobbly landing
-	drop_left = 3.5
+	drop_left = DROP_TIME
 	aim = C
 	calibrate_tilt()
 	# it rises smoothly from where it was wound (no jump): lift goes 0 → 1
@@ -583,8 +853,8 @@ func _drop_step(delta: float) -> void:
 	var off := aim - C
 	if off.length() > R - 80.0:
 		aim = C + off.limit_length(R - 80.0)
-	player.root.position = aim + Vector2(0, -110.0 * lift)
-	player.root.scale = Vector2.ONE * lerpf(2.2, 1.8, lift)
+	player.root.position = GameFx.snap(aim + Vector2(0, -110.0 * lift))
+	player.root.scale = Vector2.ONE * lerpf(2.0, 1.6, lift)
 	if tut != Tut.DROP:
 		drop_left -= delta
 	if drop_left <= 0.0:
@@ -596,7 +866,7 @@ func _drop() -> void:
 	dropping = true
 	_sfx("res://sounds/fx/claw_drop.wav", -12.0)
 	var t := create_tween()
-	t.tween_property(player.root, "position", aim, 0.3).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	t.tween_property(player.root, "position", GameFx.snap(aim), 0.3).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 	t.parallel().tween_property(player.root, "scale", Vector2.ONE, 0.3).set_ease(Tween.EASE_IN)
 	t.tween_callback(_land)
 
@@ -605,9 +875,13 @@ func _land() -> void:
 		return
 	player.pos = aim
 	player.vel = Vector2.ZERO
-	player.shadow.visible = true
+	player.root.reparent(top_nodes, false)          # (down among the others)
 	_sfx("res://sounds/fx/wood_tap.wav", -10.0, 0.0, 0.7)
 	Input.vibrate_handheld(40)
+	# it lands: a ring of dust, a shockwave across the floor
+	marks.dust(aim, 12, (bowl["floor"] as Color).darkened(0.25), 1.2)
+	fx.ring(aim, Color(1, 1, 1), 24.0, 120.0, 0.35, 6.0)
+	_kick(0.25)
 	for o in tops:
 		if o == player:
 			continue
@@ -615,8 +889,13 @@ func _land() -> void:
 		if d.length() < (player.r + o.r) * 1.3:
 			o.spin -= 12.0
 			o.vel += d.normalized() * 520.0
-			_sparks(player.pos + d * 0.5, 10)
-			_float_text("OPENING HIT!", player.pos + Vector2(0, -80))
+			# an opening hit: a big burst says it
+			var at := player.pos + d * 0.5
+			fx.sparks(at, 18, [Color(1, 1, 1), GOLD, o.color, PLAYER_COLOR], 1.2)
+			fx.ring(at, GOLD, 16.0, 150.0, 0.4, 8.0)
+			fx.flash(at, 40.0)
+			o.root.flash = 1.0
+			_kick(0.5, 0.08)
 			_sfx("res://sounds/fx/pin_bumper.wav", -6.0)
 	phase = Phase.BATTLE
 	_set_legend("DASH", "GUARD")
@@ -644,12 +923,9 @@ func _battle_step(delta: float) -> void:
 			Input.vibrate_handheld(40)
 	if flushing > 0.0:
 		flushing = maxf(0.0, flushing - delta)
-	swirl.visible = flushing > 0.0
-	if swirl.visible:
-		swirl.rotation -= delta * 4.0
-		swirl.modulate.a = clampf(flushing, 0.0, 1.0)
+		swirl_a -= delta * 4.0
 	for g in gears:
-		(g["node"] as Sprite2D).rotation += GEAR_SPIN * delta
+		g["angle"] = float(g["angle"]) + GEAR_SPIN * delta
 	if tut == Tut.MOVE:
 		tut_dist += player.vel.length() * delta
 		if tut_dist > 700.0:
@@ -663,9 +939,9 @@ func _battle_step(delta: float) -> void:
 		t.dash_cd = maxf(0.0, t.dash_cd - delta)
 		t.unsteady = maxf(0.0, t.unsteady - delta)
 		if t.dash_t < DASH_TIME + 0.05:
-			t.trail.append(t.pos)
-		if t.trail.size() > 8 or (t.trail.size() > 0 and t.dash_t >= DASH_TIME + 0.05):
-			t.trail.remove_at(0)
+			# a dash: a light ribbon behind it, its tip scoring the floor
+			trails.ribbon(t.pos + Vector2(0, -12), t.color, 0.3, 16.0)
+			marks.scuff(t.pos, Color(0.12, 0.06, 0.14, 0.22), 2.2)
 		if t.windup > 0.0:                         # the warning's over: here it comes
 			t.windup -= delta
 			if t.windup <= 0.0 and player.alive:
@@ -685,6 +961,8 @@ func _battle_step(delta: float) -> void:
 		for s in slimes:
 			if t.pos.distance_to(s) < 70.0:
 				t.spin -= 7.0 * delta
+		if t.spin < 18.0 and randf() < delta * 4.0:
+			fx.spray(t.pos, Vector2.from_angle(randf() * TAU), 3, [GOLD, Color(1, 1, 1)], 0.6, 0.5)   # (a slow top scrapes its tip)
 	const STEPS := 3
 	var dt := delta / STEPS
 	for i in STEPS:
@@ -757,8 +1035,12 @@ func _move_top(t: Top, tilt: Vector2, dt: float) -> void:
 			t.vel -= 1.55 * vn * n
 			if vn > 150.0:
 				_sfx("res://sounds/fx/wood_tap.wav", -18.0, 0.0, 1.3)
+				# off the rim: chips of light, a scrape on the floor
+				fx.spray(t.pos + n * t.r, -n, int(clampf(vn / 90.0, 3, 8)), [Color(1, 1, 1), bowl["rim_hi"]], 0.8, 0.7)
+				marks.scuff(t.pos, Color(0.12, 0.06, 0.14, 0.2), 1.6)
 
-	for b in bumpers:
+	for i in bumpers.size():
+		var b := bumpers[i]
 		var d := t.pos - b
 		var l := d.length()
 		var lim := t.r + 28.0
@@ -770,6 +1052,12 @@ func _move_top(t: Top, tilt: Vector2, dt: float) -> void:
 				t.vel -= 2.0 * bvn * bn
 				t.vel += bn * 260.0
 				_sfx("res://sounds/fx/pin_bumper.wav", -14.0)
+				# the peg lights up and pops, a ring of light off it
+				if i < bumper_views.size():
+					bumper_views[i].flash = 1.0
+					bumper_views[i].pop = 1.0
+				fx.ring(b + Vector2(0, -8), bowl["accent"], 24.0, 70.0, 0.25, 6.0)
+				fx.spray(b + bn * 28.0, bn, 5, [Color(1, 1, 1), bowl["accent"]], 0.7, 0.8)
 
 func _in_gap(angle: float) -> bool:
 	for g in gap_angles:
@@ -818,26 +1106,42 @@ func _collide(a: Top, b: Top) -> void:
 			dmg_b = hurt
 	# PERFECT guard: the guard went up just before the hit (a focused top: a wider window)
 	var window := PERFECT_WINDOW * (1.0 + 0.6 * focus)
+	var was_perfect := false
 	if a.braced and a.brace_t < window:
 		dmg_a = 0.0
 		dmg_b += 10.0
 		a.spin += 6.0
 		b.vel += n * 520.0
 		_perfect(a, b)
+		was_perfect = true
 	elif b.braced and b.brace_t < window:
 		dmg_b = 0.0
 		dmg_a += 10.0
 		b.spin += 6.0
 		a.vel -= n * 520.0
 		_perfect(b, a)
+		was_perfect = true
 	a.spin -= dmg_a
 	b.spin -= dmg_b
 	if a.is_player or b.is_player:
 		_tut_hit(a.brace_t < PERFECT_WINDOW if a.is_player else b.brace_t < PERFECT_WINDOW)
 	if impact > 80.0:
-		_sparks(a.pos + n * a.r, int(clampf(impact / 60.0, 3, 12)))
+		# the clash: sparks both ways along the hit, a ring of light, the tops flash; a big one
+		# shakes the bowl and holds the moment
+		var at := a.pos + n * a.r
+		var k := clampf(impact / 600.0, 0.2, 1.0)
+		var cols := [Color(1, 1, 1), GOLD, a.color.lightened(0.3), b.color.lightened(0.3)]
+		var tang := Vector2(-n.y, n.x)
+		fx.spray(at, tang, int(4 + 8 * k), cols, 0.7, 0.8 + 0.6 * k)
+		fx.spray(at, -tang, int(4 + 8 * k), cols, 0.7, 0.8 + 0.6 * k)
+		fx.ring(at, Color(1, 1, 1), 10.0, 40.0 + 70.0 * k, 0.25, 6.0)
+		a.root.flash = maxf(a.root.flash, k)
+		b.root.flash = maxf(b.root.flash, k)
+		var involved := a.is_player or b.is_player
+		if not was_perfect:
+			_kick(0.12 + 0.4 * k * (1.0 if involved else 0.5), 0.05 if k > 0.6 and involved else 0.0)
 		_sfx("res://sounds/fx/pin_bumper.wav", clampf(-26.0 + impact / 40.0, -24.0, -4.0), 0.0, randf_range(0.9, 1.15))
-		if a.is_player or b.is_player:
+		if involved:
 			Input.vibrate_handheld(int(clampf(impact / 15.0, 10, 60)))
 
 ## Spin the `to` top loses when `from` hits it: harder hits, dashes and stronger spin hurt
@@ -858,11 +1162,17 @@ func _perfect(guard: Top, hitter: Top) -> void:
 			hitter.spin -= 50.0
 		else:
 			_float_text("too quick! a focused top could!", hitter.pos + Vector2(0, -80))
+	# a perfect guard says itself: a white shockwave off the shield, gold sparkles, the moment held
+	var at := guard.pos + Vector2(0, -12)
+	fx.ring(at, Color(1, 1, 1), guard.r + 10.0, guard.r + 130.0, 0.4, 8.0)
+	fx.ring(at, GUARD_COL, guard.r + 4.0, guard.r + 70.0, 0.3, 6.0)
+	fx.sparkle(at, 12, Color8(255, 236, 150), 1.1)
+	guard.root.flash = 1.0
 	if guard.is_player:
 		perfects += 1
-		_float_text("PERFECT!", guard.pos + Vector2(0, -80))
+		_kick(0.3, 0.09)
 	elif hitter.is_player:
-		_float_text("GUARDED!", hitter.pos + Vector2(0, -80))
+		_kick(0.2, 0.05)
 
 func _dash(t: Top, dir: Vector2) -> void:
 	if t.dash_cd > 0.0 or dir == Vector2.ZERO or t.spin <= DASH_COST:
@@ -873,6 +1183,7 @@ func _dash(t: Top, dir: Vector2) -> void:
 	t.spin -= DASH_COST
 	t.dash_t = 0.0
 	t.dash_cd = 0.45
+	fx.puff(t.pos - dir * t.r, 6, Color(1, 1, 1), 0.5)       # (a push off the floor)
 	if t.is_player:
 		tut_counted = false
 		_sfx("res://sounds/fx/pin_flipper.wav", -10.0)
@@ -995,11 +1306,17 @@ func _topple(t: Top) -> void:
 	t.spin = 0.0
 	t.braced = false
 	_sfx("res://sounds/fx/clack.mp3", -10.0, 0.0, 0.7)
+	# it tips over and lies down (its slices fanning out), a puff of dust; it greys and fades
+	var v := t.root
+	v.fall_dir = t.vel.normalized() if t.vel.length() > 20.0 else Vector2.from_angle(randf() * TAU)
+	v.squat = 0.0
 	var tw := create_tween()
-	tw.tween_property(t.root, "rotation", 0.5 * t.dir, 0.25)
-	tw.parallel().tween_property(t.root, "scale", t.root.scale * Vector2(1.15, 0.8), 0.25)
-	tw.parallel().tween_property(t.root, "modulate", Color(0.55, 0.55, 0.6, 1), 0.25)
-	tw.tween_property(t.root, "modulate:a", 0.0, 0.8).set_delay(0.6)
+	tw.tween_property(v, "fall", 1.0, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(v, "modulate", Color(0.6, 0.6, 0.66, 1), 0.3)
+	tw.tween_property(v, "modulate:a", 0.0, 0.8).set_delay(0.6)
+	_after(0.3, func():
+		marks.dust(t.pos + v.fall_dir * 20.0, 10, (bowl["floor"] as Color).darkened(0.3), 1.0)
+		_kick(0.15))
 	if t.prize:
 		_win_prize(t)
 	elif not t.is_player:
@@ -1011,11 +1328,18 @@ func _ring_out(t: Top) -> void:
 	t.alive = false
 	t.braced = false
 	_sfx("res://sounds/fx/sfx_sounds_falling4.wav", -12.0, 0.8)
-	var out := t.pos + (t.pos - C).normalized() * 120.0
+	# out through the gap: off the bowl's edge, tumbling down to the floor, a puff at the gap
+	var out := t.pos + (t.pos - C).normalized() * 140.0
+	var v := t.root
+	v.fall_dir = (t.pos - C).normalized()
+	fx.puff(t.pos + (t.pos - C).normalized() * t.r, 10, Color(1, 1, 1), 0.8)
+	fx.ring(t.pos, bowl["accent"], 20.0, 90.0, 0.3, 6.0)
+	_kick(0.3)
 	var tw := create_tween()
-	tw.tween_property(t.root, "position", out, 0.45)
-	tw.parallel().tween_property(t.root, "scale", t.root.scale * 0.4, 0.45)
-	tw.parallel().tween_property(t.root, "modulate:a", 0.0, 0.45)
+	tw.tween_property(v, "position", GameFx.snap(out), 0.45)
+	tw.parallel().tween_property(v, "scale", Vector2(0.5, 0.5), 0.45)
+	tw.parallel().tween_property(v, "fall", 0.7, 0.45)
+	tw.parallel().tween_property(v, "modulate:a", 0.0, 0.45)
 	if t.prize:
 		_win_prize(t)
 	elif not t.is_player:
@@ -1049,6 +1373,11 @@ func _check_match_end() -> void:
 	_sfx("res://sounds/fx/unlock_ding.wav", -8.0)
 	Input.vibrate_handheld(60)
 	_show_banner("WIN!", 1.0)
+	# the last one standing: confetti over the bowl, sparkles round your top
+	fx.sparkle(player.pos + Vector2(0, -16), 16, Color8(255, 236, 150), 1.4)
+	fx.ring(player.pos + Vector2(0, -16), bowl["accent"], 30.0, 180.0, 0.5, 8.0)
+	for i in 3:
+		fx.confetti(Vector2(160.0 + i * 316.0, 140.0), 14, [bowl["accent"], GOLD, Color(1, 1, 1), PLAYER_COLOR])
 	_after(1.6, func():
 		_spend_boosts()
 		finish_level(level, stars, match_t))
@@ -1063,15 +1392,18 @@ func _splash_save() -> bool:
 	player.pos = C + (player.pos - C).limit_length(R * 0.3)
 	player.vel = Vector2.ZERO
 	player.spin = maxf(player.spin, 30.0 + 10.0 * PetState.boost_level)
-	player.root.position = player.pos
+	player.root.position = GameFx.snap(player.pos)
 	_show_banner("SPLASH!", 0.6)
-	_sparks(player.pos, 12)
+	fx.puff(player.pos, 14, Color8(170, 220, 255), 1.0)
+	fx.ring(player.pos, Color8(110, 200, 255), 20.0, 140.0, 0.4, 8.0)
+	fx.sparkle(player.pos, 10, Color8(200, 240, 255))
 	_sfx("res://sounds/fx/water_boing.wav", -8.0)
 	return true
 
 ## The golden top is beaten: its prize (a secret, once)
 func _win_prize(t: Top) -> void:
 	_float_text("THE GOLDEN TOP!", t.pos + Vector2(0, -70))
+	fx.sparkle(t.pos, 18, GOLD, 1.3)
 	if not secret.is_empty() and not secret.get("taken", false):
 		secret["taken"] = true
 		if secret["gate"] in ["fizzy", "caffeinated", "milky"] and PetState.boost == DrinkLibrary.boost_of(secret["gate"]):
@@ -1141,119 +1473,304 @@ func _update_legend() -> void:
 	hint_main.modulate = Color(1, 1, 1, 1.0 if can_dash else 0.35)
 	hint_fwd.modulate = Color(0.75, 0.9, 1.4) if player.braced else Color.WHITE
 
+## QA only (tools/qa sets it): plays by itself to check the levels and the effects: winds on the
+## gold, drops on a rival, dashes at the nearest one now and then, guards when one flashes
+var qa_autopilot := false
+var _qa_t := 0.0
+func _qa_play(delta: float) -> void:
+	_qa_t -= delta
+	match phase:
+		Phase.WIND:
+			if wind_jam <= 0.0 and absf(angle_difference(needle, zone)) < ZONE_HALF * 0.5:
+				_wind_pull()
+			if wind_spin >= 96.0:
+				_forward_down()
+				_forward_up()
+		Phase.DROP:
+			if not dropping:
+				var best: Top = null
+				for o in tops:
+					if o != player and o.alive and (best == null or o.pos.distance_to(C) < best.pos.distance_to(C)):
+						best = o
+				if best:
+					aim = C + (best.pos - C).limit_length(R - 80.0)
+				_drop()
+		Phase.BATTLE:
+			if not player.alive:
+				return
+			var threat := false
+			for o in tops:
+				if o != player and o.alive and o.windup > 0.0 and o.windup < 0.22:
+					threat = true
+			if threat and not player.braced:
+				player.braced = true
+				player.brace_t = 0.0
+			elif not threat and player.braced and player.brace_t > 0.35:
+				player.braced = false
+			if not player.braced and _qa_t <= 0.0 and player.spin > 20.0:
+				_player_dash()
+				_qa_t = randf_range(0.7, 1.2)
+
+## A small shake (and a tiny freeze) for a big moment
+func _kick(amount: float, freeze := 0.0) -> void:
+	shake = maxf(shake, amount)
+	hitstop = maxf(hitstop, freeze)
+
+## The tops on screen: turning, leaning (a wobble when slow or over-wound, into a dash), squatting
+## while guarding, lit by the place where they are
 func _animate_tops(delta: float) -> void:
+	var bw := PLAY_WIDTH / PX
+	var bh := PLAY_HEIGHT / PX
 	for t in tops:
 		if not is_instance_valid(t.root):
 			continue
+		var v := t.root
 		var spinning := t.alive or phase == Phase.WIND
+		v.t += delta
 		if spinning:
-			t.body.rotation += (4.0 + maxf(t.spin, 0.0) * 0.18) * delta * t.dir
+			v.angle += v.period * SPIN_SHOWN * clampf(t.spin / 40.0, 0.12, 1.0) * delta * t.dir
+		v.fast = clampf((t.spin - 35.0) / 45.0, 0.0, 1.0) * 0.6 if spinning else 0.0
+		v.flash = maxf(0.0, v.flash - delta * 5.0)
 		if t.alive and (phase == Phase.BATTLE or (t != player and phase != Phase.RESULT)):
-			t.root.position = t.pos
-		# a slow or over-wound top wobbles (the pal riding it rocks about)
+			v.position = GameFx.snap(t.pos)
+		# a slow or over-wound top wobbles round (it precesses), the pal riding it rocking
 		var w := clampf((25.0 - t.spin) / 25.0, 0.0, 1.0) + minf(t.unsteady, 1.0)
 		if not t.alive:
 			w = 0.0
-		t.cap.position = Vector2(sin(time * 17.0 + t.wob) * 5.0, cos(time * 13.0 + t.wob) * 3.0) * w
-		t.body.position = t.cap.position * 0.4
-		# guarding: the top squats down (darker, a touch smaller)
-		var target := Color(0.72, 0.76, 0.9) if t.braced else Color.WHITE
-		t.body.modulate = t.body.modulate.lerp(target, minf(1.0, delta * 20.0))
+		var want := Vector2.from_angle(time * (5.0 + 5.0 * w) * t.dir + t.wob) * 16.0 * minf(w, 1.0)
+		if t.alive and t.dash_t < DASH_TIME and t.vel.length() > 10.0:
+			want += t.vel.normalized() * 8.0                                  # (leaning into a dash)
+		v.lean = v.lean.lerp(want, minf(1.0, delta * 14.0))
+		v.squat = move_toward(v.squat, 1.0 if t.braced else 0.0, delta * 10.0)
+		v.self_modulate = TopSpinArt.light_at(bowl["room"], t.pos / PX, int(bw), int(bh))
+		v.queue_redraw()
 
-## Dash trails: fading copies of the top's outline behind it
-func _draw_under() -> void:
+## Under the tops: their shadows (and the pegs'), the gears turning, the flush's whirlpool, the
+## soap's bubbles, the drop's target
+func _draw_floor() -> void:
+	var f := floor_layer
+	for g in gears:
+		var a: float = g["angle"]
+		var tex := TopSpinArt.gear(GEAR_R, int(fposmod(a, TAU / 12.0) / (TAU / 12.0) * 6.0) % 6)
+		var sz := tex.get_size() * PX
+		f.draw_texture_rect(tex, Rect2(GameFx.snap(g["pos"]) - sz / 2.0, sz), false)
+	for s in slimes:
+		for k in 5:
+			var ph := fposmod(time * 0.6 + k * 0.37, 1.0)
+			var q := GameFx.snap(s + Vector2.from_angle(k * 2.4 + 0.7) * (16.0 + k * 9.0))
+			var br := 4.0 + roundf(ph * 3.0) * 4.0
+			if ph < 0.92:
+				f.draw_rect(Rect2(q - Vector2(br, br) / 2.0, Vector2(br, br)), Color(1, 1, 1, 0.5))
+				f.draw_rect(Rect2(q - Vector2(br, br) / 2.0, Vector2(4, 4)), Color(1, 1, 1, 0.9))
+			else:
+				GameFx.light_ring(f, q, br, Color(1, 1, 1), 6, 4.0, 0.6)
+	if flushing > 0.0:
+		_draw_whirlpool(f, clampf(flushing, 0.0, 1.0))
+	for b in bumpers:
+		_shadow(f, b, 26.0, 0.3)
 	for t in tops:
-		var n := t.trail.size()
-		for i in n:
-			var k := float(i + 1) / (n + 1)
-			under.draw_circle(t.trail[i], t.r * (0.5 + 0.5 * k), Color(t.color, 0.35 * k))
+		if not t.alive or not is_instance_valid(t.root):
+			continue
+		if phase == Phase.WIND and t == player:
+			continue
+		var at := t.pos
+		var k := 1.0
+		if t == player and phase == Phase.DROP:
+			at = aim
+			k = 1.0 - 0.55 * clampf((aim.y - t.root.position.y) / 110.0, 0.0, 1.0)
+		_shadow(f, at, t.r * k, 0.32 * k)
+	if phase == Phase.DROP and not dropping:
+		# where it will land: a ring of light on the floor
+		var p := 0.5 + 0.5 * sin(time * 8.0)
+		GameFx.light_ring(f, aim, TOP_R + 10.0 + p * 8.0, GOLD, 20, 6.0, 0.9, time)
+		f.draw_rect(Rect2(GameFx.snap(aim) - Vector2(4, 4), Vector2(8, 8)), Color(GOLD, 0.8))
+
+## A soft shadow on the floor, down and right of a thing (the light is top-left): an oval in rows
+func _shadow(ci: CanvasItem, at: Vector2, r: float, a: float) -> void:
+	var c := at + Vector2(8, 10)
+	var y := -r * 0.62
+	while y <= r * 0.62:
+		var half := r * 1.05 * sqrt(maxf(0.0, 1.0 - (y / (r * 0.62)) * (y / (r * 0.62))))
+		ci.draw_rect(Rect2(GameFx.snap(c + Vector2(-half, y)), Vector2(maxf(4.0, roundf(half * 2.0 / 4.0) * 4.0), 4)), Color(0.06, 0.03, 0.12, a))
+		y += 4.0
+
+## The flush (the Toilet Bowl): the water turning, foam arms spiralling in to a pulsing eye
+func _draw_whirlpool(ci: CanvasItem, a: float) -> void:
+	var rr := R * 0.8
+	GameFx.disc(ci, C, rr * 0.6, Color(0.2, 0.42, 0.56, 0.12 * a))
+	GameFx.disc(ci, C, rr * 0.3, Color(0.12, 0.3, 0.44, 0.18 * a))
+	for arm in 4:
+		for k in 30:
+			var rad := 20.0 + k * (rr / 30.0)
+			var ang := swirl_a + arm * TAU / 4.0 + rad * 0.012
+			var q := GameFx.snap(C + Vector2.from_angle(ang) * rad)
+			var al := a * (1.0 - float(k) / 30.0) * 0.8
+			ci.draw_rect(Rect2(q - Vector2(6, 6), Vector2(12, 12)), Color(0.9, 0.97, 1.0, al * 0.5))
+			ci.draw_rect(Rect2(q - Vector2(4, 4), Vector2(8, 8)), Color(0.95, 1.0, 1.0, al))
+	var eye := 12.0 + 4.0 * roundf(sin(time * 6.0))
+	GameFx.disc(ci, C, eye + 4.0, Color(0.06, 0.16, 0.26, 0.6 * a))
+
+## The lights in the rim at each way out (the world's accent, gently pulsing; red and blinking
+## while a top is close to it: careful!)
+func _draw_rim_fx() -> void:
+	var lip := C - Vector2(0, RIM_H)
+	for g in gap_angles:
+		var mouth := C + Vector2.from_angle(g) * R
+		var near := false
+		for t in tops:
+			if t.alive and t.pos.distance_to(mouth) < 150.0:
+				near = true
+		for sd in [-1.0, 1.0]:
+			var p := lip + Vector2.from_angle(g + sd * gap_half * 1.2) * (R + RIM_W * 0.5)
+			var col: Color = WARN_COL if near else bowl["accent"]
+			var a := (0.55 + 0.45 * sin(time * 2.5 + g)) if not near else (1.0 if int(time * 8.0) % 2 == 0 else 0.4)
+			GameFx.glow(rim_fx, p, 8.0, col, a)
 
 func _draw_overlay() -> void:
 	if not is_running and not is_game_over and not intro_active():
 		return
-	_draw_hud()
 	if phase == Phase.WIND:
-		overlay.draw_rect(Rect2(0, 100, PLAY_WIDTH, PLAY_HEIGHT - 100), Color(0, 0, 0, 0.35))
-		var rr := 170.0
-		overlay.draw_arc(C, rr, 0, TAU, 64, OUTLINE, 22)
-		overlay.draw_arc(C, rr, 0, TAU, 64, RIM, 14)
-		overlay.draw_arc(C, rr, zone - ZONE_HALF, zone + ZONE_HALF, 16, GOLD, 16)
-		var tip := C + Vector2.from_angle(needle) * (rr + 22)
-		overlay.draw_line(C + Vector2.from_angle(needle) * (rr - 30), tip, OUTLINE, 14)
-		overlay.draw_line(C + Vector2.from_angle(needle) * (rr - 26), tip - Vector2.from_angle(needle) * 3, Color8(240, 80, 70) if wind_jam > 0.0 else Color.WHITE, 8)
-		_draw_gauge()
-		var l := Rect2(C.x - 60, C.y + 220, 120, 12)
-		overlay.draw_rect(l, OUTLINE)
-		overlay.draw_rect(Rect2(l.position, Vector2(l.size.x * maxf(wind_left, 0.0) / WIND_TIME, l.size.y)), Color8(250, 240, 210))
+		_draw_dial()
 	elif phase == Phase.BATTLE:
 		for t in tops:
 			if not t.alive:
 				continue
-			if t.braced:                              # GUARD: a shield ring (white = PERFECT window)
-				var fresh := t.brace_t < PERFECT_WINDOW
-				overlay.draw_arc(t.pos, t.r + 10, 0, TAU, 40, OUTLINE, 12)
-				overlay.draw_arc(t.pos, t.r + 10, 0, TAU, 40, Color.WHITE if fresh else Color8(150, 200, 255), 7)
-			if t.windup > 0.0:                        # about to DASH: a flashing red ring and "!"
+			var at := t.pos + Vector2(0, -14)
+			if t.braced:                              # GUARD: a shield of light (white = the PERFECT window)
+				var fresh := t.brace_t < PERFECT_WINDOW * (1.0 + 0.6 * focus)
+				var col := Color(1, 1, 1) if fresh else GUARD_COL
+				GameFx.light_ring(overlay, at, t.r + 14.0, col, 22, 8.0 if fresh else 6.0, 0.7 + 0.3 * sin(time * 12.0), time * 2.0 * t.dir)
+			if t.windup > 0.0:                        # about to DASH: a ring of red light and its "!"
 				var on := fmod(t.windup, 0.16) < 0.08
-				overlay.draw_arc(t.pos, t.r + 16, 0, TAU, 40, Color8(240, 70, 60) if on else Color8(255, 200, 80), 6)
-				if lcd_font:
-					overlay.draw_string(lcd_font, t.pos + Vector2(-10, -t.r - 22), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 44, Color8(240, 70, 60))
-	elif phase == Phase.DROP and not dropping:
-		var p := 0.5 + 0.5 * sin(time * 10.0)
-		overlay.draw_arc(aim, TOP_R + 6 + p * 6, 0, TAU, 32, OUTLINE, 6)
-		overlay.draw_arc(aim, TOP_R + 6 + p * 6, 0, TAU, 32, GOLD, 3)
+				GameFx.light_ring(overlay, at, t.r + 22.0, WARN_COL if on else Color8(255, 200, 80), 22, 8.0, 1.0, -time * 3.0)
+				GameFx.outlined_text(overlay, lcd_font, at + Vector2(0, -t.r - 58 + (4 if on else 0)), "!", 48, WARN_COL)
 
-## The spin gauge while winding (gold up to 100%, red above: over-wound)
-func _draw_gauge() -> void:
-	var r := Rect2(70, 330, 44, 360)
-	overlay.draw_rect(r.grow(5), OUTLINE)
-	overlay.draw_rect(r, Color8(70, 78, 96))
-	var f := wind_spin / WIND_MAX
-	var h := r.size.y * f
-	var col := GOLD if wind_spin <= 100.0 else Color8(232, 86, 70)
-	overlay.draw_rect(Rect2(r.position.x, r.end.y - h, r.size.x, h), col)
-	var y100 := r.end.y - r.size.y * 100.0 / WIND_MAX
-	overlay.draw_line(Vector2(r.position.x - 8, y100), Vector2(r.end.x + 8, y100), Color.WHITE, 4)
-
-## Spin bars: yours on the left, the rivals' on the right
-func _draw_hud() -> void:
-	_spin_bar(Rect2(30, 30, 300, 26), player)
-	var y := 26.0
-	for t in tops:
-		if t == player:
-			continue
-		_spin_bar(Rect2(PLAY_WIDTH - 260, y, 230, 16), t)
-		y += 24.0
-
-func _spin_bar(r: Rect2, t: Top) -> void:
-	if t == null:
+## While winding: the bowl and the rivals dimmed, your top held up bright over them
+func _draw_dim() -> void:
+	if phase != Phase.WIND or (not is_running and not is_game_over and not intro_active()):
 		return
-	overlay.draw_rect(r.grow(4), OUTLINE)
-	overlay.draw_rect(r, Color8(70, 78, 96))
-	var f := clampf(t.spin / 100.0, 0.0, 1.0)
-	var col := t.color
-	if t.spin < 25.0 and t.alive and fmod(time, 0.4) < 0.2:
-		col = Color8(240, 80, 70)
-	if not t.alive:
-		col = Color8(90, 90, 100)
-	overlay.draw_rect(Rect2(r.position, Vector2(r.size.x * f, r.size.y)), col)
-	if t.braced:
-		overlay.draw_rect(r.grow(4), Color8(160, 200, 255), false, 3)
-	if t == player and bar_flash > 0.0 and fmod(bar_flash, 0.3) < 0.15:
-		overlay.draw_rect(r.grow(8), Color.WHITE, false, 5)        # (the tutorial points at it)
+	dim_layer.draw_rect(Rect2(0, GameFx.HUD_BAND.end.y, PLAY_WIDTH, PLAY_HEIGHT - GameFx.HUD_BAND.end.y), Color(0.04, 0.03, 0.1, 0.42))
 
-func _sparks(at: Vector2, n: int) -> void:
-	for i in n:
-		var s := ColorRect.new()
-		s.size = Vector2(8, 8)
-		s.color = Color8(255, 236, 160) if i % 2 == 0 else Color.WHITE
-		s.position = at - s.size / 2.0
-		fx.add_child(s)
-		var to := s.position + Vector2.from_angle(randf() * TAU) * randf_range(30, 90)
-		var tw := create_tween()
-		tw.tween_property(s, "position", to, 0.25).set_ease(Tween.EASE_OUT)
-		tw.parallel().tween_property(s, "modulate:a", 0.0, 0.25)
-		tw.tween_callback(s.queue_free)
+## The winding dial round your top: a dark track, the gold zone glowing, the needle a comet; red
+## while the cord is jammed, hot as it gets over-wound; the pulls in a row as pips under it
+func _draw_dial() -> void:
+	var o := overlay
+	var jam := wind_jam > 0.0
+	var hot := clampf((wind_spin - 100.0) / 30.0, 0.0, 1.0)
+	var track := Color8(64, 70, 104).lerp(Color8(150, 70, 60), hot)
+	if jam:
+		track = Color8(170, 50, 50)
+	const N := 120
+	for k in N:
+		var p := GameFx.snap(C + Vector2.from_angle(k * TAU / N) * DIAL_R)
+		o.draw_rect(Rect2(p - Vector2(10, 10), Vector2(20, 20)), OUTLINE)
+	for k in N:
+		var a := k * TAU / N
+		var p := GameFx.snap(C + Vector2.from_angle(a) * DIAL_R)
+		var col := track
+		if absf(angle_difference(a, zone)) < ZONE_HALF and not jam:
+			col = GOLD.lerp(Color(1, 1, 1), 0.25 + 0.25 * sin(time * 10.0))
+		o.draw_rect(Rect2(p - Vector2(6, 6), Vector2(12, 12)), col)
+		if k % 6 == 0:
+			var q := GameFx.snap(C + Vector2.from_angle(a) * (DIAL_R + 24.0))
+			o.draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, 0.5))
+	# the gold zone's glow
+	if not jam:
+		for k in 7:
+			var a2 := zone + (k - 3) * ZONE_HALF / 3.0
+			var q2 := GameFx.snap(C + Vector2.from_angle(a2) * DIAL_R)
+			o.draw_rect(Rect2(q2 - Vector2(16, 16), Vector2(32, 32)), Color(GOLD.r, GOLD.g, GOLD.b, 0.16))
+	# the needle: its comet tail, then the head (a bar across the track)
+	for i in range(needle_trail.size() - 1, 0, -1):
+		var qa := GameFx.snap(C + Vector2.from_angle(needle_trail[i]) * DIAL_R)
+		var al := 0.6 * (1.0 - float(i) / needle_trail.size())
+		o.draw_rect(Rect2(qa - Vector2(6, 6), Vector2(12, 12)), Color(1, 1, 1, al) if not jam else Color(1, 0.4, 0.3, al))
+	var head := Color(1, 1, 1) if not jam else WARN_COL
+	for k2 in range(-6, 7):
+		var q3 := GameFx.snap(C + Vector2.from_angle(needle) * (DIAL_R + k2 * 4.0))
+		o.draw_rect(Rect2(q3 - Vector2(6, 6), Vector2(12, 12)), OUTLINE)
+	for k3 in range(-5, 6):
+		var q4 := GameFx.snap(C + Vector2.from_angle(needle) * (DIAL_R + k3 * 4.0))
+		o.draw_rect(Rect2(q4 - Vector2(4, 4), Vector2(8, 8)), head)
+	GameFx.glow(o, C + Vector2.from_angle(needle) * (DIAL_R + 28.0), 12.0, head)
+	# the pulls in a row
+	for i2 in mini(combo, 8):
+		var pp := GameFx.snap(C + Vector2((i2 - (mini(combo, 8) - 1) / 2.0) * 20.0, DIAL_R + 52.0))
+		GameFx.glow(o, pp, 8.0, GOLD)
+
+## The band's live parts: your spin (your pal, a chunky bar), the rivals' spins on the right; the
+## stars dim as your spin drops below 70% and 40% (what you'd win now); the foot line is the
+## winding's (and the drop's) clock
+func _update_hud() -> void:
+	if not player:
+		return
+	var now := 1 + (1 if player.spin >= 40.0 else 0) + (1 if player.spin >= 70.0 else 0)
+	if not player.alive:
+		now = 0
+	if not practice:
+		_stars_shown = GameFx.set_stars(hud_stars, _stars_shown, now)
+	var band := GameFx.HUD_BAND
+	match phase:
+		Phase.WIND:
+			band_bar.size.x = band.size.x * clampf(wind_left / WIND_TIME, 0.0, 1.0) if tut != Tut.WIND else band.size.x
+			band_bar.color = GOLD
+		Phase.DROP:
+			band_bar.size.x = band.size.x * clampf(drop_left / DROP_TIME, 0.0, 1.0) if tut != Tut.DROP else band.size.x
+			band_bar.color = GOLD
+		_:
+			band_bar.size.x = band.size.x
+			band_bar.color = Color(bowl["accent"], 0.45)
+
+func _draw_hud() -> void:
+	if not player:
+		return
+	var band := GameFx.HUD_BAND
+	var h := hud
+	# your pal and your spin
+	h.draw_texture_rect(ball_texture, Rect2(Vector2(band.position.x + 176, band.position.y + 7), Vector2(48, 48)), false)
+	var r := Rect2(band.position.x + 228, band.position.y + 18, 192, 24)
+	var fill := player.color
+	if player.spin > 100.0:
+		fill = Color8(255, 110, 70).lerp(Color(1, 1, 1), 0.3 * (0.5 + 0.5 * sin(time * 14.0)))   # over-wound
+	elif player.spin < 25.0 and player.alive and fmod(time, 0.4) < 0.2:
+		fill = WARN_COL
+	if not player.alive:
+		fill = Color8(90, 90, 100)
+	_bar(h, r, clampf(player.spin / 100.0, 0.0, 1.0), fill, player.braced, bar_flash > 0.0 and fmod(bar_flash, 0.3) < 0.15)
+	# the rivals (and the golden top), a row each: their pal and their spin
+	var rows: Array[Top] = []
+	for t in tops:
+		if t != player:
+			rows.append(t)
+	var y0 := band.position.y + 29.0 - (rows.size() - 1) * 9.0
+	for i in rows.size():
+		var t := rows[i]
+		var ry := y0 + i * 18.0
+		var icon: Texture2D = t.root.rider if t.root.rider else null
+		if icon:
+			h.draw_texture_rect(icon, Rect2(Vector2(band.position.x + 586, ry - 12), Vector2(24, 24)), false, Color(1, 1, 1, 1.0 if t.alive else 0.4))
+		else:
+			GameFx.glow(h, Vector2(band.position.x + 598, ry), 8.0, GOLD, 1.0 if t.alive else 0.4)
+		var col := t.color
+		if t.spin < 25.0 and t.alive and fmod(time, 0.4) < 0.2:
+			col = WARN_COL
+		if not t.alive:
+			col = Color8(90, 90, 100)
+		_bar(h, Rect2(band.position.x + 616, ry - 4, 220, 8), clampf(t.spin / 100.0, 0.0, 1.0), col, t.braced, false)
+
+## A chunky bar on the band: outlined, its empty part dark, filled in its colour with a lit top
+## edge; a blue edge while guarding, a white one when the tutorial points at it
+func _bar(ci: CanvasItem, r: Rect2, f: float, col: Color, guard: bool, point: bool) -> void:
+	ci.draw_rect(r.grow(4), OUTLINE)
+	ci.draw_rect(r, Color8(30, 32, 50))
+	if f > 0.0:
+		var w := maxf(4.0, roundf(r.size.x * f / 4.0) * 4.0)
+		ci.draw_rect(Rect2(r.position, Vector2(w, r.size.y)), col)
+		ci.draw_rect(Rect2(r.position, Vector2(w, 4)), col.lightened(0.35))
+	if guard:
+		ci.draw_rect(r.grow(4), GUARD_COL, false, 4)
+	if point:
+		ci.draw_rect(r.grow(8), Color.WHITE, false, 4)
 
 # ================================================================== NODES / TEXTURES
 
@@ -1262,40 +1779,59 @@ func _create_static_nodes() -> void:
 	bg.color = BG
 	bg.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT)
 	add_child(bg)
-	backdrop = Sprite2D.new()                       # the room round the bowl (each world's own)
+	scene = Node2D.new()                           # (everything in the bowl's world: it shakes)
+	add_child(scene)
+	backdrop = Sprite2D.new()                       # the place round the bowl (each world's own)
 	backdrop.centered = false
 	backdrop.scale = Vector2(PX, PX)
 	backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	add_child(backdrop)
+	scene.add_child(backdrop)
 	stadium = Sprite2D.new()
-	stadium.position = C
 	stadium.scale = Vector2(PX, PX)
 	stadium.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	add_child(stadium)
-	gear_layer = Node2D.new()                        # the Clockwork Bowl's gears, on the floor
-	add_child(gear_layer)
-	bumper_nodes = Node2D.new()
-	add_child(bumper_nodes)
-	swirl = Sprite2D.new()                          # the Toilet Bowl's whirlpool while it flushes
-	swirl.texture = _make_swirl_texture()
-	swirl.scale = Vector2(PX, PX)
-	swirl.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	swirl.visible = false
-	add_child(swirl)
-	under = Node2D.new()
-	under.draw.connect(_draw_under)
-	add_child(under)
-	top_nodes = Node2D.new()
-	add_child(top_nodes)
-	fx = Node2D.new()
-	add_child(fx)
-	overlay = Node2D.new()
+	scene.add_child(stadium)
+	floor_layer = Node2D.new()                      # shadows, gears, the whirlpool, the drop's target
+	floor_layer.draw.connect(_draw_floor)
+	scene.add_child(floor_layer)
+	marks = GameFx.Burst.new()                      # scuffs and dust on the floor
+	scene.add_child(marks)
+	trails = GameFx.Burst.new()                     # the dashes' light ribbons (under the tops)
+	scene.add_child(trails)
+	top_nodes = Node2D.new()                        # the tops and the pegs, the nearer in front
+	top_nodes.y_sort_enabled = true
+	scene.add_child(top_nodes)
+	stadium_front = Sprite2D.new()                  # the near rim, over the tops
+	stadium_front.scale = Vector2(PX, PX)
+	stadium_front.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	scene.add_child(stadium_front)
+	rim_fx = Node2D.new()                           # the lights at the ways out
+	rim_fx.draw.connect(_draw_rim_fx)
+	scene.add_child(rim_fx)
+	fx = GameFx.Burst.new()                         # sparks, rings, puffs, confetti
+	scene.add_child(fx)
+	room_fx = RoomFx.new()                          # the place's living light, added on
+	var add := CanvasItemMaterial.new()
+	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	room_fx.material = add
+	scene.add_child(room_fx)
+	dim_layer = Node2D.new()                        # while winding, everything but your top dimmed
+	dim_layer.draw.connect(_draw_dim)
+	scene.add_child(dim_layer)
+	held = Node2D.new()                             # your top while it's wound and dropped (over the rest)
+	scene.add_child(held)
+	overlay = Node2D.new()                          # the guard and warning rings, the dial
 	overlay.draw.connect(_draw_overlay)
-	add_child(overlay)
+	scene.add_child(overlay)
 
-	hud_level = _make_label(Vector2(PLAY_WIDTH / 2 - 100, 18), Vector2(200, 50), 36, HORIZONTAL_ALIGNMENT_CENTER, Color(0.95, 0.96, 1.0))
-	hud_level.add_theme_color_override("font_outline_color", OUTLINE)
-	hud_level.add_theme_constant_override("outline_size", 10)
+	# the HUD on the race games' band: the level, your pal and spin, the stars, the rivals, the boost
+	var band := GameFx.build_band(self, BAND, BAND_FOOT)
+	band_bar = band["bar"]
+	var b := GameFx.HUD_BAND
+	hud_level = GameFx.label(self, lcd_font, Vector2(b.position.x + 18, b.position.y + 2), Vector2(160, 52), 32, HORIZONTAL_ALIGNMENT_LEFT, HUD_TEXT)
+	hud = Node2D.new()
+	hud.draw.connect(_draw_hud)
+	add_child(hud)
+	hud_stars = GameFx.build_stars(self, Vector2(b.position.x + 432, b.position.y + 10))
 	lives_box = HBoxContainer.new()                 # (no lives with the level menu: kept hidden)
 	lives_box.visible = false
 	add_child(lives_box)
@@ -1303,7 +1839,7 @@ func _create_static_nodes() -> void:
 	boost_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	boost_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	boost_icon.size = Vector2(28, 36)
-	boost_icon.position = Vector2(34, 66)
+	boost_icon.position = Vector2(b.end.x - 52, b.position.y + 10)
 	boost_icon.visible = false
 	add_child(boost_icon)
 	# the control legend along the bottom (what each button does right now)
@@ -1311,23 +1847,7 @@ func _create_static_nodes() -> void:
 	hint_main.position = Vector2(72, PLAY_HEIGHT - 86)             # (clear of the screen's rounded corners)
 	hint_fwd = make_button_hint(1, "DONE")
 	hint_fwd.position = Vector2(PLAY_WIDTH - 250, PLAY_HEIGHT - 86)
-	banner = _make_label(Vector2(0, C.y - 60), Vector2(PLAY_WIDTH, 120), 54, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
-	banner.add_theme_color_override("font_outline_color", OUTLINE)
-	banner.add_theme_constant_override("outline_size", 14)
-	banner.modulate.a = 0.0
-
-func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
-	var l := Label.new()
-	l.position = pos
-	l.size = sz
-	l.horizontal_alignment = align
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	if lcd_font:
-		l.add_theme_font_override("font", lcd_font)
-	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", color)
-	add_child(l)
-	return l
+	banner = GameFx.banner(self, lcd_font, BAND_FOOT, 470.0)
 
 func _refresh_lives() -> void:
 	if not lives_box.visible:
@@ -1342,319 +1862,6 @@ func _refresh_lives() -> void:
 		t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		t.modulate = Color(1, 1, 1, 1) if i < lives else Color(0, 0, 0, 0.35)
 		lives_box.add_child(t)
-
-## The bowl seen from above: an even, flat floor of blue-grey turned wood (wavy grain, lathe
-## rings; no shading, it read as dirt), a thick indigo rim with its grain running round and a lit
-## bevel, gaps cut through it (ring-outs), and slime puddles (hard pixels, no blending)
-func _paint_stadium() -> Image:
-	var n := int(ceil((R + RIM_W + 4.0) * 2.0 / PX))
-	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
-	var half := n / 2.0
-	for y in n:
-		for x in n:
-			var d := (Vector2(x + 0.5, y + 0.5) - Vector2(half, half)) * PX
-			var r := d.length()
-			var ang := d.angle()
-			var lit := d.x + d.y < -r * 0.25           # the top-left side
-			var col := Color(0, 0, 0, 0)
-			if r > R + RIM_W:
-				pass
-			elif r > R - 8.0:
-				# --- the rim (its dark outlines two pixels thick) ---
-				if _in_gap(ang):
-					col = GAP
-					var edge := absf(absf(angle_difference(ang, _nearest_gap(ang))) - gap_half) * r
-					if edge < 6.0 and r > R:
-						col = RIM_DARK                   # the gap's cut side walls
-				elif r < R or r > R + RIM_W - 8.0:
-					col = OUTLINE
-				else:
-					var g := sin(r * 0.35 + sin(ang * 9.0 + r * 0.02) * 1.8)
-					col = bowl["rim_dark"] if g > 0.75 else bowl["rim"]
-					if bowl["room"] == "workshop" and int(fposmod(ang, TAU) * 18.0 / TAU * 2.0) % 2 == 0 and absf(r - (R + RIM_W * 0.5)) < 5.0:
-						col = bowl["rim_hi"]                 # rivets round the iron rim
-					if r > R + RIM_W - 16.0:
-						col = bowl["rim_hi"] if lit else bowl["rim_dark"]    # outer bevel: lit top-left, shaded bottom-right
-					elif r < R + 8.0 and not lit:
-						col = bowl["rim_hi"]                 # inner lip catches the light on the far side
-			else:
-				# --- the floor ---
-				var g := sin(d.y * 0.11 + sin(d.x * 0.012 + d.y * 0.004) * 2.6 + sin(d.x * 0.031) * 0.6)
-				col = bowl["floor"]
-				if g > 0.72:
-					col = bowl["grain"]
-				elif g < -0.9:
-					col = bowl["light"]
-				if r > 40.0 and fposmod(r, 52.0) < float(PX):      # (one whole pixel wide: no broken ticks)
-					col = bowl["lathe"]                      # the turned rings
-				if r < 16.0 and r > 9.0:
-					col = bowl["lathe"]                      # the lathe's centre mark
-				if bowl.get("swirls", false):
-					# gold maki-e swirls on the black lacquer
-					var sw := sin(ang * 2.0 + r * 0.03)
-					if absf(sw) < 0.035 and r > 90.0 and int(r / 60.0) % 2 == 0:
-						col = Color8(176, 140, 64)
-				if bowl.get("scales", false):
-					# a dragon's scales: rows of little arcs, gold-edged
-					var row := int(r / 28.0)
-					var ca := fposmod(ang * r / 28.0 + row * 0.5, 1.0)
-					if fposmod(r, 28.0) < float(PX) * 1.2 and (ca < 0.2 or ca > 0.8):
-						col = Color8(236, 186, 80)
-				if bowl["room"] == "bathroom" and fposmod(r - time * 0.0, 38.0) < float(PX) and r > 50.0:
-					col = bowl["light"]                      # the water's rings
-				if bowl["room"] == "workshop" and (int(d.x / 24.0) + int(d.y / 24.0)) % 2 == 0 and fposmod(d.x, 24.0) < float(PX):
-					col = bowl["grain"]                      # engraved lines on the brass
-				if r > R - 40.0 and _in_gap(ang):
-					col = col.darkened(0.12)                 # a faint strip leading into each gap (the way out)
-			for s in slimes:
-				var sd := (C + d).distance_to(s) + sin(ang * 5.0 + s.x) * 6.0
-				if sd < 70.0:
-					col = SLIME if sd < 64.0 else SLIME_DARK
-			img.set_pixel(x, y, col)
-	return img
-
-func _nearest_gap(ang: float) -> float:
-	var best := 0.0
-	var bd := 99.0
-	for g in gap_angles:
-		var dd := absf(angle_difference(ang, g))
-		if dd < bd:
-			bd = dd
-			best = g
-	return best
-
-## A spinning top from above: four blades round a dark hub (so you can see it turn)
-func _make_top_texture(color: Color) -> Texture2D:
-	const S := 26
-	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
-	var c := Vector2(S / 2.0, S / 2.0)
-	for y in S:
-		for x in S:
-			var off := Vector2(x + 0.5, y + 0.5) - c
-			var d := off.length()
-			var a := fposmod(off.angle() * 4.0 / TAU, 1.0)        # 0..1 across each blade
-			var edge := 12.5 - (2.0 if a > 0.7 else 0.0)            # notches between the blades
-			if d > edge:
-				continue
-			var col := color
-			if d > edge - 1.2:
-				col = OUTLINE
-			elif d < 7.0:
-				col = color.darkened(0.45)                          # the hub (the pal sits here)
-			elif a < 0.18:
-				col = color.lightened(0.35)                         # leading edge of a blade
-			elif a > 0.55:
-				col = color.darkened(0.2)
-			img.set_pixel(x, y, col)
-	return ImageTexture.create_from_image(img)
-
-## A rival's face on top of its top: a ball in its colour, angry brows
-func _make_rival_face(color: Color) -> Texture2D:
-	const S := 20
-	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
-	var c := Vector2(S / 2.0, S / 2.0)
-	var face := color.lightened(0.3)
-	for y in S:
-		for x in S:
-			var off := Vector2(x + 0.5, y + 0.5) - c
-			var d := off.length()
-			if d > 8.0:
-				continue
-			var col := face if off.x + off.y < 2.0 else face.darkened(0.15)
-			if d > 7.0:
-				col = OUTLINE
-			img.set_pixel(x, y, col)
-	img.set_pixel(7, 7, Color.WHITE)
-	for p in [Vector2i(7, 10), Vector2i(7, 11), Vector2i(12, 10), Vector2i(12, 11)]:
-		img.set_pixel(p.x, p.y, OUTLINE)                            # eyes
-	for p in [Vector2i(6, 8), Vector2i(7, 9), Vector2i(13, 8), Vector2i(12, 9)]:
-		img.set_pixel(p.x, p.y, OUTLINE)                            # angry brows
-	for p in [Vector2i(9, 13), Vector2i(10, 13)]:
-		img.set_pixel(p.x, p.y, OUTLINE)                            # mouth
-	return ImageTexture.create_from_image(img)
-
-## A bouncer: a turned wooden peg in the rim's indigo, seen from above (lighter top, a lathe
-## ring, a little brass dot in the middle), so it belongs to the same toy
-func _make_bumper_texture() -> Texture2D:
-	var RIM: Color = bowl["rim"]
-	var RIM_HI: Color = bowl["rim_hi"]
-	var RIM_DARK: Color = bowl["rim_dark"]
-	const S := 20
-	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
-	var c := Vector2(S / 2.0, S / 2.0)
-	for y in S:
-		for x in S:
-			var off := Vector2(x + 0.5, y + 0.5) - c
-			var d := off.length()
-			if d > 9.5:
-				continue
-			var col := RIM
-			if d > 8.5:
-				col = OUTLINE
-			elif d > 7.0:
-				col = RIM_HI if off.x + off.y < 0 else RIM_DARK      # the peg's edge: lit top-left
-			elif d > 5.6 and d < 6.6:
-				col = RIM_DARK                                       # a lathe ring on its top
-			elif d < 2.2:
-				col = Color8(226, 190, 104) if off.x + off.y < 0 else Color8(176, 136, 64)   # brass dot
-			elif off.x + off.y < -2.0:
-				col = RIM_HI
-			img.set_pixel(x, y, col)
-	return ImageTexture.create_from_image(img)
-
-## The room round the bowl, each world's own (board px: the play area / PX), hard pixels, light
-## from the top-left: tatami mats, a festival stall, a lacquered table, bathroom tiles, a
-## workbench, a night festival
-func _paint_room(kind: String) -> Image:
-	var w := int(PLAY_WIDTH / PX) + 1
-	var h := int(PLAY_HEIGHT / PX) + 1
-	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
-	for y in h:
-		for x in w:
-			img.set_pixel(x, y, _room_px(kind, x, y, w, h))
-	return img
-
-func _room_px(kind: String, x: int, y: int, w: int, h: int) -> Color:
-	var hash_v := ((x * 73856093) ^ (y * 19349663)) & 1023
-	match kind:
-		"tatami":
-			# mats 60 x 30 (every other row turned), woven along their length, dark cloth borders
-			var row := y / 30
-			var mx := x + (30 if row % 2 else 0)
-			var lx := mx % 60
-			var ly := y % 30
-			if ly < 2 or ly >= 28:
-				return Color8(42, 58, 50)                                     # the heri (border cloth)
-			if lx < 1:
-				return Color8(150, 140, 96)
-			var c := Color8(198, 190, 136) if (lx / 2) % 2 == 0 else Color8(186, 178, 124)
-			if hash_v < 30:
-				c = c.darkened(0.06)
-			return c.lerp(Color8(255, 240, 200), 0.06) if x + y < (w + h) / 2 else c
-		"stall":
-			# a striped awning along the top with its scallops, wooden counter planks below, a paper
-			# lantern in each top corner
-			if y < 22:
-				var c2 := Color8(220, 70, 64) if (x / 12) % 2 == 0 else Color8(246, 240, 228)
-				if y >= 18 and (x % 12 < 2 or x % 12 > 9):
-					return Color8(150, 106, 72)
-				return c2
-			for lp in [Vector2(22, 40), Vector2(w - 22, 40)]:
-				var d: Vector2 = Vector2(x, y) - lp
-				if (d.x / 13.0) * (d.x / 13.0) + (d.y / 16.0) * (d.y / 16.0) < 1.0:
-					if absi(int(d.y)) % 6 == 0:
-						return Color8(60, 30, 30)
-					return Color8(236, 96, 84) if d.x + d.y < 0 else Color8(196, 60, 56)
-				if absf(d.x) < 1.0 and d.y < -16.0 and y >= 22:
-					return Color8(60, 40, 30)                                 # its string
-			var plank := y / 12
-			var pc := Color8(168, 116, 76) if plank % 2 == 0 else Color8(156, 106, 68)
-			if y % 12 == 0:
-				pc = Color8(110, 72, 48)
-			return pc
-		"lacquer":
-			# a lacquered table: deep red-black, gold dust, a gold line inset round it
-			var e := mini(mini(x, y), mini(w - 1 - x, h - 1 - y))
-			if e == 5:
-				return Color8(214, 176, 80)
-			var c3 := Color8(66, 22, 26) if (x + y) % 2 else Color8(60, 20, 24)
-			if hash_v < 6:
-				return Color8(200, 160, 70)
-			return c3
-		"bathroom":
-			# square tiles, white and mint by turns, grout between them, a lit corner on each
-			var tx := x % 18
-			var ty := y % 18
-			if tx == 0 or ty == 0:
-				return Color8(170, 186, 190)
-			var c4 := Color8(240, 246, 246) if ((x / 18) + (y / 18)) % 2 == 0 else Color8(196, 232, 222)
-			if tx <= 2 and ty <= 2:
-				c4 = c4.lightened(0.3)
-			return c4
-		"workshop":
-			# a workbench: planks running across, scattered nuts and little gears, a ruler at the bottom
-			var p := x / 20
-			var c5 := Color8(170, 122, 78) if p % 2 == 0 else Color8(158, 112, 70)
-			if x % 20 == 0:
-				c5 = Color8(110, 74, 48)
-			if y > h - 10:
-				c5 = Color8(232, 206, 120) if (x % 6) != 0 else Color8(120, 90, 40)          # the ruler
-			for nut in [Vector2(14, 14), Vector2(w - 18, 20), Vector2(20, h - 24), Vector2(w - 24, h - 30)]:
-				var d2 := Vector2(x, y).distance_to(nut)
-				if d2 < 6.0:
-					return Color8(150, 154, 166) if d2 > 2.5 else Color8(70, 72, 84)
-			return c5
-		"festival":
-			# a night festival: the sky going deep blue, strings of lanterns across the top, fireworks
-			var t := float(y) / h
-			var c6 := Color8(22, 24, 56).lerp(Color8(46, 30, 72), t)
-			for k in 2:
-				var sag := 24.0 + k * 22.0 + 12.0 * sin(float(x) / w * PI)
-				if absf(y - sag) < 1.0:
-					return Color8(70, 50, 60)
-				if absf(y - sag - 4.0) < 3.0 and (x + k * 9) % 18 < 5:
-					return Color8(255, 200, 110) if (x / 18 + k) % 2 == 0 else Color8(240, 110, 90)
-			for fw in [Vector2(30, 70), Vector2(w - 34, 64), Vector2(40, h - 50)]:
-				var d3: Vector2 = Vector2(x, y) - fw
-				var l: float = d3.length()
-				if l < 18.0 and l > 4.0 and int((d3.angle() + PI) * 12.0 / TAU * 2.0) % 2 == 0 and int(l) % 4 == 0:
-					return [Color8(255, 220, 120), Color8(250, 140, 170), Color8(150, 220, 255)][int(fw.x) % 3]
-			if hash_v < 3 and y < h / 2:
-				return Color8(240, 240, 220)                                  # a star
-			return c6
-	return BG
-
-## A gear plate (the Clockwork Bowl): a brass gear seen from above, its teeth round the edge, a
-## hub; it turns (the sprite's rotation), carrying the tops on it
-func _make_gear_texture() -> Texture2D:
-	var n := int(GEAR_R * 2.0 / PX) + 4
-	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
-	var c := Vector2(n / 2.0, n / 2.0)
-	var rr := GEAR_R / PX
-	for y in n:
-		for x in n:
-			var off := Vector2(x + 0.5, y + 0.5) - c
-			var d := off.length()
-			var tooth := 1.6 if fposmod(off.angle() * 12.0 / TAU, 1.0) < 0.5 else 0.0
-			if d > rr + tooth:
-				continue
-			var col := Color8(222, 186, 104) if off.x + off.y < 0 else Color8(196, 158, 80)
-			if d > rr + tooth - 1.0:
-				col = OUTLINE
-			elif d < 5.0:
-				col = Color8(120, 92, 50) if d > 2.0 else OUTLINE
-			elif absf(d - rr * 0.6) < 0.6:
-				col = Color8(170, 132, 66)
-			elif fposmod(off.angle() * 5.0 / TAU, 1.0) < 0.12 and d < rr * 0.6:
-				col = Color8(170, 132, 66)                                    # its spokes
-			img.set_pixel(x, y, col)
-	return ImageTexture.create_from_image(img)
-
-## The flush's whirlpool (the Toilet Bowl): pale water spiralling into the middle
-func _make_swirl_texture() -> Texture2D:
-	var n := int(R_FULL * 1.6 / PX)
-	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
-	var c := Vector2(n / 2.0, n / 2.0)
-	for y in n:
-		for x in n:
-			var off := Vector2(x + 0.5, y + 0.5) - c
-			var d := off.length()
-			if d > n / 2.0:
-				continue
-			var arm := fposmod(off.angle() * 3.0 / TAU + d * 0.05, 1.0)
-			if arm < 0.18:
-				img.set_pixel(x, y, Color(0.85, 0.95, 1.0, 0.55 * (1.0 - d / (n / 2.0))))
-	return ImageTexture.create_from_image(img)
-
-func _make_shadow_texture() -> Texture2D:
-	var img := Image.create(13, 7, false, Image.FORMAT_RGBA8)
-	for y in 7:
-		for x in 13:
-			var off := Vector2((x + 0.5 - 6.5) / 6.5, (y + 0.5 - 3.5) / 3.5)
-			var l := off.length()
-			if l <= 1.0:
-				img.set_pixel(x, y, Color(0.1, 0.1, 0.2, 0.3 if l < 0.7 else 0.16))
-	return ImageTexture.create_from_image(img)
 
 # ================================================================== INPUT
 
@@ -1774,15 +1981,12 @@ func end_game() -> void:
 # ================================================================== FX HELPERS
 
 func _show_banner(text: String, hold: float) -> void:
-	banner.text = text
-	var t := create_tween()
-	t.tween_property(banner, "modulate:a", 1.0, 0.15)
-	t.tween_interval(hold)
-	t.tween_property(banner, "modulate:a", 0.0, 0.3)
+	GameFx.show_banner(banner, text, hold)
 
+## A rare word over the bowl (a rival out, a secret's hint), in the pixel font with its dark edge
 func _float_text(text: String, at: Vector2) -> void:
 	var lx := clampf(at.x - 200, 30, PLAY_WIDTH - 430)
-	var l := _make_label(Vector2(lx, at.y - 40), Vector2(400, 40), 28, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.95, 0.85))
+	var l := GameFx.label(self, lcd_font, Vector2(lx, at.y - 40), Vector2(400, 40), 28, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.95, 0.85))
 	l.add_theme_color_override("font_outline_color", OUTLINE)
 	l.add_theme_constant_override("outline_size", 10)
 	l.text = text
