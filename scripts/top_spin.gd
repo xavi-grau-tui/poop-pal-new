@@ -298,110 +298,6 @@ class PegView extends Node2D:
 		if flash > 0.0:
 			GameFx.disc(self, Vector2(0, -8), 24.0, Color(1, 1, 1, 0.75 * flash))
 
-## The place's living light (drawn added on, over the bowl and the tops): dust in the morning sun,
-## flecks of sun through the leaves, glints in the lacquer, light rippling on the water, a lamp
-## swaying on its cord, lanterns flickering and the fireworks' flashes at night
-class RoomFx extends Node2D:
-	var kind := ""
-	var c := Vector2.ZERO
-	var r := 370.0
-	var t := 0.0
-	var motes: Array = []             # [position, velocity, phase]
-	var flash := 0.0
-	var flash_col := Color(1, 1, 1)
-	var flash_at := Vector2.ZERO
-	var next_flash := 4.0
-	const W := 950.0
-	const H := 948.0
-	func setup(k: String, centre: Vector2, radius: float) -> void:
-		kind = k
-		c = centre
-		r = radius
-		motes.clear()
-		var n: int = { "tatami": 30, "veranda": 18, "lacquer": 12, "workshop": 22, "festival": 16 }.get(k, 0)
-		for i in n:
-			motes.append([Vector2(randf() * W, randf() * H), Vector2(randf_range(-4.0, 10.0), randf_range(-16.0, -4.0)), randf() * TAU])
-		flash = 0.0
-		next_flash = randf_range(3.0, 6.0)
-	func _process(delta: float) -> void:
-		t += delta
-		for m in motes:
-			m[0] += (m[1] as Vector2) * delta + Vector2(sin(t * 0.7 + m[2]) * 6.0, 0) * delta
-			if m[0].y < 90.0:
-				m[0] = Vector2(randf() * W, H)
-			if m[0].x > W:
-				m[0].x = 0.0
-		if kind == "festival":
-			next_flash -= delta
-			if next_flash <= 0.0:
-				next_flash = randf_range(4.0, 8.0)
-				flash = 1.0
-				flash_col = [Color8(255, 120, 180), Color8(255, 210, 110), Color8(120, 220, 255), Color8(170, 255, 140)][randi() % 4]
-				flash_at = Vector2(randf_range(0.0, W), randf_range(-100.0, 200.0))
-			flash = maxf(0.0, flash - delta * 1.6)
-		queue_redraw()
-	func _draw() -> void:
-		match kind:
-			"tatami":
-				# dust drifting through the slanting sun (only where the sun falls)
-				for m in motes:
-					var p: Vector2 = m[0]
-					var into := clampf(1.0 - absf(p.x + p.y * 0.55 - W * 0.42) / (W * 0.22), 0.0, 1.0)
-					if into > 0.2:
-						var a := (0.22 + 0.18 * sin(t * 2.0 + m[2])) * into
-						draw_rect(Rect2(GameFx.snap(p), Vector2(4, 4)), Color(1, 0.95, 0.8, a))
-			"veranda":
-				# flecks of sun through the leaves, breathing as the leaves move
-				for m in motes:
-					var p2: Vector2 = GameFx.snap((m[0] as Vector2) * Vector2(1, 0) + Vector2(0, fposmod(m[2] * 150.0, H)) + Vector2(sin(t * 0.5 + m[2]) * 10.0, 0))
-					var a2 := maxf(0.0, sin(t * 1.1 + m[2] * 3.0)) * 0.22
-					draw_rect(Rect2(p2 - Vector2(4, 4), Vector2(8, 8)), Color(1, 0.96, 0.75, a2))
-					draw_rect(Rect2(p2 - Vector2(8, 0), Vector2(16, 4)), Color(1, 0.96, 0.75, a2 * 0.4))
-			"lacquer":
-				# the lamp's pool breathing, glints of gold in the lacquer
-				var k := 0.03 + 0.012 * sin(t * 1.7) + 0.006 * sin(t * 7.3)
-				GameFx.disc(self, c, r * 0.95, Color(1, 0.8, 0.5, k))
-				for m in motes:
-					var on := sin(t * 1.6 + m[2] * 5.0)
-					if on > 0.8:
-						var q: Vector2 = GameFx.snap(Vector2(fposmod(m[2] * 977.0, W), fposmod(m[2] * 613.0, H)))
-						var a3 := (on - 0.8) * 4.0
-						draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 0.85, 0.45, a3))
-						draw_rect(Rect2(q - Vector2(6, 2), Vector2(12, 4)), Color(1, 0.85, 0.45, a3 * 0.4))
-						draw_rect(Rect2(q - Vector2(2, 6), Vector2(4, 12)), Color(1, 0.85, 0.45, a3 * 0.4))
-			"bathroom":
-				# light rippling on the water in the middle of the bowl
-				for ring in 4:
-					var rr := 40.0 + ring * 28.0
-					for k2 in 18:
-						var a4 := k2 * TAU / 18.0 + t * (0.4 + ring * 0.12) * (1.0 if ring % 2 == 0 else -1.0)
-						var wob := sin(a4 * 3.0 + t * 2.2) * 6.0
-						var q2 := GameFx.snap(c + Vector2.from_angle(a4) * (rr + wob))
-						var al := 0.1 + 0.08 * sin(a4 * 2.0 + t * 3.0)
-						draw_rect(Rect2(q2, Vector2(8, 4)), Color(0.85, 1.0, 1.0, al))
-			"workshop":
-				# the hanging lamp sways on its cord: its pool of light moves a little; dust in it
-				var lc := c + Vector2(sin(t * 0.8) * 26.0, cos(t * 0.8) * 6.0)
-				GameFx.disc(self, lc, r * 0.8, Color(1, 0.86, 0.6, 0.035))
-				GameFx.disc(self, lc, r * 0.5, Color(1, 0.86, 0.6, 0.03))
-				for m in motes:
-					var p3: Vector2 = m[0]
-					if p3.distance_to(lc) < r * 0.85:
-						draw_rect(Rect2(GameFx.snap(p3), Vector2(4, 4)), Color(1, 0.9, 0.7, 0.18 + 0.12 * sin(t * 2.0 + m[2])))
-			"festival":
-				# the lanterns' warm light flickering round the stage, a firework's flash now and then
-				for i in 4:
-					var lp := Vector2([90.0, 860.0, 120.0, 830.0][i], [150.0, 170.0, 900.0, 880.0][i])
-					var fl := 0.05 + 0.02 * sin(t * 9.0 + i * 1.7) + 0.015 * sin(t * 23.0 + i)
-					GameFx.disc(self, lp, 150.0, Color(1, 0.6, 0.3, fl))
-					GameFx.disc(self, lp, 70.0, Color(1, 0.7, 0.4, fl))
-				if flash > 0.0:
-					draw_rect(Rect2(0, 0, W, H), Color(flash_col.r, flash_col.g, flash_col.b, 0.1 * flash))
-					GameFx.disc(self, flash_at, 360.0, Color(flash_col.r, flash_col.g, flash_col.b, 0.07 * flash))
-				for m in motes:
-					var p4: Vector2 = m[0]
-					draw_rect(Rect2(GameFx.snap(p4), Vector2(4, 4)), Color(1, 0.6, 0.3, 0.3 + 0.2 * sin(t * 5.0 + m[2])))
-
 enum Phase { WIND, DROP, BATTLE, RESULT }
 var C := C_FULL                       # (the bowl in use: full size, or the tutorial's)
 var R := R_FULL
@@ -477,7 +373,7 @@ var trails: GameFx.Burst
 var top_nodes: Node2D
 var rim_fx: Node2D
 var fx: GameFx.Burst
-var room_fx: RoomFx
+var room_fx: GameFx.Ambience
 var dim_layer: Node2D                 # (while winding: the bowl dimmed...)
 var held: Node2D                      # (...under your top, held up while it's wound and dropped)
 var overlay: Node2D
@@ -1898,7 +1794,7 @@ func _create_static_nodes() -> void:
 	scene.add_child(rim_fx)
 	fx = GameFx.Burst.new()                         # sparks, rings, puffs, confetti
 	scene.add_child(fx)
-	room_fx = RoomFx.new()                          # the place's living light, added on
+	room_fx = GameFx.Ambience.new()                 # the place's living light, added on
 	var add := CanvasItemMaterial.new()
 	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	room_fx.material = add

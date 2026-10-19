@@ -44,6 +44,14 @@ extends BaseMinigame
 ## Prizes: stickers of your own pals, special foods, world dress-ups (snorkel, headlamp, hard hat), gut decor,
 ## backgrounds. Taken once (BaseMinigame.take_secret). The finale of world 6 holds the game's case.
 ##
+## The look (the user, 2026-10-19: the toy games at the race games' quality, one suite; GameFx,
+## docs/ideas_roadmap.md "The games' look"): the 3D tilt (the inner walls rise off the floor as the
+## phone tilts, their sides showing; the floor, the frame and the ball still, so what you see is
+## where they are), each world's light over the board and something alive in it (GameFx.Ambience:
+## dust in the window's light, soap bubbles, glowing spores, drips, a weld's sparks, twinkling
+## stars), Pal Prix 2177's bursts for the moments (a marble taken, the trapdoor opening, a fall,
+## an enemy's hit, a hard bump), a shake on the big ones, the race games' banner.
+##
 ## Tilt: gravity sensor on device. Desktop: arrow keys / WASD / hold mouse to pull.
 ## Tilt is measured from how the phone is held when each level starts (any angle works).
 ## Main button: set the current phone angle as "level" again (recalibrate).
@@ -178,7 +186,12 @@ const HIT_HOP := 0.35                 # the hop: over any hole
 const HIT_BLINK := 1.2                # ...then a blink: no enemy hurts it
 const KNOCK := 560.0                  # how hard it's knocked back, px/s
 
-var board: Sprite2D
+var scene: Node2D                     # the board and everything on it (it shakes; the HUD stays put)
+var board: Sprite2D                   # the floor and the frame (still)
+var walls: Sprite2D                   # the maze's inner walls (they rise off the floor: the 3D tilt)
+var fx: GameFx.Burst
+var ambience: GameFx.Ambience
+var shake := 0.0
 var finish_sprite: Sprite2D           # the flush swirl, under the trapdoor
 var exit_node: Node2D                 # the trapdoor: frame + swirl + two hatch doors
 var hatch_l: Sprite2D
@@ -333,7 +346,10 @@ func _build_level() -> void:
 	_place_things(rng2, k)
 	_place_blockers(rng2, k)
 	par = ceilf(PAR_BASE + path_cells.size() * PAR_PER_CELL[world])
-	board.texture = ImageTexture.create_from_image(_paint_board())
+	var imgs := _paint_board()
+	board.texture = ImageTexture.create_from_image(imgs[0])
+	walls.texture = ImageTexture.create_from_image(imgs[1])
+	ambience.setup(theme["kind"], ORIGIN + Vector2(BOARD_PX, BOARD_PX) * PX / 2.0, BOARD_PX * PX / 2.0, Rect2(ORIGIN, Vector2(BOARD_PX, BOARD_PX) * PX))
 	bg_rect.color = theme["outline"]
 	_spawn_level_nodes()
 	calibrate_tilt()                     # however the phone is held now = level
@@ -729,7 +745,7 @@ func _is_wall_tile(x: int, y: int) -> bool:
 
 # ================================================================== BOARD PAINTING
 
-func _paint_board() -> Image:
+func _paint_board() -> Array:
 	var n := BOARD_PX
 	var t := TILE_PX
 	# Per-tile: which sides face open floor (for bevels / outlines)
@@ -747,6 +763,9 @@ func _paint_board() -> Image:
 
 	var data := PackedByteArray()
 	data.resize(n * n * 4)
+	var wdata := PackedByteArray()                 # (the inner walls, apart: clear elsewhere)
+	wdata.resize(n * n * 4)
+	var side: Color = (theme["wall"][3] as Color).darkened(0.3)
 	var noise := RandomNumberGenerator.new()
 	noise.seed = 99
 	# a few knots in the plywood (fixed per board)
@@ -762,6 +781,7 @@ func _paint_board() -> Image:
 			var lx := x % t
 			var i := ty * GRID + tx
 			var c: Color
+			var inner := tiles[i] == 1 and tx > 0 and ty > 0 and tx < GRID - 1 and ty < GRID - 1
 			if tiles[i] == 1:
 				var d_up := ly if up[i] else 99
 				var d_dn := (t - 1 - ly) if dn[i] else 99
@@ -771,6 +791,13 @@ func _paint_board() -> Image:
 				# (the grain runs along the wall: horizontal unless it's a vertical run)
 				var vertical := (up[i] == 0 or dn[i] == 0) and lf[i] + rt[i] > 0
 				c = TiltMazeArt.wall_px(theme, x, y, m, d_up, d_dn, d_lf, d_rt, vertical)
+				c = _lit(c, x, y)
+				if inner:
+					wdata[k] = c.r8
+					wdata[k + 1] = c.g8
+					wdata[k + 2] = c.b8
+					wdata[k + 3] = 255
+					c = _lit(side, x, y)                    # (under it: its side, seen as it rises)
 			else:
 				c = TiltMazeArt.floor_px(theme, x, y, knots)
 				# drop shadow of the walls (light from the top-left), two steps
@@ -778,6 +805,7 @@ func _paint_board() -> Image:
 					c = c.darkened(0.2)
 				elif _is_wall_px(x - 2, y - 3):
 					c = c.darkened(0.09)
+				c = _lit(c, x, y)
 			data[k] = c.r8
 			data[k + 1] = c.g8
 			data[k + 2] = c.b8
@@ -789,7 +817,42 @@ func _paint_board() -> Image:
 	for j in range(path_cells.size() - 1):
 		_ink_line(img, _to_px(_cell_center(path_cells[j])), _to_px(_cell_center(path_cells[j + 1])))
 	_ink_ring(img, _to_px(start_pos), 7.0)
-	return img
+	return [img, Image.create_from_data(n, n, false, Image.FORMAT_RGBA8, wdata)]
+
+## The world's light over the board (board px; the race games' way: dithered steps, subtle): the
+## window's slanting light on the wooden toy, a soft bright corner on the tiles, the gut's lining
+## darker at its edges, a shaft of light down the sewer, a lamp's pool in the factory, a nebula's
+## glow in a corner of space
+func _lit(c: Color, x: int, y: int) -> Color:
+	var n := float(BOARD_PX)
+	match theme["kind"]:
+		"wood":
+			var into := clampf(1.0 - absf(x + y * 0.6 - n * 0.45) / (n * 0.24), 0.0, 1.0)
+			if into > 0.3 or (into > 0.15 and GameFx.dithered((into - 0.15) / 0.15, x, y)):
+				return Color(minf(1.0, c.r * 1.06 + 0.03), minf(1.0, c.g * 1.05 + 0.02), c.b)
+			return c.lerp(Color8(90, 70, 70), 0.05)
+		"tiles":
+			var k := clampf(1.0 - (x + y) / (n * 1.1), 0.0, 1.0)
+			if k > 0.45 or (k > 0.35 and GameFx.dithered((k - 0.35) / 0.1, x, y)):
+				return c.lightened(0.05)
+		"gut":
+			var e := Vector2(x, y).distance_to(Vector2(n, n) / 2.0) / (n * 0.5)
+			if e > 0.95 or (e > 0.85 and GameFx.dithered((e - 0.85) / 0.1, x, y)):
+				return c.darkened(0.08)
+		"sewer":
+			var shaft := absf(x - n * 0.5 + (y - n * 0.5) * 0.2) / (n * 0.16)
+			if shaft < 0.7 or (shaft < 1.0 and GameFx.dithered((1.0 - shaft) / 0.3, x, y)):
+				return c.lightened(0.06)
+			return c.darkened(0.04)
+		"factory":
+			var d := Vector2(x, y).distance_to(Vector2(n * 0.5, n * 0.42)) / (n * 0.5)
+			if d > 1.0 or (d > 0.88 and GameFx.dithered((d - 0.88) / 0.12, x, y)):
+				return c.darkened(0.07)
+		"space":
+			var g := Vector2(x, y).distance_to(Vector2(n * 0.82, n * 0.2)) / (n * 0.34)
+			if g < 0.6 or (g < 1.0 and GameFx.dithered((1.0 - g) / 0.4, x, y)):
+				return c.lerp(Color8(150, 90, 200), 0.1)
+	return c
 
 func _to_px(p: Vector2) -> Vector2:
 	return (p - ORIGIN) / PX
@@ -830,23 +893,31 @@ func _create_static_nodes() -> void:
 	bg_rect.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT)
 	add_child(bg_rect)
 
+	scene = Node2D.new()                         # (the board and all on it: it shakes, its walls tilt in 3D)
+	add_child(scene)
 	board = Sprite2D.new()
 	board.centered = false
 	board.position = ORIGIN
 	board.scale = Vector2(PX, PX)
 	board.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	add_child(board)
+	scene.add_child(board)
+	walls = Sprite2D.new()                       # the inner walls, over their own sides (the 3D tilt)
+	walls.centered = false
+	walls.position = ORIGIN
+	walls.scale = Vector2(PX, PX)
+	walls.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	scene.add_child(walls)
 
 	current_layer = CurrentLayer.new()
 	current_layer.lanes = currents
-	add_child(current_layer)
+	scene.add_child(current_layer)
 
 	level_nodes = Node2D.new()
-	add_child(level_nodes)
+	scene.add_child(level_nodes)
 
 	# The exit: a trapdoor in the floor; it opens once every marble is collected
 	exit_node = Node2D.new()
-	add_child(exit_node)
+	scene.add_child(exit_node)
 	hatch_frame = Sprite2D.new()
 	var frame_s := hatch_frame
 	frame_s.scale = Vector2(DETAIL, DETAIL)
@@ -871,27 +942,34 @@ func _create_static_nodes() -> void:
 	shadow.texture = _make_shadow_texture()
 	shadow.scale = Vector2(DETAIL, DETAIL)
 	shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	add_child(shadow)
+	scene.add_child(shadow)
 
 	ball = Sprite2D.new()
 	ball.texture = ball_texture
 	ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
 	ball.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	add_child(ball)
+	scene.add_child(ball)
+	fx = GameFx.Burst.new()                      # sparks, rings, puffs, confetti
+	scene.add_child(fx)
+	ambience = GameFx.Ambience.new()             # the world's living light, added on
+	var add := CanvasItemMaterial.new()
+	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	ambience.material = add
+	scene.add_child(ambience)
 
 	# The HUD, on the top rail (clear of the frame's edges): the level, the clock / par, the
 	# three stars still possible, the coins
 	var light := Color(0.98, 0.93, 0.84)
-	hud_level = _make_label(Vector2(ORIGIN.x + 22, ORIGIN.y + 2), Vector2(110, 52), 36, HORIZONTAL_ALIGNMENT_LEFT, light)
-	hud_time = _make_label(Vector2(ORIGIN.x + 128, ORIGIN.y + 2), Vector2(250, 52), 34, HORIZONTAL_ALIGNMENT_CENTER, light)
+	hud_level = _make_label(Vector2(ORIGIN.x + 22, ORIGIN.y + 2), Vector2(110, 52), 32, HORIZONTAL_ALIGNMENT_LEFT, light)
+	hud_time = _make_label(Vector2(ORIGIN.x + 128, ORIGIN.y + 2), Vector2(250, 52), 32, HORIZONTAL_ALIGNMENT_CENTER, light)
 	for i in 3:
 		var st := TextureRect.new()
 		st.texture = UiArt.star(true)
 		st.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		st.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		st.size = Vector2(39, 39)
+		st.size = Vector2(36, 36)
 		st.pivot_offset = st.size / 2.0
-		st.position = Vector2(ORIGIN.x + 392 + i * 44, ORIGIN.y + 8)
+		st.position = Vector2(ORIGIN.x + 392 + i * 42, ORIGIN.y + 10)
 		add_child(st)
 		hud_stars.append(st)
 	# the lives, between the stars and the marble tray
@@ -899,13 +977,10 @@ func _create_static_nodes() -> void:
 
 	# (the marble tray goes on the rail's right: _build_tray, per level)
 	blocker_layer = Node2D.new()
-	add_child(blocker_layer)
-	move_child(blocker_layer, level_nodes.get_index() + 1)
+	scene.add_child(blocker_layer)
+	scene.move_child(blocker_layer, level_nodes.get_index() + 1)
 
-	banner = _make_label(Vector2(0, PLAY_HEIGHT / 2 - 60), Vector2(PLAY_WIDTH, 120), 54, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
-	banner.add_theme_color_override("font_outline_color", Color8(74, 44, 32))
-	banner.add_theme_constant_override("outline_size", 14)
-	banner.modulate.a = 0.0
+	banner = GameFx.banner(self, lcd_font, Color8(74, 44, 32), PLAY_HEIGHT / 2.0)
 
 func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
 	var l := Label.new()
@@ -1093,6 +1168,11 @@ func _open_exit() -> void:
 	hatch_r.visible = true
 	_sfx("res://sounds/fx/unlock_ding.wav", -10.0)
 	Input.vibrate_handheld(40)
+	# it opens: light bursting out of it, a ring across the board, sparkles
+	fx.flash(finish_pos, 44.0, Color8(200, 236, 255))
+	fx.ring(finish_pos, Color8(170, 220, 255), 30.0, 220.0, 0.5, 8.0)
+	fx.sparkle(finish_pos, 14, Color8(220, 244, 255), 1.2)
+	_kick(0.15)
 	var t := create_tween().set_parallel(true)
 	# a little rattle first...
 	var rt := create_tween()
@@ -1118,7 +1198,32 @@ func _make_shadow_texture() -> Texture2D:
 
 # ================================================================== LOOP
 
+## The 3D tilt (the user, 2026-10-19: like the iPhone's 3D photos, as in Pal Prix): tilting the
+## phone lifts the maze's inner walls off the floor, the way they lean their sides show; the floor,
+## the frame, the ball and everything on the floor stay still (what you see is where it is), the
+## world's dust and spores drift the walls' way, a little more; measured from the pose at the
+## level's start (and MAIN's re-levelling), smoothed; off with DEPTH_3D. Px per full tilt:
+const DEPTH_3D := true
+const DEPTH_NEAR := 8.0
+var _depth_tilt := Vector2.ZERO
+var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, the Mac has no sensor)
+func _depth_3d() -> void:
+	var want := qa_depth_tilt
+	if DEPTH_3D and has_tilt_sensor() and state != State.CLEAR:
+		want = device_tilt().limit_length(0.6) / 0.6
+	_depth_tilt = _depth_tilt.lerp(want, 0.12)
+	var near := (-_depth_tilt * DEPTH_NEAR).round()
+	walls.position = ORIGIN + near
+	ambience.position = (near * 1.5).round()
+
+## A small shake for a big moment (the HUD stays put)
+func _kick(amount: float) -> void:
+	shake = maxf(shake, amount)
+
 func _process(delta: float) -> void:
+	_depth_3d()
+	shake = maxf(0.0, shake - delta * 3.0)
+	scene.position = Vector2(randi_range(-1, 1), randi_range(-1, 1)) * 4.0 * ceilf(shake * 2.0) if shake > 0.0 else Vector2.ZERO
 	if not is_running:
 		return
 	finish_sprite.rotation -= delta * 2.5
@@ -1235,6 +1340,12 @@ func _push_out(rect: Rect2, b: float) -> bool:
 			else:
 				_sfx("res://sounds/fx/wood_tap.wav", clampf(-34.0 + (-vn) / 50.0, -30.0, -16.0), 0.0, randf_range(0.92, 1.08))
 			Input.vibrate_handheld(12)
+			# off the wall: a puff of its dust, chips flying back off it; a hard one shakes the board
+			var k := clampf((-vn - 220.0) / 400.0, 0.0, 1.0)
+			fx.spray(closest, n, int(3 + 5 * k), [Color(1, 1, 1), (theme["wall"][0] as Color).lightened(0.2)], 0.9, 0.5 + 0.5 * k)
+			fx.ring(closest, Color(1, 1, 1), 6.0, 26.0 + 30.0 * k, 0.2, 4.0)
+			if k > 0.5:
+				_kick(0.12 * k)
 	return true
 
 ## The gate's solid part in the vault's door: a thin bar across it (the fence) or a thicker one
@@ -1346,19 +1457,10 @@ func _skim() -> void:
 	if sign:
 		sign.visible = false
 
-## A burst of little squares (crumbs of wall, drops of water)
+## A burst of crumbs (of wall, drops of water): a puff of them and a few flying off with tails
 func _debris(at: Vector2, col: Color) -> void:
-	for i in 10:
-		var d := ColorRect.new()
-		d.size = Vector2(DETAIL * 2, DETAIL * 2)
-		d.color = col
-		d.position = at - d.size / 2.0
-		level_nodes.add_child(d)
-		var to := at + Vector2.from_angle(TAU * i / 10.0 + randf() * 0.4) * randf_range(40, 90)
-		var t := create_tween()
-		t.tween_property(d, "position", to.snapped(Vector2(DETAIL, DETAIL)), 0.35).set_ease(Tween.EASE_OUT)
-		t.parallel().tween_property(d, "modulate:a", 0.0, 0.45)
-		t.tween_callback(d.queue_free)
+	fx.puff(at, 10, col, 0.7)
+	fx.sparks(at, 8, [col, col.lightened(0.3), Color(1, 1, 1)], 0.6)
 
 ## The fizzy hop: up and over the fence, which falls flat behind; the boost is spent
 func _hop(bar: Rect2) -> void:
@@ -1412,6 +1514,9 @@ func _check_checkpoints() -> void:
 		t.tween_property(s, "scale", Vector2(DETAIL, DETAIL) * 1.6, 0.12)
 		t.tween_property(s, "scale", Vector2(DETAIL, DETAIL), 0.15)
 		s.texture = TiltMazeArt.pickup(world, true)
+		# taken: sparkles off it, a ring of light (bigger as the tray fills)
+		fx.sparkle(cp["pos"], 8 + marbles_taken * 2, Color8(255, 236, 160), 0.9)
+		fx.ring(cp["pos"], Color8(255, 226, 140), 14.0, 60.0 + marbles_taken * 10.0, 0.3, 6.0)
 		if not exit_open and checkpoints.all(func(c): return c["taken"]):
 			_open_exit()
 
@@ -1453,6 +1558,11 @@ func _check_finish() -> void:
 	var stars := _stars_now()
 	_sfx("res://sounds/fx/water-pouring-98795.mp3", -12.0, 1.4)
 	Input.vibrate_handheld(60)
+	# flushed: a splash of light out of the swirl, confetti over the board
+	fx.ring(finish_pos, Color8(170, 220, 255), 20.0, 140.0, 0.4, 8.0)
+	fx.sparkle(finish_pos, 16, Color8(220, 244, 255), 1.3)
+	for i in 3:
+		fx.confetti(Vector2(ORIGIN.x + 140.0 + i * 310.0, ORIGIN.y + 120.0), 12, [Color8(255, 214, 90), Color8(250, 140, 170), Color8(140, 220, 255), Color(1, 1, 1)])
 	# Flushed! Spiral into the swirl, then the result card
 	var t := create_tween()
 	ball_pos = finish_pos
@@ -1475,6 +1585,10 @@ func _fall_into(h: Vector2) -> void:
 	var last := lose_life()
 	_sfx("res://sounds/fx/hole_plop.wav", -16.0)
 	Input.vibrate_handheld(90)
+	# down the hole: a puff of dust round its rim, the board jolts
+	fx.dust(h, 12, (theme["floor"][1] as Color).darkened(0.2), 0.9)
+	fx.ring(h, Color(0, 0, 0, 0.5), HOLE_R + 4.0, HOLE_R + 40.0, 0.3, 6.0)
+	_kick(0.2)
 	var t := create_tween()
 	t.tween_property(ball, "position", h, 0.12)
 	t.tween_property(ball, "scale", Vector2(0.15, 0.15) * BALL_SCALE, 0.45).set_ease(Tween.EASE_IN)
@@ -1774,6 +1888,10 @@ func _hit(from: Vector2) -> void:
 	_sfx("res://sounds/fx/water_boing.wav", -10.0, 0.0, 0.8)
 	Input.vibrate_handheld(70)
 	_debris(ball_pos, Color8(250, 226, 160))
+	# the hit: sparks off it, a ring of light, the board shakes
+	fx.sparks(ball_pos, 12, [Color(1, 1, 1), Color8(255, 214, 90), Color8(255, 120, 90)], 1.0)
+	fx.ring(ball_pos, Color8(255, 150, 110), 16.0, 90.0, 0.3, 6.0)
+	_kick(0.3)
 	if not splash_used and PetState.boost_power("splash") > 0:
 		splash_used = true
 		PetState.use_boost()
@@ -1819,6 +1937,7 @@ func _splash_save(at: Vector2) -> bool:
 	_sfx("res://sounds/fx/water_boing.wav", -8.0, 0.0, 1.0)
 	Input.vibrate_handheld(40)
 	_debris(at, Color8(150, 210, 250))
+	fx.ring(at, Color8(110, 200, 255), 20.0, 120.0, 0.4, 8.0)
 	_float_text("Splash!", at)
 	return true
 
@@ -1940,11 +2059,7 @@ func end_game() -> void:
 # ================================================================== FX HELPERS
 
 func _show_banner(text: String, hold: float) -> void:
-	banner.text = text
-	var t := create_tween()
-	t.tween_property(banner, "modulate:a", 1.0, 0.15)
-	t.tween_interval(hold)
-	t.tween_property(banner, "modulate:a", 0.0, 0.3)
+	GameFx.show_banner(banner, text, hold)
 
 func _float_text(text: String, at: Vector2) -> void:
 	var lx := clampf(at.x - 200, 30, PLAY_WIDTH - 430)          # (kept inside the board)

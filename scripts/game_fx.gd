@@ -259,3 +259,192 @@ class Burst extends Node2D:
 					draw_rect(Rect2(p, Vector2(s, 4.0 if flip else s)), Color(c.r, c.g, c.b, 1.0 if f < 0.7 else (1.0 - f) / 0.3))
 				SCUFF:
 					draw_rect(Rect2(p - Vector2(2, 2), Vector2(4, 4)), Color(c.r, c.g, c.b, c.a * (1.0 - f)))
+
+# ================================================================== A PLACE'S LIVING LIGHT
+
+## A place's living light (drawn added on: give it an ADD CanvasItemMaterial; over the play
+## pieces, so they're lit too): one kind per place. Top Spin's: "tatami" (dust in the morning sun),
+## "veranda" (flecks of sun through the leaves), "lacquer" (gold glints, a lamp's pool breathing),
+## "bathroom" (light rippling on the water), "workshop" (a lamp swaying on its cord, dust in it),
+## "festival" (lanterns flickering, the fireworks' flashes). Tilt Maze's: "wood" (dust drifting
+## in the window's light), "tiles" (soap bubbles rising, catching the light), "gut" (glowing
+## spores floating, a slow pulse), "sewer" (drips falling from above, rings where they land),
+## "factory" (a lamp's flicker, sparks dropping from a weld), "space" (stars twinkling, now and
+## then a shooting star). `view`: where it draws (the play area by default)
+class Ambience extends Node2D:
+	var kind := ""
+	var c := Vector2.ZERO
+	var r := 370.0
+	var t := 0.0
+	var motes: Array = []             # [position, velocity, phase]
+	var flash := 0.0
+	var flash_col := Color(1, 1, 1)
+	var flash_at := Vector2.ZERO
+	var next_flash := 4.0
+	var view := Rect2(0, 0, 950, 948)
+	var W := 950.0
+	var H := 948.0
+	func setup(k: String, centre: Vector2, radius: float, area := Rect2(0, 0, 950, 948)) -> void:
+		kind = k
+		c = centre
+		r = radius
+		view = area
+		W = area.end.x
+		H = area.end.y
+		motes.clear()
+		var n: int = { "tatami": 30, "veranda": 18, "lacquer": 12, "workshop": 22, "festival": 16,
+			"wood": 24, "tiles": 14, "gut": 18, "sewer": 6, "factory": 10, "space": 40 }.get(k, 0)
+		for i in n:
+			var vel := Vector2(randf_range(-4.0, 10.0), randf_range(-16.0, -4.0))
+			match k:
+				"tiles":
+					vel = Vector2(randf_range(-6.0, 6.0), randf_range(-26.0, -14.0))      # (bubbles rise)
+				"gut":
+					vel = Vector2(randf_range(-8.0, 8.0), randf_range(-8.0, 8.0))         # (spores drift every way)
+				"sewer":
+					vel = Vector2(0, randf_range(260.0, 320.0))                           # (drips fall)
+				"factory":
+					vel = Vector2(randf_range(-30.0, 30.0), randf_range(80.0, 160.0))
+				"space":
+					vel = Vector2.ZERO
+			motes.append([Vector2(randf_range(view.position.x, W), randf_range(view.position.y, H)), vel, randf() * TAU])
+		flash = 0.0
+		next_flash = randf_range(3.0, 6.0)
+	func _process(delta: float) -> void:
+		t += delta
+		for m in motes:
+			m[0] += (m[1] as Vector2) * delta + Vector2(sin(t * 0.7 + m[2]) * 6.0, 0) * delta
+			if m[0].y < view.position.y + 64.0:
+				m[0] = Vector2(randf_range(view.position.x, W), H)
+			if m[0].y > H:
+				m[0] = Vector2(randf_range(view.position.x, W), view.position.y + 64.0)
+				m[2] = randf() * TAU
+			if m[0].x > W:
+				m[0].x = view.position.x
+			elif m[0].x < view.position.x:
+				m[0].x = W
+		if kind == "festival":
+			next_flash -= delta
+			if next_flash <= 0.0:
+				next_flash = randf_range(4.0, 8.0)
+				flash = 1.0
+				flash_col = [Color8(255, 120, 180), Color8(255, 210, 110), Color8(120, 220, 255), Color8(170, 255, 140)][randi() % 4]
+				flash_at = Vector2(randf_range(0.0, W), randf_range(-100.0, 200.0))
+			flash = maxf(0.0, flash - delta * 1.6)
+		queue_redraw()
+	func _draw() -> void:
+		match kind:
+			"tatami":
+				# dust drifting through the slanting sun (only where the sun falls)
+				for m in motes:
+					var p: Vector2 = m[0]
+					var into := clampf(1.0 - absf(p.x + p.y * 0.55 - W * 0.42) / (W * 0.22), 0.0, 1.0)
+					if into > 0.2:
+						var a := (0.22 + 0.18 * sin(t * 2.0 + m[2])) * into
+						draw_rect(Rect2(GameFx.snap(p), Vector2(4, 4)), Color(1, 0.95, 0.8, a))
+			"veranda":
+				# flecks of sun through the leaves, breathing as the leaves move
+				for m in motes:
+					var p2: Vector2 = GameFx.snap((m[0] as Vector2) * Vector2(1, 0) + Vector2(0, fposmod(m[2] * 150.0, H)) + Vector2(sin(t * 0.5 + m[2]) * 10.0, 0))
+					var a2 := maxf(0.0, sin(t * 1.1 + m[2] * 3.0)) * 0.22
+					draw_rect(Rect2(p2 - Vector2(4, 4), Vector2(8, 8)), Color(1, 0.96, 0.75, a2))
+					draw_rect(Rect2(p2 - Vector2(8, 0), Vector2(16, 4)), Color(1, 0.96, 0.75, a2 * 0.4))
+			"lacquer":
+				# the lamp's pool breathing, glints of gold in the lacquer
+				var k := 0.03 + 0.012 * sin(t * 1.7) + 0.006 * sin(t * 7.3)
+				GameFx.disc(self, c, r * 0.95, Color(1, 0.8, 0.5, k))
+				for m in motes:
+					var on := sin(t * 1.6 + m[2] * 5.0)
+					if on > 0.8:
+						var q: Vector2 = GameFx.snap(Vector2(fposmod(m[2] * 977.0, W), fposmod(m[2] * 613.0, H)))
+						var a3 := (on - 0.8) * 4.0
+						draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 0.85, 0.45, a3))
+						draw_rect(Rect2(q - Vector2(6, 2), Vector2(12, 4)), Color(1, 0.85, 0.45, a3 * 0.4))
+						draw_rect(Rect2(q - Vector2(2, 6), Vector2(4, 12)), Color(1, 0.85, 0.45, a3 * 0.4))
+			"bathroom":
+				# light rippling on the water in the middle of the bowl
+				for ring in 4:
+					var rr := 40.0 + ring * 28.0
+					for k2 in 18:
+						var a4 := k2 * TAU / 18.0 + t * (0.4 + ring * 0.12) * (1.0 if ring % 2 == 0 else -1.0)
+						var wob := sin(a4 * 3.0 + t * 2.2) * 6.0
+						var q2 := GameFx.snap(c + Vector2.from_angle(a4) * (rr + wob))
+						var al := 0.1 + 0.08 * sin(a4 * 2.0 + t * 3.0)
+						draw_rect(Rect2(q2, Vector2(8, 4)), Color(0.85, 1.0, 1.0, al))
+			"workshop":
+				# the hanging lamp sways on its cord: its pool of light moves a little; dust in it
+				var lc := c + Vector2(sin(t * 0.8) * 26.0, cos(t * 0.8) * 6.0)
+				GameFx.disc(self, lc, r * 0.8, Color(1, 0.86, 0.6, 0.035))
+				GameFx.disc(self, lc, r * 0.5, Color(1, 0.86, 0.6, 0.03))
+				for m in motes:
+					var p3: Vector2 = m[0]
+					if p3.distance_to(lc) < r * 0.85:
+						draw_rect(Rect2(GameFx.snap(p3), Vector2(4, 4)), Color(1, 0.9, 0.7, 0.18 + 0.12 * sin(t * 2.0 + m[2])))
+			"festival":
+				# the lanterns' warm light flickering round the stage, a firework's flash now and then
+				for i in 4:
+					var lp := Vector2([90.0, 860.0, 120.0, 830.0][i], [150.0, 170.0, 900.0, 880.0][i])
+					var fl := 0.05 + 0.02 * sin(t * 9.0 + i * 1.7) + 0.015 * sin(t * 23.0 + i)
+					GameFx.disc(self, lp, 150.0, Color(1, 0.6, 0.3, fl))
+					GameFx.disc(self, lp, 70.0, Color(1, 0.7, 0.4, fl))
+				if flash > 0.0:
+					draw_rect(Rect2(0, 0, W, H), Color(flash_col.r, flash_col.g, flash_col.b, 0.1 * flash))
+					GameFx.disc(self, flash_at, 360.0, Color(flash_col.r, flash_col.g, flash_col.b, 0.07 * flash))
+				for m in motes:
+					var p4: Vector2 = m[0]
+					draw_rect(Rect2(GameFx.snap(p4), Vector2(4, 4)), Color(1, 0.6, 0.3, 0.3 + 0.2 * sin(t * 5.0 + m[2])))
+			"wood":
+				# dust drifting through the window's light (a slanting band from the top-left)
+				for m in motes:
+					var p5: Vector2 = m[0]
+					var into := clampf(1.0 - absf((p5.x - view.position.x) + (p5.y - view.position.y) * 0.6 - view.size.x * 0.45) / (view.size.x * 0.24), 0.0, 1.0)
+					if into > 0.15:
+						draw_rect(Rect2(GameFx.snap(p5), Vector2(4, 4)), Color(1, 0.94, 0.78, (0.2 + 0.16 * sin(t * 2.0 + m[2])) * into))
+			"tiles":
+				# soap bubbles rising, a glint on each
+				for m in motes:
+					var p6: Vector2 = GameFx.snap(m[0])
+					var br := 8.0 + 4.0 * float(int(m[2] * 10.0) % 3)
+					GameFx.light_ring(self, p6, br, Color(0.85, 0.97, 1.0), 10, 4.0, 0.16)
+					draw_rect(Rect2(p6 + Vector2(-br * 0.5, -br * 0.5), Vector2(4, 4)), Color(1, 1, 1, 0.3))
+			"gut":
+				# glowing spores floating, and the whole lining breathing a little light
+				var k6 := 0.02 + 0.015 * sin(t * 1.4)
+				GameFx.disc(self, c, r * 0.7, Color(1, 0.6, 0.6, k6))
+				for m in motes:
+					var a6 := 0.2 + 0.15 * sin(t * 2.4 + m[2])
+					GameFx.glow(self, m[0], 4.0, Color(0.85, 1.0, 0.6), a6)
+			"sewer":
+				# drips falling from the grates above, a ring where each lands
+				for m in motes:
+					var p7: Vector2 = m[0]
+					var land := view.position.y + fposmod(m[2] * 977.0, view.size.y - 120.0) + 100.0
+					if p7.y < land:
+						draw_rect(Rect2(GameFx.snap(p7), Vector2(4, 8)), Color(0.8, 0.95, 1.0, 0.35))
+					else:
+						var age := (p7.y - land) / 300.0
+						if age < 0.5:
+							GameFx.light_ring(self, Vector2(p7.x, land), 8.0 + age * 40.0, Color(0.8, 0.95, 1.0), 10, 4.0, 0.35 * (1.0 - age * 2.0))
+			"factory":
+				# a lamp's flicker over the floor, sparks dropping from a weld now and then
+				var fl := 0.03 + (0.03 if sin(t * 31.0) > 0.7 else 0.0)
+				GameFx.disc(self, c, r * 0.8, Color(1, 0.9, 0.7, fl))
+				for m in motes:
+					if sin(t * 0.9 + m[2] * 4.0) > 0.4:
+						draw_rect(Rect2(GameFx.snap(m[0]), Vector2(4, 4)), Color(1, 0.75, 0.3, 0.6))
+			"space":
+				# the stars twinkling, now and then a shooting star across the deck
+				for m in motes:
+					var tw := sin(t * (1.0 + fposmod(m[2], 1.0) * 2.0) + m[2] * 7.0)
+					if tw > 0.55:
+						var q7: Vector2 = GameFx.snap(m[0])
+						var a7 := (tw - 0.55) * 1.6
+						draw_rect(Rect2(q7, Vector2(4, 4)), Color(1, 1, 1, a7))
+						draw_rect(Rect2(q7 + Vector2(-4, 0), Vector2(12, 4)), Color(1, 1, 1, a7 * 0.35))
+						draw_rect(Rect2(q7 + Vector2(0, -4), Vector2(4, 12)), Color(1, 1, 1, a7 * 0.35))
+				var sh := fposmod(t, 9.0)
+				if sh < 0.9:
+					var from := view.position + Vector2(view.size.x * 0.2, view.size.y * 0.12)
+					var head := from + Vector2(1, 0.45) * sh * 700.0
+					for k7 in 8:
+						draw_rect(Rect2(GameFx.snap(head - Vector2(1, 0.45) * k7 * 10.0), Vector2(4, 4)), Color(1, 1, 1, 0.6 * (1.0 - k7 / 8.0) * (1.0 - sh / 0.9)))
