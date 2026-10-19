@@ -1629,7 +1629,7 @@ func _drift(turn: float, rate: float, delta: float) -> void:
 	else:
 		if drift_level > 0:
 			_add_boost(DRIFT_BOOST[drift_level - 1], false)
-			pops.say(["DRIFT!", "DRIFT!!", "SUPER DRIFT!"][drift_level - 1], car_pos + Vector2(0, -80 - car_h), DRIFT_COLS[drift_level - 1])
+			# (no word: the user found DRIFT / PERFECT pop-ups annoying; the sparks, the burst and the sound say it)
 			_sfx("res://sounds/fx/rc_boost.wav", -10.0, 1.1 + 0.1 * drift_level)
 		drift_ang = 0.0
 		drift_dir = held_dir
@@ -1689,9 +1689,6 @@ func _transform(g: Dictionary) -> void:
 	Input.vibrate_handheld(50)
 	if perfect:
 		_add_boost(PERFECT_BOOST, true)
-		get_tree().create_timer(0.25).timeout.connect(func():
-			if is_running:
-				pops.say("PERFECT!", car_pos + Vector2(0, -120 - car_h), Color8(255, 255, 255), 36))
 		_sfx("res://sounds/fx/ring_chime.wav", -10.0, 1.2)
 	else:
 		_add_boost(GATE_BOOST, false)
