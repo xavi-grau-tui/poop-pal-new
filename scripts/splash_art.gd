@@ -127,44 +127,6 @@ static func tank_layers(w_px: int, h_px: int, band_y: float, floor_at: Callable,
 				front.set_pixel(x, y, _sand_decor(scene, wx, wy, fy, cs, sand))
 	return [ImageTexture.create_from_image(back), ImageTexture.create_from_image(front)]
 
-## The tank: top band (the HUD sits on it), water (edge to edge: no side rails, they peeked
-## out past the console's screen window) with light rays, the funnel floor
-## shaped by floor_at (world coords), a darker hole at each pump
-static func tank(w_px: int, h_px: int, band_y: float, _wall_l: float, _wall_r: float, floor_at: Callable, _nozzles: Array, theme: Dictionary = THEMES[0]) -> Texture2D:
-	var img := Image.create(w_px, h_px, false, Image.FORMAT_RGBA8)
-	var water_top := band_y
-	var water_bottom := 880.0
-	var water: Array = theme["water"]
-	var sand: Array = theme["sand"]
-	var scene: String = theme["scene"]
-	for y in h_px:
-		for x in w_px:
-			var wx := (x + 0.5) * P
-			var wy := (y + 0.5) * P
-			var col: Color
-			var fy: float = floor_at.call(wx)
-			if wy < band_y:                                      # the top band
-				col = CASE
-				if wy < P * 2:
-					col = CASE_LIGHT
-				elif wy > band_y - P * 3:
-					col = CASE_SHADE
-				if wy > band_y - P:
-					col = OUTLINE
-			elif wy > fy:                                        # the funnel floor: sand
-				col = _sand(int(wx / P), int(wy / P), wy - fy, sand)
-				col = _sand_decor(scene, wx, wy, fy, col, sand)
-			else:                                                # the water
-				var t := clampf((wy - water_top) / (water_bottom - water_top), 0.0, 0.999)
-				var band := int(t * water.size())
-				col = water[band]
-				if theme["rays"] and band > 0 and wy < 640.0 and _in_ray(wx, wy - water_top):
-					col = water[band - 1]                        # light through the water
-				if scene != "":
-					col = _scene(scene, wx, wy, fy, col, water)
-			img.set_pixel(x, y, col)
-	return ImageTexture.create_from_image(img)
-
 ## The sand floor: a 2 px outline along its top, a lit lip, then the sand's own colour with
 ## grains (a lighter and a darker one, scattered) and soft ripples that follow the slope.
 ## sand = [base, light, shade]
@@ -201,14 +163,7 @@ static func _scene(kind: String, wx: float, wy: float, fy: float, col: Color, wa
 				col = col.lerp(Color8(176, 214, 198), 0.32)              # the sandbank, hazy
 				if absf(fmod(wx + 13.0 * sin(wy * 0.05), 41.0) - 20.0) < 2.0 and wy < bank + 46.0:
 					col = col.lerp(Color8(110, 170, 140), 0.35)          # seagrass on it
-			for f in [Vector2(250, 330), Vector2(286, 352), Vector2(232, 368), Vector2(272, 384), Vector2(310, 330)]:
-				if _fish(wx, wy, f, 1.0, 9.0):
-					return col.lerp(Color8(90, 140, 150), 0.42)
-			if wy > fy - 190.0:
-				for sx in [70.0, 118.0, 400.0, 560.0, 860.0, 905.0]:
-					var x0: float = sx + 10.0 * sin(wy * 0.04 + sx * 0.3)
-					if absf(wx - x0) < 4.5 and wy > fy - 150.0 - fmod(sx * 7.0, 50.0):
-						return col.lerp(Color8(70, 150, 112), 0.5)
+			# (the school of fish and the tall seagrass move: SceneLife)
 			return col
 		"sun":
 			# the sky above the horizon, a big low sun with a striped bottom, the sea below with
@@ -231,53 +186,27 @@ static func _scene(kind: String, wx: float, wy: float, fy: float, col: Color, wa
 					var crown := Vector2(wx, wy) - Vector2(pt.x + 11.0, pt.y - 46.0)
 					if absf(crown.y + 0.25 * absf(crown.x)) < 3.0 and absf(crown.x) < 26.0:
 						return Color8(150, 92, 120)                  # its fronds
-				for bd in [Vector2(330, 160), Vector2(372, 140), Vector2(560, 182)]:
-					var bx := absf(wx - bd.x)
-					if bx < 9.0 and absf(wy - (bd.y + bx * 0.45)) < 1.5:
-						return Color8(120, 70, 100)                  # a gull
+				# (the gulls, the clouds and the sun's glow move: SceneLife)
 				var d := Vector2(wx, wy).distance_to(SUN)
 				if d < R:
 					var below := wy - SUN.y
 					if below > 6.0 and fmod(below, 16.0) < 2.0 + int(below / 16.0) * 1.8:
 						return col                                   # the stripes across its bottom half
 					return Color8(255, 240, 176) if d < R - 9.0 else Color8(255, 218, 138)
-				if d < R + 18.0 and (ax + ay) % 2 == 0:
-					return col.lerp(Color8(255, 228, 160), 0.45)     # a dithered glow round it
 				return col
 			if wy < HORIZON + P:
 				return Color8(255, 222, 150)                         # the horizon, lit
 			var sea := clampf((wy - HORIZON) / 420.0, 0.0, 0.999)
 			col = water[2 + int(sea * 3.0)]
-			var half := 70.0 - (wy - HORIZON) * 0.12
-			if half > 6.0 and absf(wx - SUN.x) < half and ay % 4 == 0 and _hash(int(wx / 18.0), ay) > 0.35:
-				return col.lerp(Color8(255, 210, 150), 0.6)          # the reflection, in streaks
-			return col
+			return col                                           # (the sun's reflection shimmers: SceneLife)
 		"reef":
 			# corals, sea fans and seaweed along the bottom, two little fish: printed darker than the
 			# water so they stay behind the toy; caustics over the top, a turtle far off
 			var cc := _caustic(wx, wy)
 			if cc > 0.0 and wy < 460.0:
 				col = col.lerp(Color8(220, 250, 246), cc * 0.4)
-			var turtle := Vector2(wx, wy) - Vector2(640, 250)
-			if (turtle.x / 46.0) * (turtle.x / 46.0) + (turtle.y / 26.0) * (turtle.y / 26.0) < 1.0:
-				return col.lerp(water[2], 0.5)                       # its shell, hazy
-			for fl in [Vector2(-40, -20), Vector2(30, -24), Vector2(-40, 22), Vector2(34, 20)]:
-				var ff: Vector2 = turtle - fl
-				if absf(ff.x) < 16.0 and absf(ff.y) < 6.0:
-					return col.lerp(water[2], 0.42)                  # its flippers
-			if Vector2(wx, wy).distance_to(Vector2(698, 246)) < 13.0:
-				return col.lerp(water[2], 0.45)                      # its head
-			var back: Color = water[3]
-			for f in [Vector2(150, 300), Vector2(800, 360)]:
-				var dd: Vector2 = Vector2(wx, wy) - f
-				if (dd.x / 22.0) * (dd.x / 22.0) + (dd.y / 11.0) * (dd.y / 11.0) < 1.0 or (dd.x > 18.0 and dd.x < 34.0 and absf(dd.y) < (dd.x - 16.0) * 0.6):
-					return col.lerp(back, 0.55)                     # a fish (and its tail)
+			# (the turtle, the fish and the seaweed move: SceneLife)
 			if wy > fy - 230.0:
-				# seaweed: wavy strands
-				for sx in [60.0, 300.0, 610.0, 900.0]:
-					var x0: float = sx + 9.0 * sin(wy * 0.045 + sx)
-					if absf(wx - x0) < 6.0 and wy > fy - 200.0 + fmod(sx, 60.0):
-						return col.lerp(Color8(60, 150, 110), 0.55)
 				# lumpy corals (pink, orange, purple)
 				var corals := [[Vector2(120, 0), Color8(236, 120, 130)], [Vector2(400, 0), Color8(244, 160, 90)],
 						[Vector2(560, 0), Color8(170, 110, 196)], [Vector2(850, 0), Color8(236, 120, 130)]]
@@ -312,14 +241,7 @@ static func _scene(kind: String, wx: float, wy: float, fy: float, col: Color, wa
 				return Color8(250, 248, 230)                         # a star
 			if wy > 520.0 and h > 0.992:
 				return col.lerp(Color8(120, 244, 230), 0.7)          # plankton
-			# a jellyfish drifting far back: a glowing dome and long trailing tentacles
-			var jf := Vector2(wx, wy) - Vector2(720, 330)
-			if jf.y < 0.0 and (jf.x / 54.0) * (jf.x / 54.0) + (jf.y / 40.0) * (jf.y / 40.0) < 1.0:
-				return col.lerp(Color8(200, 150, 240), 0.45 if jf.y > -30.0 else 0.32)
-			if jf.y >= 0.0 and jf.y < 150.0:
-				for tx in [-36.0, -14.0, 8.0, 30.0]:
-					if absf(jf.x - tx - 8.0 * sin(jf.y * 0.06 + tx)) < 2.0:
-						return col.lerp(Color8(190, 140, 230), 0.4 * (1.0 - jf.y / 150.0))
+			# (the jellyfish drift and pulse: SceneLife)
 			return col
 		"deep":
 			# the deep: glowing specks, a kraken's tentacles curling up from the dark far back, a
@@ -329,42 +251,19 @@ static func _scene(kind: String, wx: float, wy: float, fy: float, col: Color, wa
 				return col.lerp(Color8(120, 220, 255), 0.75)
 			if h2 < 0.003 and wy > 300.0:
 				return col.lerp(Color8(255, 150, 220), 0.6)
-			for tk in [[140.0, 0.0], [820.0, 2.0], [600.0, 4.0]]:
-				var base: float = tk[0]
-				var tx: float = base + 46.0 * sin(wy * 0.012 + tk[1]) + 20.0 * sin(wy * 0.031)
-				var width := 14.0 * clampf((wy - 260.0) / 500.0, 0.25, 1.0)
-				if absf(wx - tx) < width and wy > 260.0 and wy < fy - 30.0:
-					var suck := fmod(wy, 26.0) < 6.0 and wx > tx
-					return col.lerp(Color8(70, 54, 96) if not suck else Color8(110, 80, 130), 0.55)
+			# (the kraken's tentacles curl: SceneLife)
 			return col
 		"rain":
-			# dark clouds along the top, rain slanting down
-			var puff := 0.0
-			for k in 8:
-				var c := Vector2(60.0 + k * 125.0, 120.0 + 18.0 * sin(k * 2.1))
-				puff = maxf(puff, 1.0 - Vector2(wx, wy).distance_to(c) / (70.0 + 12.0 * sin(k * 1.3)))
-			if puff > 0.0:
-				if puff > 0.18 or (ax + ay) % 2 == 0:
-					return col.lerp(Color8(64, 74, 82), 0.75)
-			var u := wx + wy * 0.32
-			var lane := int(u / 46.0)
-			if fmod(u, 46.0) < 3.0 and fmod(wy + lane * 37.0, 70.0) < 24.0 and wy < fy - 40.0:
-				return col.lerp(Color8(186, 200, 204), 0.45)         # a raindrop's streak
-			# a lighthouse on a rock far off, its beam sweeping over the waves
+			# (the clouds rolling, the rain, the lighthouse's beam and the waves move: SceneLife)
+			# a lighthouse on a rock far off
 			var lh := Vector2(wx, wy) - Vector2(800, 330)
 			if absf(lh.x) < 13.0 - lh.y * 0.04 and lh.y > -70.0 and lh.y < 40.0:
 				var stripe := int((lh.y + 70.0) / 22.0) % 2 == 0
 				return col.lerp(Color8(214, 206, 196) if stripe else Color8(170, 90, 84), 0.55)
 			if absf(lh.x) < 16.0 and lh.y > -86.0 and lh.y <= -70.0:
-				return col.lerp(Color8(255, 236, 160), 0.7)          # its lamp
+				return col.lerp(Color8(160, 150, 120), 0.6)          # its lamp's housing (the light: SceneLife)
 			if lh.y > 40.0 and lh.y < 70.0 and absf(lh.x) < 60.0 - lh.y * 0.3:
 				return col.lerp(Color8(60, 70, 74), 0.6)             # its rock
-			var beam := Vector2(wx, wy) - Vector2(800, 252)
-			if beam.x < -20.0 and absf(beam.y + beam.x * 0.08) < 10.0 - beam.x * 0.06 and (ax + ay) % 2 == 0:
-				return col.lerp(Color8(255, 240, 190), 0.25)
-			# waves breaking along the top, under the clouds
-			if wy > 214.0 and wy < 236.0 and fmod(wx + 30.0 * sin(wy * 0.3), 90.0) < 40.0 - (wy - 214.0):
-				return col.lerp(Color8(214, 224, 222), 0.35)
 			return col
 	return col
 
@@ -933,3 +832,225 @@ static func basket_icon(full: bool, rim: Color) -> Texture2D:
 			if col.a > 0.0:
 				img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
+
+# ================================================================== THE PANEL'S LIFE
+
+## What moves on the back panel behind the water (the user, 2026-10-19: moving backgrounds, more
+## beautiful, keeping what each world is): drawn every frame on the game's 3 px grid, printed pale
+## like the rest of the panel (see-through over it), shifting with it (the 3D tilt). The lagoon's
+## school of fish swimming past and its tall seagrass swaying; the sunset's gulls flapping across,
+## wisps of cloud drifting, the sun's glow breathing and its reflection shimmering on the sea; the
+## reef's fish crossing both ways, the turtle paddling far back, the seaweed swaying; the night's
+## jellyfish pulsing and drifting (a far one too), the moon's halo breathing, stars twinkling; the
+## storm's clouds rolling, the lighthouse's beam sweeping round (its lamp flaring as it faces you),
+## waves breaking under the clouds; the deep's kraken tentacles curling.
+class SceneLife extends Node2D:
+	var kind := ""
+	var water: Array = []
+	var floor_at: Callable
+	var t := 0.0
+	func setup(k: String, w: Array, f: Callable) -> void:
+		kind = k
+		water = w
+		floor_at = f
+		queue_redraw()
+	func _process(delta: float) -> void:
+		t += delta
+		queue_redraw()
+	func _px(x: float, y: float, w: float, h: float, col: Color) -> void:
+		draw_rect(Rect2(Vector2(x, y).snapped(Vector2(3, 3)), Vector2(maxf(3.0, roundf(w / 3.0) * 3.0), maxf(3.0, roundf(h / 3.0) * 3.0))), col)
+	## a little fish facing `face` (-1 left, 1 right): a body and a tail, `k` its size
+	func _fish(at: Vector2, k: float, face: float, col: Color) -> void:
+		var r := 9.0 * k
+		var y := -r * 0.5
+		while y <= r * 0.5:
+			var half := r * sqrt(maxf(0.0, 1.0 - (y / (r * 0.5)) * (y / (r * 0.5))))
+			_px(at.x - half, at.y + y, half * 2.0, 3.0, col)
+			y += 3.0
+		var wag := sin(t * 9.0 + at.x * 0.1) * 2.0 * k
+		for i in 3:
+			var tx := at.x - face * (r + 2.0 + i * 3.0)
+			_px(tx, at.y - (i + 1) * 2.0 * k + wag, 3.0, (i + 1) * 4.0 * k, col)
+	## a swaying strand from the floor at x0 up `tall` px, `w` px wide
+	func _strand(x0: float, tall: float, w: float, col: Color, phase: float) -> void:
+		var fy: float = floor_at.call(x0)
+		var y := 0.0
+		while y < tall:
+			var bend := 10.0 * sin(t * 1.3 + phase - y * 0.035) * (y / tall)
+			_px(x0 + bend - w / 2.0, fy - y, w, 3.0, col)
+			y += 3.0
+	func _disc(c: Vector2, r: float, col: Color, dither := false) -> void:
+		var y := -r
+		while y <= r:
+			var half := sqrt(maxf(0.0, r * r - y * y))
+			if dither:
+				var x := -half
+				while x <= half:
+					if (int((c.x + x) / 3.0) + int((c.y + y) / 3.0)) % 2 == 0:
+						_px(c.x + x, c.y + y, 3.0, 3.0, col)
+					x += 3.0
+			else:
+				_px(c.x - half, c.y + y, half * 2.0, 3.0, col)
+			y += 3.0
+	func _draw() -> void:
+		match kind:
+			"lagoon":
+				# the school, swimming left, round again; each fish its own wiggle
+				var sx := fposmod(860.0 - t * 30.0, 1200.0) - 120.0
+				var sy := 340.0 + 14.0 * sin(t * 0.5)
+				for f in [Vector2(0, 0), Vector2(36, 22), Vector2(-18, 38), Vector2(22, 54), Vector2(60, 0), Vector2(78, 40), Vector2(-40, 14)]:
+					_fish(Vector2(sx, sy) + (f as Vector2) + Vector2(0, 4.0 * sin(t * 2.0 + f.x)), 1.0, -1.0, Color8(90, 140, 150, 107))
+				for st in [[70.0, 160.0], [118.0, 130.0], [400.0, 150.0], [560.0, 175.0], [860.0, 140.0], [905.0, 165.0]]:
+					_strand(st[0], st[1], 9.0, Color8(70, 150, 112, 128), st[0] * 0.3)
+			"sun":
+				# wisps of cloud drifting right, low over the horizon
+				for i in 3:
+					var cx := fposmod(140.0 + i * 330.0 + t * 8.0, 1200.0) - 120.0
+					var cy := 190.0 + i * 46.0
+					for row in 3:
+						var w := 150.0 - row * 40.0 + 20.0 * sin(i * 2.0 + row)
+						_px(cx - w / 2.0 + row * 12.0, cy + row * 6.0, w, 6.0, Color8(255, 200, 180, 120))
+				# the sun's glow breathing (dithered round it)
+				var g := 106.0 + 4.0 * sin(t * 1.4)
+				var y := -g
+				while y <= g:
+					var half := sqrt(maxf(0.0, g * g - y * y))
+					var inner := sqrt(maxf(0.0, 92.0 * 92.0 - y * y))
+					var x := inner
+					while x <= half:
+						for sgn in [-1.0, 1.0]:
+							var px: float = 720.0 + sgn * x
+							if (int(px / 3.0) + int((250.0 + y) / 3.0)) % 2 == 0:
+								_px(px, 250.0 + y, 3.0, 3.0, Color8(255, 228, 160, 110))
+						x += 3.0
+					y += 3.0
+				# its reflection on the sea, in streaks that shimmer
+				var yy := 405.0
+				while yy < 820.0:
+					var half2 := 70.0 - (yy - 402.0) * 0.12
+					if half2 > 6.0 and int(yy / 3.0) % 4 == 0:
+						var x2 := 720.0 - half2
+						while x2 < 720.0 + half2:
+							var h := sin(floor(x2 / 18.0) * 12.9898 + floor(yy / 3.0) * 78.233 + floor(t * 3.0 + yy * 0.02)) * 43758.5453
+							if h - floor(h) > 0.4:
+								_px(x2, yy, 15.0, 3.0, Color8(255, 210, 150, 150))
+							x2 += 18.0
+					yy += 3.0
+				# gulls flapping across, slowly
+				for i in 3:
+					var gx := fposmod(330.0 + i * 260.0 - t * (22.0 + i * 6.0), 1150.0) - 100.0
+					var gy := 150.0 + i * 22.0 + 6.0 * sin(t * 0.8 + i)
+					var up := sin(t * 6.0 + i * 1.7) > 0.0
+					for k in 4:
+						var dy := (k * 1.5 if up else -k * 0.5)
+						_px(gx - 3.0 - k * 3.0, gy - dy, 3.0, 3.0, Color8(120, 70, 100))
+						_px(gx + k * 3.0, gy - dy, 3.0, 3.0, Color8(120, 70, 100))
+			"reef":
+				# the turtle paddling slowly across far back, hazy
+				var tx := fposmod(640.0 + t * 12.0, 1300.0) - 150.0
+				var ty := 250.0 + 10.0 * sin(t * 0.4)
+				var hz: Color = water[2]
+				hz.a = 0.5
+				_disc(Vector2(tx, ty), 26.0, hz)
+				_disc(Vector2(tx + 34.0, ty - 4.0), 12.0, hz)
+				var pad := sin(t * 2.0) * 6.0
+				for fl in [Vector2(-30, -22), Vector2(20, -26), Vector2(-30, 22), Vector2(22, 24)]:
+					_px(tx + fl.x, ty + fl.y + (pad if fl.y < 0.0 else -pad), 18.0, 9.0, hz)
+				# fish crossing both ways at their own depths
+				var back: Color = water[3]
+				back.a = 0.55
+				for fs in [[300.0, 1.0, 26.0, 1.3], [360.0, -1.0, 34.0, 1.1], [470.0, 1.0, 20.0, 0.9]]:
+					var x := fposmod(fs[0] * 3.0 + t * fs[2] * fs[1], 1200.0) - 120.0
+					if fs[1] < 0.0:
+						x = 1080.0 - x
+					_fish(Vector2(x, fs[0] + 8.0 * sin(t + fs[0])), fs[3], fs[1], back)
+				for st in [[60.0, 200.0], [300.0, 170.0], [610.0, 190.0], [900.0, 160.0]]:
+					_strand(st[0], st[1], 12.0, Color8(60, 150, 110, 140), st[0])
+			"night":
+				# the moon's halo breathing
+				var hr := 66.0 + 6.0 * sin(t * 0.9)
+				var y3 := -hr
+				while y3 <= hr:
+					var half3 := sqrt(maxf(0.0, hr * hr - y3 * y3))
+					var inner3 := sqrt(maxf(0.0, 52.0 * 52.0 - y3 * y3))
+					var x3 := inner3
+					while x3 <= half3:
+						for sgn in [-1.0, 1.0]:
+							var px3: float = 190.0 + sgn * x3
+							if (int(px3 / 3.0) + int((232.0 + y3) / 3.0)) % 2 == 0:
+								_px(px3, 232.0 + y3, 3.0, 3.0, Color8(160, 170, 220, 80))
+						x3 += 3.0
+					y3 += 3.0
+				# stars twinkling up high
+				for i in 16:
+					var sx2 := fposmod(i * 211.0 + 37.0, 920.0) + 15.0
+					var sy2 := 130.0 + fposmod(i * 97.0, 360.0)
+					if sin(t * (1.2 + fposmod(i * 0.37, 1.0)) + i) > 0.7:
+						_px(sx2, sy2, 3.0, 3.0, Color8(255, 252, 230))
+						_px(sx2 - 3.0, sy2, 9.0, 3.0, Color8(255, 252, 230, 90))
+						_px(sx2, sy2 - 3.0, 3.0, 9.0, Color8(255, 252, 230, 90))
+				# the jellyfish: a near one and a far one, their bells pulsing, drifting up and down
+				for jf in [[Vector2(720, 330), 1.0, 0.45, 0.0], [Vector2(300, 520), 0.6, 0.25, 2.0]]:
+					var k: float = jf[1]
+					var pulse := sin(t * 2.4 + jf[3])
+					var c: Vector2 = (jf[0] as Vector2) + Vector2(20.0 * sin(t * 0.2 + jf[3]), 30.0 * sin(t * 0.35 + jf[3]) - pulse * 6.0 * k)
+					var rx := 54.0 * k * (1.0 + 0.08 * pulse)
+					var ry := 40.0 * k * (1.0 - 0.1 * pulse)
+					var yb := -ry
+					while yb <= 0.0:
+						var hb := rx * sqrt(maxf(0.0, 1.0 - (yb / ry) * (yb / ry)))
+						var a: float = jf[2] * (1.0 if yb > -ry * 0.6 else 0.7)
+						_px(c.x - hb, c.y + yb, hb * 2.0, 3.0, Color(0.78, 0.59, 0.94, a))
+						yb += 3.0
+					for tt in [-36.0, -14.0, 8.0, 30.0]:
+						var yt := 0.0
+						while yt < 150.0 * k:
+							var xt: float = c.x + tt * k + 8.0 * k * sin(yt * 0.06 / k + tt + t * 2.0)
+							_px(xt, c.y + yt, 3.0, 3.0, Color(0.75, 0.55, 0.9, jf[2] * 0.9 * (1.0 - yt / (150.0 * k))))
+							yt += 3.0
+			"rain":
+				# dark clouds rolling along the top
+				for i in 9:
+					var cx2 := fposmod(60.0 + i * 125.0 + t * 14.0, 1125.0) - 90.0
+					var cy2 := 120.0 + 18.0 * sin(i * 2.1) + 4.0 * sin(t * 0.5 + i)
+					_disc(Vector2(cx2, cy2), 66.0 + 10.0 * sin(i * 1.3 + t * 0.3), Color8(64, 74, 82, 190))
+					_disc(Vector2(cx2, cy2), 84.0 + 10.0 * sin(i * 1.3 + t * 0.3), Color8(64, 74, 82, 120), true)
+				# waves breaking under them, the crests running along
+				var wxs := 0.0
+				while wxs < 960.0:
+					var f2 := fposmod(wxs + t * 40.0, 90.0)
+					if f2 < 36.0:
+						_px(wxs, 214.0 + f2 * 0.3, 6.0, 3.0, Color8(214, 224, 222, 90))
+					wxs += 6.0
+				# the lighthouse's beam sweeping round: long when it points sideways, its lamp flaring
+				# as it faces you
+				var a2 := t * 0.9
+				var side := cos(a2)
+				var lamp := Vector2(800, 252)
+				var reach := 620.0 * absf(side)
+				var dirx := signf(side)
+				var x4 := 20.0
+				while x4 < reach:
+					var hw := 8.0 + x4 * 0.07
+					var fade := 1.0 - x4 / maxf(reach, 1.0)
+					var yc := lamp.y + x4 * 0.08
+					var yv := -hw
+					while yv <= hw:
+						if (int((lamp.x + dirx * x4) / 3.0) + int((yc + yv) / 3.0)) % 2 == 0:
+							_px(lamp.x + dirx * x4, yc + yv, 3.0, 3.0, Color(1.0, 0.94, 0.75, 0.3 * fade))
+						yv += 3.0
+					x4 += 3.0
+				var flare := clampf(1.0 - absf(side) * 3.0, 0.0, 1.0)
+				_disc(lamp, 10.0 + 14.0 * flare, Color(1.0, 0.92, 0.62, 0.5 + 0.4 * flare))
+			"deep":
+				# the kraken's tentacles curling up from the dark, slowly
+				for tk in [[140.0, 0.0], [820.0, 2.0], [600.0, 4.0]]:
+					var y5 := 260.0
+					var fy5: float = floor_at.call(tk[0]) - 30.0
+					while y5 < fy5:
+						var x5: float = tk[0] + 46.0 * sin(y5 * 0.012 + tk[1] + t * 0.35) + 20.0 * sin(y5 * 0.031 + t * 0.6)
+						var w5 := 14.0 * clampf((y5 - 260.0) / 500.0, 0.25, 1.0)
+						_px(x5 - w5, y5, w5 * 2.0, 3.0, Color8(70, 54, 96, 140))
+						if fmod(y5, 26.0) < 6.0:
+							_px(x5 + w5 * 0.3, y5, w5 * 0.6, 3.0, Color8(110, 80, 130, 140))
+						y5 += 3.0

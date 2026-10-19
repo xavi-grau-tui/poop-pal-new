@@ -222,6 +222,7 @@ var tank_back: Sprite2D                # the back panel behind the water (it shi
 var fx: GameFx.Burst
 var ambience: GameFx.Ambience
 var back_shadows: Node2D               # the pieces' soft shadows on the back panel (they shift with it)
+var scene_life: SplashArt.SceneLife    # what moves on the back panel (fish, jellyfish, clouds, the beam...)
 var band_bar: ColorRect                # (the band's foot line: the clock running down)
 const PLASTIC := Color8(44, 70, 102)   # the HUD band: the toy's blue plastic...
 const PLASTIC_FOOT := Color8(26, 42, 64)
@@ -263,6 +264,7 @@ func _ready() -> void:
 	tex["coin"] = SplashArt.coin()
 	GameData.coins_changed.connect(func(_c): _refresh_coins())
 	_create_static_nodes()
+	_theme_nodes()
 	super._ready()
 
 # --- the level menu (BaseMinigame) ---
@@ -323,13 +325,18 @@ func _apply_theme(w: int) -> void:
 		tex["glow_ball"] = SplashArt.glow(25, 25, Color(1, 1, 1))
 		tex["glow_rim"] = SplashArt.glow(44, 26, rim[0])
 	if tank_sprite:
-		tank_sprite.texture = tex["tank"]
-		tank_back.texture = tex["tank_back"]
-		var top := 402.0 if theme["scene"] == "sun" else BAND_Y          # (the sunset's sky: no bubbles in it)
-		ambience.setup(String(theme["scene"]), Vector2(PLAY_WIDTH / 2.0, 500.0), 420.0, Rect2(0, top, PLAY_WIDTH, PLAY_HEIGHT - top))
-		band_bar.color = (theme["rim"][1] as Color)
-		for n in nozzle_sprites:
-			n.texture = tex["nozzle"]
+		_theme_nodes()
+
+## The world's look on the nodes (once they exist: the first world's is set right after they're made)
+func _theme_nodes() -> void:
+	tank_sprite.texture = tex["tank"]
+	tank_back.texture = tex["tank_back"]
+	scene_life.setup(String(theme["scene"]), theme["water"], floor_at)
+	var top := 402.0 if theme["scene"] == "sun" else BAND_Y          # (the sunset's sky: no bubbles in it)
+	ambience.setup(String(theme["scene"]), Vector2(PLAY_WIDTH / 2.0, 500.0), 420.0, Rect2(0, top, PLAY_WIDTH, PLAY_HEIGHT - top))
+	band_bar.color = (theme["rim"][1] as Color)
+	for n in nozzle_sprites:
+		n.texture = tex["nozzle"]
 
 func start_game() -> void:
 	super.start_game()
@@ -529,6 +536,7 @@ func _depth_3d() -> void:
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
 	tank_back.position = (_depth_tilt * DEPTH_FAR).round()
 	back_shadows.position = tank_back.position
+	scene_life.position = tank_back.position
 	back_shadows.queue_redraw()
 	ambience.position = (-_depth_tilt * DEPTH_NEAR).round()
 
@@ -1278,6 +1286,8 @@ func _create_static_nodes() -> void:
 	tank_back = _sprite(tex["tank_back"], Vector2.ZERO)   # the back panel (the 3D tilt shifts it)
 	tank_back.centered = false
 	add_child(tank_back)
+	scene_life = SplashArt.SceneLife.new()          # the panel's moving things (behind the water)
+	add_child(scene_life)
 	back_shadows = Node2D.new()                     # the baskets', balls' and pal's shadows on the panel
 	back_shadows.draw.connect(_draw_back_shadows)
 	add_child(back_shadows)
