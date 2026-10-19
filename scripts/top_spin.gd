@@ -627,13 +627,15 @@ func _paint_scene(data: Dictionary) -> void:
 						img.set_pixel(x, y, TopSpinArt.lit(bowl["room"], c, bp, int(PLAY_WIDTH / PX) + 1, int(PLAY_HEIGHT / PX) + 1))
 		_bowl_cache[key] = [ImageTexture.create_from_image(imgs[0]), ImageTexture.create_from_image(imgs[1]), ImageTexture.create_from_image(imgs[2]),
 			ImageTexture.create_from_image(_rim_side_image(imgs[1], imgs)), ImageTexture.create_from_image(_rim_side_image(imgs[2], imgs))]
+		_bowl_cache[key].append(ImageTexture.create_from_image(_outlined(_bowl_cache[key][3].get_image())))
+		_bowl_cache[key].append(ImageTexture.create_from_image(_outlined(_bowl_cache[key][4].get_image())))
 	stadium.texture = _bowl_cache[key][0]
 	stadium_rim.texture = _bowl_cache[key][1]
 	stadium_front.texture = _bowl_cache[key][2]
-	for sp in rim_back_sides:
-		sp.texture = _bowl_cache[key][3]
-	for sp in rim_front_sides:
-		sp.texture = _bowl_cache[key][4]
+	for j in rim_back_sides.size():                  # (the lowest copy outlined: the side's contour on the floor)
+		rim_back_sides[j].texture = _bowl_cache[key][5 if j == 0 else 3]
+	for j in rim_front_sides.size():
+		rim_front_sides[j].texture = _bowl_cache[key][6 if j == 0 else 4]
 	stadium.position = C
 	stadium_rim.position = C
 	stadium_front.position = C
@@ -1511,6 +1513,7 @@ func _rim_side_image(src: Image, imgs: Array) -> Image:
 			if (ring[(i - k + STEPS) % STEPS] as Color).a > 0.0:
 				ring[i] = ring[(i - k + STEPS) % STEPS]
 				break
+	# (the cut ends' faces lit like the rim's top, a little darker: a cut face, not a black block)
 	for y in src.get_height():
 		for x in src.get_width():
 			if src.get_pixel(x, y).a == 0.0:
@@ -1518,7 +1521,30 @@ func _rim_side_image(src: Image, imgs: Array) -> Image:
 			var d := Vector2(x - half + 0.5, y - half + 0.5)
 			var i := int(fposmod(d.angle(), TAU) / TAU * STEPS) % STEPS
 			var c: Color = ring[i] if (ring[i] as Color).a > 0.0 else src.get_pixel(x, y)
-			out.set_pixel(x, y, c.darkened(0.38))
+			var end := false
+			for g in gap_angles:
+				var dd := absf(angle_difference(d.angle(), g))
+				if dd >= gap_half and dd < gap_half + 2.5 / maxf(d.length(), 1.0):
+					end = true
+			out.set_pixel(x, y, c.darkened(0.1 if end else 0.38))
+	return out
+
+## A side picture with its edge outlined (only the lowest copy: the copies above cover all but its
+## outer edge, which traces the side's contour; outlining every copy made a checker)
+func _outlined(src: Image) -> Image:
+	var out := src.duplicate() as Image
+	var w := src.get_width()
+	var h := src.get_height()
+	for y in h:
+		for x in w:
+			if src.get_pixel(x, y).a == 0.0:
+				continue
+			for o: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var nx := x + o.x
+				var ny := y + o.y
+				if nx < 0 or ny < 0 or nx >= w or ny >= h or src.get_pixel(nx, ny).a == 0.0:
+					out.set_pixel(x, y, TopSpinArt.OUTLINE)
+					break
 	return out
 
 ## The rim's copies under its top (the 3D tilt's sides), darker the lower they are
