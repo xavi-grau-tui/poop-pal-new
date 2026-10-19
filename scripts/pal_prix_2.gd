@@ -10,11 +10,14 @@ extends BaseMinigame
 ## FASTER, NOT HARDER (the user, 2026-10-19): wide roads and long bends taken flat out (the
 ## craft turns on the same circle at any speed), a view that pulls back the faster it goes
 ## (speed lines, light trails, stars streaking, a shake on a boost), forgiving edges (the walls
-## are magnetic: you stick to them and slow down, you never fall off or crash), boost chains on a
+## on land are magnetic: you stick to them and slow down), boost chains on a
 ## good line (plates on the road, currents on the water, rings in the air: each one taken
 ## straight after the last adds to the chain), a slipstream behind a rival (then a slingshot
 ## past it), a drift boost (hold a turn through a long bend: sparks, blue, orange, pink; let go:
-## a burst). No hearts: a race always finishes.
+## a burst). Hearts (the user, 2026-10-19): on the
+## land the walls are magnetic, but on the water it's Pal Prix's boat (buoys you push, shallows
+## that slow you, the bank past them a crash) and in the air leaving the lane is a crash: a heart,
+## back on the last checkpoint; the last one: out of lives.
 ## Stars: 1 = the 3 laps, 2 = within the par time (with rivals: 1st), 3 = within the turbo time
 ## (the boosts' time; with rivals: 1st within it). Things in the way (rocks, icebergs, asteroids)
 ## only bump and spin you: they cost time.
@@ -44,8 +47,8 @@ const FORM_NAMES := ["hover", "jetski", "rocket"]
 ## Per form (LAND / SEA / AIR): its speed (mat px/s), the circle it turns on at any speed (mat px),
 ## how fast its way takes up its heading (/s: the jet ski drifts)
 const SPEED := [820.0, 760.0, 900.0]
-const TURN_R := [205.0, 225.0, 245.0]
-const GRIP := [10.0, 4.4, 7.5]
+const TURN_R := [205.0, 200.0, 215.0]
+const GRIP := [10.0, 8.0, 9.0]
 const ICE_GRIP := 2.6                  # (the Ice Fjord's icy roads)
 const ACCEL := 950.0                   # speeding up, mat px/s^2
 const BRAKE := 1700.0                  # slowing to a lower speed
@@ -77,10 +80,20 @@ const Z_START := 1.5                   # the view: close at the start...
 const Z_NEAR := 1.36                   # ...pulling back with the speed...
 const Z_FAR := 1.0                     # ...to this at a big boost
 const GUST_PUSH := 240.0
-const WELL_PULL := 650.0
+## Water: Pal Prix's boat rules (the user, 2026-10-19): the buoys only mark the lane, the shallows
+## past them slow it (its hull SHALLOW_IN inside the buoys), SHORE_AT past them it runs onto the
+## bank (painted SHORE_PAINT past them): a crash, a heart. Air: past the lane's edge (AIR_OUT) it
+## falls out of the race: a heart. The land keeps its magnetic walls.
+const SHALLOW_IN := 10.0
+const SHALLOW_SLOW := 0.7
+const SHORE_AT := 56.0                # (bank painted 72 past the buoys: the bow reaches it)
+const AIR_EDGE := 1.7                 # the air lane's edge: this x its half width from its middle
+const AIR_OUT := 10.0
+const CHECKPOINTS := 10               # per lap: where a crashed craft is put back
+const WELL_PULL := 420.0
 const PAR_SLACK := 1.05
 const PAR_PLUS := 1.0
-const TURBO_K := 0.965                 # the turbo time: the clean drive's time x this (boosts needed)
+const TURBO_K := 0.93                 # the turbo time: the clean drive's time x this (boosts needed)
 const ICE_SLACK := 1.07                # (icy roads: the par a little longer, the craft slides)
 
 const WORLDS := ["Neon City", "Rapids", "Canyon", "Ice Fjord", "Asteroid Belt", "Saturn's Rings"]
@@ -92,7 +105,7 @@ const CELLS := [560.0, 600.0, 600.0, 600.0, 600.0, 620.0]
 ## round a flight, the rock round a land stretch (space; Saturn's Rings: the Earth)
 const REGIONS := [
 	{ "sea": 520.0 }, { "sea": 250.0, "air": 290.0 }, { "air": 300.0 }, { "sea": 320.0, "air": 280.0 },
-	{ "land": 280.0, "sea": 210.0 }, { "land": 1100.0, "sea": 430.0, "air": 300.0 },
+	{ "land": 280.0, "sea": 250.0 }, { "land": 1100.0, "sea": 430.0, "air": 300.0 },
 ]
 const FACE_H := [0.0, 26.0, 32.0, 28.0, 16.0, 0.0]          # a cliff's height (board px)
 const PARALLAX := [0.5, 0.55, 0.5, 0.55, 0.35, 0.45]       # how fast the deep layer moves
@@ -189,7 +202,7 @@ const RIVAL_TIERS := [
 ]
 const RIVAL_COLS := ["blue", "yellow", "green"]
 
-enum State { WAIT, DRIVE, DONE }
+enum State { WAIT, DRIVE, FALL, DONE }
 
 var state := State.WAIT
 var level := 1
@@ -215,6 +228,10 @@ var wall_t := 0.0                      # touching a wall (fading)
 var bump_t := 0.0                      # just hit something (fading): slowed
 var spin_t := 0.0                      # ...spinning round
 var slip_charge := 0.0                 # behind a rival this long
+var last_cp := 0.0                     # progress at the last checkpoint passed
+var falls := 0                         # crashes this race (hearts lost)
+var splash_used := false               # (a splashy pal's water heart: its first crash undone)
+var _grace_t := 0.0                    # (just put back: nothing crashes it for a moment)
 var hop_t := 0.0                       # in the air off a ramp / a step: time left
 var hop_len := 0.0
 var hop_good := false
@@ -265,6 +282,7 @@ var front: Node2D                      # the craft and the rivals
 var craft: Node2D
 var slices: Array[Sprite2D] = []
 var driver: Sprite2D
+var canopy: Sprite2D                   # the glass cabin over the pal
 var shadow: Sprite2D
 var glow: Sprite2D
 var flames: Flames
@@ -402,6 +420,7 @@ func _begin(n: int) -> void:
 	_spawn_rivals()
 	if qa_autopilot:
 		print("QA build %d: %d ms, %d points, %d gates" % [level, Time.get_ticks_msec() - t0, course.count, course.gates.size()])
+		print("QA things %d: wells %s obstacles %s slings %s" % [level, str(wells.map(func(w): return w["i"])), str(obstacles.map(func(o): return [o["i"], o["kind"]])), str(pads.filter(func(p): return p["sling"]).map(func(p): return p["i"]))])
 	# the craft on the line
 	car_pos = course.centre[0]
 	heading = course.direction(0).angle()
@@ -428,6 +447,13 @@ func _begin(n: int) -> void:
 	bank = 0.0
 	bumps = 0
 	place = 1
+	falls = 0
+	last_cp = 0.0
+	splash_used = false
+	_grace_t = 0.0
+	craft.modulate = Color(1, 1, 1)
+	craft.scale = Vector2.ONE
+	reset_lives()
 	_passed_gates = 0
 	held = [false, false]
 	_touch.clear()
@@ -585,6 +611,13 @@ func _place_features() -> void:
 			var i := rng.randi_range(45, count - 40)
 			if course.kind_at(i) != on_kind or not course.straight(i, 10, 10) or not free_at.call(i - 8, i + 8):
 				continue
+			# (room to straighten up between two: never a quick slalom at these speeds)
+			var crowded := false
+			for o2 in obstacles:
+				if absi(posmod(int(o2["i"]) - i + count / 2, count) - count / 2) < 80:
+					crowded = true
+			if crowded and t2 < 250:
+				continue
 			var sd := -1.0 if rng.randf() < 0.5 else 1.0
 			var r: float = { "rocks": 30.0, "bergs": 46.0, "asteroids": 46.0 }[kind_name]
 			var pos: Vector2 = course.centre[i] + course.normal(i) * sd * rng.randf_range(0.36, 0.5) * course.half_w
@@ -596,10 +629,10 @@ func _place_features() -> void:
 	for s2 in int(extras.get("wells", 0)):
 		for t3 in 120:
 			var i := rng.randi_range(45, count - 40)
-			if course.kind_at(i) != AIR or not free_at.call(i - 10, i + 10):
+			if course.kind_at(i) != AIR or not free_at.call(i - 10, i + 10) or not course.straight(i, 24, 24):
 				continue
 			var sd2 := -1.0 if rng.randf() < 0.5 else 1.0
-			wells.append({ "pos": course.centre[i] + course.normal(i) * sd2 * (course.half_w + 70.0), "r": 300.0, "i": i })
+			wells.append({ "pos": course.centre[i] + course.normal(i) * sd2 * (course.half_w + 70.0), "r": 260.0, "i": i })
 			used.append([i - 10, i + 10])
 			break
 	# the canyon's winds: stretches of the flight where it blows across
@@ -744,7 +777,7 @@ func _spawn_course_things() -> void:
 			if course.kinds[i] != SEA:
 				continue
 			var p: Vector2 = course.centre[i] + course.normal(i) * sd * hw
-			if p.distance_to(last) < 64.0:
+			if p.distance_to(last) < 48.0:
 				continue
 			bspots.append([p, nb % 2 == 0])
 			last = p
@@ -752,11 +785,11 @@ func _spawn_course_things() -> void:
 	buoys.setup(bspots, accent, ACCENTS[(world_no + 2) % 6])
 	# the air lanes' beacons
 	var aspots: Array = []
-	for i in range(0, count, 18):
+	for i in range(0, count, 3):
 		if course.kinds[i] != AIR:
 			continue
 		for sd2 in [-1.0, 1.0]:
-			aspots.append([course.centre[i] + course.normal(i) * sd2 * (hw + 12.0), i, sd2])
+			aspots.append([course.centre[i] + course.normal(i) * sd2 * hw * AIR_EDGE - Vector2(0, AIR_H), i, sd2])
 	beacons.setup(aspots, accent)
 	# currents and rings
 	for p2 in pads:
@@ -897,6 +930,11 @@ func _place_craft() -> void:
 	# the pal in its seat (its face kept upright)
 	var seat := Vector2.from_angle(yaw) * PalPrix2Art.SEAT * PX
 	driver.position = craft.position + seat + Vector2(0, -n * LAYER_UP - 4.0) + tilt
+	canopy.position = (craft.position + Vector2.from_angle(yaw) * (PalPrix2Art.SEAT + 1.5) * PX + Vector2(0, -n * LAYER_UP - 2.0) + tilt).round()
+	canopy.rotation = yaw
+	canopy.scale = Vector2(PX, PX * squash)
+	canopy.modulate = craft.modulate
+	driver.scale = Vector2(2, 2) * craft.scale.x
 	driver.modulate = craft.modulate
 	# its shadow: on the ground under it, or far below on the deep layer when it flies
 	var grounded := car_h < AIR_H * 0.5
@@ -920,7 +958,7 @@ func _place_craft() -> void:
 	flames.lift = lift + Vector2(0, -2.0 * LAYER_UP)
 	flames.heading = yaw
 	flames.power = boost
-	flames.on = state != State.WAIT or form == AIR
+	flames.on = state == State.DRIVE or (state == State.WAIT and form == AIR)
 	# the antenna: a wire up from its back left, leaning back and out; a ball on its tip
 	var corner := Vector2(-44, -24)
 	var base := craft.position + corner.rotated(yaw) + Vector2(0, -n * LAYER_UP)
@@ -928,6 +966,8 @@ func _place_craft() -> void:
 	var top := base + Vector2(0, -46) + lean
 	antenna.points = PackedVector2Array([base.round(), (base.lerp(top, 0.5) + lean * 0.15).round(), top.round()])
 	antenna_tip.position = top.round()
+	antenna.visible = state != State.FALL
+	antenna_tip.visible = antenna.visible
 
 # ================================================================== NODES
 
@@ -1003,6 +1043,8 @@ func _create_nodes() -> void:
 	driver.scale = Vector2(2, 2)
 	driver.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	front.add_child(driver)
+	canopy = _px_sprite(PalPrix2Art.canopy(), Vector2.ZERO)
+	front.add_child(canopy)
 	ring_front = Node2D.new()
 	world.add_child(ring_front)
 	gust_fx = PalPrix2Fx.Gusts.new()
@@ -1050,8 +1092,9 @@ func _create_nodes() -> void:
 		st.position = Vector2(HUD_BAND.position.x + 432 + i * 40, HUD_BAND.position.y + 10)
 		add_child(st)
 		hud_stars.append(st)
-	hud_chain = _label(Vector2(HUD_BAND.position.x + 560, HUD_BAND.position.y + 2), Vector2(100, 52), 32, HORIZONTAL_ALIGNMENT_LEFT, Color8(255, 214, 90))
-	hud_place = _label(Vector2(HUD_BAND.end.x - 190, HUD_BAND.position.y + 2), Vector2(120, 52), 32, HORIZONTAL_ALIGNMENT_RIGHT, light)
+	build_lives(Vector2(HUD_BAND.position.x + 566, HUD_BAND.position.y + 15), 30.0, 33.0)
+	hud_chain = _label(Vector2(HUD_BAND.position.x + 700, HUD_BAND.position.y + 2), Vector2(70, 52), 32, HORIZONTAL_ALIGNMENT_LEFT, Color8(255, 214, 90))
+	hud_place = _label(Vector2(HUD_BAND.end.x - 150, HUD_BAND.position.y + 2), Vector2(90, 52), 32, HORIZONTAL_ALIGNMENT_RIGHT, light)
 	boost_icon = TextureRect.new()
 	boost_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	boost_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -1171,6 +1214,7 @@ func _follow(amount: float) -> void:
 	deep_mat.set_shader_parameter("zoom", zoom)
 	deep_mat.set_shader_parameter("t", _t)
 	pops.view = view_rect()
+	beacons.craft = car_pos - Vector2(0, car_h)
 	speed_lines.k = clampf((speed - 700.0) / 600.0, 0.0, 1.0) * (0.6 if state == State.DRIVE else 0.0) + boost * 0.6
 	speed_lines.dir = Vector2.from_angle(heading)
 
@@ -1267,6 +1311,8 @@ func _process(frame_delta: float) -> void:
 				_go()
 		State.DRIVE:
 			_drive(delta)
+		State.FALL:
+			pass                                         # (the crash plays out: _crash's tween)
 		State.DONE:
 			# (over the line: it coasts on and slows down)
 			speed = move_toward(speed, 0.0, BRAKE * 0.4 * delta)
@@ -1313,6 +1359,15 @@ func _drive(delta_real: float) -> void:
 		target *= 1.08
 	if bump_t > 0.0:
 		target *= 1.0 - 0.55 * bump_t
+	var lat_now := (car_pos - course.centre[near]).dot(course.normal(near))
+	if form == SEA and absf(lat_now) > course.half_w - SHALLOW_IN and hop_t <= 0.0 and tf_t <= 0.0:
+		# past the buoys: the shallows, slowed, its hull scraping (a spray, a rumble)
+		target *= SHALLOW_SLOW
+		if _sfx_cd <= 0.0:
+			_sfx_cd = 0.12
+			Input.vibrate_handheld(6)
+			trail.spray(car_pos + course.normal(near) * signf(lat_now) * 18.0, heading, 2)
+	_grace_t = maxf(0.0, _grace_t - delta)
 	speed = move_toward(speed, target, (ACCEL if speed < target else BRAKE) * delta)
 	if wall_t > 0.0:
 		speed *= exp(-WALL_DRAG * delta)
@@ -1354,7 +1409,12 @@ func _drive(delta_real: float) -> void:
 	var was := progress
 	var was_near := near
 	_find_near()
-	_walls(delta)
+	if progress >= last_cp + course.count / CHECKPOINTS:
+		last_cp = floorf(progress / (course.count / CHECKPOINTS)) * (course.count / CHECKPOINTS)
+	var crash := _walls(delta)
+	if crash != "":
+		_crash(crash)
+		return
 	_transforms(was, delta)
 	_pads(was)
 	_jumps(was_near)
@@ -1398,14 +1458,27 @@ func _find_near() -> void:
 	progress += stp
 	near = best
 
-## The magnetic edges (the user: you stick to the walls and slow down, never fall off): pushed
-## back in, the way into the wall taken off its speed, sparks (spray on the water), a soft buzz
-func _walls(_delta: float) -> void:
+## The lane's edges: on land the magnetic walls (you stick to them and slow down, never fall off):
+## pushed back in, the way into the wall taken off its speed, sparks, a soft buzz. On the water
+## the bank past the shallows, in the air the lane's edge: a crash (returned: "shore" / "air")
+func _walls(_delta: float) -> String:
 	var n := course.normal(near)
 	var lat := (car_pos - course.centre[near]).dot(n)
+	if form != LAND and tf_t <= 0.0 and hop_t <= 0.0 and _grace_t <= 0.0:
+		if form == SEA and absf(lat) > course.half_w + SHORE_AT:
+			return "shore"
+		if form == AIR and absf(lat) > course.half_w * AIR_EDGE + AIR_OUT:
+			if bump_t > 0.2 or spin_t > 0.0:
+				# (just knocked by something in the way: the edge holds it in, one penalty is enough)
+				car_pos -= n * signf(lat) * (absf(lat) - course.half_w * AIR_EDGE - AIR_OUT)
+				vel -= n * signf(lat) * maxf(0.0, vel.dot(n * signf(lat)))
+				return ""
+			return "air"
+	if form != LAND:
+		return ""
 	var lim := course.half_w - WALL_IN
 	if absf(lat) <= lim:
-		return
+		return ""
 	var out := n * signf(lat)
 	car_pos -= out * (absf(lat) - lim)
 	var into := vel.dot(out)
@@ -1420,10 +1493,132 @@ func _walls(_delta: float) -> void:
 		_sfx_cd = 0.18
 		_sfx("res://sounds/fx/water_boing.wav" if form == SEA else "res://sounds/fx/wood_tap.wav", -14.0, 1.4 if form != SEA else 1.1)
 		Input.vibrate_handheld(12)
-	if form == SEA:
-		trail.spray(car_pos + out * 26.0, heading, 2)
+	trail.sparks(car_pos + out * 26.0 - Vector2(0, car_h), heading, 2, ACCENTS[world_no])
+	return ""
+
+## A crash (the bank, out of the air lane): a heart breaks (a splashy pal's water heart first: that
+## one undoes it on the spot) and the crowd near it screams; the jet ski runs up onto the bank and
+## stops, the rocket spins down into the depth; then it's back on the last checkpoint (the clock
+## goes on). The last heart: out (retry from the start)
+func _crash(kind: String) -> void:
+	if not splash_used and PetState.boost_power("splash") > 0:
+		splash_used = true
+		PetState.use_boost()
+		spend_water_heart()
+		car_pos = course.centre[near]
+		heading = course.direction(near).angle()
+		vel = Vector2.from_angle(heading) * speed * 0.6
+		_grace_t = 1.0
+		trail.spray(car_pos, heading, 14)
+		_sfx("res://sounds/fx/water_boing.wav", -8.0)
+		_show_banner("splash!", 0.5)
+		Input.vibrate_handheld(40)
+		return
+	falls += 1
+	var last := lose_life()
+	if qa_autopilot:
+		print("QA crash %d: %s at %.1f s near %d/%d lat %.0f speed %.0f gates %s straight %s" % [level, kind, race_time, near, course.count, (car_pos - course.centre[near]).dot(course.normal(near)), speed, str(course.gates.map(func(g): return [g["i"], g["from"], g["to"]])), course.straight(near, 6, 6)])
+	if crowd.visible:
+		crowd.scream(car_pos)
+	state = State.FALL
+	motor.stop()
+	drift_ang = 0.0
+	drift_level = 0
+	boost = 0.0
+	chain = 0
+	Input.vibrate_handheld(80)
+	var from := car_pos
+	var out := (car_pos - course.centre[near]).normalized()
+	var h0 := heading
+	var t := create_tween()
+	if kind == "shore":
+		_sfx("res://sounds/fx/wood_tap.wav", -6.0, 0.5)
+		_sfx("res://sounds/fx/rc_land.wav", -10.0, 0.8)
+		trail.spray(car_pos, heading, 10)
+		t.tween_method(func(f: float):
+			car_pos = from + out * 30.0 * (1.0 - pow(1.0 - minf(1.0, f * 3.0), 2.0))
+			heading = h0 + sin(f * TAU * 2.0) * 0.35 * (1.0 - f)
+			craft.modulate = Color(1, 1, 1).lerp(Color(1, 1, 1, 0.0), maxf(0.0, f - 0.6) / 0.4), 0.0, 1.0, 0.75)
 	else:
-		trail.sparks(car_pos + out * 26.0 - Vector2(0, car_h), heading, 2, ACCENTS[world_no])
+		_sfx("res://sounds/fx/sfx_sounds_falling4.wav", -10.0)
+		var h1 := car_h
+		t.tween_method(func(f: float):
+			heading = h0 + f * TAU * 2.0
+			car_h = h1 - f * f * 150.0
+			craft.modulate = Color(1, 1, 1).lerp(Color(0.5, 0.5, 0.6, 0.0), f * f)
+			craft.scale = Vector2.ONE * (1.0 - 0.6 * f), 0.0, 1.0, 0.8)
+	t.tween_interval(0.35)
+	t.tween_callback(_out_of_lives if last else _respawn)
+
+## Back on the last checkpoint, in that stretch's form, pointing down the course, blinking
+func _respawn() -> void:
+	var i := int(fposmod(last_cp, course.count))
+	car_pos = course.centre[i]
+	heading = course.direction(i).angle()
+	speed = SPEED[course.kind_at(i)] * 0.5
+	vel = Vector2.from_angle(heading) * speed
+	near = i
+	progress = last_cp
+	form = course.kind_at(i)
+	tf_t = 0.0
+	hop_t = 0.0
+	_set_form(form, 1.0)
+	car_h = AIR_H if form == AIR else 0.0
+	craft.modulate = Color(1, 1, 1)
+	craft.scale = Vector2.ONE
+	trail.marks.clear()
+	held = [false, false]
+	_grace_t = 1.2
+	state = State.DRIVE
+	motor.play()
+	var blink := create_tween()
+	for k in 3:
+		blink.tween_property(craft, "modulate:a", 0.25, 0.08)
+		blink.tween_property(craft, "modulate:a", 1.0, 0.08)
+
+## The last heart broke: the race is over (its result card: Out of lives!, retry from the start)
+func _out_of_lives() -> void:
+	state = State.DONE
+	motor.stop()
+	if qa_autopilot:
+		print("QA race %d (%s) OUT OF LIVES at %.1f lap %d" % [level, WORLDS[world_no], race_time, lap])
+	_show_banner("Out of lives!", 0.9)
+	_sfx("res://sounds/fx/error.mp3", -10.0)
+	get_tree().create_timer(1.4).timeout.connect(func():
+		if is_running:
+			finish_level(level, 0, race_time))
+
+func fail_title() -> String:
+	return "Out of lives!"
+
+## A life on the HUD: a little turbo craft, red when it's there, blue for the splashy pal's extra,
+## a faded grey one lost (13 x 11 px, outlined like the hearts)
+const LIFE_ROWS := [
+	"....####.....",
+	"...#llll#....",
+	"..#lmmmmm##..",
+	"#####mmmmmm#.",
+	"#ll#ggmmmmmd#",
+	"#mm#ggmmmmmd#",
+	"#####mmmmmd#.",
+	"..#mmmmmdd#..",
+	"...#dddd#....",
+	"....####.....",
+	".............",
+]
+var _life_icons := {}
+func life_icon(kind: String) -> Texture2D:
+	if _life_icons.has(kind):
+		return _life_icons[kind]
+	var tone: Array = {
+		"full": [Color8(255, 150, 130), Color8(226, 70, 64), Color8(170, 44, 48)],
+		"water": [Color8(214, 240, 255), Color8(110, 178, 236), Color8(56, 116, 196)],
+		"empty": [UiArt.EMPTY.lightened(0.12), UiArt.EMPTY, UiArt.EMPTY_DARK],
+	}[kind]
+	var tex := PalPrix2Art.rows_texture(LIFE_ROWS, { "#": UiArt.OUTLINE, "l": tone[0], "m": tone[1], "d": tone[2],
+		"g": Color8(150, 230, 255) if kind != "empty" else UiArt.EMPTY.lightened(0.2) })
+	_life_icons[kind] = tex
+	return tex
 
 ## The drift boost: holding one button through a long bend charges it (blue, orange, pink sparks
 ## off its back), letting go fires it. A wall breaks it.
@@ -1716,11 +1911,15 @@ func _autopilot() -> float:
 			first = di2
 			var ob_lat := ((ob["pos"] as Vector2) - course.centre[oi]).dot(course.normal(oi))
 			lat = ob_lat - signf(ob_lat if ob_lat != 0.0 else 1.0) * (float(ob["r"]) + CRAFT_R + 40.0)
+	for w in wells:
+		var to_w: Vector2 = (w["pos"] as Vector2) - car_pos
+		if to_w.length() < float(w["r"]) + 200.0:
+			lat -= signf(to_w.dot(course.normal(near))) * 90.0      # (leaning away from its pull)
 	for g in course.gates:
 		var dg := posmod(int(g["i"]) - near, course.count)
 		if dg > 0 and dg < 40:
 			lat = 0.0
-	var limit := course.half_w - WALL_IN - 20.0
+	var limit := course.half_w - (SHALLOW_IN + 40.0 if form == SEA else WALL_IN + 20.0)
 	aim += course.normal(ai) * clampf(lat, -limit, limit)
 	var want := (aim - car_pos).angle()
 	if form == SEA:
@@ -1771,6 +1970,9 @@ func _qa_start_at() -> void:
 				at = int(course.gates[1]["i"])
 		"secret":
 			at = int(secret.get("at", -1))
+		_:
+			if want.is_valid_int():
+				at = int(want)
 	if at < 0:
 		print("QA at=%s: none on level %d" % [want, level])
 		return
@@ -1830,6 +2032,8 @@ func _spawn_rivals() -> void:
 			sl.append(spr)
 		var helmet := _px_sprite(_helmet_texture(PalPrix2Art.BODY_COLS[RIVAL_COLS[j]][0]), Vector2.ZERO, 2)
 		node.add_child(helmet)
+		var cab := _px_sprite(PalPrix2Art.canopy(), Vector2.ZERO)
+		node.add_child(cab)
 		var ant := Line2D.new()
 		ant.width = 4.0
 		ant.default_color = Color8(40, 30, 40)
@@ -1843,7 +2047,7 @@ func _spawn_rivals() -> void:
 		var tr: Dictionary = RIVAL_TIERS[tier]
 		rivals.append({ "node": node, "slices": sl, "helmet": helmet, "ant": ant, "ant_tip": ant_tip, "col": RIVAL_COLS[j],
 			"progress": -float(8 + j * 7), "lane": lane, "lane_now": lane, "tier": tier, "speed_k": float(tr["speed"]) * (1.0 + 0.004 * k),
-			"heading": 0.0, "pos": Vector2.ZERO, "done": false, "kind": -1, "dodge": {}, "spin": 0.0, "phase": randf() * TAU,
+			"heading": 0.0, "pos": Vector2.ZERO, "done": false, "kind": -1, "dodge": {}, "spin": 0.0, "cab": cab, "phase": randf() * TAU,
 			"wander_hz": randf_range(0.25, 0.5), "slip_t": 0.0, "react": float(tr["react"]) + randf_range(0.0, 0.15),
 			"next_slip": randf_range(float(tr["slip_every"]) * 0.5, float(tr["slip_every"]) * 1.5), "h": 0.0, "v": 0.0 })
 	_place_rivals()
@@ -1881,6 +2085,8 @@ func _place_rivals() -> void:
 			spr.rotation = hd + spin_a
 			spr.position = Vector2(0, -li * LAYER_UP).round()
 		(r["helmet"] as Sprite2D).position = Vector2.from_angle(hd + spin_a) * PalPrix2Art.SEAT * PX + Vector2(0, -n_sl * LAYER_UP - 4.0)
+		(r["cab"] as Sprite2D).position = (Vector2.from_angle(hd + spin_a) * (PalPrix2Art.SEAT + 1.5) * PX + Vector2(0, -n_sl * LAYER_UP - 2.0)).round()
+		(r["cab"] as Sprite2D).rotation = hd + spin_a
 		var corner := Vector2(-44, -24)
 		var base := corner.rotated(hd + spin_a) + Vector2(0, -n_sl * LAYER_UP)
 		var top := base + Vector2(0, -46) + Vector2.from_angle(hd) * -12.0

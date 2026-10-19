@@ -138,7 +138,8 @@ To build:
   (Earth to space and back: the launch coast, the ocean, the sky turning into space with Saturn).
   Each world's 4th and 7th levels bring a thing: boost chains, jumps over roof gaps · waterfall
   steps, rocks · boost rings, canyon winds · icy roads, icebergs · asteroids, gravity wells ·
-  slingshots round moons. No hearts (a race always finishes); stars: the 3 laps, the par time (with
+  slingshots round moons. Hearts (the user, 2026-10-19): magnetic walls on land, but on the water
+  Pal Prix's boat rules (buoys, shallows, the bank a crash) and out of the air lane a crash; stars: the 3 laps, the par time (with
   rivals: 1st), the turbo time (the boosts' time). Secrets: 2-6 (fizzy: a gift over a waterfall
   step), 3-6 (sturdy: crates on the road), 4-6 (lucky), 5-6 Moon Rock (sturdy), 6-6 Stardust Sugar
   (lucky). QA: tools/qa/shoot.sh game=11 ... at=jump|step|pad|ring|rock|berg|asteroid|well|sling|

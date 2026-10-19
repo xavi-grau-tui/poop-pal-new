@@ -366,6 +366,69 @@ static func sparkle() -> Texture2D:
 		], { "#": Color8(120, 80, 30), "w": Color8(255, 250, 220), "y": Color8(255, 220, 110) })
 	return _cache["sparkle"]
 
+## A buoy as a stack of round slices, bottom first (Pal Prix's, in a futuristic colour): its dark
+## waterline, its body, a white band, its lit top, a glowing cap; 7 px across
+static func buoy_slices(c: Color) -> Array[Texture2D]:
+	var key := "buoy_%s" % c.to_html()
+	if _cache.has(key):
+		return _cache[key]
+	var w := Color8(240, 246, 255)
+	var out: Array[Texture2D] = []
+	for kind in 5:
+		var img := Image.create(7, 7, false, Image.FORMAT_RGBA8)
+		var rr := 3.6 if kind < 4 else 1.7
+		var cen := Vector2(3.5, 3.5) if kind < 4 else Vector2(3.0, 3.0)
+		for y in 7:
+			for x in 7:
+				var o := Vector2(x + 0.5, y + 0.5) - cen
+				var d := o.length()
+				if d > rr:
+					continue
+				var rim := d > rr - 1.0
+				var lit := o.x + o.y < -1.2
+				var shade := o.x + o.y > 1.6
+				var col: Color
+				match kind:
+					0:
+						col = Color8(20, 30, 60, 140)
+					1:
+						col = OUTLINE if rim else Color8(56, 60, 84)
+					2:
+						col = OUTLINE if rim else (w if lit else (Color8(190, 200, 220) if shade else Color8(222, 228, 240)))
+					3:
+						col = OUTLINE if rim else (c.lightened(0.45) if lit else (c.darkened(0.25) if shade else c))
+					_:
+						col = Color(1, 1, 1) if o.x + o.y < 0.0 else c.lightened(0.5)
+				img.set_pixel(x, y, col)
+		out.append(ImageTexture.create_from_image(img))
+	_cache[key] = out
+	return out
+
+## The glass cabin over the pal (space-age, the user 2026-10-19): a bubble canopy over the seat
+## and the windscreen, see-through tinted glass, a dark rim, glints top left; 13 x 9 px
+static func canopy() -> Texture2D:
+	if _cache.has("canopy"):
+		return _cache["canopy"]
+	var img := Image.create(13, 9, false, Image.FORMAT_RGBA8)
+	for y in 9:
+		for x in 13:
+			var o := Vector2((x + 0.5 - 6.5) / 6.5, (y + 0.5 - 4.5) / 4.5)
+			var d := o.length()
+			if d > 1.0:
+				continue
+			var col := Color(0.62, 0.9, 1.0, 0.3)
+			if d > 0.8:
+				col = Color8(36, 44, 72)
+			elif o.x + o.y < -0.75 and d < 0.72 and d > 0.4:
+				col = Color(1, 1, 1, 0.8)
+			elif absf(o.x + o.y + 0.05) < 0.14 and d < 0.78:
+				col = Color(1, 1, 1, 0.38)                   # (a glare across the glass)
+			elif o.x > 0.45 and absf(o.y) < 0.3:
+				col = Color(0.75, 0.95, 1.0, 0.5)
+			img.set_pixel(x, y, col)
+	_cache["canopy"] = ImageTexture.create_from_image(img)
+	return _cache["canopy"]
+
 ## Rows of characters -> a texture (a colour per character, "." = clear)
 static func rows_texture(rows: Array, cols: Dictionary) -> Texture2D:
 	var w := 0

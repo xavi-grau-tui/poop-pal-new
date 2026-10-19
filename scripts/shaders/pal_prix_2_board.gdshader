@@ -846,6 +846,17 @@ vec4 ground(vec2 lp) {
 	if (water) {
 		float ed2 = (space ? rs - hs.d : rs - hs.d);
 		g = water_px(bp, hs, ed2);
+		// past the buoys (Pal Prix's boat rules): the shallows, lighter, then the bank: a crash
+		float past = hs.d - hw;
+		if (past > 0.0 && past < 18.0) {
+			g = mix(g, world == 4 ? c8(150.0, 110.0, 220.0) : vec3(1.0), 0.14 + 0.1 * past / 18.0);
+		} else if (past >= 18.0 && past < 22.0) {
+			float q = past - 18.0;
+			if (q < 0.9 || q > 3.1) g = OUTLINE;
+			else if (world == 0) g = mod(floor((hs.along * 2.0 + q) / 3.0), 2.0) < 1.0 ? c8(250.0, 210.0, 70.0) : c8(40.0, 36.0, 48.0);
+			else if (world == 4) g = mix(c8(255.0, 90.0, 220.0), vec3(1.0), 0.4 * sin(t * 4.0 + hs.along * 0.3) + 0.3);
+			else g = shore_px(bp, q + 1.0);
+		}
 		// a waterfall step across the river (a jump): the white lip, the water falling (moving),
 		// the dark drop at its foot
 		for (int j2 = 0; j2 < n_gaps; j2++) {

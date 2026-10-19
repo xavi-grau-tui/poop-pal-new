@@ -150,31 +150,44 @@ class SpeedLines extends Node2D:
 
 # ================================================================== THE LANES
 
-## The sea lanes' edges: neon buoys bobbing on the swell, their lights pulsing (the user liked
-## Pal Prix's buoys reacting to the boat): a hull touching one carries it along, it swings back
-## on a spring once the craft has gone, ripples round it while it moves
+## The sea lanes' edges: Pal Prix's floating buoys (the user, 2026-10-19: like the boat races,
+## the same behaviour, futuristic colours): round stacked slices standing out of the water, a
+## light on the cap; a hull touching one carries it along at its edge (it leans away, a soft
+## bonk), and once the craft has gone it swings back on a spring, wobbling, ripples round it; a
+## light swell bobs them along the line, now and then one rocks
 class Buoys extends Node2D:
-	const REACH := 40.0
+	const REACH := 36.0
 	const SPRING := 22.0
 	const DAMP := 4.0
-	const MAX_OFF := 50.0
+	const MAX_OFF := 48.0
+	const UP := 3.0
 	var rest := PackedVector2Array()
 	var off := PackedVector2Array()
 	var vel := PackedVector2Array()
-	var col: Array[Color] = []
+	var lean := PackedVector2Array()
+	var touched: Array[bool] = []
+	var which: Array[bool] = []
+	var slices := {}
 	var t := 0.0
 	func setup(spots: Array, a: Color, b: Color) -> void:
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		rest.clear()
 		off.clear()
 		vel.clear()
-		col.clear()
+		lean.clear()
+		touched.clear()
+		which.clear()
 		for sp in spots:
 			rest.append(sp[0])
 			off.append(Vector2.ZERO)
 			vel.append(Vector2.ZERO)
-			col.append(a if sp[1] else b)
+			lean.append(Vector2.ZERO)
+			touched.append(false)
+			which.append(bool(sp[1]))
+		slices = { true: PalPrix2Art.buoy_slices(a), false: PalPrix2Art.buoy_slices(b) }
 		visible = not rest.is_empty()
 		queue_redraw()
+	## Moves them; returns how many the craft has just bumped into (for the bonk)
 	func update(delta: float, hulls: Array) -> int:
 		if rest.is_empty():
 			return 0
@@ -189,47 +202,59 @@ class Buoys extends Node2D:
 				if dd < REACH and off[i].length() < MAX_OFF:
 					var away := to / dd if dd > 0.01 else Vector2.RIGHT
 					p = (hl[0] as Vector2) + away * REACH
-					if vel[i].length() < 40.0 and hl[2]:
-						bumps += 1
 					vel[i] = (hl[1] as Vector2) * 0.5 + away * 60.0
+					lean[i] = lean[i].lerp(away * 7.0, minf(1.0, delta * 14.0))
 					held = true
+					if hl[2] and not touched[i] and (hl[1] as Vector2).length() > 120.0:
+						bumps += 1
+					if hl[2]:
+						touched[i] = true
 			if held:
 				off[i] = p - rest[i]
 			else:
+				touched[i] = touched[i] and off[i].length() > 6.0
 				vel[i] += -off[i] * SPRING * delta
 				vel[i] *= exp(-DAMP * delta)
 				off[i] += vel[i] * delta
+				lean[i] = lean[i].lerp(-vel[i] * 0.04, minf(1.0, delta * 8.0)).limit_length(7.0)
 			if off[i].length() > MAX_OFF:
 				off[i] = off[i].normalized() * MAX_OFF
 		queue_redraw()
 		return bumps
 	func _draw() -> void:
 		for i in rest.size():
-			var p := PalPrix2Fx.snap(rest[i] + off[i])
 			var moving := vel[i].length() > 10.0 or off[i].length() > 3.0
+			var p := PalPrix2Fx.snap(rest[i] + off[i])
 			if moving:
 				var ring := 4.0 * (4.0 + roundf(fposmod(t * 6.0 + i, 3.0)))
 				for a in 10:
 					var q := PalPrix2Fx.snap(p + Vector2.from_angle(a * TAU / 10.0) * ring)
-					draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, 0.4))
-			var bob := -4.0 if sin(t * 1.7 - float(i) * 0.45) > 0.4 else 0.0
-			var c := col[i]
-			var pulse := 0.5 + 0.5 * sin(t * 4.0 - float(i) * 0.6)
-			# its glow on the water, its body (dark, outlined), its light on top
-			draw_rect(Rect2(p - Vector2(12, 4), Vector2(24, 12)), Color(c.r, c.g, c.b, 0.18 + 0.12 * pulse))
-			draw_rect(Rect2(p + Vector2(-10, -14 + bob), Vector2(20, 18)), OUTLINE)
-			draw_rect(Rect2(p + Vector2(-6, -10 + bob), Vector2(12, 10)), Color8(70, 74, 96))
-			draw_rect(Rect2(p + Vector2(-6, -10 + bob), Vector2(4, 4)), Color8(130, 134, 160))
-			draw_rect(Rect2(p + Vector2(-6, -22 + bob), Vector2(12, 12)), OUTLINE)
-			draw_rect(Rect2(p + Vector2(-2, -18 + bob), Vector2(4, 4)), c.lerp(Color(1, 1, 1), 0.5 * pulse))
-			draw_rect(Rect2(p + Vector2(-2, -14 + bob), Vector2(4, 4)), c)
+					draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, 0.45))
+			var ph := t * 1.7 - float(i) * 0.45
+			var sw := sin(ph)
+			var bob := (-4.0 if sw > 0.45 else (4.0 if sw < -0.55 else 0.0)) * (1.5 if moving else 1.0)
+			var rock := Vector2.ZERO
+			if not moving and sin(t * 0.7 + float(i) * 2.3) > 0.93:
+				rock = Vector2(4.0 if sin(t * 5.0 + float(i)) > 0.0 else -4.0, 0)
+			var sl: Array = slices[which[i]]
+			for k in sl.size():
+				var tx: Texture2D = sl[k]
+				var f := float(k) / float(sl.size() - 1)
+				var at := p + Vector2(0, bob * f - k * UP) + (lean[i] + rock) * f
+				draw_texture_rect(tx, Rect2(at.round() - Vector2(14, 14), tx.get_size() * 4.0), false)
+			# its light blinking on the cap, down the line one after another
+			if fposmod(t * 2.0 - float(i) * 0.15, 2.0) < 0.5:
+				var top := p + Vector2(0, bob - (sl.size() - 1) * UP) + lean[i] + rock
+				draw_rect(Rect2(top.round() - Vector2(8, 8), Vector2(16, 16)), Color(1, 1, 1, 0.25))
 
-## The air lanes' edges: little floating beacons both sides of the way, their lights running in
-## a chase towards where to go (the user: the way has to be easy to read), a soft beam under each
+## The air lanes' edges (the user: no buoys in the air): a thin holographic dotted line along each
+## side at the rocket's height, a light running along it the way to go; it turns red where the
+## craft comes close (past it: out of the race, a heart)
 class Beacons extends Node2D:
 	var spots: Array = []                 # [position, along (points), side]
 	var t := 0.0
 	var col := Color8(255, 90, 220)
+	var craft := Vector2(-1e9, -1e9)
 	func setup(s: Array, c: Color) -> void:
 		spots = s
 		col = c
@@ -239,19 +264,22 @@ class Beacons extends Node2D:
 		if visible:
 			queue_redraw()
 	func _draw() -> void:
+		var warn := Color8(255, 70, 70)
 		for s in spots:
 			var p := PalPrix2Fx.snap(s[0])
-			var ph := fposmod(float(s[1]) / 20.0 - t * 3.0, 4.0)
-			var on := ph < 1.0
-			var bob := roundf(sin(t * 2.0 + float(s[1]) * 0.1) * 1.0) * 4.0
-			if on:
-				draw_rect(Rect2(p + Vector2(-20, -20 + bob), Vector2(40, 40)), Color(col.r, col.g, col.b, 0.16))
-				draw_rect(Rect2(p + Vector2(-16, -16 + bob), Vector2(32, 32)), Color(col.r, col.g, col.b, 0.2))
-			draw_rect(Rect2(p + Vector2(-12, -12 + bob), Vector2(24, 24)), OUTLINE)
-			draw_rect(Rect2(p + Vector2(-8, -8 + bob), Vector2(16, 16)), Color8(56, 60, 84))
-			draw_rect(Rect2(p + Vector2(-4, -4 + bob), Vector2(8, 8)), col if on else col.darkened(0.35))
-			if on:
-				draw_rect(Rect2(p + Vector2(-4, -4 + bob), Vector2(4, 4)), Color(1, 1, 1))
+			var d := p.distance_to(craft)
+			var run := fposmod(float(s[1]) / 24.0 - t * 2.5, 3.0) < 0.35
+			var c := col
+			if d < 160.0:
+				c = warn.lerp(Color(1, 1, 1), 0.3 if int(t * 10.0) % 2 == 0 else 0.0)
+			var a := 0.7 if not run else 1.0
+			if d < 160.0:
+				a = 1.0
+			draw_rect(Rect2(p - Vector2(8, 8), Vector2(16, 16)), Color(c.r, c.g, c.b, 0.18 if not run else 0.35))
+			draw_rect(Rect2(p - Vector2(6, 6), Vector2(12, 12)), Color(0.08, 0.06, 0.16, 0.5))
+			draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color(c.r, c.g, c.b, a))
+			if run or d < 160.0:
+				draw_rect(Rect2(p - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, a))
 
 ## A transform gate: a curtain of light across the lane between two glowing posts, chevrons in it
 ## flowing the way to go, the new form's sign floating over the middle (a wave, wings, a wheel),

@@ -148,7 +148,7 @@ and its finale; the details are in each game's script header.)
   bought; Pal Prix 6-9 opens it): one craft that turns from a hover car to a jet ski to a rocket at
   gates on the course. 1 Neon City (land + sea) · 2 Rapids (sea + air) · 3 Canyon (land + air) ·
   4 Ice Fjord (all three) · 5 Asteroid Belt (with rivals) · 6 Saturn's Rings (Earth to space and
-  back). Faster, not harder: no hearts, magnetic walls, boosts (chains, drift, slipstream);
+  back). Faster, not harder: magnetic walls on land, hearts on the water and in the air (the user), boosts (chains, drift, slipstream);
   stars = the laps, the par (1st with rivals), the turbo time.
 - Tummy Tunes (LATER; one toy instrument per world, loved by the user): 1 Toy Xylophone (single
   notes on the beat) · 2 Toy Piano (chords: two buttons at once) · 3 Toy Drums (holds and rolls) ·
