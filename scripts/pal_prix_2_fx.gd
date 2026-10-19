@@ -253,9 +253,11 @@ class Beacons extends Node2D:
 			if on:
 				draw_rect(Rect2(p + Vector2(-4, -4 + bob), Vector2(4, 4)), Color(1, 1, 1))
 
-## A transform gate's arch over the lane: two pylons at its edges, a beam across with chevrons
-## flowing the way to go, the new form's sign (a wave, wings, a wheel) over the middle, glowing in
-## its colour (water cyan, air pink, land gold); flown under, it flashes
+## A transform gate: a curtain of light across the lane between two glowing posts, chevrons in it
+## flowing the way to go, the new form's sign floating over the middle (a wave, wings, a wheel),
+## all in its colour (water cyan, air pink, land gold); flown through, it flashes. Lying across
+## the lane it reads the same whichever way the course runs (an arch standing up turned into a
+## pole when the lane ran across the screen)
 class Gate extends Node2D:
 	var a := Vector2.ZERO                 # its two feet (mat px)
 	var b := Vector2.ZERO
@@ -270,29 +272,36 @@ class Gate extends Node2D:
 		queue_redraw()
 	func _draw() -> void:
 		var c: Color = COLS[to]
-		var lift := Vector2(0, -64)
-		# the pylons
-		for f in [a, b]:
-			var p := PalPrix2Fx.snap(f)
-			draw_rect(Rect2(p + Vector2(-10, -72), Vector2(20, 76)), OUTLINE)
-			draw_rect(Rect2(p + Vector2(-6, -68), Vector2(12, 68)), Color8(70, 74, 100))
-			draw_rect(Rect2(p + Vector2(-6, -68), Vector2(4, 68)), Color8(120, 126, 156))
-			draw_rect(Rect2(p + Vector2(-2, -60), Vector2(4, 48)), c.darkened(0.2))
-		# the beam across, chevrons flowing along it
+		if flash > 0.0:
+			c = c.lerp(Color(1, 1, 1), flash)
 		var span := b - a
-		var n := int(span.length() / 8.0)
+		var across := span.normalized()
+		var n := int(span.length() / 4.0)
+		# the curtain: a band of light across the lane, scanlines running through it, chevrons
+		# pointing the way
 		for k in n + 1:
-			var q := PalPrix2Fx.snap(a.lerp(b, float(k) / float(maxi(n, 1))) + lift)
-			draw_rect(Rect2(q - Vector2(6, 10), Vector2(12, 20)), OUTLINE)
-		for k in n + 1:
-			var q2 := PalPrix2Fx.snap(a.lerp(b, float(k) / float(maxi(n, 1))) + lift)
-			var run := fposmod(float(k) * 0.25 - t * 3.0, 2.0) < 1.0
-			var cc := c if run else c.darkened(0.45)
-			if flash > 0.0:
-				cc = cc.lerp(Color(1, 1, 1), flash)
-			draw_rect(Rect2(q2 - Vector2(2, 6), Vector2(4, 12)), cc)
-		# the sign in the middle: the form it turns you into
-		var m := PalPrix2Fx.snap((a + b) / 2.0 + lift + Vector2(0, -28))
+			var f := float(k) / float(maxi(n, 1))
+			var base := a.lerp(b, f)
+			for u in range(-3, 4):
+				var q := PalPrix2Fx.snap(base + dir * u * 4.0)
+				var scan := fposmod(float(k) * 0.5 - t * 6.0, 4.0) < 1.0
+				var a2 := 0.22 + (0.2 if scan else 0.0) + 0.25 * flash
+				draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(c.r, c.g, c.b, a2))
+		for k2 in range(2, n - 1, 9):
+			var mid := a.lerp(b, float(k2) / float(maxi(n, 1))) + dir * (fposmod(t * 40.0, 16.0) - 8.0)
+			for arm in range(-2, 3):
+				var q2 := PalPrix2Fx.snap(mid - dir * absf(arm) * 4.0 + across * arm * 4.0)
+				draw_rect(Rect2(q2 - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, 0.75))
+		# the posts: dark, outlined, a glowing core, standing up a little
+		for f2 in [a, b]:
+			var p := PalPrix2Fx.snap(f2)
+			draw_rect(Rect2(p + Vector2(-12, -44), Vector2(24, 52)), OUTLINE)
+			draw_rect(Rect2(p + Vector2(-8, -40), Vector2(16, 44)), Color8(62, 66, 92))
+			draw_rect(Rect2(p + Vector2(-8, -40), Vector2(4, 44)), Color8(116, 122, 152))
+			draw_rect(Rect2(p + Vector2(-4, -36), Vector2(8, 28)), c)
+			draw_rect(Rect2(p + Vector2(-4, -36), Vector2(4, 8)), Color(1, 1, 1))
+		# the sign over the middle: the form it turns you into
+		var m := PalPrix2Fx.snap((a + b) / 2.0 + Vector2(0, -56) + Vector2(0, roundf(sin(t * 3.0)) * 4.0))
 		draw_rect(Rect2(m - Vector2(22, 18), Vector2(44, 36)), OUTLINE)
 		draw_rect(Rect2(m - Vector2(18, 14), Vector2(36, 28)), Color8(30, 34, 54))
 		var ic := c.lerp(Color(1, 1, 1), 0.3 + 0.3 * sin(t * 5.0))

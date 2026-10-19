@@ -77,10 +77,11 @@ const Z_START := 1.5                   # the view: close at the start...
 const Z_NEAR := 1.36                   # ...pulling back with the speed...
 const Z_FAR := 1.0                     # ...to this at a big boost
 const GUST_PUSH := 240.0
-const WELL_PULL := 900.0
+const WELL_PULL := 650.0
 const PAR_SLACK := 1.05
 const PAR_PLUS := 1.0
-const TURBO_K := 0.94                  # the turbo time: the clean drive's time x this (boosts needed)
+const TURBO_K := 0.965                 # the turbo time: the clean drive's time x this (boosts needed)
+const ICE_SLACK := 1.07                # (icy roads: the par a little longer, the craft slides)
 
 const WORLDS := ["Neon City", "Rapids", "Canyon", "Ice Fjord", "Asteroid Belt", "Saturn's Rings"]
 ## Each world's kinds, in lap order (the start's first), and their share of the lap
@@ -182,9 +183,9 @@ const FINALES := { 45: "coins:30", 54: "coins:60" }
 ## The rivals' tiers (Pal Prix's): pace (x the form's speed), braking in the bends, wandering,
 ## mistakes (a moment slow, every this many s; 0 never), the green light, steering round things
 const RIVAL_TIERS := [
-	{ "speed": 0.9, "corner": 0.4, "wander": 0.22, "slip_every": 9.0, "react": 0.5, "dodge": 0.55 },
-	{ "speed": 0.96, "corner": 0.25, "wander": 0.13, "slip_every": 15.0, "react": 0.3, "dodge": 0.8 },
-	{ "speed": 1.03, "corner": 0.1, "wander": 0.05, "slip_every": 0.0, "react": 0.12, "dodge": 0.97 },
+	{ "speed": 0.88, "corner": 0.4, "wander": 0.22, "slip_every": 9.0, "react": 0.5, "dodge": 0.55 },
+	{ "speed": 0.94, "corner": 0.25, "wander": 0.13, "slip_every": 15.0, "react": 0.3, "dodge": 0.8 },
+	{ "speed": 0.99, "corner": 0.1, "wander": 0.05, "slip_every": 0.0, "react": 0.12, "dodge": 0.97 },
 ]
 const RIVAL_COLS := ["blue", "yellow", "green"]
 
@@ -470,8 +471,9 @@ func _par_times() -> void:
 	for i in course.count:
 		lap_t += STEP / float(SPEED[course.kinds[i]])
 	var clean := lap_t * LAPS + 0.6                     # (+ getting going off the line)
-	par = ceilf(clean * PAR_SLACK + PAR_PLUS)
-	turbo = floorf(clean * TURBO_K)
+	var slack := ICE_SLACK if ice else 1.0
+	par = ceilf(clean * PAR_SLACK * slack + PAR_PLUS)
+	turbo = floorf(clean * TURBO_K * slack)
 
 # ================================================================== THE COURSE'S THINGS
 
@@ -1882,9 +1884,9 @@ func _update_rivals(delta: float) -> void:
 			var gap: float = float(r["progress"]) - progress
 			var k := 1.0
 			if gap > c * 0.12:
-				k = 0.94
+				k = 0.92
 			elif gap < -c * 0.12:
-				k = 1.07
+				k = 1.06
 			var ri := posmod(int(r["progress"]), c)
 			var bend := absf(wrapf(course.direction(ri + 7).angle() - course.direction(ri).angle(), -PI, PI))
 			k *= 1.0 - float(tr["corner"]) * clampf(bend, 0.0, 1.0)

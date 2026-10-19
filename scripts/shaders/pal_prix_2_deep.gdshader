@@ -190,8 +190,8 @@ void fragment() {
 		vec2 cell = floor(bp / 14.0);
 		vec2 cen = (cell + vec2(0.3 + 0.4 * hash3(cell, 61.0), 0.3 + 0.4 * hash3(cell, 62.0))) * 14.0;
 		if (hash3(cell, 65.0) < 0.16 && length(bp + 0.5 - cen) < 1.2 + hash3(cell, 63.0) * 2.2) col = c8(170.0, 196.0, 222.0);
-		float sh = sin(bp.x * 0.04 + t * 0.3) * sin(bp.y * 0.05 - t * 0.2);
-		if (sh > 0.75 && bayer(bp) < 0.5) col = mix(col, c8(80.0, 220.0, 160.0), 0.3);
+		float sh = sin(bp.y * 0.4 + sin(bp.x * 0.025 + t * 0.4) * 3.0);
+		if (sh > 0.97 && mod(bp.x, 4.0) < 2.0) col = mix(col, c8(80.0, 220.0, 160.0), 0.22);
 		col = mix(col, c8(90.0, 120.0, 160.0), 0.2);
 	} else if (world == 4) {
 		col = space(rel, bp);

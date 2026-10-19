@@ -585,7 +585,7 @@ vec3 shore_px(vec2 bp, float out_d) {
 
 vec4 face_px(vec2 bp, float u, bool waterfall) {
 	// u: px below the edge (0 = the lip). The rock (or the falling water) going down into haze
-	float k = u / face_h;
+	float k = u / max(face_h, 1.0);
 	vec3 col;
 	if (waterfall) {
 		float x = bp.x;
@@ -802,8 +802,8 @@ vec4 ground(vec2 lp) {
 			}
 		} else if (has_air && !ha.cut && ha.n.y < -0.05) {
 			float u2 = (ra - ha.d) / (-ha.n.y);
-			if (u2 < face_h) {
-				bool wf = has_sea && !hs.cut && hs.d < rs + u2 + 2.0;
+			if (u2 >= 0.0 && u2 < face_h) {
+				bool wf = world != 5 && has_sea && !hs.cut && hs.d < rs + u2 + 2.0;   // (no sea pours into space)
 				col = face_px(bp, u2, wf);
 			}
 		}
@@ -824,17 +824,19 @@ vec4 ground(vec2 lp) {
 				float u4 = s / gd.y;
 				bool before_high = to == AIR;
 				if (u4 >= 0.0 && u4 < face_h && ((before_high && gd.y > 0.0 && s >= 0.0) || (!before_high && gd.y < 0.0 && s <= 0.0))) {
-					col = face_px(bp, u4, (before_high ? from : to) == SEA);
+					col = face_px(bp, u4, world != 5 && (before_high ? from : to) == SEA);
 				}
 			}
 		}
 		if (world == 5 && col.a < 0.5) {
-			// the Earth's edge: clouds round it
+			// the Earth's edge: its air glowing round it
 			float ed = min(hl.cut ? 1e9 : hl.d - rl, hs.cut ? 1e9 : hs.d - rl);
-			if (ed >= 0.0 && ed < 14.0) {
+			if (ed >= 0.0 && ed < 10.0) {
+				// (the Earth's edge from space: its air glowing blue, thin, dithered away outwards)
+				float k = 1.0 - ed / 10.0;
 				float cl = fbm(bp * 0.12 + vec2(t * 0.3, 0.0));
-				if (cl > 0.35 + ed / 14.0 * 0.45) {
-					col = vec4(cl > 0.6 ? vec3(1.0) : c8(214.0, 228.0, 246.0), 1.0);
+				if (bayer(bp) < k * k * (0.4 + 0.4 * cl)) {
+					col = vec4(mix(c8(90.0, 150.0, 240.0), c8(200.0, 230.0, 255.0), k * cl * 0.6), 1.0);
 				}
 			}
 		}
