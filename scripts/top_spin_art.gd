@@ -73,8 +73,8 @@ static func blade_r(kind: String, a: float) -> float:
 ##     thickness under it (its side, in shade)
 ##   blur: a haze out to the blades' reach (drawn under the face while it spins fast)
 ##   period: one blade's turn (rad)
-static func top_parts(main: Color, rf: float, kind: String) -> Dictionary:
-	var key := "top_%s_%.1f_%s" % [main.to_html(), rf, kind]
+static func top_parts(main: Color, rf: float, kind: String, seat_r := SEAT_R) -> Dictionary:
+	var key := "top_%s_%.1f_%s_%.1f" % [main.to_html(), rf, kind, seat_r]
 	if _cache.has(key):
 		return _cache[key]
 	var n := int(ceilf(rf)) * 2 + 2
@@ -88,9 +88,10 @@ static func top_parts(main: Color, rf: float, kind: String) -> Dictionary:
 	for f in FRAMES:
 		var rot := float(f) / FRAMES * period
 		var mask := _blade_mask(n, rf, kind, rot)
-		faces.append(_tex(_face_img(n, rf, main, mask, rot)))
+		faces.append(_tex(_face_img(n, rf, main, mask, rot, seat_r)))
 		unders.append(_tex(_under_img(n, main, mask)))
-	var out := { "slices": slices, "faces": faces, "unders": unders, "blur": _tex(_blur_img(n, rf, main, kind)), "period": period }
+	var out := { "slices": slices, "faces": faces, "unders": unders, "blur": _tex(_blur_img(n, rf, main, kind)), "period": period,
+		"arcs": speed_arc_frames(rf), "rf": rf }
 	_cache[key] = out
 	return out
 
@@ -131,12 +132,12 @@ static func _inside(m: PackedByteArray, n: int, x: int, y: int) -> bool:
 ## turning on it, and in the middle the socket the pal is set into (the user, 2026-10-19: the pal
 ## embedded right in the middle, the top its vehicle): a dark seat in a metal lip, the size of the
 ## pal's ball; the dark outline round it all
-static func _face_img(n: int, rf: float, main: Color, m: PackedByteArray, rot: float) -> Image:
+static func _face_img(n: int, rf: float, main: Color, m: PackedByteArray, rot: float, seat_r: float) -> Image:
 	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
 	var c := Vector2(n / 2.0, n / 2.0)
 	var hi := main.lightened(0.32)
 	var lo := main.darkened(0.24)
-	var seat := SEAT_R + 1.0                                     # (the ball, and the lip round it)
+	var seat := seat_r + 1.0 * seat_r / SEAT_R                  # (the ball, and the lip round it)
 	for y in n:
 		for x in n:
 			if not _inside(m, n, x, y):
@@ -148,7 +149,7 @@ static func _face_img(n: int, rf: float, main: Color, m: PackedByteArray, rot: f
 				col = OUTLINE
 			elif d < seat:
 				col = Color8(46, 38, 56)                                # the pal's seat (its ball covers it)
-				if d > seat - 1.0:
+				if d > seat - 1.0 * seat_r / SEAT_R:
 					col = Color8(214, 218, 230) if o.x + o.y < 0.0 else Color8(136, 140, 158)   # the metal lip round it
 			elif d < seat + maxf(1.4, rf * 0.16):
 				col = main.lightened(0.55)                             # the energy ring, a lighter tint...
@@ -259,17 +260,19 @@ static func speed_arc_frames(rf: float) -> Array[Texture2D]:
 
 # ================================================================== THE BOWL
 
-## The bowl from above, raised like the race games' track: [the back (floor, far inner wall, the
-## rim but its near half), the front (the near half of the rim and its outer side face, drawn over
-## the tops)], each n x n board px round the bowl's middle. bowl: a BOWLS entry; r, rim_w, rim_h:
-## the floor's radius, the rim's width and height (px); gaps: the ways out's angles; gap_half;
-## slimes: puddles (px from the middle)
+## The bowl from above, raised like the race games' track: [the floor (it goes on under the rim,
+## so the rim can shift over it: the 3D tilt), the rim's far half (its top, the far inner wall,
+## the ways out), the rim's near half (its top and outer side face, drawn over the tops)], each
+## n x n board px round the bowl's middle. bowl: a BOWLS entry; r, rim_w, rim_h: the floor's
+## radius, the rim's width and height (px); gaps: the ways out's angles; gap_half; slimes:
+## puddles (px from the middle)
 static func bowl_images(bowl: Dictionary, r: float, rim_w: float, rim_h: float, gaps: Array, gap_half: float, slimes: Array) -> Array:
 	var px := 4.0
 	var rr := r / px
 	var rw := rim_w / px
 	var rh := rim_h / px
 	var n := int(ceilf((rr + rw) * 2.0)) + 8
+	var floor_img := Image.create(n, n, false, Image.FORMAT_RGBA8)
 	var back := Image.create(n, n, false, Image.FORMAT_RGBA8)
 	var front := Image.create(n, n, false, Image.FORMAT_RGBA8)
 	var c := Vector2(n / 2.0, n / 2.0)              # the floor's middle
@@ -328,27 +331,33 @@ static func bowl_images(bowl: Dictionary, r: float, rim_w: float, rim_h: float, 
 					col = (bowl["rim"] as Color).darkened(0.16 + 0.24 * (1.0 - k)).lerp(bowl["rim_hi"], 0.3 * maxf(0.0, side))
 					if d0 < rr + 1.0:
 						col = OUTLINE                                    # where it meets the floor
-			elif d0 < rr:
-				# --- the floor: its material, shaded as a hollow, the rim's shadow, puddles ---
-				col = _floor_px(bowl, p - c, x, y)
-				var v := (p - c) / rr
-				var sdot := v.dot(light_dir)
-				if sdot > 0.66 or (sdot > 0.5 and dith((sdot - 0.5) / 0.16, x, y)):
-					col = col.darkened(0.1)                              # (the top-left slope faces away from the light)
-				elif sdot < -0.7 or (sdot < -0.56 and dith((-0.56 - sdot) / 0.14, x, y)):
-					col = col.lightened(0.07)                            # (the bottom-right one faces it)
-				var q := p - light_dir * 2.6
-				if (q - lip).length() >= rr - 0.2 and p.y < c.y + rr * 0.3:
-					col = col.darkened(0.2)                              # the rim's shadow inside its top-left edge
-				if d0 > rr - 10.0 and _gap_at(gaps, gap_half, ang0) >= 0.0:
-					col = col.darkened(0.1)                              # a faint strip leading into each way out
-				for s in slimes:
-					var sd := ((p - c) * px - (s as Vector2)).length() + sin(ang0 * 5.0 + (s as Vector2).x) * 6.0
-					if sd < 70.0:
-						col = _slime_px(sd, x, y)
+			if d0 < rr + rw - 0.5:
+				# --- the floor (on under the rim; dark in the ways out): its material, shaded as a
+				# hollow, the rim's shadow, puddles ---
+				var fc := pocket if d0 >= rr and _gap_at(gaps, gap_half, ang0) >= 0.0 else _floor_px(bowl, p - c, x, y)
+				if d0 < rr or fc == pocket:
+					var v := (p - c) / rr
+					var sdot := v.dot(light_dir)
+					if fc != pocket:
+						if sdot > 0.66 or (sdot > 0.5 and dith((sdot - 0.5) / 0.16, x, y)):
+							fc = fc.darkened(0.1)
+						elif sdot < -0.7 or (sdot < -0.56 and dith((-0.56 - sdot) / 0.14, x, y)):
+							fc = fc.lightened(0.07)
+						var q0 := p - light_dir * 2.6
+						if (q0 - lip).length() >= rr - 0.2 and p.y < c.y + rr * 0.3:
+							fc = fc.darkened(0.2)
+						if d0 > rr - 10.0 and _gap_at(gaps, gap_half, ang0) >= 0.0:
+							fc = fc.darkened(0.1)
+						for s in slimes:
+							var sd0 := ((p - c) * px - (s as Vector2)).length() + sin(ang0 * 5.0 + (s as Vector2).x) * 6.0
+							if sd0 < 70.0:
+								fc = _slime_px(sd0, x, y)
+				else:
+					fc = fc.darkened(0.3)                                 # (under the rim: only seen as it shifts)
+				floor_img.set_pixel(x, y, fc)
 			if col.a > 0.0:
 				(front if is_front else back).set_pixel(x, y, col)
-	return [back, front]
+	return [floor_img, back, front]
 
 ## How far into a way out `ang` is (0 its middle .. 1 its edge), or -1 outside every one
 static func _gap_at(gaps: Array, gap_half: float, ang: float) -> float:

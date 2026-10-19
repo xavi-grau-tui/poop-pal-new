@@ -116,7 +116,7 @@ const SPARE_RIDERS := ["peapod", "daruma", "ramune", "bruin", "nebula_nug"]
 const RIVAL_BLADES := { "rookie": "fins3", "charger": "hooks3", "wall": "shield", "heavy": "lugs4", "boss": "scythe4" }
 const PLAYER_BLADES := ["blades4", "star5", "petals6", "wave5", "gear10", "dragon3"]
 const PRIZE_BLADES := "petals6"
-const SPIN_SHOWN := 2.4               # how fast a top's blades seem to turn at full spin (blades a second)
+const SPIN_SHOWN := 7.5               # how fast a top's blades turn at full spin (blades a second: about a frame step every frame)
 
 ## The worlds: each its own bowl (floor, grain, rings, rim) in its own place (TopSpinArt's room:
 ## its surface and its light) and its accent (the band's foot line, the lights in the rim)
@@ -198,16 +198,14 @@ class Top:
 
 ## A top on screen (TopSpinArt.top_parts): its slices stacked bottom first (the tip, the driver,
 ## the wheel), the blades' side, then the blade ring on top turning frame by frame (a haze behind
-## it when it spins fast, light arcs round its edge), the pal set in its middle. It leans (a wobble when
-## slow or over-wound, into a dash), squats while guarding, lies down when it falls
+## it when it spins fast, light arcs round its edge), the pal set in its middle. It leans (a wobble
+## when slow or over-wound, into a dash), squats while guarding, lies down when it falls. Your top
+## has a close-up look too, twice as fine (the user, 2026-10-19: the winding's top was too low a
+## resolution): shown while it's wound and dropped, the light gathering round it as it's wound
 class TopView extends Node2D:
-	var rf := 9.5                     # the blades' reach (board px)
-	var slices: Array[Texture2D] = []
-	var faces: Array[Texture2D] = []
-	var unders: Array[Texture2D] = []
-	var period := TAU / 4.0           # (one blade's turn)
-	var blur: Texture2D
-	var arcs: Array[Texture2D] = []
+	var look := {}                    # TopSpinArt.top_parts
+	var look_hi := {}                 # (yours) the same, twice as fine
+	var hi := false                   # drawn from look_hi, twice the size (the node stays at its scale)
 	var rider: Texture2D
 	var cap_tex: Texture2D            # (the golden top: its prize instead of a rider)
 	var cap_px := 44.0
@@ -219,45 +217,66 @@ class TopView extends Node2D:
 	var fall := 0.0                   # 0..1 toppled
 	var fall_dir := Vector2.RIGHT
 	var flash := 0.0                  # a hit's flash
+	var aura := 0.0                   # 0..1 the winding's light round it...
+	var hot := 0.0                    # ...turning red as it's over-wound
 	var t := 0.0
+	func _look_now() -> Dictionary:
+		return look_hi if hi and not look_hi.is_empty() else look
+	func _k() -> float:
+		return 2.0 if hi and not look_hi.is_empty() else 1.0
 	func face_offset() -> Vector2:
-		var n := slices.size() + 1
-		var off := Vector2(0, -n * 4.0 * (1.0 - 0.5 * squat)) + lean
+		var k := _k()
+		var n: int = (_look_now()["slices"] as Array).size() + 1
+		var off := Vector2(0, -n * 4.0 * k * (1.0 - 0.5 * squat)) + lean * k
 		if fall > 0.0:
-			off = off.lerp(fall_dir * n * 7.0 + Vector2(0, -6), fall)
+			off = off.lerp((fall_dir * n * 7.0 + Vector2(0, -6)) * k, fall)
 		return off.snapped(Vector2(4, 4))
 	func _draw() -> void:
+		var L := _look_now()
+		var k := _k()
+		var slices: Array = L["slices"]
+		var faces: Array = L["faces"]
+		var unders: Array = L["unders"]
+		var period: float = L["period"]
+		var rf: float = L["rf"]
+		var blur: Texture2D = L["blur"]
+		var arcs: Array = L["arcs"]
 		var n := slices.size() + 1                     # (the static slices and the blades' side; the face on top)
-		var step := 4.0 * (1.0 - 0.5 * squat)
+		var step := 4.0 * k * (1.0 - 0.5 * squat)
 		var fi := int(fposmod(angle, period) / period * faces.size()) % faces.size()
-		for k in n + 1:
-			var f := float(k) / float(n)
-			var off := Vector2(0, -k * step) + lean * f
+		var face := face_offset()
+		if aura > 0.0:
+			# the light gathering round it as it's wound (red-hot when over-wound)
+			var ac := Color8(255, 222, 120).lerp(Color8(255, 86, 60), hot)
+			GameFx.disc(self, face, rf * 4.0 + 20.0 * k, Color(ac.r, ac.g, ac.b, 0.12 * aura))
+			GameFx.light_ring(self, face, rf * 4.0 + 12.0 * k, ac, 30, 4.0 * k, 0.65 * aura, -angle * 0.35)
+		for kk in n + 1:
+			var f := float(kk) / float(n)
+			var off := Vector2(0, -kk * step) + lean * k * f
 			if fall > 0.0:
-				off = off.lerp(fall_dir * k * 7.0 + Vector2(0, -k * 1.5), fall)
+				off = off.lerp((fall_dir * kk * 7.0 + Vector2(0, -kk * 1.5)) * k, fall)
 			off = off.snapped(Vector2(4, 4))
-			var tex: Texture2D = slices[k] if k < slices.size() else (unders[fi] if k == slices.size() else faces[fi])
-			if k == n and fast > 0.0 and blur and fall == 0.0:
+			var tex: Texture2D = slices[kk] if kk < slices.size() else (unders[fi] if kk == slices.size() else faces[fi])
+			if kk == n and fast > 0.0 and blur and fall == 0.0:
 				var bsz := blur.get_size() * 4.0                # (spinning hard: a haze between the blades)
 				draw_texture_rect(blur, Rect2(off - bsz / 2.0, bsz), false, Color(1, 1, 1, clampf(fast, 0.0, 1.0)))
 			var sz := tex.get_size() * 4.0
 			draw_texture_rect(tex, Rect2(off - sz / 2.0, sz), false)
-		var face := face_offset()
-		if fast > 0.3 and fall == 0.0 and not arcs.is_empty():
-			var ai := int(t * 30.0) % arcs.size()
+		if fast > 0.25 and fall == 0.0 and not arcs.is_empty():
+			var ai := int(t * 40.0) % arcs.size()
 			if dir < 0.0:
 				ai = arcs.size() - 1 - ai
 			var at: Texture2D = arcs[ai]
 			var asz := at.get_size() * 4.0
-			draw_texture_rect(at, Rect2(face - asz / 2.0, asz), false, Color(1, 1, 1, clampf((fast - 0.3) * 2.0, 0.0, 0.9)))
+			draw_texture_rect(at, Rect2(face - asz / 2.0, asz), false, Color(1, 1, 1, clampf((fast - 0.25) * 1.6, 0.0, 1.0)))
 		if flash > 0.0:
-			GameFx.disc(self, face, rf * 4.0 - 10.0, Color(1, 1, 1, 0.55 * flash))
+			GameFx.disc(self, face, rf * 4.0 - 10.0 * k, Color(1, 1, 1, 0.55 * flash))
 		# the pal set right in the middle, its vehicle round it (its face kept upright: it looks at you)
 		if rider:
-			draw_texture_rect(rider, Rect2(face - Vector2(24, 24), Vector2(48, 48)), false)
+			draw_texture_rect(rider, Rect2(face - Vector2(24, 24) * k, Vector2(48, 48) * k), false)
 		elif cap_tex:
 			var s := cap_tex.get_size()
-			var k2 := cap_px / maxf(s.x, s.y)
+			var k2 := cap_px * k / maxf(s.x, s.y)
 			draw_texture_rect(cap_tex, Rect2(face - s * k2 / 2.0, s * k2), false)
 
 ## A bumper peg on the floor: its slices, bottom first; it flashes and pops up when hit
@@ -449,8 +468,9 @@ var hint_fwd: HBoxContainer           # ...and the forward button
 # tops and pegs (sorted by depth), the near rim, the rim's lights, bursts, the place's light, the
 # rings and the dial; all in `scene` (it shakes), then the HUD band over it
 var scene: Node2D
-var stadium: Sprite2D
-var stadium_front: Sprite2D
+var stadium: Sprite2D                 # the bowl's floor (the tops' plane: it stays put)
+var stadium_rim: Sprite2D             # the rim's far half (under the tops)...
+var stadium_front: Sprite2D           # ...and its near half (over them)
 var floor_layer: Node2D
 var marks: GameFx.Burst
 var trails: GameFx.Burst
@@ -472,6 +492,7 @@ var lcd_font: Font
 var ball_texture: Texture2D
 var shake := 0.0
 var hitstop := 0.0
+var whir: AudioStreamPlayer           # your top's whir (tools/audio/top_sounds.py)
 var _bowl_cache := {}
 
 func _ready() -> void:
@@ -669,8 +690,10 @@ func _start_match() -> void:
 	dropping = false
 	forward_held = false
 	player.root.position = C
-	player.root.scale = Vector2(2, 2)
+	player.root.hi = true                            # (the close-up: twice the size, twice as fine)
+	player.root.scale = Vector2.ONE
 	practice = tut != Tut.NONE
+	calibrate_tilt()                                 # (the 3D tilt's level, until the drop sets the steering's)
 	var per := GameData.LEVELS_PER_WORLD
 	hud_level.text = "TUTORIAL" if practice else "%d-%d" % [(level - 1) / per + 1, (level - 1) % per + 1]
 	hud_level.add_theme_font_size_override("font_size", 22 if practice else 32)
@@ -700,10 +723,12 @@ func _paint_scene(data: Dictionary) -> void:
 					if c.a > 0.0:
 						var bp := C / PX + Vector2(x - half, y - half)
 						img.set_pixel(x, y, TopSpinArt.lit(bowl["room"], c, bp, int(PLAY_WIDTH / PX) + 1, int(PLAY_HEIGHT / PX) + 1))
-		_bowl_cache[key] = [ImageTexture.create_from_image(imgs[0]), ImageTexture.create_from_image(imgs[1])]
+		_bowl_cache[key] = [ImageTexture.create_from_image(imgs[0]), ImageTexture.create_from_image(imgs[1]), ImageTexture.create_from_image(imgs[2])]
 	stadium.texture = _bowl_cache[key][0]
-	stadium_front.texture = _bowl_cache[key][1]
+	stadium_rim.texture = _bowl_cache[key][1]
+	stadium_front.texture = _bowl_cache[key][2]
 	stadium.position = C
+	stadium_rim.position = C
 	stadium_front.position = C
 	var bw := int(PLAY_WIDTH / PX) + 1
 	var bh := int(PLAY_HEIGHT / PX) + 1
@@ -726,15 +751,11 @@ func _make_top(is_player: bool, style: String, color: Color) -> Top:
 		size = st["size"]
 	t.r = TOP_R * size
 	var v := TopView.new()
-	v.rf = t.r / PX + 1.5                            # (the blades' tips a little past its round: the circle is about their mean reach)
+	var rf := t.r / PX + 1.5                         # (the blades' tips a little past its round: the circle is about their mean reach)
 	var kind: String = PLAYER_BLADES[world if tut == Tut.NONE else 0] if is_player else (PRIZE_BLADES if color == GOLD else String(RIVAL_BLADES.get(style, "fins3")))
-	var parts := TopSpinArt.top_parts(color, v.rf, kind)
-	v.slices = parts["slices"]
-	v.faces = parts["faces"]
-	v.unders = parts["unders"]
-	v.blur = parts["blur"]
-	v.period = parts["period"]
-	v.arcs = TopSpinArt.speed_arc_frames(v.rf)
+	v.look = TopSpinArt.top_parts(color, rf, kind)
+	if is_player:
+		v.look_hi = TopSpinArt.top_parts(color, rf * 2.0, kind, TopSpinArt.SEAT_R * 2.0)
 	v.rider = ball_texture if is_player else _rider(style)
 	v.dir = t.dir
 	(held if is_player else top_nodes).add_child(v)
@@ -760,6 +781,8 @@ func _process(delta: float) -> void:
 	# a shake on the big hits (the HUD stays put)
 	shake = maxf(0.0, shake - delta * 3.0)
 	scene.position = Vector2(randi_range(-1, 1), randi_range(-1, 1)) * 4.0 * ceilf(shake * 2.0) if shake > 0.0 else Vector2.ZERO
+	_depth_3d()
+	_update_whir(delta)
 	if not is_running:
 		return
 	time += delta
@@ -811,10 +834,20 @@ func _wind_pull() -> void:
 	if off < ZONE_HALF:
 		combo += 1
 		gain = WIND_GOOD + combo * 2.0 + 3.0 * fizz
-		_sfx("res://sounds/fx/click-6.mp3", -8.0, 0.0, 1.0 + combo * 0.08)
+		_sfx("res://sounds/fx/click-6.mp3", -12.0, 0.0, 1.0 + combo * 0.08)
+		_sfx("res://sounds/fx/top_zip.wav", -10.0, 0.0, 0.92 + combo * 0.06)      # (the ripcord zipping out)
 		fx.sparks(tip, 8 + mini(combo, 5) * 2, [GOLD, Color(1, 1, 1), Color8(255, 236, 160)], 0.8)
 		fx.ring(tip, GOLD, 10.0, 56.0 + combo * 6.0, 0.3, 6.0)
-		player.root.flash = 0.6
+		# the top takes it: a jolt, sparks flung off its blades, a ring of light off it
+		player.root.flash = 0.5
+		var jolt := create_tween()
+		jolt.tween_property(player.root, "scale", Vector2(1.08, 1.08), 0.05)
+		jolt.tween_property(player.root, "scale", Vector2.ONE, 0.14)
+		for k in 10:
+			var a := TAU * k / 10.0 + randf() * 0.3
+			fx.spray(C + Vector2(0, -36) + Vector2.from_angle(a) * 80.0, Vector2.from_angle(a + PI / 2.0 * player.dir), 1, [GOLD, Color(1, 1, 1)], 0.3, 1.2)
+		fx.ring(C + Vector2(0, -36), Color8(255, 222, 120), 70.0, 150.0 + combo * 8.0, 0.3, 6.0)
+		_kick(0.08 + 0.02 * mini(combo, 5))
 		if tut == Tut.WIND:
 			tut_good += 1
 			if tut_good == 1:
@@ -854,7 +887,7 @@ func _drop_step(delta: float) -> void:
 	if off.length() > R - 80.0:
 		aim = C + off.limit_length(R - 80.0)
 	player.root.position = GameFx.snap(aim + Vector2(0, -110.0 * lift))
-	player.root.scale = Vector2.ONE * lerpf(2.0, 1.6, lift)
+	player.root.scale = Vector2.ONE * lerpf(1.0, 0.8, lift)
 	if tut != Tut.DROP:
 		drop_left -= delta
 	if drop_left <= 0.0:
@@ -867,7 +900,7 @@ func _drop() -> void:
 	_sfx("res://sounds/fx/claw_drop.wav", -12.0)
 	var t := create_tween()
 	t.tween_property(player.root, "position", GameFx.snap(aim), 0.3).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
-	t.parallel().tween_property(player.root, "scale", Vector2.ONE, 0.3).set_ease(Tween.EASE_IN)
+	t.parallel().tween_property(player.root, "scale", Vector2(0.5, 0.5), 0.3).set_ease(Tween.EASE_IN)
 	t.tween_callback(_land)
 
 func _land() -> void:
@@ -875,7 +908,10 @@ func _land() -> void:
 		return
 	player.pos = aim
 	player.vel = Vector2.ZERO
-	player.root.reparent(top_nodes, false)          # (down among the others)
+	player.root.reparent(top_nodes, false)          # (down among the others, its normal look)
+	player.root.hi = false
+	player.root.scale = Vector2.ONE
+	player.root.aura = 0.0
 	_sfx("res://sounds/fx/wood_tap.wav", -10.0, 0.0, 0.7)
 	Input.vibrate_handheld(40)
 	# it lands: a ring of dust, a shockwave across the floor
@@ -1473,6 +1509,48 @@ func _update_legend() -> void:
 	hint_main.modulate = Color(1, 1, 1, 1.0 if can_dash else 0.35)
 	hint_fwd.modulate = Color(0.75, 0.9, 1.4) if player.braced else Color.WHITE
 
+## Your top's whir (a seamless loop, the race toys' motors' way): it climbs as you wind and sinks
+## as the spin runs down, quiet, under the music; it fades out when the top's out or the match is
+## over (the user, 2026-10-19: more sense of intensity)
+func _update_whir(delta: float) -> void:
+	var on := is_running and player != null and player.alive and phase != Phase.RESULT
+	if not on:
+		if whir.playing:
+			whir.volume_db = move_toward(whir.volume_db, -60.0, delta * 90.0)
+			if whir.volume_db <= -59.0:
+				whir.stop()
+		return
+	if not whir.playing:
+		whir.volume_db = -44.0
+		whir.pitch_scale = 0.6
+		whir.play()
+	var k := clampf(player.spin / 100.0, 0.0, 1.3)
+	whir.pitch_scale = lerpf(whir.pitch_scale, 0.55 + 0.8 * k, minf(1.0, delta * 8.0))
+	whir.volume_db = lerpf(whir.volume_db, lerpf(-38.0, -22.0, minf(k, 1.0)), minf(1.0, delta * 6.0))
+
+## The 3D tilt (the user, 2026-10-19: like the iPhone's 3D photos, as in Pal Prix): tilting the
+## phone shifts the layers by their depth, the floor and the tops still (so what you see is where
+## they are): the place below the bowl one way, the raised rim (and the dust in the air, the
+## lights on the rim) the other; measured from the pose at the match's start and again at the
+## drop (the steering's), smoothed; off with DEPTH_3D. Pixels per full tilt, on the screen:
+const DEPTH_3D := true
+const DEPTH_FAR := 16.0
+const DEPTH_NEAR := 8.0
+var _depth_tilt := Vector2.ZERO
+var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, the Mac has no sensor)
+func _depth_3d() -> void:
+	var want := qa_depth_tilt
+	if DEPTH_3D and has_tilt_sensor() and phase != Phase.RESULT:
+		want = device_tilt().limit_length(0.6) / 0.6
+	_depth_tilt = _depth_tilt.lerp(want, 0.12)
+	var far := (_depth_tilt * DEPTH_FAR).round()
+	var near := (-_depth_tilt * DEPTH_NEAR).round()
+	backdrop.position = far
+	stadium_rim.position = C + near
+	stadium_front.position = C + near
+	rim_fx.position = near
+	room_fx.position = near
+
 ## QA only (tools/qa sets it): plays by itself to check the levels and the effects: winds on the
 ## gold, drops on a rival, dashes at the nearest one now and then, guards when one flashes
 var qa_autopilot := false
@@ -1528,8 +1606,11 @@ func _animate_tops(delta: float) -> void:
 		var spinning := t.alive or phase == Phase.WIND
 		v.t += delta
 		if spinning:
-			v.angle += v.period * SPIN_SHOWN * clampf(t.spin / 40.0, 0.12, 1.0) * delta * t.dir
-		v.fast = clampf((t.spin - 35.0) / 45.0, 0.0, 1.0) * 0.6 if spinning else 0.0
+			v.angle += float(v.look["period"]) * SPIN_SHOWN * clampf(t.spin / 90.0, 0.07, 1.0) * delta * t.dir
+		v.fast = clampf((t.spin - 30.0) / 50.0, 0.0, 1.0) * 0.65 if spinning else 0.0
+		if t == player and phase == Phase.WIND:
+			v.aura = clampf(wind_spin / 100.0, 0.0, 1.0)
+			v.hot = clampf((wind_spin - 100.0) / 30.0, 0.0, 1.0)
 		v.flash = maxf(0.0, v.flash - delta * 5.0)
 		if t.alive and (phase == Phase.BATTLE or (t != player and phase != Phase.RESULT)):
 			v.position = GameFx.snap(t.pos)
@@ -1540,6 +1621,8 @@ func _animate_tops(delta: float) -> void:
 		var want := Vector2.from_angle(time * (5.0 + 5.0 * w) * t.dir + t.wob) * 16.0 * minf(w, 1.0)
 		if t.alive and t.dash_t < DASH_TIME and t.vel.length() > 10.0:
 			want += t.vel.normalized() * 8.0                                  # (leaning into a dash)
+		if t == player and phase == Phase.WIND and wind_spin > 100.0:
+			want = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 4.0 * v.hot   # (over-wound: it rattles)
 		v.lean = v.lean.lerp(want, minf(1.0, delta * 14.0))
 		v.squat = move_toward(v.squat, 1.0 if t.braced else 0.0, delta * 10.0)
 		v.self_modulate = TopSpinArt.light_at(bowl["room"], t.pos / PX, int(bw), int(bh))
@@ -1790,6 +1873,10 @@ func _create_static_nodes() -> void:
 	stadium.scale = Vector2(PX, PX)
 	stadium.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	scene.add_child(stadium)
+	stadium_rim = Sprite2D.new()                    # the rim's far half and inner wall (under the tops)
+	stadium_rim.scale = Vector2(PX, PX)
+	stadium_rim.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	scene.add_child(stadium_rim)
 	floor_layer = Node2D.new()                      # shadows, gears, the whirlpool, the drop's target
 	floor_layer.draw.connect(_draw_floor)
 	scene.add_child(floor_layer)
@@ -1848,6 +1935,12 @@ func _create_static_nodes() -> void:
 	hint_fwd = make_button_hint(1, "DONE")
 	hint_fwd.position = Vector2(PLAY_WIDTH - 250, PLAY_HEIGHT - 86)
 	banner = GameFx.banner(self, lcd_font, BAND_FOOT, 470.0)
+	whir = AudioStreamPlayer.new()
+	var wav: AudioStreamWAV = (load("res://sounds/fx/top_whir.wav") as AudioStreamWAV).duplicate()
+	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	wav.loop_end = int(wav.get_length() * wav.mix_rate)
+	whir.stream = wav
+	add_child(whir)
 
 func _refresh_lives() -> void:
 	if not lives_box.visible:
