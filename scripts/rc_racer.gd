@@ -371,6 +371,7 @@ class Crowd extends Node2D:
 		style = kind
 		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		dots.clear()
+		_hue_cache.clear()
 		party = false
 		pals.clear()
 		var rng := RandomNumberGenerator.new()
@@ -416,10 +417,41 @@ class Crowd extends Node2D:
 				elif pals.size() > n_mine:
 					who = n_mine + rng.randi() % (pals.size() - n_mine)
 				var flag := rng.randi_range(0, FLAGS.size() - 1) if rng.randf() < 0.22 else -1
-				dots.append([p.snapped(Vector2(4, 4)), who, -10.0, 1, -10.0, Vector2.ZERO, 20.0, rng.randf() * TAU, rng.randf() * 3.0, flag])
+				# (the user, 2026-10-18: a little less in the way, more colourful: each pal through a
+				# colour filter of its own, a bright hue, a touch softer than the race)
+				# (each seat its pal in its own colours: the pal's colours turned round the rainbow, a
+				# little brighter; the whole stand a touch see-through, behind the race)
+				var hue := rng.randi_range(0, HUES - 1)
+				dots.append([p.snapped(Vector2(4, 4)), who, -10.0, 1, -10.0, Vector2.ZERO, 20.0, rng.randf() * TAU, rng.randf() * 3.0, flag, _hued(who, hue)])
 		# (drawn back to front: the far rows first)
 		dots.sort_custom(func(x, y): return x[0].y < y[0].y)
 		queue_redraw()
+	## A pal's ball with its colours turned round the rainbow (0 = as it is): its outline and its
+	## eyes (the dark and the grey) kept, the rest shifted, a little more saturated
+	const HUES := 6
+	var _hue_cache := {}
+	func _hued(who: int, hue: int) -> Texture2D:
+		var key := Vector2i(who, hue)
+		if _hue_cache.has(key):
+			return _hue_cache[key]
+		var tex: Texture2D = pals[who]
+		if hue == 0:
+			_hue_cache[key] = tex
+			return tex
+		var img := tex.get_image()
+		img.decompress()
+		img.convert(Image.FORMAT_RGBA8)
+		for y in img.get_height():
+			for x in img.get_width():
+				var c := img.get_pixel(x, y)
+				if c.a < 0.1 or c.v < 0.3 or c.s < 0.15:
+					continue
+				c.h = fposmod(c.h + float(hue) / float(HUES), 1.0)
+				c.s = minf(1.0, c.s * 1.15)
+				img.set_pixel(x, y, c)
+		var out := ImageTexture.create_from_image(img)
+		_hue_cache[key] = out
+		return out
 	## A wave of hops along the stand, starting from `from` (mat px)
 	func cheer(from: Vector2, hops := 1) -> void:
 		for d in dots:
@@ -496,7 +528,7 @@ class Crowd extends Node2D:
 				draw_rect(Rect2(p + Vector2(16, -44), Vector2(4, 32)), OUTLINE)
 				draw_rect(Rect2(p + Vector2(20, -44 + flap * 0.5), Vector2(16 - flap, 12)), OUTLINE)
 				draw_rect(Rect2(p + Vector2(20, -40 + flap * 0.5), Vector2(12 - flap, 4)), FLAGS[d[9]])
-			draw_texture_rect(pals[d[1]], Rect2(p - Vector2(24, 28), Vector2(48, 48)), false)
+			draw_texture_rect(d[10], Rect2(p - Vector2(24, 28), Vector2(48, 48)), false, Color(1, 1, 1, 0.92))
 			if scared and int(d[1]) % 2 == 0:
 				draw_rect(Rect2(p + Vector2(-2, -46), Vector2(4, 10)), Color8(250, 246, 236))
 				draw_rect(Rect2(p + Vector2(-2, -32), Vector2(4, 4)), Color8(250, 246, 236))
@@ -1064,37 +1096,40 @@ class WaterFx extends Node2D:
 					var q2 := (cen + Vector2.from_angle(ang2) * 68.0).snapped(Vector2(4, 4))
 					draw_rect(Rect2(q2 - Vector2(4, 2), Vector2(8, 4)), Color(1, 1, 1, 0.6))
 
-## The air rushing past the plane (the user, 2026-10-18: a wind layer always against its front,
-## very subtle, the race still the picture): faint thin streaks coming at it from ahead and
-## sliding past on both sides, faster than it flies, along its heading; on the 4 px grid
+## The wind (the user, 2026-10-18: a whole layer over the screen, like the traces on the sea but
+## wind, a bit more visible): thin light strokes everywhere in the view, drifting the way the air
+## goes past the plane (against its nose), each coming and going like the water's glints; the
+## race still the picture
 class AirFx extends Node2D:
 	var rc: Node
-	var streaks: Array = []               # [position, velocity, age, life, length]
+	var streaks: Array = []               # [position, age, life, length]
+	var flow := Vector2.LEFT              # the way the air goes past (screen: against the plane's heading)
 	func _process(delta: float) -> void:
 		if not visible or rc == null:
 			return
-		var fwd := Vector2.from_angle(float(rc.heading))
-		var side := Vector2(-fwd.y, fwd.x)
-		var at: Vector2 = rc.car_pos
-		if rc.state == 1 and streaks.size() < 26 and randf() < delta * 22.0:      # (racing only: State.DRIVE)
-			var off := side * randf_range(60.0, 340.0) * (1.0 if randf() < 0.5 else -1.0)
-			var p := at + fwd * randf_range(260.0, 520.0) + off
-			streaks.append([p, -fwd * randf_range(900.0, 1200.0), 0.0, randf_range(0.35, 0.6), randf_range(24.0, 48.0)])
+		var heading_v := Vector2.from_angle(float(rc.heading))
+		flow = flow.lerp(-heading_v, minf(1.0, delta * 3.0)).normalized()
+		var view: Rect2 = rc.view_rect().grow(60.0)
+		var racing: bool = rc.state == 1
+		var rate := 46.0 if racing else 12.0
+		if streaks.size() < 60 and randf() < delta * rate:
+			var p := Vector2(randf_range(view.position.x, view.end.x), randf_range(view.position.y, view.end.y))
+			streaks.append([p, 0.0, randf_range(0.6, 1.2), randf_range(20.0, 52.0)])
+		var speed := 520.0 if racing else 90.0
 		for st in streaks:
-			st[0] += (st[1] as Vector2) * delta
-			st[2] += delta
-		streaks = streaks.filter(func(st): return st[2] < st[3])
+			st[0] += flow * speed * delta
+			st[1] += delta
+		streaks = streaks.filter(func(st): return st[1] < st[2])
 		queue_redraw()
 	func _draw() -> void:
 		for st in streaks:
-			var f: float = st[2] / st[3]
-			var a := sin(f * PI) * 0.3
-			var dir: Vector2 = (st[1] as Vector2).normalized()
-			var ln: float = st[4]
+			var f: float = st[1] / st[2]
+			var a := sin(f * PI) * 0.34
+			var ln: float = float(st[3]) * (0.6 + 0.4 * sin(f * PI))
 			var k := 0.0
 			while k < ln:
-				var q := ((st[0] as Vector2) - dir * k).snapped(Vector2(4, 4))
-				draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, a * (1.0 - k / ln * 0.6)))
+				var q := ((st[0] as Vector2) - flow * k).snapped(Vector2(4, 4))
+				draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, a * (1.0 - k / ln * 0.7)))
 				k += 4.0
 
 ## EXPERIMENT (the user, 2026-10-18: "like the iPhone's 3D photos"): tilting the phone shifts
@@ -1126,19 +1161,18 @@ func _depth_3d() -> void:
 	canopy.position = near
 	air_fx.position = near
 
-## The planes' start (the user, 2026-10-18: not just floating): a wooden deck hanging in the sky
-## under the grid, outlined, its planks lit from the top left, its side face below it, the
-## checkered start line across it, held up by two balloons at its back corners (bobbing on their
-## strings); painted once (1 px = 4 mat px), under the planes
+## The planes' start (the user, 2026-10-18: not just floating; then: smaller, in the game's
+## style, cool, clear of the crowd): a launch pad hanging in the sky under the grid, outlined like
+## the track (a solid dark line), its top lit from the top left, its side face below it, a red
+## and white striped rim like the curbs, the checkered line across it, landing lights blinking
+## along it, and a drone's four rotors at its corners spinning (that's what keeps it up)
 class SkyDock extends Node2D:
 	var tex: Texture2D
 	var top_left := Vector2.ZERO
-	var balloons: Array = []              # [anchor (mat px), its sprite]
+	var lights: Array = []                # the landing lights (mat px)
+	var fans: Array = []                  # the rotors: [its corner (mat px), the way its arm goes]
 	var t := 0.0
-	func build(c0: Vector2, dir: Vector2, back: float, ahead: float, half: float, balloon_tex: Array) -> void:
-		for b in balloons:
-			(b[1] as Node).queue_free()
-		balloons.clear()
+	func build(c0: Vector2, dir: Vector2, back: float, ahead: float, half: float) -> void:
 		var side := Vector2(-dir.y, dir.x)
 		var corners := [c0 - dir * back - side * half, c0 - dir * back + side * half, c0 + dir * ahead - side * half, c0 + dir * ahead + side * half]
 		var lo: Vector2 = corners[0]
@@ -1146,72 +1180,107 @@ class SkyDock extends Node2D:
 		for q in corners:
 			lo = lo.min(q)
 			hi = hi.max(q)
-		hi += Vector2(0, 24)                                  # (room for the side face)
+		hi += Vector2(0, 28)
 		lo = (lo / 4.0).floor() * 4.0
 		var w := int((hi.x - lo.x) / 4.0) + 2
 		var h := int((hi.y - lo.y) / 4.0) + 2
 		var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
 		var out := Color8(40, 30, 40)
-		var wood := [Color8(150, 104, 66), Color8(178, 128, 82), Color8(204, 152, 100), Color8(222, 172, 118)]
-		var inside := func(q: Vector2) -> Vector2:
+		var deck := [Color8(92, 98, 120), Color8(112, 120, 144), Color8(150, 160, 184)]   # (painted steel: shade, mid, lit)
+		var rim := [Color8(226, 70, 64), Color8(246, 242, 232)]
+		var side_col := Color8(64, 66, 86)
+		var uvf := func(q: Vector2) -> Vector2:
 			var o: Vector2 = q - c0
 			return Vector2(o.dot(dir), o.dot(side))
+		var inside := func(uv: Vector2) -> bool:
+			return uv.x > -back and uv.x < ahead and absf(uv.y) < half
 		for y in h:
 			for x in w:
 				var q := lo + Vector2(x * 4 + 2, y * 4 + 2)
-				var uv: Vector2 = inside.call(q)
-				var on := uv.x > -back and uv.x < ahead and absf(uv.y) < half
-				if on:
-					var edge := uv.x < -back + 6.0 or uv.x > ahead - 6.0 or absf(uv.y) > half - 6.0
+				var uv: Vector2 = uvf.call(q)
+				if inside.call(uv):
+					var dx := minf(uv.x + back, ahead - uv.x)
+					var dy := half - absf(uv.y)
+					var d := minf(dx, dy)
 					var col: Color
-					if edge:
+					if d < 4.0:
+						col = out
+					elif d < 12.0:
+						# the striped rim, like the curbs
+						var along := uv.y if dx < dy else uv.x
+						col = rim[int(floorf(along / 16.0)) % 2 if along >= 0.0 else (int(floorf(-along / 16.0)) + 1) % 2]
+					elif d < 16.0:
 						col = out
 					elif absf(uv.x) < 12.0:
-						col = Color8(30, 30, 34) if (int(floorf(uv.x / 8.0)) + int(floorf(uv.y / 8.0))) % 2 == 0 else Color8(244, 240, 226)
+						col = Color8(30, 30, 34) if (int(floorf((uv.x + 12.0) / 8.0)) + int(floorf((uv.y + 400.0) / 8.0))) % 2 == 0 else Color8(244, 240, 226)
 					else:
-						var plank := int(floorf((uv.y + half) / 16.0)) % 2
-						var lit := (uv.y < -half + 14.0) or (uv.x < -back + 14.0)
-						col = wood[3] if lit else wood[1 + plank]
-						if int(floorf(uv.x / 40.0)) % 3 == 0 and absf(fposmod(uv.x, 40.0)) < 4.0:
-							col = wood[0]                         # (the planks' joints)
+						var lit := (uv.y < -half + 30.0) or (uv.x < -back + 30.0)
+						var shade := (uv.y > half - 30.0)
+						col = deck[2] if lit else (deck[0] if shade else deck[1])
+						if int(floorf((uv.x + back) / 48.0)) % 2 == 0 and absf(uv.y) < 6.0:
+							col = Color8(252, 210, 64)               # (the centre line, dashed)
 					img.set_pixel(x, y, col)
 				else:
-					# its side face: below the deck on the screen (thick wood, then its outline)
-					for dy in [8.0, 16.0]:
-						var uv2: Vector2 = inside.call(q - Vector2(0, dy))
-						if uv2.x > -back and uv2.x < ahead and absf(uv2.y) < half:
-							img.set_pixel(x, y, out if dy > 12.0 else wood[0].darkened(0.25))
+					# its side face, under it on the screen, then its outline
+					for dy2 in [6.0, 14.0, 20.0]:
+						if inside.call(uvf.call(q - Vector2(0, dy2))):
+							img.set_pixel(x, y, out if dy2 > 18.0 else side_col)
 							break
 		tex = ImageTexture.create_from_image(img)
 		top_left = lo
 		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		for k in 2:
-			var anchor: Vector2 = c0 - dir * (back - 14.0) + side * (half - 14.0) * (1.0 if k == 0 else -1.0)
-			var spr := Sprite2D.new()
-			spr.texture = balloon_tex[k]
-			spr.scale = Vector2(4, 4)
-			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			add_child(spr)
-			balloons.append([anchor, spr])
+		lights.clear()
+		var n := 5
+		for k in n:
+			var f := float(k) / float(n - 1)
+			for sd in [-1.0, 1.0]:
+				lights.append(c0 + dir * lerpf(-back + 20.0, ahead - 20.0, f) + side * sd * (half - 8.0))
+		fans.clear()
+		for cu in [-back, ahead]:
+			for sd2 in [-1.0, 1.0]:
+				fans.append([c0 + dir * cu + side * sd2 * half, (dir * signf(cu) + side * sd2).normalized()])
 		queue_redraw()
 	func _process(delta: float) -> void:
 		if not visible:
 			return
 		t += delta
-		for k in balloons.size():
-			var b: Array = balloons[k]
-			(b[1] as Sprite2D).position = ((b[0] as Vector2) + Vector2(0, -96.0 + 6.0 * sin(t * 1.3 + k * 2.0))).round()
 		queue_redraw()
 	func _draw() -> void:
 		if tex:
 			draw_texture_rect(tex, Rect2(top_left, tex.get_size() * 4.0), false)
-		for b in balloons:
-			var a: Vector2 = b[0]
-			var top: Vector2 = (b[1] as Sprite2D).position + Vector2(0, 30)
-			var k2 := 0.0
-			while k2 < 1.0:
-				draw_rect(Rect2(a.lerp(top, k2).snapped(Vector2(4, 4)) - Vector2(2, 2), Vector2(4, 4)), Color8(40, 30, 40))
-				k2 += 0.08
+		# a drone's rotors at its four corners (the user, 2026-10-18): an arm out from the corner,
+		# the motor, the blades spinning (a blur, a blade flicking across it)
+		for fp in fans:
+			var corner: Vector2 = fp[0]
+			var out_dir: Vector2 = fp[1]
+			var hub := (corner + out_dir * 30.0).snapped(Vector2(4, 4))
+			var k3 := 0.0
+			while k3 <= 30.0:
+				var q := (corner + out_dir * k3).snapped(Vector2(4, 4))
+				draw_rect(Rect2(q - Vector2(4, 4), Vector2(8, 8)), Color8(40, 30, 40))
+				k3 += 4.0
+			var yy := -30.0
+			while yy <= 30.0:
+				var half_x := sqrt(maxf(0.0, 30.0 * 30.0 - yy * yy))
+				draw_rect(Rect2((hub + Vector2(-half_x, yy * 0.55)).snapped(Vector2(4, 4)), Vector2(half_x * 2.0, 4).snapped(Vector2(4, 4))), Color(0.92, 0.95, 1.0, 0.4))
+				yy += 4.0
+			# (its guard ring: a dark rim round the blur, so it reads on any sky)
+			for ka in 24:
+				var rq := (hub + Vector2(cos(ka * TAU / 24.0) * 32.0, sin(ka * TAU / 24.0) * 32.0 * 0.55)).snapped(Vector2(4, 4))
+				draw_rect(Rect2(rq - Vector2(2, 2), Vector2(4, 4)), Color8(40, 30, 40))
+			var ang := t * 22.0 + corner.x * 0.01
+			for sgn in [-1.0, 1.0]:
+				for j in 5:
+					var bq: Vector2 = (hub + Vector2(cos(ang), sin(ang) * 0.55) * sgn * (6.0 + j * 5.0)).snapped(Vector2(4, 4))
+					draw_rect(Rect2(bq - Vector2(4, 4), Vector2(8, 8)), Color8(40, 30, 40))
+					draw_rect(Rect2(bq - Vector2(2, 2), Vector2(4, 4)), Color8(236, 240, 248))
+			draw_rect(Rect2(hub - Vector2(6, 6), Vector2(12, 12)), Color8(40, 30, 40))
+			draw_rect(Rect2(hub - Vector2(2, 2), Vector2(4, 4)), Color8(226, 70, 64))
+		for k in lights.size():
+			var on := int(t * 4.0 - float(k / 2) * 0.5) % 4 == 0
+			var lp: Vector2 = (lights[k] as Vector2).snapped(Vector2(4, 4))
+			draw_rect(Rect2(lp - Vector2(4, 4), Vector2(8, 8)), Color8(40, 30, 40))
+			draw_rect(Rect2(lp - Vector2(2, 2), Vector2(4, 4)), Color8(255, 236, 120) if on else Color8(150, 120, 60))
 
 ## The wind across the course in a gust: short white streaks blowing over it (on the 4 px grid)
 class GustFx extends Node2D:
@@ -1318,7 +1387,7 @@ func _begin(n: int) -> void:
 	sky_dock.visible = vehicle == "plane"
 	if vehicle == "plane":
 		var d0 := (centre[2] - centre[0]).normalized()
-		sky_dock.build(centre[0], d0, 30.0 * STEP, 8.0 * STEP, half_w * 1.05, [_balloon_texture(), _balloon_texture()])   # (party balloons: the hot-air ones are things in the way)
+		sky_dock.build(centre[0], d0, 20.0 * STEP, 6.0 * STEP, half_w * 0.72)
 	water_fx.visible = vehicle == "boat"
 	water_fx.setup(self, slicks.filter(func(sl): return sl[1] == "whirl").map(func(sl): return sl[0]), Color8(255, 236, 214) if look == "lagoon" else Color8(236, 255, 252), pads if vehicle == "boat" else [], PAD_LEN, half_w - 34.0)
 	canopy.visible = look == "garden" and not _trees.is_empty()
@@ -1866,7 +1935,10 @@ func _place_features() -> void:
 			if not clash:
 				gusts.append([i, i + len, -1.0 if rng.randf() < 0.5 else 1.0])
 				break
-	# the secret, if this level has one: a spot on a straight (or anywhere free)
+	# the secret, if this level has one: a spot on a straight (or anywhere free); the last
+	# level's gift goes first (it stayed behind in the next race when that one had none)
+	if secret.has("node") and is_instance_valid(secret["node"]):
+		(secret["node"] as Node).queue_free()
 	secret = secret_of(level)
 	if not secret.is_empty():
 		var spot := -1
@@ -4454,7 +4526,7 @@ func _spawn_secret() -> void:
 				g.position = centre[at] + Vector2(0, -70)
 				node.add_child(g)
 				g.add_child(_px_sprite(_balloon_texture(), Vector2(0, -40)))
-				g.add_child(_px_sprite(Collection.prize_icon(secret["prize"]), Vector2.ZERO, 2))
+				g.add_child(_gift_sprite(secret["prize"], Vector2.ZERO))
 				var bob := g.create_tween().set_loops()
 				bob.tween_property(g, "position:y", g.position.y - 10.0, 0.7).set_trans(Tween.TRANS_SINE)
 				bob.tween_property(g, "position:y", g.position.y, 0.7).set_trans(Tween.TRANS_SINE)
@@ -4465,7 +4537,7 @@ func _spawn_secret() -> void:
 				var cl := _px_sprite(PalPrixArt.cloud(16, 7, true), centre[at])
 				node.add_child(cl)
 				secret["cloud"] = cl
-				var g4 := _px_sprite(Collection.prize_icon(secret["prize"]), centre[at], 2)
+				var g4 := _gift_sprite(secret["prize"], centre[at])
 				node.add_child(g4)
 				secret["gift"] = g4
 		"milky":
@@ -4475,7 +4547,7 @@ func _spawn_secret() -> void:
 					var cr := _px_sprite(_crate_texture(), centre[at] + side * (half_w * 0.28 + k * 34.0 - 34.0) * 1.0 + side * half_w * 0.2)
 					node.add_child(cr)
 					crates.append(cr)
-				var g2 := _px_sprite(Collection.prize_icon(secret["prize"]), centre[(at + 4) % count] + side * half_w * 0.45, 2)
+				var g2 := _gift_sprite(secret["prize"], centre[(at + 4) % count] + side * half_w * 0.45)
 				node.add_child(g2)
 				secret["gift"] = g2
 			secret["crates"] = crates
@@ -4488,7 +4560,7 @@ func _spawn_secret() -> void:
 				tw.tween_property(sp, "modulate:a", 0.25, 0.5)
 				tw.tween_property(sp, "modulate:a", 1.0, 0.5)
 				secret["sparkle"] = sp
-				var g3 := _px_sprite(Collection.prize_icon(secret["prize"]), centre[at], 2)
+				var g3 := _gift_sprite(secret["prize"], centre[at])
 				g3.visible = gate_open("fruity", secret["lvl"])      # (only a lucky car sees it)
 				node.add_child(g3)
 				secret["gift"] = g3
@@ -4865,6 +4937,17 @@ func _tinted_slices(main: Color, dark: Color) -> Array[Texture2D]:
 					img.set_pixel(x, y, main.lightened(0.18))
 		out.append(ImageTexture.create_from_image(img))
 	return out
+
+## A secret's gift on the course, its picture sized to GIFT_SIZE whatever it is (the user,
+## 2026-10-18: the stickers showed very big; their pictures aren't all the same size)
+const GIFT_SIZE := 64.0
+func _gift_sprite(prize: String, pos: Vector2) -> Sprite2D:
+	var t: Texture2D = Collection.prize_icon(prize)
+	var sp := _px_sprite(t, pos, 2)
+	if t:
+		var big := maxf(t.get_width(), t.get_height())
+		sp.scale = Vector2.ONE * (GIFT_SIZE / maxf(1.0, big))
+	return sp
 
 func _px_sprite(t: Texture2D, pos: Vector2, k := PX) -> Sprite2D:
 	var sp := Sprite2D.new()
