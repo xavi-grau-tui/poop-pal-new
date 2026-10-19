@@ -436,18 +436,27 @@ func _add_key(w: Wrestler) -> void:
 
 ## The 3D tilt (the user, 2026-10-19: like the iPhone's 3D photos, as in Pal Prix): tilting the
 ## phone shifts the place behind the ring (and what moves in it), the box and the wrestlers still;
-## measured from the pose at the bout's start, smoothed; off with DEPTH_3D. Px per full tilt:
+## measured from the pose at the bout's start, smoothed; off with DEPTH_3D; then (the user: more
+## obvious, as in Top Spin and Tilt Maze) 40 px, full at ~27 degrees (DEPTH_FULL: its sine). Px per
+## full tilt:
 const DEPTH_3D := true
-const DEPTH_FAR := 12.0
+const DEPTH_FULL := 0.45
+const DEPTH_FAR := 40.0               # (the place is painted SumoArt.MARGIN past the screen)
+## ...and the box with its ring and the wrestlers the other way (the user: the front should move
+## too), so the two pull apart
+const DEPTH_NEAR := 14.0
 var _depth_tilt := Vector2.ZERO
 var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, the Mac has no sensor)
 func _depth_3d() -> void:
 	var want := qa_depth_tilt
 	if DEPTH_3D and has_tilt_sensor() and is_running:
-		want = device_tilt().limit_length(0.6) / 0.6
+		want = device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
 	painted_back.position = (_depth_tilt * DEPTH_FAR).round() - Vector2.ONE * SumoArt.MARGIN * SumoArt.PX
 	life.position = (_depth_tilt * DEPTH_FAR).round()
+	var near := (-_depth_tilt * DEPTH_NEAR).round()
+	for n: Node2D in [painted, stage, wrestlers, fx, burst]:
+		n.position = near
 
 ## A small shake for a big moment (the HUD stays put)
 func _kick(amount: float) -> void:

@@ -48,6 +48,9 @@ func _build() -> void:
 	var rect: Rect2 = pink.get_rect()
 	var tl := pink.position + rect.position * pink.scale
 	var sz := rect.size * pink.scale
+	if pink.has_meta("screen_rect"):                     # (TiltParallax enlarges the sky past the screen)
+		tl = (pink.get_meta("screen_rect") as Rect2).position
+		sz = (pink.get_meta("screen_rect") as Rect2).size
 	var center := tl + sz / 2.0
 
 	screen = ColorRect.new()

@@ -46,8 +46,9 @@ extends BaseMinigame
 ##
 ## The look (the user, 2026-10-19: the toy games at the race games' quality, one suite; GameFx,
 ## docs/ideas_roadmap.md "The games' look"): the 3D tilt (the walls and the frame stand up off the
-## floor, solid, and lean as the phone tilts, their sides showing, the rail's HUD with them; the
-## floor and the ball still, so what you see is where they are), each world's light over the board and something alive in it (GameFx.Ambience:
+## floor, solid; the tops held still on the screen, the floor and all on it sliding under them as the
+## phone tilts, the walls' sides showing: TOPS_FIXED), the pal really rolling (tilt_ball.gdshader),
+## the marbles, the blockers and the vault's pieces standing up off the floor (_raise), each world's light over the board and something alive in it (GameFx.Ambience:
 ## dust in the window's light, soap bubbles, glowing spores, drips, a weld's sparks, twinkling
 ## stars), Pal Prix 2177's bursts for the moments (a marble taken, the trapdoor opening, a fall,
 ## an enemy's hit, a hard bump), a shake on the big ones, the race games' banner.
@@ -204,6 +205,10 @@ var locked_hint_cd := 0.0
 var fence_hint_cd := 0.0
 var ball: Sprite2D
 var shadow: Sprite2D
+var roll := Basis.IDENTITY            # the ball's turn (its art on a sphere: tilt_ball.gdshader)
+var raised: Array[Dictionary] = []    # what stands up off the floor: { n (its top), base, h, sides } (_raise)
+var depth_up := Vector2.ZERO          # the 3D tilt's lean of a wall's top, px (things lean by their height)
+var pick_t := 0.0                     # the marbles' bob and spin
 var level_nodes: Node2D
 var current_layer: CurrentLayer
 var hud_level: Label
@@ -373,7 +378,10 @@ func _build_level() -> void:
 	ball.position = ball_pos
 	ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
 	ball.modulate = Color(1, 1, 1, 1)
-	shadow.position = ball.position + Vector2(8, 20)
+	ball.rotation = 0.0
+	roll = Basis.IDENTITY
+	_roll(0.0)
+	shadow.position = ball.position + Vector2(6, 14)
 	hud_level.text = "%d-%d" % [world + 1, k + 1]
 	_build_tray()
 	_stars_shown = 3
@@ -950,6 +958,7 @@ func _create_static_nodes() -> void:
 	ball.texture = ball_texture
 	ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
 	ball.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ball.material = _ball_material()
 	scene.add_child(ball)
 	# the walls, the frame too, standing up off the floor (the 3D tilt): their sides (copies stacked
 	# from the floor up, darker the lower), their tops, what's set in them (the magnets); over the
@@ -1030,6 +1039,7 @@ func _sprite(tex: Texture2D, pos: Vector2, parent: Node = null) -> Sprite2D:
 func _spawn_level_nodes() -> void:
 	for n in level_nodes.get_children():
 		n.queue_free()
+	raised.clear()
 	exit_node.position = finish_pos
 	# the trapdoor in the world's material (wooden planks, a chrome drain cover, flaps...)
 	hatch_frame.texture = TiltMazeArt.hatch_frame(world, HATCH_IN + 4)
@@ -1047,9 +1057,21 @@ func _spawn_level_nodes() -> void:
 		n.queue_free()
 	for m in magnets:
 		_sprite(TiltMazeArt.magnet(), m, in_walls)
+	# the marbles float over the floor, bobbing, their shadows below; the flat ones (a ring, a nut,
+	# a star) spin like thick coins (_update_pickups)
 	var pick := TiltMazeArt.pickup(world)
 	for cp in checkpoints:
-		cp["node"] = _sprite(pick, cp["pos"])
+		var top := _raise(level_nodes, pick, cp["pos"], PICK_LIFT, 0, 1.0)
+		var edge: Array = []
+		if world in COIN_WORLDS:
+			for j in 2:
+				var e := _sprite(pick, cp["pos"])
+				e.modulate = Color(1, 1, 1).darkened(0.3 + 0.15 * j)
+				level_nodes.move_child(e, (edge[0] as Node).get_index() if j > 0 else top.get_index())   # (under the face, the far one first)
+				edge.append(e)
+		cp["node"] = top
+		cp["raise"] = raised[-1]
+		cp["edge"] = edge
 	if not vault.is_empty():
 		_spawn_vault()
 	_spawn_blockers()
@@ -1074,9 +1096,16 @@ func _spawn_vault() -> void:
 			gate = _sprite(TiltMazeArt.shutter(long, vertical, world), door.get_center())
 	if gate:
 		vault["fence_node"] = gate
+		# (stood up off the floor, solid: a fence, a block of wall, a shutter; the channel is in the floor)
+		var hs := {"fizzy": [0.45, 3], "milky": [0.9, 5], "caffeinated": [0.6, 4]}
+		if kind in hs:
+			gate.queue_free()
+			gate = _raise(level_nodes, gate.texture, door.get_center(), hs[kind][0], hs[kind][1])
+			vault["fence_node"] = gate
+			vault["fence_raise"] = raised[-1]
 	if kind != "skill":
 		# the sign: which drink opens it, and its level (outside the gate)
-		var sign := _sprite(TiltMazeArt.sign_card(), door.get_center() + dir * TILE * 0.66)
+		var sign := _raise(level_nodes, TiltMazeArt.sign_card(), door.get_center() + dir * TILE * 0.66, 0.5, 3, 1.0)
 		var icon := Sprite2D.new()
 		icon.texture = gate_icon(kind, vault["lvl"])
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -1084,11 +1113,14 @@ func _spawn_vault() -> void:
 		vault["sign_node"] = sign
 	if vault["taken"]:
 		if kind == "fruity":
-			_sprite(TiltMazeArt.chest(true), vault["prize_pos"])      # (opened and emptied)
+			_raise(level_nodes, TiltMazeArt.chest(true), vault["prize_pos"], 0.4, 3, 1.2)      # (opened and emptied)
 		return
 	var prize := Node2D.new()
 	prize.position = vault["prize_pos"]
+	var under := _sprite(shadow.texture, prize.position + Vector2(6, 12), level_nodes)
+	under.scale = Vector2(DETAIL, DETAIL) * 1.3
 	level_nodes.add_child(prize)
+	raised.append({"n": prize, "base": prize.position, "h": 0.55, "sides": []})
 	var p: String = vault["prize"]
 	var art := Sprite2D.new()
 	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -1100,11 +1132,8 @@ func _spawn_vault() -> void:
 	if kind == "fruity":
 		# locked in a chest: the prize shows only once it's open
 		art.visible = false
-		var ch := Sprite2D.new()
-		ch.texture = TiltMazeArt.chest(false)
-		ch.scale = Vector2(DETAIL, DETAIL)
-		ch.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		prize.add_child(ch)
+		# (the chest stands on the floor, solid; the prize inside floats up out of it)
+		var ch := _raise(level_nodes, TiltMazeArt.chest(false), vault["prize_pos"], 0.4, 3)
 		vault["chest_node"] = ch
 		vault["art_node"] = art
 	var bob := art.create_tween().set_loops()       # (dies with the prize)
@@ -1235,6 +1264,11 @@ const DEPTH_3D := true
 const DEPTH_FULL := 0.45
 const DEPTH_NEAR := 24.0              # the walls' tops (the frame's, at most, just inside the screen)
 const WALL_SIDES := 5                 # the copies under the tops (every DEPTH_NEAR / 6 px)
+## The tops held still on the screen (the glass of the box: your eye is on them), the floor and all
+## on it sliding under them the other way, the rail's HUD still (the user, 2026-10-19: to try);
+## false = the floor still, the tops leaning
+const TOPS_FIXED := true
+var floor_shift := Vector2.ZERO       # (the board's slide, with TOPS_FIXED; the shake goes on top)
 var _depth_tilt := Vector2.ZERO
 var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, the Mac has no sensor)
 func _depth_3d() -> void:
@@ -1243,12 +1277,30 @@ func _depth_3d() -> void:
 		want = device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
 	var up := -_depth_tilt * DEPTH_NEAR
+	depth_up = up
 	var near := up.round()
+	floor_shift = -near if TOPS_FIXED else Vector2.ZERO
 	for j in wall_sides.size():
 		wall_sides[j].position = ORIGIN + (up * float(j + 1) / float(WALL_SIDES + 1)).round()
 	walls.position = ORIGIN + near
 	in_walls.position = near
 	ambience.position = (up * 1.25).round()
+	# what stands on the floor, by its height (its sides stacked under its top, like the walls')
+	for r in raised:
+		var top: Node2D = r["n"]
+		if not is_instance_valid(top):
+			continue
+		var h: float = r["h"]
+		top.position = r["base"] + (up * h).round()
+		var sides: Array = r["sides"]
+		for j in sides.size():
+			var sd: Sprite2D = sides[j]
+			sd.position = r["base"] + (up * h * float(j + 1) / float(sides.size() + 1)).round()
+			sd.visible = h > 0.0 and top.visible
+			sd.texture = (top as Sprite2D).texture
+			sd.rotation = top.rotation
+			sd.scale = top.scale
+			sd.modulate = Color(1, 1, 1).darkened(0.42 - 0.27 * float(j) / float(sides.size())) * top.modulate
 	# the rail's HUD (each piece kept where it was made, plus the rail's lift)
 	var rail: Array = [hud_level, hud_time]
 	rail.append_array(hud_stars)
@@ -1257,7 +1309,96 @@ func _depth_3d() -> void:
 	for c: Control in rail:
 		if not c.has_meta("rail_at"):
 			c.set_meta("rail_at", c.position)
-		c.position = c.get_meta("rail_at") + near
+		c.position = c.get_meta("rail_at") + near + floor_shift
+
+## Things standing on the floor lean by their height (a wall's top = 1.0): the ball's middle, a
+## floating marble, a peg up, the duck, a vault's gate...
+const BALL_LIFT := 0.5
+const PICK_LIFT := 0.55               # (+- PICK_BOB as it bobs)
+const PICK_BOB := 0.12
+const PEG_LIFT := 0.55
+const COIN_WORLDS := [3, 4, 5]        # the ring, the nut, the star: flat, they spin like coins
+
+## Something standing up off the floor (the 3D tilt): its top leans by its height h, `sides` copies
+## of it stacked under the top, darker the lower (solid, like the walls: _depth_3d), and with
+## shade > 0 its shadow on the floor (that size). Returns the top.
+func _raise(parent: Node, tex: Texture2D, pos: Vector2, h: float, sides := 0, shade := 0.0) -> Sprite2D:
+	var sh: Sprite2D = null
+	if shade > 0.0:
+		sh = _sprite(shadow.texture, pos + Vector2(6, 12) * shade, parent)
+		sh.scale = Vector2(DETAIL, DETAIL) * shade
+	var side_nodes: Array = []
+	for j in sides:
+		side_nodes.append(_sprite(tex, pos, parent))
+	var top := _sprite(tex, pos, parent)
+	raised.append({"n": top, "base": pos, "h": h, "sides": side_nodes, "shadow": sh})
+	return top
+
+## The marbles bob over their shadows (the shadow smaller as one rises); a ring, a nut, a star spin
+## like thick coins, their edge showing as they turn; taken, the ghost settles on the floor
+func _update_pickups(delta: float) -> void:
+	pick_t += delta
+	for i in checkpoints.size():
+		var cp: Dictionary = checkpoints[i]
+		if not cp.has("raise"):
+			continue
+		var r: Dictionary = cp["raise"]
+		var top: Sprite2D = cp["node"]
+		var sh: Sprite2D = r["shadow"]
+		if cp["taken"]:
+			r["h"] = move_toward(r["h"], 0.0, delta * 3.0)
+			sh.visible = false
+			top.scale.x = absf(top.scale.y)
+			for e: Sprite2D in cp["edge"]:
+				e.visible = false
+			continue
+		var ph := pick_t * 2.4 + i * 1.3
+		r["h"] = PICK_LIFT + PICK_BOB * sin(ph)
+		sh.scale = Vector2(DETAIL, DETAIL) * (1.0 - 0.12 * sin(ph))
+		var edge: Array = cp["edge"]
+		if edge.is_empty():
+			continue
+		var c := cos(pick_t * 2.8 + i * 0.9)
+		var face := 1.0 if c >= 0.0 else -1.0
+		top.scale.x = DETAIL * maxf(absf(c), 0.14) * face
+		var thick := sqrt(maxf(0.0, 1.0 - c * c))
+		for j in edge.size():
+			var e: Sprite2D = edge[j]
+			e.visible = true
+			e.scale = top.scale
+			e.position = top.position + Vector2(-face * thick * DETAIL * (j + 1), 0).round()
+
+## The ball's material: its art on a turning sphere, lit from the top-left (tilt_ball.gdshader);
+## its back the body's colour, its outline the art's own
+func _ball_material() -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = load("res://scripts/shaders/tilt_ball.gdshader")
+	var img := ball_texture.get_image()
+	if img.is_compressed():
+		img.decompress()
+	var art := img.get_width()
+	var back := PalBall._main_colour(img, Rect2i(art / 2 - 5, art / 2 + 1, 10, 5))
+	var ink := img.get_pixel(art / 2, art / 2 + PalBall.SIZE / 2 - 1)
+	if ink.a < 0.5 or ink.get_luminance() > 0.35:
+		ink = back.darkened(0.65)
+	m.set_shader_parameter("back_col", back)
+	m.set_shader_parameter("ink", ink)
+	m.set_shader_parameter("art", float(art))
+	m.set_shader_parameter("rad", PalBall.SIZE / 2.0)
+	return m
+
+## The ball rolls for real (its top going the way it goes, BALL_R round); slow, it turns back
+## face up (the pal looking out), its ears and leaves popping back out
+func _roll(delta: float) -> void:
+	var speed := vel.length()
+	if speed > 40.0:
+		var axis := Vector3(-vel.y, vel.x, 0.0) / speed
+		roll = (Basis(axis, speed * delta / BALL_R) * roll).orthonormalized()
+	else:
+		roll = roll.slerp(Basis.IDENTITY, minf(1.0, delta * 5.0)).orthonormalized()
+	var m := ball.material as ShaderMaterial
+	m.set_shader_parameter("roll", roll)
+	m.set_shader_parameter("extras", smoothstep(0.9, 0.99, roll.z.z) if speed < 160.0 else 0.0)
 
 ## A small shake for a big moment (the HUD stays put)
 func _kick(amount: float) -> void:
@@ -1266,7 +1407,7 @@ func _kick(amount: float) -> void:
 func _process(delta: float) -> void:
 	_depth_3d()
 	shake = maxf(0.0, shake - delta * 3.0)
-	scene.position = Vector2(randi_range(-1, 1), randi_range(-1, 1)) * 4.0 * ceilf(shake * 2.0) if shake > 0.0 else Vector2.ZERO
+	scene.position = floor_shift + (Vector2(randi_range(-1, 1), randi_range(-1, 1)) * 4.0 * ceilf(shake * 2.0) if shake > 0.0 else Vector2.ZERO)
 	if not is_running:
 		return
 	finish_sprite.rotation -= delta * 2.5
@@ -1295,11 +1436,7 @@ func _process(delta: float) -> void:
 			_collide_gate()
 			if state != State.PLAY:
 				break
-		var speed := vel.length()
-		if speed > 60.0:
-			ball.rotation += vel.x * delta / BALL_R
-		else:
-			ball.rotation = lerp_angle(ball.rotation, 0.0, minf(1.0, delta * 6.0))
+		_roll(delta)
 		if state == State.PLAY:
 			_check_checkpoints()
 			_check_prize()
@@ -1318,8 +1455,12 @@ func _process(delta: float) -> void:
 			ball.modulate.a = 1.0 if hop > 0.0 or int(hit_t * 12.0) % 2 == 0 else 0.3
 		elif ball.modulate.a < 1.0 and state == State.PLAY:
 			ball.modulate.a = 1.0
-	shadow.position = ball.position + Vector2(8, 20) * (ball.scale.x / BALL_SCALE)
+	# the ball's middle is up off the floor: it leans with the 3D tilt, its shadow stays below
+	var lift := depth_up * BALL_LIFT if state != State.FALLING else Vector2.ZERO
+	ball.offset = (lift / ball.scale.x).round() if ball.scale.x > 0.01 else Vector2.ZERO
+	shadow.position = ball.position + Vector2(6, 14) * (ball.scale.x / BALL_SCALE)
 	shadow.visible = state != State.FALLING
+	_update_pickups(delta)
 
 ## The Gut: drifting holes go round their little circles
 func _move_holes(delta: float) -> void:
@@ -1527,6 +1668,8 @@ func _hop(bar: Rect2) -> void:
 		state = State.PLAY
 		_sfx("res://sounds/fx/clack.mp3", -14.0))
 	var f: Sprite2D = vault.get("fence_node")
+	if vault.has("fence_raise"):
+		vault["fence_raise"]["h"] = 0.0
 	if f:
 		var ft := create_tween()
 		ft.tween_property(f, "modulate", Color(0.6, 0.55, 0.5, 0.7), 0.3).set_delay(0.25)
@@ -1716,11 +1859,12 @@ func _spawn_blockers() -> void:
 		bl["node"] = node
 		match bl["kind"]:
 			"peg":
-				bl["sprite"] = _sprite(TiltMazeArt.peg(false), Vector2.ZERO, node)
+				bl["sprite"] = _raise(node, TiltMazeArt.peg(false), Vector2.ZERO, 0.0, 4)
+				bl["raise"] = raised[-1]
 			"duck":
 				var sh := _sprite(shadow.texture, Vector2(6, 16), node)
 				sh.modulate = Color(1, 1, 1, 0.8)
-				bl["sprite"] = _sprite(TiltMazeArt.duck(), Vector2.ZERO, node)
+				bl["sprite"] = _raise(node, TiltMazeArt.duck(), Vector2.ZERO, 0.4)
 			"valve":
 				var vertical: bool = (bl["dir"] as Vector2).x != 0.0      # the door runs along y
 				var lips: Array = []
@@ -1735,10 +1879,10 @@ func _spawn_blockers() -> void:
 				den.position = (bl["a"] as Vector2).snapped(Vector2(DETAIL, DETAIL))
 				blocker_layer.move_child(den, 0)
 				bl["den"] = den
-				bl["sprite"] = _sprite(TiltMazeArt.rat(0), Vector2.ZERO, node)
+				bl["sprite"] = _raise(node, TiltMazeArt.rat(0), Vector2.ZERO, 0.3)
 			"fire":
 				_sprite(TiltMazeArt.burner(), Vector2.ZERO, node)
-				var f := _sprite(TiltMazeArt.flame(0, true), Vector2(0, -24), node)
+				var f := _raise(node, TiltMazeArt.flame(0, true), Vector2(0, -24), 0.6)
 				f.visible = false
 				bl["sprite"] = f
 			"meteor":
@@ -1774,6 +1918,7 @@ func _update_blockers(delta: float) -> void:
 				bl["solid"] = up
 				var sp: Sprite2D = bl["sprite"]
 				sp.texture = TiltMazeArt.peg(up)
+				bl["raise"]["h"] = PEG_LIFT if up else 0.0
 				sp.rotation = sin(t * 40.0) * 0.12 if ph > PEG_CYCLE - 0.4 else 0.0
 				sp.scale = Vector2(DETAIL, DETAIL) * (1.12 if up and ph < 0.08 else 1.0)
 				if up and ph < delta * 1.5:
@@ -1998,6 +2143,7 @@ func fail_title() -> String:
 ## Back on the last marble taken, blinking
 func _respawn() -> void:
 	ball_pos = respawn_pos
+	roll = Basis.IDENTITY
 	ball.position = ball_pos
 	ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
 	ball.modulate = Color(1, 1, 1, 1)

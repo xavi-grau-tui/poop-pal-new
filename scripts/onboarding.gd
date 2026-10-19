@@ -211,6 +211,9 @@ func _build_card() -> void:
 	var rect: Rect2 = pink.get_rect()
 	var tl := pink.position + rect.position * pink.scale
 	var sz := rect.size * pink.scale
+	if pink.has_meta("screen_rect"):                     # (TiltParallax enlarges the sky past the screen)
+		tl = (pink.get_meta("screen_rect") as Rect2).position
+		sz = (pink.get_meta("screen_rect") as Rect2).size
 	card = Control.new()
 	card.size = Vector2(sz.x - 180, 200)                 # (well inside the screen: room on top and the sides)
 	card.position = Vector2(tl.x + 90, tl.y + 80)

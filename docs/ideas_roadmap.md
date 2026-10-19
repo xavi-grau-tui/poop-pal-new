@@ -1170,7 +1170,13 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
     annoying").
   - The 3D tilt (the user: like the iPhone's 3D photos; Pal Prix first): tilting the phone shifts
     the layers by their depth, the play plane still (what you see is where things are); a far layer
-    is painted a little past the screen (MARGIN) so a full tilt never shows its edge.
+    is painted a little past the screen (MARGIN) so a full tilt never shows its edge. It must be
+    OBVIOUS: the far layer ~40-56 px, full at ~27 degrees, the front the other way. A toy that is a
+    BOX (Tilt Maze, Splash Hoops) keeps its front still on the screen (the glass you look through:
+    the wall tops, the band and the sand) while its floor / back slides under it, and its inside
+    walls show between them. What's in it looks solid: round things lit as spheres (a fixed light
+    from the top-left), raised things stacked (copies floor to top, darker the lower), hollow things
+    hollow (a basket: its back, its rim's ends, nothing in between), shadows left on the floor.
   - The HUD: the race games' band across the top (GameFx.HUD_BAND): the level on the left, the
     game's measure in the middle, the 3 stars (each dims the moment it's lost), lives if any, the
     game's own things on the right, the boost at the far right; the band in the game's own
@@ -1179,15 +1185,22 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
 - DONE on `suite-look` (the user loved Top Spin's, then the rest followed):
   - TOP SPIN: see its section (Beyblades, its places' light and life, the band, the whir, the 3D
     tilt: the place below one way, the rim the other).
-  - TILT MAZE: the 3D tilt (the inner walls rise off the floor, their sides showing; the floor, the
-    frame, the ball still), each world's light baked over the board and its life (dust, soap
+  - TILT MAZE: the 3D tilt (the wall tops and the frame still, the floor sliding under them, the
+    walls' sides showing; TOPS_FIXED), the pal really rolling (tilt_ball.gdshader: its face rolls
+    away and back, the light fixed; face up again when it stops), the marbles floating over their
+    shadows (spheres; the ring, the nut and the star spinning like thick coins), pegs, the duck, the
+    rat, flames, vault gates, the sign and the chest standing up (_raise), each world's light baked over the board and its life (dust, soap
     bubbles, glowing spores, drips, a weld's sparks, twinkling stars), bursts for a marble, the
     trapdoor, a fall, a hit, a hard bump, confetti when flushed, the race HUD sizes, the banner.
   - SPLASH HOOPS: the race band set in the toy's plastic top (its foot line the clock running
-    down), the 3D tilt (the panel behind the water: an aquarium), the pieces' shadows on the panel,
+    down), the 3D tilt (a box: the front still, the panel sliding 56 px behind, the tank's inside
+    walls and ceiling showing; the baskets open, their backs sliding: CUP_DEPTH), the pieces' shadows on the panel,
     the panels alive (SceneLife, see "Splash Hoops"), bubbles and glitter, bursts and confetti.
   - PAPER SUMO: the band in cardboard, each place alive (StageLife, see "Paper Sumo"), the 3D tilt
-    (the place behind the ring), sand at the feet, a shake on a fall, sparkles, confetti.
+    (the place behind the ring 40 px, the ring and the wrestlers 14 px the other way), sand at the feet, a shake on a fall, sparkles, confetti.
+  - TOP SPIN: its ways out are just gaps in the rim (the floor running out), not black pockets.
+  - THE PET SCREEN (tilt_parallax.gd): the sky and the clouds slide 44 / 30 / 18 px (enlarged so no
+    edge shows), the gut, the cam and the pal 14 px the other way.
   - PAL PRIX 2177: the ground fills the whole screen (some stages left a black frame, effects drawn
     past it).
 - Tools: tools/qa/preview (an art preview from a scratch script, with the autoloads), Top Spin's

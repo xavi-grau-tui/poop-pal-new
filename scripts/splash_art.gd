@@ -90,7 +90,7 @@ const THEMES := [
 ## The tank in two layers, for the 3D tilt (the games' shared look): [the back panel (the water
 ## and what's printed on it, painted on under the sand and the band too, so it can shift behind
 ## them), the front (the top band and the funnel floor; clear where the water is)]
-const MARGIN := 6                            # (art px) the back panel is painted this far past the screen (the 3D tilt shifts it)
+const MARGIN := 20                           # (art px) the back panel is painted this far past the screen (the 3D tilt shifts it)
 
 static func tank_layers(w_px: int, h_px: int, band_y: float, floor_at: Callable, theme: Dictionary) -> Array:
 	var back := Image.create(w_px + MARGIN * 2, h_px + MARGIN * 2, false, Image.FORMAT_RGBA8)

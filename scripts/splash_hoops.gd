@@ -33,8 +33,9 @@ extends BaseMinigame
 ## A ball sitting right on a nozzle goes straight up and back down with one pump only.
 ## The look (the user, 2026-10-19: the toy games at the race games' quality, one suite; GameFx,
 ## docs/ideas_roadmap.md "The games' look"): the race games' band set in the toy's plastic top (its
-## foot line the clock running down, in the world's plastic), the 3D tilt (the scene printed behind
-## the water shifts as the phone tilts, the baskets, the balls and the sand still: an aquarium),
+## foot line the clock running down, in the world's plastic), the 3D tilt (a box: its front still,
+## the scene printed on its back sliding as the phone tilts, its inside walls showing, the baskets
+## open with their backs sliding: _draw_box_walls, CUP_DEPTH),
 ## each world's water alive (light glittering under the surface and bubbles rising, plankton
 ## glowing at night, marine snow in the deep: GameFx.Ambience), bursts for a basket filled, the
 ## splash's second chance and the pufferfish, confetti for a clear, the race games' banner.
@@ -222,6 +223,9 @@ var tank_back: Sprite2D                # the back panel behind the water (it shi
 var fx: GameFx.Burst
 var ambience: GameFx.Ambience
 var back_shadows: Node2D               # the pieces' soft shadows on the back panel (they shift with it)
+var box_walls: Node2D                  # the tank's inside walls, seen as it tilts (_draw_box_walls)
+var box_shift := Vector2.ZERO          # (the back panel's shift: where the walls end)
+var cup_backs: Node2D                  # the baskets' depth: copies stacked behind them (the 3D tilt)
 var scene_life: SplashArt.SceneLife    # what moves on the back panel (fish, jellyfish, clouds, the beam...)
 var band_bar: ColorRect                # (the band's foot line: the clock running down)
 const PLASTIC := Color8(44, 70, 102)   # the HUD band: the toy's blue plastic...
@@ -309,6 +313,8 @@ func _apply_theme(w: int) -> void:
 		return
 	theme_index = w
 	theme = SplashArt.THEMES[w]
+	if box_walls:
+		box_walls.queue_redraw()
 	var old := "res://textures/minigames/splash/"
 	var rim: Array = theme["rim"]
 	var layers := SplashArt.tank_layers(317, 316, BAND_Y, floor_at, theme)
@@ -373,6 +379,8 @@ func _build_level() -> void:
 	for c in cups:
 		for k in ["net", "rim_node", "label"]:
 			c[k].queue_free()
+		for bk in c["backs"]:
+			bk[0].queue_free()
 	balls.clear()
 	cups.clear()
 	glows.clear()
@@ -512,10 +520,33 @@ func _make_cup(center: Vector2, points: int) -> Dictionary:
 	if theme["glow"]:
 		_add_glow(rim, tex["glow_rim"], Color.WHITE)
 	net_layer.add_child(rim)
+	# its depth, sliding the panel's way (_depth_3d): an open basket. Its back: the net (faint) and
+	# the rim (darker); between them only the rim's two ends run back, solid (copies stacked, darker
+	# further back), and the net's bottom edges (_draw_cup_edges): empty inside, seen through
+	var backs: Array = []
+	var far_net := _sprite(tex["cup_net"], center)
+	far_net.modulate = Color(0.62, 0.62, 0.66, 0.5)
+	cup_backs.add_child(far_net)
+	backs.append([far_net, 1.0, 0.0])
+	var far_rim := _sprite(tex["cup_rim"], center)
+	far_rim.modulate = Color(1, 1, 1).darkened(0.55)
+	cup_backs.add_child(far_rim)
+	backs.append([far_rim, 1.0, 0.0])
+	var rim_w: int = (tex["cup_rim"] as Texture2D).get_width()
+	var rim_h: int = (tex["cup_rim"] as Texture2D).get_height()
+	for j in CUP_SIDES:
+		var f := float(CUP_SIDES - j) / float(CUP_SIDES + 1)      # (the furthest first)
+		for side in [-1.0, 1.0]:
+			var bk := _sprite(tex["cup_rim"], center)
+			bk.region_enabled = true
+			bk.region_rect = Rect2(0 if side < 0.0 else rim_w - RIM_END, 0, RIM_END, rim_h)
+			bk.modulate = Color(1, 1, 1).darkened(0.25 + 0.3 * f)
+			cup_backs.add_child(bk)
+			backs.append([bk, f, side * (rim_w - RIM_END) / 2.0 * S])
 	var label := _make_label(center + Vector2(-45, -CUP_H / 2.0 - 34), Vector2(90, 30), 22, HORIZONTAL_ALIGNMENT_CENTER, theme["label"])
 	label.text = str(points)
 	label.visible = false                  # (no points: the baskets are just baskets)
-	return { "pos": center, "rim": center.y - CUP_H / 2.0 + 12.0, "full": false, "points": points, "net": net, "rim_node": rim, "label": label }
+	return { "pos": center, "rim": center.y - CUP_H / 2.0 + 12.0, "full": false, "points": points, "net": net, "rim_node": rim, "label": label, "backs": backs }
 
 # ================================================================== LOOP
 
@@ -523,23 +554,99 @@ func _make_cup(center: Vector2, points: int) -> Dictionary:
 ## phone shifts the scene printed behind the water (it's the far side of the tank), the baskets,
 ## the balls, the pal and the sand still (what you see is where they are); the water's glitter and
 ## bubbles drift the other way, a little; measured from the pose at the level's start, smoothed;
-## off with DEPTH_3D. Px per full tilt:
+## off with DEPTH_3D; then (the user: more obvious, as in Top Spin and Tilt Maze) 40 px, full at
+## ~27 degrees (DEPTH_FULL: its sine). Px per full tilt:
 const DEPTH_3D := true
-const DEPTH_FAR := 14.0
-const DEPTH_NEAR := 6.0
+const DEPTH_FULL := 0.45
+const DEPTH_FAR := 56.0               # (the panel is painted SplashArt.MARGIN past the screen; then 56: the user, more obvious)
+const DEPTH_NEAR := 14.0
+const CUP_DEPTH := 22.0               # a basket's back (its copies stacked between: CUP_SIDES)
+const CUP_SIDES := 6
+const RIM_END := 3                    # (art px) the rim's ends that run back
 var _depth_tilt := Vector2.ZERO
 var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, the Mac has no sensor)
 func _depth_3d() -> void:
 	var want := qa_depth_tilt
 	if DEPTH_3D and has_tilt_sensor() and state == State.PLAY:
-		want = device_tilt().limit_length(0.6) / 0.6
+		want = device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
 	var far := (_depth_tilt * DEPTH_FAR).round()
 	tank_back.position = far - Vector2.ONE * SplashArt.MARGIN * S
 	back_shadows.position = far
 	scene_life.position = far
 	back_shadows.queue_redraw()
+	if far != box_shift:
+		box_shift = far
+		box_walls.queue_redraw()
+	for c in cups:
+		var at: Vector2 = (c["rim_node"] as Node2D).position
+		for bk in c["backs"]:
+			(bk[0] as Node2D).position = at + Vector2(bk[2], 0) + (_depth_tilt * CUP_DEPTH * float(bk[1])).round()
+	cup_backs.queue_redraw()
+
+## A basket's net, its two bottom corners joined front to back (the open basket's sides), in 3 px
+## steps of the net's colour, dimmer at the back
+func _draw_cup_edges() -> void:
+	var back := (_depth_tilt * CUP_DEPTH).round()
+	if back.length() < S:
+		return
+	var col: Color = (theme["net"] as Color).darkened(0.25)
+	var n := int(ceilf(back.length() / S))
+	for c in cups:
+		var at: Vector2 = (c["rim_node"] as Node2D).position
+		for side in [-1.0, 1.0]:
+			var p: Vector2 = at + Vector2(side * CUP_W * 0.36 - S * 0.5, CUP_H / 2.0 - S * 2.0)
+			for k in n:
+				var f := (k + 0.5) / float(n)
+				var q := GameFx.snap(p + back * f)
+				cup_backs.draw_rect(Rect2(q, Vector2(S, S)), Color(col.darkened(0.3 * f), 0.7))
 	ambience.position = (-_depth_tilt * DEPTH_NEAR).round()
+
+## The tank is a box (the user, 2026-10-19: its walls should show as it tilts): the front (the band,
+## the sand, the screen's edges) holds still, the back panel slides behind it, and between them its
+## inside walls show: the side wall on the side the panel slid away from, the ceiling under the
+## band. The toy's plastic seen through the water (each water band tints it), darker towards the
+## back, a lit front edge, a dark seam at the panel; on the game's 3 px grid. (The floor is the sand.)
+func _draw_box_walls() -> void:
+	var d := box_shift
+	var water: Array = theme["water"]
+	var top := BAND_Y
+	var bot := PLAY_HEIGHT
+	var water_bottom := 880.0
+	var steps := func(f: float) -> float: return floorf(f * 3.0) / 3.0
+	# a side wall: columns from the front edge back to the panel's edge (its top and bottom slant with d.y)
+	var n := int(absf(d.x) / S)
+	if n > 0:
+		var right := d.x < 0.0                       # (the right wall faces the light from the left: lit)
+		var base: Color = SplashArt.CASE_SHADE if right else SplashArt.CASE_DARK
+		var x0 := TANK_R if right else TANK_L
+		for k in n:
+			var f := (k + 0.5) / float(n)
+			var x := x0 - (k + 1) * S if right else x0 + k * S
+			var y0 := snappedf(top + maxf(0.0, d.y) * f, S)
+			var y := y0
+			while y < bot:
+				var band := clampi(int((y - top) / (water_bottom - top) * water.size()), 0, water.size() - 1)
+				var y1 := minf(bot, snappedf(top + (band + 1) * (water_bottom - top) / water.size(), S)) if band < water.size() - 1 else bot
+				var c: Color = base.lerp(water[band], 0.28).darkened(0.1 + 0.36 * steps.call(f))
+				if k == 0:
+					c = c.lightened(0.18)
+				elif k == n - 1:
+					c = SplashArt.OUTLINE.lerp(water[band], 0.35)
+				box_walls.draw_rect(Rect2(x, y, S, maxf(S, y1 - y)), c)
+				y = maxf(y1, y + S)
+	# the ceiling under the band: rows from the band back to the panel's top edge
+	var m := int(d.y / S)
+	if m > 0:
+		for k in m:
+			var f := (k + 0.5) / float(m)
+			var y := top + k * S
+			var xl := maxf(TANK_L, snappedf(TANK_L + d.x * f, S)) if d.x > 0.0 else TANK_L
+			var xr := minf(TANK_R, snappedf(TANK_R + d.x * f, S)) if d.x < 0.0 else TANK_R
+			var c: Color = SplashArt.CASE_DARK.lerp(water[0], 0.25).darkened(0.18 + 0.32 * steps.call(f))
+			if k == m - 1:
+				c = SplashArt.OUTLINE.lerp(water[0], 0.35)
+			box_walls.draw_rect(Rect2(xl, y, xr - xl, S), c)
 
 ## The pieces' soft shadows on the back panel (the light from the surface, top-left): each basket,
 ## each ball and the pal, down and right of it, on the panel (they shift with it: the 3D tilt)
@@ -1294,6 +1401,9 @@ func _create_static_nodes() -> void:
 	add_child(back_shadows)
 	rain_layer = Node2D.new()                       # (the storm's moving rain: behind everything else)
 	add_child(rain_layer)
+	box_walls = Node2D.new()                        # the tank's inside walls (the 3D tilt), behind the band and the sand
+	box_walls.draw.connect(_draw_box_walls)
+	add_child(box_walls)
 	var tank := _sprite(tex["tank"], Vector2.ZERO)
 	tank.centered = false
 	add_child(tank)
@@ -1304,6 +1414,9 @@ func _create_static_nodes() -> void:
 		add_child(nz)
 		nozzle_sprites.append(nz)
 
+	cup_backs = Node2D.new()                        # (behind the balls, like the baskets' backs)
+	cup_backs.draw.connect(_draw_cup_edges)
+	add_child(cup_backs)
 	world = Node2D.new()
 	add_child(world)
 	net_layer = Node2D.new()

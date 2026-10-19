@@ -20,7 +20,7 @@ const STUMP := Vector2(440, 176)      # a round top (the pond's rock, the stump)
 const DARK := 0.38                    # how much darker everything outside the spotlight is
 const ROUND := [1, 4]                 # the worlds whose ring is on a round top (STUMP), not a box
 const OUTLINE := Color8(70, 44, 30)
-const MARGIN := 6                     # (stage px) the place behind is painted this far past the screen (the 3D tilt shifts it)
+const MARGIN := 11                    # (stage px) the place behind is painted this far past the screen (the 3D tilt shifts it)
 
 # the wooden box (world 1, the prototype's)
 const WALL := Color8(236, 220, 192)

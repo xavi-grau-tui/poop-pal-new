@@ -8,7 +8,7 @@ class_name TopSpinArt
 ##     and shows its body; the blade ring turning in frames, a haze behind it when it spins fast
 ##   - the bowl: raised like the race games' tracks: the rim's top, its outer side face on the
 ##     near side, the far inner wall, the floor shaded as a hollow, the rim's shadow inside it, the
-##     ways out (dark pockets) cut through the rim; the near rim is a separate picture drawn over
+##     ways out cut through the rim (no rim there, the floor running out); the near rim is a separate picture drawn over
 ##     the tops
 ##   - the places round it, one per world with its own palette and time of day (the Retry rules:
 ##     no outlines, few colours in dithered steps, the world's light over everything, nothing
@@ -278,7 +278,6 @@ static func bowl_images(bowl: Dictionary, r: float, rim_w: float, rim_h: float, 
 	var c := Vector2(n / 2.0, n / 2.0)              # the floor's middle
 	var lip := c - Vector2(0, rh)                    # the rim's top is rh higher
 	var light_dir := Vector2(-1, -1).normalized()
-	var pocket := Color8(22, 18, 30)
 	for y in n:
 		for x in n:
 			var p := Vector2(x + 0.5, y + 0.5)
@@ -289,13 +288,12 @@ static func bowl_images(bowl: Dictionary, r: float, rim_w: float, rim_h: float, 
 			var col := Color(0, 0, 0, 0)
 			var is_front := false
 			if d1 >= rr and d1 < rr + rw:
-				# --- the rim's top; a pocket cut through it at each way out ---
+				# --- the rim's top; cut away at each way out (the user: no black pocket, just no rim:
+				# the floor runs on out through it) ---
 				var g1 := _gap_at(gaps, gap_half, ang1)
 				if g1 >= 0.0:
 					if g1 > 0.86:
 						col = OUTLINE                                    # the cut's edges
-					elif d0 < rr + rw - 0.5:
-						col = pocket.lerp(Color8(54, 46, 62), clampf((d1 - rr) / rw, 0.0, 1.0) * 0.6)
 				else:
 					var t := (d1 - rr) / rw
 					var lit := (p - lip).normalized().dot(light_dir)
@@ -324,7 +322,8 @@ static func bowl_images(bowl: Dictionary, r: float, rim_w: float, rim_h: float, 
 				# --- the far inner wall, between the floor's edge and the lip ---
 				var g2 := _gap_at(gaps, gap_half, ang1)
 				if g2 >= 0.0:
-					col = OUTLINE if g2 > 0.86 else pocket
+					if g2 > 0.86:
+						col = OUTLINE
 				else:
 					var k := clampf((d0 - rr) / maxf(rh, 0.01), 0.0, 1.0)
 					var side := (p - c).normalized().x
@@ -332,26 +331,26 @@ static func bowl_images(bowl: Dictionary, r: float, rim_w: float, rim_h: float, 
 					if d0 < rr + 1.0:
 						col = OUTLINE                                    # where it meets the floor
 			if d0 < rr + rw - 0.5:
-				# --- the floor (on under the rim; dark in the ways out): its material, shaded as a
+				# --- the floor (on under the rim, and out through the ways out): its material, shaded as a
 				# hollow, the rim's shadow, puddles ---
-				var fc := pocket if d0 >= rr and _gap_at(gaps, gap_half, ang0) >= 0.0 else _floor_px(bowl, p - c, x, y)
-				if d0 < rr or fc == pocket:
+				var in_gap := d0 >= rr and _gap_at(gaps, gap_half, ang0) >= 0.0
+				var fc := _floor_px(bowl, p - c, x, y)
+				if in_gap and d0 >= rr + rw - 1.5:
+					fc = OUTLINE                                          # (the floor's edge, where it ends)
+				elif d0 < rr or in_gap:
 					var v := (p - c) / rr
 					var sdot := v.dot(light_dir)
-					if fc != pocket:
-						if sdot > 0.66 or (sdot > 0.5 and dith((sdot - 0.5) / 0.16, x, y)):
-							fc = fc.darkened(0.1)
-						elif sdot < -0.7 or (sdot < -0.56 and dith((-0.56 - sdot) / 0.14, x, y)):
-							fc = fc.lightened(0.07)
-						var q0 := p - light_dir * 2.6
-						if (q0 - lip).length() >= rr - 0.2 and p.y < c.y + rr * 0.3:
-							fc = fc.darkened(0.2)
-						if d0 > rr - 10.0 and _gap_at(gaps, gap_half, ang0) >= 0.0:
-							fc = fc.darkened(0.1)
-						for s in slimes:
-							var sd0 := ((p - c) * px - (s as Vector2)).length() + sin(ang0 * 5.0 + (s as Vector2).x) * 6.0
-							if sd0 < 70.0:
-								fc = _slime_px(sd0, x, y)
+					if sdot > 0.66 or (sdot > 0.5 and dith((sdot - 0.5) / 0.16, x, y)):
+						fc = fc.darkened(0.1)
+					elif sdot < -0.7 or (sdot < -0.56 and dith((-0.56 - sdot) / 0.14, x, y)):
+						fc = fc.lightened(0.07)
+					var q0 := p - light_dir * 2.6
+					if (q0 - lip).length() >= rr - 0.2 and p.y < c.y + rr * 0.3:
+						fc = fc.darkened(0.2)
+					for s in slimes:
+						var sd0 := ((p - c) * px - (s as Vector2)).length() + sin(ang0 * 5.0 + (s as Vector2).x) * 6.0
+						if sd0 < 70.0:
+							fc = _slime_px(sd0, x, y)
 				else:
 					fc = fc.darkened(0.3)                                 # (under the rim: only seen as it shifts)
 				floor_img.set_pixel(x, y, fc)

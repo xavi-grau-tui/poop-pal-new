@@ -19,7 +19,7 @@ extends Node
 ##   until=done    on to the next level as soon as this one is over (at most `wait` s)
 ##   hands=off     (Pal Prix) the toy isn't steered at all: can it finish by itself?
 ##   intro=1       the game's how-to card over each level
-##   depth=x,y     (Pal Prix) a pretend phone tilt for the 3D layers, -1..1 each
+##   depth=x,y     a pretend phone tilt for the 3D layers (the games', the pet screen's), -1..1 each
 ## Prints "QA DONE" and quits when finished. The testing save is wiped at every launch anyway.
 
 var args := {}
@@ -74,6 +74,15 @@ func _run() -> void:
 		_quit()
 		return
 	if game == "pet":
+		for btn in get_tree().get_nodes_in_group("menu_toggle_buttons"):
+			if btn.button_pressed:
+				btn.button_pressed = false                     # (the games menu open: closed, the pet screen shows)
+		await _wait(1.0)
+		if args.has("depth"):                              # (the pet screen's 3D wallpaper: a pretend tilt)
+			var tp := get_tree().root.find_child("TiltParallax", true, false)
+			if tp:
+				tp.qa_tilt = Vector2(float(str(args["depth"]).get_slice(",", 0)), float(str(args["depth"]).get_slice(",", 1)))
+				await get_tree().create_timer(1.0).timeout
 		await _shot("pet")
 		_quit()
 		return

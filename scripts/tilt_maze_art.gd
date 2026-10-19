@@ -355,15 +355,13 @@ static func pickup(w: int, taken := false) -> Texture2D:
 							col = Color8(255, 255, 255)
 						elif off.x > 1.5 and off.y > 1.5 and absf(d - 4.4) < 0.7:
 							col = Color8(236, 196, 250, 220)      # a rainbow sheen
-				2:  # a glowing spore: a bright core, a soft green halo
+				2:  # a glowing spore: a lit ball in a soft green halo, its glow brightest up-left
 					if d <= 7.0:
 						col = Color8(160, 236, 120, 90)
-						if d < 5.2:
-							col = Color8(196, 246, 120)
-						if d < 3.6:
-							col = Color8(244, 255, 196)
-						if d > 6.2 and d <= 7.0:
+						if d > 6.2:
 							col = Color8(70, 130, 60, 160)
+						elif d < 5.4:
+							col = _sphere_px(off, 5.4, [Color8(255, 255, 230), Color8(244, 255, 196), Color8(196, 246, 120), Color8(140, 214, 96), Color8(96, 170, 74)], Color8(96, 170, 74))
 				3:  # a lost gold ring
 					if d <= 7.0 and d >= 3.0:
 						col = Color8(244, 196, 70) if off.x + off.y < 0 else Color8(206, 146, 40)
@@ -390,19 +388,38 @@ static func pickup(w: int, taken := false) -> Texture2D:
 							col = Color8(120, 70, 20)
 						elif Vector2(off.x + 1.6, off.y + 1.6).length() < 1.1:
 							col = Color8(255, 252, 220)
-				_:  # 0: an amber glass marble: warm gold, a darker lower half, a glint
+				_:  # 0: an amber glass marble: a lit ball, a glint, light through the glass below
 					if d <= 7.0:
-						col = Color8(246, 186, 74) if off.x + off.y < 0 else Color8(214, 132, 40)
-						if d > 6.1:
-							col = Color8(112, 58, 20)
-						elif Vector2(off.x + 2.5, off.y + 2.5).length() < 1.6:
-							col = Color8(255, 240, 200)
-						elif Vector2(off.x - 2.0, off.y - 2.4).length() < 1.3:
-							col = Color8(250, 214, 120)              # light through the glass
+						col = _sphere_px(off, 7.0, [Color8(255, 246, 214), Color8(250, 200, 96), Color8(234, 160, 56), Color8(204, 118, 36), Color8(150, 78, 24)], Color8(112, 58, 20))
+						if d <= 6.0 and Vector2(off.x - 1.8, off.y - 2.2).length() < 1.4:
+							col = Color8(252, 210, 110)              # light through the glass
 			if col.a > 0.0 and taken:
 				col = Color(col.r * 0.5 + 0.2, col.g * 0.45 + 0.15, col.b * 0.45 + 0.13, col.a * 0.45)
 			img.set_pixel(x, y, col)
 	return _tex(key, img)
+
+## A ball's pixel, lit like the pal's ball (tilt_ball.gdshader: from the top-left, in front): off
+## from its middle, r its radius; tones [shine, lit, mid, shade, dark side], the outline ink, a bounce
+## of light along the lower right rim
+const LIGHT := Vector3(-0.55, -0.65, 0.75)
+static func _sphere_px(off: Vector2, r: float, tones: Array, ink: Color) -> Color:
+	var d := off.length()
+	if d > r:
+		return Color(0, 0, 0, 0)
+	if d > r - 1.0:
+		return ink
+	var q := off / (r - 1.0)
+	var n := Vector3(q.x, q.y, sqrt(maxf(0.0, 1.0 - q.length_squared())))
+	var dif := n.dot(LIGHT.normalized())
+	if dif > 0.95:
+		return tones[0]
+	if dif > 0.72:
+		return tones[1]
+	if dif > 0.4:
+		return tones[2]
+	if dif > 0.1 or (q.length() > 0.6 and q.x + q.y > 0.75):
+		return tones[3]
+	return tones[4]
 
 ## The low fence across a vault's door (the Fizzy pal hops it): pickets in the world's material
 ## under the striped rail (that rail is what says "a low fence" in every world), w x 9 px
