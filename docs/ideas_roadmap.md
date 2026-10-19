@@ -20,8 +20,9 @@ light, playful and visually intuitive: icons over text, learn by doing. Asia fir
 - 2026-10-19: Pal Prix 2177 (the Turbo League) built on branch `pal-prix-2`, for the user to try:
   see "PAL PRIX 2177" under "To build" (what's in it, what's still to do).
 - 2026-10-19 (later): THE GAMES' LOOK, one suite (branch `suite-look`, NOT merged): Top Spin redone
-  as the trial (Beyblades, its places, the band, the effects, the 3D tilt), for the user to judge
-  before Tilt Maze, Splash Hoops and Paper Sumo follow: see "The games' look: one suite".
+  first (Beyblades, its places, the band, the effects, the 3D tilt; the user loved it), then Tilt
+  Maze, Splash Hoops and Paper Sumo (living places, the band, the 3D tilt, the bursts) and Pal Prix
+  2177's full-screen ground: see "The games' look: one suite".
 - Branch `complete-games` (not merged, for the user to review: what stays, what changes): the
   skeleton's systems (meal clock, coins on the LCD, every boost, drink levels, the daily special
   shelf, Lucky Pinch every 4th new pal); the first five games each at 6 worlds x 9 levels with a
@@ -1140,7 +1141,7 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   certain to drop, or guaranteed after a few tries, never a long chain of random drops).
 - Games feed each other: game A drops the drink whose boost opens game B's secrets.
 
-## The games' look: one suite (2026-10-19, TRIAL on branch `suite-look`: Top Spin first)
+## The games' look: one suite (2026-10-19, BUILT on branch `suite-look`, not merged: the user to try)
 - The aim (the user, 2026-10-19): Splash Hoops, Tilt Maze, Top Spin and Paper Sumo at the race
   games' quality, so all of them feel part of the same thing, Pal Prix 2177 the most advanced (its
   nature). Their ideas and gameplay stay; Tilt Maze needs the least. A middle point between Pal
@@ -1154,29 +1155,46 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   - The places (the user: "no random stuff in the backgrounds"): each world ONE place with its own
     small palette and a time of day; no outlines in the background, few colours in steps with a 2x2
     dither, depth by haze; the world's light lies over everything, the play pieces too; nothing
-    scattered about to fill it: what's there belongs to the place, and something in it lives (dust
-    in a sunbeam, flecks of sun through leaves, a lamp swaying, lanterns flickering, fireworks'
-    flashes, light rippling on water).
+    scattered about to fill it: what's there belongs to the place.
+  - The places LIVE (the user: "not just the HUD: moving, more beautiful backgrounds, keeping what
+    we have: the jellyfish, clouds, seaweed, the sun, the lighthouse moving its light"): what can
+    move in a place moves, drawn every frame on the game's grid, printed like the rest (dust in a
+    sunbeam, a lamp swaying, lanterns flickering and swaying, fireworks, fish and turtles swimming,
+    seaweed swaying, jellyfish pulsing, clouds rolling, a lighthouse's beam sweeping, a waterfall
+    pouring, petals and leaves falling, stars twinkling). GameFx.Ambience (the living light, added
+    on) and each game's own life layer (SplashArt.SceneLife, SumoArt.StageLife).
   - The light and motion (2177's, measured): glows on what matters (a soft halo, a bright core, a
     white-hot pixel), sparks with tails, bursts, shockwave rings, light ribbons behind fast things,
     a shake and a tiny freeze on the big hits. Words only for the rare big moments (world names,
     GO!, WIN!, a rival out); the frequent ones are said by the sparks and the chime (2177: "a bit
     annoying").
   - The 3D tilt (the user: like the iPhone's 3D photos; Pal Prix first): tilting the phone shifts
-    the layers by their depth, the play plane still (what you see is where things are).
+    the layers by their depth, the play plane still (what you see is where things are); a far layer
+    is painted a little past the screen (MARGIN) so a full tilt never shows its edge.
   - The HUD: the race games' band across the top (GameFx.HUD_BAND): the level on the left, the
     game's measure in the middle, the 3 stars (each dims the moment it's lost), lives if any, the
     game's own things on the right, the boost at the far right; the band in the game's own
     material, its foot line in the world's accent (a timer or a charge can run along it). The
     button legend in the bottom corners, the banner (72 px, outlined) across the middle.
-- TOP SPIN (built on `suite-look`, for the user to judge): see its section. Tools: tools/qa/preview
-  (an art preview from a scratch script, with the autoloads), Top Spin's QA autopilot,
-  tools/audio/top_sounds.py.
-- NEXT, once the user confirms (proposed): Tilt Maze (the band and the stars like the races, the 3D
-  tilt: the holes' depth below, the walls raised; the board's places calmer, its pieces moving),
-  Splash Hoops (the band in the toy's plastic, the tank as one scene with its light and life, the
-  baskets and the pal stacked, splashes and bubbles as bursts), Paper Sumo (the band, the stage's
-  light over the wrestlers, hops and pushes as bursts and dust, a shake on a fall).
+- DONE on `suite-look` (the user loved Top Spin's, then the rest followed):
+  - TOP SPIN: see its section (Beyblades, its places' light and life, the band, the whir, the 3D
+    tilt: the place below one way, the rim the other).
+  - TILT MAZE: the 3D tilt (the inner walls rise off the floor, their sides showing; the floor, the
+    frame, the ball still), each world's light baked over the board and its life (dust, soap
+    bubbles, glowing spores, drips, a weld's sparks, twinkling stars), bursts for a marble, the
+    trapdoor, a fall, a hit, a hard bump, confetti when flushed, the race HUD sizes, the banner.
+  - SPLASH HOOPS: the race band set in the toy's plastic top (its foot line the clock running
+    down), the 3D tilt (the panel behind the water: an aquarium), the pieces' shadows on the panel,
+    the panels alive (SceneLife, see "Splash Hoops"), bubbles and glitter, bursts and confetti.
+  - PAPER SUMO: the band in cardboard, each place alive (StageLife, see "Paper Sumo"), the 3D tilt
+    (the place behind the ring), sand at the feet, a shake on a fall, sparkles, confetti.
+  - PAL PRIX 2177: the ground fills the whole screen (some stages left a black frame, effects drawn
+    past it).
+- Tools: tools/qa/preview (an art preview from a scratch script, with the autoloads), Top Spin's
+  QA autopilot, tools/audio/top_sounds.py. QA tip: a windowed shoot.sh run can stall when its
+  window is hidden behind others (no frame drawn): run Godot with --always-on-top.
+- STILL OPEN: Pal Prix 1's and 2177's HUD and effects stay their own (they were the model); Tummy
+  Tunes when its songs come; the user's verdict on the phone, then merge.
 
 ## Tilt Maze (the model for the others)
 - BUILT (2026-10-15, branch `tilt-maze`, to tune on the phone): 6 worlds x 9 levels in the level menu
@@ -1303,6 +1321,11 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   vulnerable). If it still feels useless, make FORWARD a BRACE instead (hold to plant your feet:
   heavier, no hops), like Top Spin's guard.
 - Check on the phone: lean direction (INVERT_TILT), bout length, whether falls happen.
+- LOOK (2026-10-19, `suite-look`): each place lives (SumoArt.StageLife): dust in the spotlight,
+  sakura petals and two koi in the pond, the waterfall pouring and maple leaves falling, stars, the
+  Earth's clouds and the Moon base's blinking lamps, sun shafts and pollen in the forest, the
+  festival's lanterns swaying and fireworks; the race band in cardboard, the 3D tilt (the place
+  behind the ring), sand at the wrestlers' feet, a shake on a fall.
 
 ## Splash Hoops (reworked 2026-10-10: scripts/splash_hoops.gd, art in scripts/splash_art.gd)
 - Look: a plastic water toy painted in code (teal water with light rays, rippled sand floor,
@@ -1354,6 +1377,13 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
   (onboarding, first drink step c). Rejected alternative: pumps never run dry (bends water's
   "second chance" meaning). Fizzy here = stronger jets (boost table), so the 2nd drink helps both.
 - Ideas: more layouts (a basket riding the pufferfish?). The sideways current is world 5's storm.
+- LOOK (2026-10-19, `suite-look`): the panels behind the water live (SplashArt.SceneLife): the
+  lagoon's school of fish and swaying seagrass; the sunset's gulls, cloud wisps, the sun's breathing
+  glow and shimmering reflection; the reef's fish both ways, the turtle paddling, swaying seaweed;
+  the night's two pulsing jellyfish, the moon's halo, twinkling stars; the storm's rolling clouds,
+  the lighthouse's sweeping beam (its lamp flaring), breaking waves; the deep's curling tentacles.
+  The race band in the toy's plastic top (its foot line the clock), the 3D tilt, the pieces'
+  shadows on the panel, bubbles and glitter (GameFx.Ambience), bursts for a basket filled.
 
 ## Tummy Tunes (the music game)
 - Each WORLD a different toy instrument (2026-10-10): a toy xylophone, then a toy piano, then a toy
