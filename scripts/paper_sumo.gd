@@ -29,6 +29,14 @@ extends BaseMinigame
 ## light at its feet shows it) · STURDY is heavier. A world's 6th level: a mystery challenger
 ## after the match, for a sturdy or a focused pal (the gate on the level); beat it for its prize.
 ##
+## The look (the user, 2026-10-19: the toy games at the race games' quality, one suite; GameFx,
+## docs/ideas_roadmap.md "The games' look"): the race games' band in cardboard, each place alive
+## (SumoArt.StageLife: dust in the spotlight, sakura petals and koi, the waterfall and maple leaves,
+## the stars and the Earth's clouds, shafts of sun, the festival's lanterns swaying and fireworks),
+## the 3D tilt (the place behind shifts as the phone tilts, the box and the wrestlers still), dust
+## at the wrestlers' feet, a shake on a fall, sparkles and confetti for the wins, the race games'
+## banner.
+##
 ## Desktop: Left / Right (A / D) lean, Space = MAIN, Shift or X = FORWARD.
 
 const GAME_INDEX := 9
@@ -168,7 +176,14 @@ var qa_back := 0.0
 var me: Wrestler
 var rival: Wrestler
 
-var painted: Sprite2D
+var scene: Node2D                     # (the place, the box, the wrestlers: it shakes; the HUD stays put)
+var painted_back: Sprite2D            # the place behind the ring (it shifts: the 3D tilt)
+var life: SumoArt.StageLife           # what moves in the place
+var painted: Sprite2D                 # the box with its ring (still)
+var burst: GameFx.Burst
+var shake := 0.0
+const CARD_BAND := Color8(126, 88, 58)      # the HUD band: brown cardboard...
+const CARD_FOOT := Color8(84, 56, 36)
 var stage: Node2D
 var wrestlers: Node2D
 var fx: Node2D
@@ -306,7 +321,10 @@ func _mystery_data() -> Dictionary:
 func _new_match() -> void:
 	match_id += 1
 	world = clampi((level - 1) / GameData.LEVELS_PER_WORLD, 0, WORLDS.size() - 1)
-	painted.texture = ImageTexture.create_from_image(SumoArt.stage(world))
+	var layers := SumoArt.stage_layers(world)
+	painted_back.texture = ImageTexture.create_from_image(layers[0])
+	painted.texture = ImageTexture.create_from_image(layers[1])
+	life.setup(world)
 	_style_hud()
 	wins = 0
 	losses = 0
@@ -416,8 +434,30 @@ func _add_key(w: Wrestler) -> void:
 
 # ================================================================== LOOP
 
+## The 3D tilt (the user, 2026-10-19: like the iPhone's 3D photos, as in Pal Prix): tilting the
+## phone shifts the place behind the ring (and what moves in it), the box and the wrestlers still;
+## measured from the pose at the bout's start, smoothed; off with DEPTH_3D. Px per full tilt:
+const DEPTH_3D := true
+const DEPTH_FAR := 12.0
+var _depth_tilt := Vector2.ZERO
+var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, the Mac has no sensor)
+func _depth_3d() -> void:
+	var want := qa_depth_tilt
+	if DEPTH_3D and has_tilt_sensor() and is_running:
+		want = device_tilt().limit_length(0.6) / 0.6
+	_depth_tilt = _depth_tilt.lerp(want, 0.12)
+	painted_back.position = (_depth_tilt * DEPTH_FAR).round() - Vector2.ONE * SumoArt.MARGIN * SumoArt.PX
+	life.position = (_depth_tilt * DEPTH_FAR).round()
+
+## A small shake for a big moment (the HUD stays put)
+func _kick(amount: float) -> void:
+	shake = maxf(shake, amount)
+
 func _process(delta: float) -> void:
 	stage.queue_redraw()
+	_depth_3d()
+	shake = maxf(0.0, shake - delta * 3.0)
+	scene.position = Vector2(randi_range(-1, 1), randi_range(-1, 1)) * 4.0 * ceilf(shake * 2.0) if shake > 0.0 else Vector2.ZERO
 	if not is_running:
 		return
 	time += delta
@@ -500,10 +540,11 @@ func _land(w: Wrestler) -> void:
 		w.buffered = false
 		_drum(w, 1.0)
 		return
-	# paper squash
+	# paper squash, a puff of the ring's sand at its feet
 	var t := create_tween()
 	t.tween_property(w.card, "scale", w.card_scale * Vector2(1.06, 0.92), 0.04)
 	t.tween_property(w.card, "scale", w.card_scale, 0.08)
+	burst.dust(Vector2(w.x, RING_C.y + 2.0), 5, Color8(214, 190, 138), 0.5)
 	if w == me:
 		_sfx("res://sounds/fx/wood_tap.wav", -24.0, 0.0, 1.5)        # the beat to tap on
 
@@ -564,18 +605,10 @@ func _finish_tutorial() -> void:
 	hide_coach()
 
 ## A hop timed right as the wrestler landed (a bit stronger): a little burst of sparks at its feet
+## (a fan, upwards) and a ring of light on the ring's sand
 func _good_hop_sparks(w: Wrestler) -> void:
-	for i in 5:
-		var sp := ColorRect.new()
-		sp.size = Vector2(8, 8)
-		sp.color = Color8(255, 236, 150) if i % 2 == 0 else Color.WHITE
-		sp.position = Vector2(w.x, RING_C.y) - sp.size / 2.0
-		fx.add_child(sp)
-		var dir := Vector2.from_angle(PI + (i + 0.5) * PI / 5.0)       # (a fan, upwards)
-		var t := create_tween()
-		t.tween_property(sp, "position", sp.position + dir * randf_range(30.0, 50.0), 0.22).set_ease(Tween.EASE_OUT)
-		t.parallel().tween_property(sp, "modulate:a", 0.0, 0.22)
-		t.tween_callback(sp.queue_free)
+	burst.spray(Vector2(w.x, RING_C.y), Vector2.UP, 7, [Color8(255, 236, 150), Color(1, 1, 1)], 1.1, 0.7)
+	burst.ring(Vector2(w.x, RING_C.y), Color8(255, 236, 150), 10.0, 50.0, 0.22, 4.0)
 
 # ================================================================== BOUTS
 
@@ -591,6 +624,8 @@ func _check_bout() -> void:
 			if _splash_save(w):
 				continue
 			lost = w
+			burst.dust(Vector2(w.x, RING_C.y), 10, Color8(214, 190, 138), 1.0)     # (over the rope: a puff of sand)
+			_kick(0.15)
 	if lost:
 		_end_bout(lost != me, "FELL OVER" if lost.down else "OUT OF THE RING")
 
@@ -620,6 +655,12 @@ func _fall_over(w: Wrestler) -> void:
 	t.tween_property(w.root, "rotation", flat, 0.25).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 	_sfx("res://sounds/fx/clack.mp3", -10.0, 0.0, 0.8)
 	Input.vibrate_handheld(40)
+	# it slaps down: a cloud of the ring's sand where it lands, the box shakes
+	_after(0.22, func():
+		var at := Vector2(w.x + signf(w.lean) * w.facing * w.half * 1.2, RING_C.y)
+		burst.dust(at, 14, Color8(214, 190, 138), 1.2)
+		burst.ring(at, Color(1, 1, 1), 12.0, 80.0, 0.3, 6.0)
+		_kick(0.3))
 
 func _end_bout(won: bool, how: String) -> void:
 	phase = Phase.RESULT
@@ -637,6 +678,7 @@ func _end_bout(won: bool, how: String) -> void:
 	if won:
 		wins += 1
 		_sfx("res://sounds/fx/gamecoin.wav", -8.0)
+		burst.sparkle(Vector2(me.x, RING_C.y - 90.0), 12, Color8(255, 236, 150), 1.0)
 	else:
 		losses += 1
 		_sfx("res://sounds/fx/error.mp3", -14.0)
@@ -664,6 +706,8 @@ func _match_won() -> void:
 	_sfx("res://sounds/fx/unlock_ding.wav", -8.0)
 	Input.vibrate_handheld(60)
 	_show_banner("MATCH WON!", 1.0)
+	for i in 3:
+		burst.confetti(Vector2(160.0 + i * 316.0, 130.0), 14, [Color8(255, 214, 90), Color8(236, 92, 96), Color(1, 1, 1), Color8(140, 220, 255)])
 	var sc := secret_of(level)
 	if not sc.is_empty() and not sc["taken"]:
 		_after(1.5, func(): _challenger(sc))
@@ -726,8 +770,8 @@ func _peek_challenger() -> void:
 	s.offset = Vector2(-sz.x / 2.0, -sz.y)
 	s.position = Vector2(770, 600 if world == 4 else 540)
 	s.modulate.a = 0.0
-	add_child(s)
-	move_child(s, painted.get_index() + 1)                       # (behind the wrestlers)
+	scene.add_child(s)
+	scene.move_child(s, painted.get_index() + 1)                 # (behind the wrestlers)
 	var t := create_tween()
 	t.tween_property(s, "modulate:a", 1.0, 0.4)
 	t.tween_interval(1.4)
@@ -891,35 +935,51 @@ func _qa_log(won: bool) -> void:
 # ================================================================== DRAWING
 
 func _create_static_nodes() -> void:
-	painted = Sprite2D.new()
-	painted.texture = ImageTexture.create_from_image(SumoArt.stage(0))
+	scene = Node2D.new()
+	add_child(scene)
+	var layers := SumoArt.stage_layers(0)
+	painted_back = Sprite2D.new()                  # the place behind (the 3D tilt shifts it)
+	painted_back.texture = ImageTexture.create_from_image(layers[0])
+	painted_back.centered = false
+	painted_back.position = -Vector2.ONE * SumoArt.MARGIN * SumoArt.PX
+	painted_back.scale = Vector2(SumoArt.PX, SumoArt.PX)
+	painted_back.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	scene.add_child(painted_back)
+	life = SumoArt.StageLife.new()                 # what moves in it
+	scene.add_child(life)
+	painted = Sprite2D.new()                       # the box with its ring
+	painted.texture = ImageTexture.create_from_image(layers[1])
 	painted.centered = false
 	painted.scale = Vector2(SumoArt.PX, SumoArt.PX)
 	painted.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	add_child(painted)
+	scene.add_child(painted)
 	stage = Node2D.new()
 	stage.draw.connect(_draw_stage)
-	add_child(stage)
+	scene.add_child(stage)
 	wrestlers = Node2D.new()
-	add_child(wrestlers)
+	scene.add_child(wrestlers)
 	fx = Node2D.new()
-	add_child(fx)
+	scene.add_child(fx)
+	burst = GameFx.Burst.new()                     # dust, sparks, sparkles, confetti
+	scene.add_child(burst)
 	var ftex := _make_finger_texture()
 	finger_l = _make_finger(ftex, Vector2(82, 892))
 	finger_r = _make_finger(ftex, Vector2(PLAY_WIDTH - 82, 892))
 
-	hud_level = _make_label(Vector2(30, 20), Vector2(200, 50), 36, HORIZONTAL_ALIGNMENT_LEFT, OUTLINE)
-	hud_rival = _make_label(Vector2(PLAY_WIDTH - 430, 20), Vector2(400, 50), 32, HORIZONTAL_ALIGNMENT_RIGHT, OUTLINE)
+	# the HUD: the race games' band, in cardboard: the level, the rival, the bouts, the boost
+	GameFx.build_band(self, CARD_BAND, CARD_FOOT)
+	hud_level = _make_label(Vector2(45, 28), Vector2(150, 52), 32, HORIZONTAL_ALIGNMENT_LEFT, TEXT)
+	hud_rival = _make_label(Vector2(190, 28), Vector2(440, 52), 32, HORIZONTAL_ALIGNMENT_CENTER, TEXT)
 	boost_icon = TextureRect.new()
 	boost_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	boost_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	boost_icon.size = Vector2(28, 36)
-	boost_icon.position = Vector2(34, 76)
+	boost_icon.position = Vector2(GameFx.HUD_BAND.end.x - 52, GameFx.HUD_BAND.position.y + 10)
 	boost_icon.visible = false
 	add_child(boost_icon)
 	bouts_box = HBoxContainer.new()
-	bouts_box.alignment = BoxContainer.ALIGNMENT_END
-	bouts_box.position = Vector2(PLAY_WIDTH - 160, 80)
+	bouts_box.alignment = BoxContainer.ALIGNMENT_BEGIN
+	bouts_box.position = Vector2(660, 43)
 	bouts_box.size = Vector2(130, 28)
 	bouts_box.add_theme_constant_override("separation", 10)
 	add_child(bouts_box)
@@ -929,10 +989,10 @@ func _create_static_nodes() -> void:
 	hint_fwd = make_button_hint(1, "SHAKE")
 	hint_fwd.size = hint_fwd.get_combined_minimum_size()
 	hint_fwd.position = Vector2(PLAY_WIDTH - 134 - hint_fwd.size.x, PLAY_HEIGHT - 90)
-	banner = _make_label(Vector2(0, 300), Vector2(PLAY_WIDTH, 140), 50, HORIZONTAL_ALIGNMENT_CENTER, TEXT)
-	banner.add_theme_color_override("font_outline_color", OUTLINE)
-	banner.add_theme_constant_override("outline_size", 14)
-	banner.modulate.a = 0.0
+	banner = GameFx.banner(self, lcd_font, OUTLINE, 370.0)
+	banner.add_theme_font_size_override("font_size", 56)          # (its words often take two lines)
+	banner.position.y = 370.0 - 100.0
+	banner.size.y = 200.0
 
 func _make_finger(tex: Texture2D, at: Vector2) -> Sprite2D:
 	var f := Sprite2D.new()
@@ -940,16 +1000,14 @@ func _make_finger(tex: Texture2D, at: Vector2) -> Sprite2D:
 	f.scale = Vector2(4, 4)
 	f.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	f.position = at
-	add_child(f)
+	scene.add_child(f)
 	return f
 
-## The HUD's ink: dark on the light walls, light with a dark edge on the forest and the night
+## The HUD's ink: light on the cardboard band (every world)
 func _style_hud() -> void:
-	var light := world in LIGHT_HUD
 	for l in [hud_level, hud_rival]:
-		l.add_theme_color_override("font_color", TEXT if light else OUTLINE)
-		l.add_theme_color_override("font_outline_color", OUTLINE)
-		l.add_theme_constant_override("outline_size", 10 if light else 0)
+		l.add_theme_color_override("font_color", TEXT)
+		l.add_theme_constant_override("outline_size", 0)
 
 func _set_rival_name(n: String) -> void:
 	hud_rival.text = "VS " + n
@@ -978,7 +1036,7 @@ func _refresh_hud() -> void:
 	# bouts: filled = won, red = lost, empty = to go (best of 3; the mystery challenger: one)
 	for n in bouts_box.get_children():
 		n.queue_free()
-	var empty := Color(1, 1, 1, 0.25) if world in LIGHT_HUD else Color(0, 0, 0, 0.18)
+	var empty := Color(1, 1, 1, 0.22)
 	for i in (1 if mystery else 3):
 		var r := ColorRect.new()
 		r.custom_minimum_size = Vector2(28, 28)
@@ -1205,11 +1263,7 @@ func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: C
 	return l
 
 func _show_banner(text: String, hold: float) -> void:
-	banner.text = text
-	var t := create_tween()
-	t.tween_property(banner, "modulate:a", 1.0, 0.15)
-	t.tween_interval(hold)
-	t.tween_property(banner, "modulate:a", 0.0, 0.3)
+	GameFx.show_banner(banner, text, hold)
 
 ## A word that pops up over the ring for a moment ("WIND UP!")
 func _pop_text(text: String, at: Vector2) -> void:

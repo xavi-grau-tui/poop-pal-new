@@ -1443,7 +1443,7 @@ func _depth_3d() -> void:
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
 	var far := (_depth_tilt * DEPTH_FAR).round()
 	var near := (-_depth_tilt * DEPTH_NEAR).round()
-	backdrop.position = far
+	backdrop.position = far - Vector2.ONE * TopSpinArt.MARGIN * PX
 	stadium_rim.position = C + near
 	stadium_front.position = C + near
 	rim_fx.position = near

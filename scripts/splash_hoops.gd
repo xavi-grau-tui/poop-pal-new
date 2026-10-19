@@ -534,9 +534,10 @@ func _depth_3d() -> void:
 	if DEPTH_3D and has_tilt_sensor() and state == State.PLAY:
 		want = device_tilt().limit_length(0.6) / 0.6
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
-	tank_back.position = (_depth_tilt * DEPTH_FAR).round()
-	back_shadows.position = tank_back.position
-	scene_life.position = tank_back.position
+	var far := (_depth_tilt * DEPTH_FAR).round()
+	tank_back.position = far - Vector2.ONE * SplashArt.MARGIN * S
+	back_shadows.position = far
+	scene_life.position = far
 	back_shadows.queue_redraw()
 	ambience.position = (-_depth_tilt * DEPTH_NEAR).round()
 
@@ -1283,7 +1284,7 @@ func _create_static_nodes() -> void:
 	bg.color = OUTLINE
 	bg.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT)
 	add_child(bg)
-	tank_back = _sprite(tex["tank_back"], Vector2.ZERO)   # the back panel (the 3D tilt shifts it)
+	tank_back = _sprite(tex["tank_back"], -Vector2.ONE * SplashArt.MARGIN * S)   # the back panel (the 3D tilt shifts it)
 	tank_back.centered = false
 	add_child(tank_back)
 	scene_life = SplashArt.SceneLife.new()          # the panel's moving things (behind the water)

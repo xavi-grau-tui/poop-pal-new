@@ -90,28 +90,35 @@ const THEMES := [
 ## The tank in two layers, for the 3D tilt (the games' shared look): [the back panel (the water
 ## and what's printed on it, painted on under the sand and the band too, so it can shift behind
 ## them), the front (the top band and the funnel floor; clear where the water is)]
+const MARGIN := 6                            # (art px) the back panel is painted this far past the screen (the 3D tilt shifts it)
+
 static func tank_layers(w_px: int, h_px: int, band_y: float, floor_at: Callable, theme: Dictionary) -> Array:
-	var back := Image.create(w_px, h_px, false, Image.FORMAT_RGBA8)
+	var back := Image.create(w_px + MARGIN * 2, h_px + MARGIN * 2, false, Image.FORMAT_RGBA8)
 	var front := Image.create(w_px, h_px, false, Image.FORMAT_RGBA8)
 	var water_top := band_y
 	var water_bottom := 880.0
 	var water: Array = theme["water"]
 	var sand: Array = theme["sand"]
 	var scene: String = theme["scene"]
+	for y in range(-MARGIN, h_px + MARGIN):
+		for x in range(-MARGIN, w_px + MARGIN):
+			var bx := (x + 0.5) * P
+			var by := (y + 0.5) * P
+			var bfy: float = floor_at.call(bx)
+			# the back panel, everywhere (and a little past the screen)
+			var t := clampf((by - water_top) / (water_bottom - water_top), 0.0, 0.999)
+			var band := int(t * water.size())
+			var col: Color = water[band]
+			if theme["rays"] and band > 0 and by < 640.0 and _in_ray(bx, by - water_top):
+				col = water[band - 1]                        # light through the water
+			if scene != "":
+				col = _scene(scene, bx, by, bfy, col, water)
+			back.set_pixel(x + MARGIN, y + MARGIN, col)
 	for y in h_px:
 		for x in w_px:
 			var wx := (x + 0.5) * P
 			var wy := (y + 0.5) * P
 			var fy: float = floor_at.call(wx)
-			# the back panel, everywhere
-			var t := clampf((wy - water_top) / (water_bottom - water_top), 0.0, 0.999)
-			var band := int(t * water.size())
-			var col: Color = water[band]
-			if theme["rays"] and band > 0 and wy < 640.0 and _in_ray(wx, wy - water_top):
-				col = water[band - 1]                        # light through the water
-			if scene != "":
-				col = _scene(scene, wx, wy, fy, col, water)
-			back.set_pixel(x, y, col)
 			# the front: the band and the sand
 			if wy < band_y:
 				var cb := CASE

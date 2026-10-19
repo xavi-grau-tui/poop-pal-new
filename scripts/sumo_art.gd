@@ -20,6 +20,7 @@ const STUMP := Vector2(440, 176)      # a round top (the pond's rock, the stump)
 const DARK := 0.38                    # how much darker everything outside the spotlight is
 const ROUND := [1, 4]                 # the worlds whose ring is on a round top (STUMP), not a box
 const OUTLINE := Color8(70, 44, 30)
+const MARGIN := 6                     # (stage px) the place behind is painted this far past the screen (the 3D tilt shifts it)
 
 # the wooden box (world 1, the prototype's)
 const WALL := Color8(236, 220, 192)
@@ -35,6 +36,7 @@ const ROPE_DARK := Color8(150, 120, 56)
 
 static var _glow := false             # (a wall painter sets it: this pixel is lit already)
 static var _cache := {}               # world -> its painted stage (painted once a session)
+static var _live := false             # (painting the layers: what moves is left to StageLife)
 
 ## A world's stage (0-5): one pixel per PX world px
 static func stage(world: int) -> Image:
@@ -74,6 +76,70 @@ static func stage(world: int) -> Image:
 			img.set_pixel(x, y, col if _glow else col.darkened(1.0 - _light(p)))
 	_cache[world] = img
 	return img
+
+## A world's stage in two layers, for the 3D tilt and the life on it (the games' shared look):
+## [the place behind (painted on under the box too, so it can shift behind it), the box with its
+## ring (clear round it)]; what moves (the festival's lanterns) is left out: StageLife draws it
+static func stage_layers(world: int) -> Array:
+	var key := "layers_%d" % world
+	if _cache.has(key):
+		return _cache[key]
+	var w := int(ceil(W / PX))
+	var h := int(ceil(H / PX))
+	var back := Image.create(w + MARGIN * 2, h + MARGIN * 2, false, Image.FORMAT_RGBA8)
+	var front := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var stump := world in ROUND
+	var inside := PackedByteArray()
+	inside.resize(w * h)
+	for y in h:
+		for x in w:
+			inside[y * w + x] = 1 if _in_box(_px(x, y), stump) else 0
+	_live = true
+	for y in range(-MARGIN, h + MARGIN):
+		for x in range(-MARGIN, w + MARGIN):
+			var pb := _px(x, y)
+			_glow = false
+			var cb := _wall(world, pb, x, y)
+			back.set_pixel(x + MARGIN, y + MARGIN, cb if _glow else cb.darkened(1.0 - _light(pb)))
+	for y in h:
+		for x in w:
+			var p := _px(x, y)
+			if inside[y * w + x] == 1:
+				var edge := false
+				for dy in range(-2, 3):
+					for dx in range(-2, 3):
+						var nx := x + dx
+						var ny := y + dy
+						if nx < 0 or ny < 0 or nx >= w or ny >= h or inside[ny * w + nx] == 0:
+							edge = true
+				_glow = false
+				var fc: Color
+				if edge or _on_rim(p, stump):
+					fc = OUTLINE
+				elif _on_front(p, stump):
+					fc = _front(world, p, x, y)
+				else:
+					fc = _ring(world, p, _lid(world, p, x, y))
+				front.set_pixel(x, y, fc if _glow else fc.darkened(1.0 - _light(p)))
+	_live = false
+	_cache[key] = [back, front]
+	return _cache[key]
+
+## One of the festival's lanterns as a picture (red or white), its centre in the middle, for
+## StageLife to hang and sway
+static func lantern_tex(red: bool) -> Texture2D:
+	var key := "lantern_%s" % red
+	if _cache.has(key):
+		return _cache[key]
+	var img := Image.create(14, 18, false, Image.FORMAT_RGBA8)
+	for y in 18:
+		for x in 14:
+			var l := (Vector2(x + 0.5, y + 0.5) - Vector2(7, 9)) * PX
+			var c := _lantern_at(l, red)
+			if c.a > 0.0:
+				img.set_pixel(x, y, c)
+	_cache[key] = ImageTexture.create_from_image(img)
+	return _cache[key]
 
 ## The world position of a stage pixel's centre
 static func _px(x: int, y: int) -> Vector2:
@@ -675,28 +741,34 @@ static func _wall_night(p: Vector2, x: int, y: int) -> Color:
 static func _string_y(x: float) -> float:
 	return 150.0 + 50.0 * (1.0 - pow((x - 475.0) / 560.0, 2))
 
-## A chōchin: ribbed paper, black caps, glowing from inside (red and white in turns)
+## A chōchin: ribbed paper, black caps, glowing from inside (red and white in turns); painting the
+## layers, only the string (StageLife hangs the lanterns, swaying)
 static func _lantern(p: Vector2) -> Color:
 	if p.y < 300.0 and absf(p.y - _string_y(p.x)) < 2.5:
 		return Color8(30, 24, 30)
+	if _live:
+		return Color(0, 0, 0, 0)
 	for i in LANTERN_X.size():
 		var lx: float = LANTERN_X[i]
-		var c := Vector2(lx, _string_y(lx) + 32.0)
-		var l := p - c
-		if absf(l.x) <= 12.0 and (absf(l.y + 30.0) < 4.0 or absf(l.y - 30.0) < 4.0):
-			return Color8(36, 30, 34)                          # the caps
-		var q := (l / Vector2(22, 27)).length_squared()
-		if q > 1.0:
-			continue
-		if q > 0.82:
-			return Color8(60, 30, 30)
-		var red := i % 2 == 0
-		var col := Color8(226, 70, 54) if red else Color8(250, 238, 214)
-		col = col.lerp(Color8(255, 214, 150), clampf(1.0 - q * 1.6, 0.0, 1.0) * 0.6)   # the flame inside
-		if fposmod(l.y + 30.0, 9.0) < PX:
-			col = col.darkened(0.2)                            # the ribs
-		return col
+		var c := _lantern_at(p - Vector2(lx, _string_y(lx) + 32.0), i % 2 == 0)
+		if c.a > 0.0:
+			return c
 	return Color(0, 0, 0, 0)
+
+## A lantern's pixel at `l` from its centre (red or white)
+static func _lantern_at(l: Vector2, red: bool) -> Color:
+	if absf(l.x) <= 12.0 and (absf(l.y + 30.0) < 4.0 or absf(l.y - 30.0) < 4.0):
+		return Color8(36, 30, 34)                          # the caps
+	var q := (l / Vector2(22, 27)).length_squared()
+	if q > 1.0:
+		return Color(0, 0, 0, 0)
+	if q > 0.82:
+		return Color8(60, 30, 30)
+	var col := Color8(226, 70, 54) if red else Color8(250, 238, 214)
+	col = col.lerp(Color8(255, 214, 150), clampf(1.0 - q * 1.6, 0.0, 1.0) * 0.6)   # the flame inside
+	if fposmod(l.y + 30.0, 9.0) < PX:
+		col = col.darkened(0.2)                            # the ribs
+	return col
 
 ## A vermilion torii: the curved top beam (black on top), the tie beam, two pillars
 static func _torii(p: Vector2) -> Color:
@@ -749,3 +821,179 @@ static func _noise(x: float, y: float) -> float:
 	fx = fx * fx * (3.0 - 2.0 * fx)
 	fy = fy * fy * (3.0 - 2.0 * fy)
 	return lerpf(lerpf(_hash(ix, iy), _hash(ix + 1, iy), fx), lerpf(_hash(ix, iy + 1), _hash(ix + 1, iy + 1), fx), fy)
+
+# ================================================================== THE PLACES' LIFE
+
+## What moves in each place (the user, 2026-10-19: moving, more beautiful backgrounds keeping what
+## each place is): drawn every frame on the 4 px grid over the place behind the ring (it shifts
+## with it: the 3D tilt), behind the box and the wrestlers. The wooden box: dust drifting in the
+## spotlight's cone · the pond: sakura petals fluttering down, glints on the water, two koi gliding
+## past behind the rock · the autumn stream: the waterfall pouring and its mist breathing, maple
+## leaves twirling down, foam drifting on the stream · the Moon: stars twinkling, clouds sliding
+## across the Earth, the dome's lamp and the rocket's light blinking, now and then a shooting star
+## · the forest: shafts of sun swaying through the leaves, pollen floating in them · the shrine
+## festival: the paper lanterns swaying on their string and flickering, fireworks bursting high on
+## both sides of the sky
+class StageLife extends Node2D:
+	var world := 0
+	var t := 0.0
+	var motes: Array = []             # [position, velocity, phase, kind]
+	var bursts: Array = []            # the festival's fireworks: [centre, age, colour]
+	var next_burst := 1.5
+	var lanterns: Array[Texture2D] = []
+	func setup(w: int) -> void:
+		world = w
+		motes.clear()
+		bursts.clear()
+		var n: int = [26, 30, 26, 46, 26, 34][clampi(w, 0, 5)]
+		for i in n:
+			motes.append([Vector2(randf_range(0, SumoArt.W), randf_range(0, 600)), Vector2(randf_range(-8, 8), randf_range(-6, 6)), randf() * TAU, i % 3])
+		if w == 5:
+			lanterns = [SumoArt.lantern_tex(true), SumoArt.lantern_tex(false)]
+		queue_redraw()
+	func _process(delta: float) -> void:
+		t += delta
+		match world:
+			1, 2:
+				# petals / leaves: falling slowly, fluttering sideways, round again from the trees
+				for m in motes:
+					m[0] += Vector2(28.0 + 30.0 * sin(t * 1.3 + m[2]), 46.0 + 12.0 * sin(t * 0.7 + m[2])) * delta
+					if m[0].y > SumoArt.RING_C.y - 60.0 or m[0].x > SumoArt.W + 20.0:
+						m[0] = Vector2(randf_range(-60, SumoArt.W * 0.7), randf_range(0, 120))
+			5:
+				next_burst -= delta
+				if next_burst <= 0.0:
+					next_burst = randf_range(1.6, 3.2)
+					var left := randf() < 0.5
+					bursts.append([Vector2(randf_range(60, 260) if left else randf_range(760, 900), randf_range(60, 150)), 0.0,
+						[Color8(255, 120, 180), Color8(255, 214, 110), Color8(140, 220, 255), Color8(170, 255, 150)][randi() % 4]])
+				for b in bursts:
+					b[1] += delta
+				bursts = bursts.filter(func(b): return b[1] < 1.6)
+			_:
+				for m in motes:
+					m[0] += (m[1] as Vector2) * delta + Vector2(0, -6.0) * delta
+					if m[0].y < 0.0:
+						m[0].y = 600.0
+					m[0].x = fposmod(m[0].x, SumoArt.W)
+		queue_redraw()
+	func _sq(p: Vector2, s: float, col: Color) -> void:
+		draw_rect(Rect2(GameFx.snap(p) - Vector2(s, s) / 2.0, Vector2(s, s)), col)
+	func _draw() -> void:
+		var rc := SumoArt.RING_C
+		match world:
+			0:
+				# dust drifting in the spotlight's cone
+				for m in motes:
+					var p: Vector2 = m[0]
+					var hw := lerpf(90.0, SumoArt.RING_RX + 30.0, clampf(p.y / rc.y, 0.0, 1.0))
+					if absf(p.x - rc.x) < hw and p.y < rc.y - 40.0:
+						_sq(p, 4.0, Color(1, 0.96, 0.84, 0.22 + 0.16 * sin(t * 2.0 + m[2])))
+			1:
+				# glints on the pond, and two koi gliding past behind the rock
+				for g in 18:
+					var gx := fposmod(g * 113.0 + sin(t * 0.4 + g) * 20.0, SumoArt.W)
+					var gy := SumoArt.WATER_Y + 16.0 + fposmod(g * 37.0, 90.0)
+					if sin(t * 2.0 + g * 1.9) > 0.55:
+						draw_rect(Rect2(GameFx.snap(Vector2(gx, gy)), Vector2(12, 4)), Color(1, 1, 1, 0.45))
+				for k in 2:
+					var kx := fposmod(t * (34.0 + 10.0 * k) + k * 480.0, SumoArt.W + 200.0) - 100.0
+					var ky := SumoArt.WATER_Y + 46.0 + k * 34.0 + 6.0 * sin(t * 0.8 + k)
+					var face := 1.0
+					for seg in 6:
+						var sx := kx - face * seg * 8.0
+						var wob := sin(t * 5.0 - seg * 0.8 + k) * 3.0 * seg / 5.0
+						var col := Color8(240, 120, 60, 170) if (seg + k) % 3 != 1 else Color8(250, 246, 240, 170)
+						var sz := 12.0 - absf(seg - 1.5) * 2.0
+						_sq(Vector2(sx, ky + wob), maxf(4.0, sz), col)
+				# petals fluttering down from the sakura
+				for m in motes:
+					var flip := sin(t * 6.0 + m[2]) > 0.0
+					draw_rect(Rect2(GameFx.snap(m[0]), Vector2(8, 4) if flip else Vector2(4, 8)), Color8(250, 196, 214) if m[3] != 1 else Color8(255, 232, 240))
+			2:
+				# the waterfall pouring (light streaks running down it), its mist breathing at the foot
+				var fx2 := 475.0
+				for k in 14:
+					var x := fx2 - 44.0 + k * 7.0
+					var top := 170.0 + 22.0 * sin(x * 0.02)
+					var run := fposmod(t * 260.0 + k * 53.0, 260.0)
+					var y := top + run
+					if y < 408.0:
+						draw_rect(Rect2(GameFx.snap(Vector2(x, y)), Vector2(4, 24)), Color(1, 1, 1, 0.5))
+				var mist := 0.18 + 0.08 * sin(t * 1.5)
+				for k in 5:
+					GameFx.disc(self, Vector2(fx2 - 60.0 + k * 30.0, 412.0 + 6.0 * sin(t + k)), 22.0 + 6.0 * sin(t * 1.2 + k), Color(1, 1, 1, mist))
+				# foam drifting on the stream
+				for k in 10:
+					var fx3 := fposmod(k * 97.0 + t * 30.0, SumoArt.W)
+					var fy := SumoArt.STREAM_Y + 14.0 + fposmod(k * 41.0, 60.0)
+					draw_rect(Rect2(GameFx.snap(Vector2(fx3, fy)), Vector2(16, 4)), Color(0.86, 0.94, 0.96, 0.5))
+				# maple leaves twirling down
+				for m in motes:
+					var flip2 := sin(t * 5.0 + m[2]) > 0.0
+					var lc: Color = [Color8(214, 76, 44), Color8(240, 158, 60), Color8(232, 196, 70)][int(m[3])]
+					draw_rect(Rect2(GameFx.snap(m[0]), Vector2(8, 8) if flip2 else Vector2(8, 4)), lc)
+			3:
+				# stars twinkling above the horizon
+				for m in motes:
+					var p3: Vector2 = Vector2(m[0].x, fposmod(m[0].y, 340.0))
+					if sin(t * (1.0 + fposmod(m[2], 1.0)) + m[2] * 5.0) > 0.6:
+						_sq(p3, 4.0, Color(1, 1, 1, 0.9))
+						draw_rect(Rect2(GameFx.snap(p3) - Vector2(6, 2), Vector2(12, 4)), Color(1, 1, 1, 0.3))
+				# clouds sliding across the Earth (kept inside its disc)
+				var ec := Vector2(740, 150)
+				for k in 4:
+					var cy := ec.y - 40.0 + k * 22.0
+					var cx := fposmod(t * (10.0 + k * 3.0) + k * 37.0, 160.0) - 80.0 + ec.x
+					var y4 := cy - ec.y
+					var half := sqrt(maxf(0.0, 58.0 * 58.0 - y4 * y4))
+					var x0 := maxf(cx - 22.0, ec.x - half)
+					var x1 := minf(cx + 22.0, ec.x + half)
+					if x1 > x0:
+						draw_rect(Rect2(GameFx.snap(Vector2(x0, cy)), Vector2(roundf((x1 - x0) / 4.0) * 4.0, 4)), Color(1, 1, 1, 0.55))
+				# the dome's lamp and the rocket's nose light blinking
+				if fposmod(t, 1.2) < 0.5:
+					GameFx.glow(self, Vector2(896, 344), 8.0, Color8(255, 96, 80))
+				if fposmod(t + 0.6, 1.6) < 0.4:
+					GameFx.glow(self, Vector2(120, 196), 8.0, Color8(255, 220, 120))
+				# now and then a shooting star
+				var sh := fposmod(t, 7.0)
+				if sh < 0.7:
+					var head := Vector2(160, 60) + Vector2(1, 0.35) * sh * 600.0
+					for k in 8:
+						_sq(head - Vector2(1, 0.35) * k * 9.0, 4.0, Color(1, 1, 1, 0.7 * (1.0 - k / 8.0) * (1.0 - sh / 0.7)))
+			4:
+				# shafts of sun swaying through the leaves, pollen floating in them
+				for k in 3:
+					var sx2 := 200.0 + k * 260.0 + 30.0 * sin(t * 0.3 + k)
+					var y5 := 120.0
+					while y5 < rc.y - 80.0:
+						var x5 := sx2 + (y5 - 120.0) * 0.35
+						draw_rect(Rect2(GameFx.snap(Vector2(x5 - 30.0, y5)), Vector2(60, 4)), Color(1, 0.98, 0.8, 0.06 + 0.03 * sin(t * 0.8 + k)))
+						y5 += 4.0
+				for m in motes:
+					_sq(m[0], 4.0, Color(1, 0.98, 0.75, 0.3 + 0.2 * sin(t * 2.0 + m[2])))
+			5:
+				# fireworks bursting high on both sides of the sky
+				for b in bursts:
+					var f: float = b[1] / 1.6
+					var r := 20.0 + 90.0 * (1.0 - (1.0 - f) * (1.0 - f))
+					var bc: Color = b[2]
+					for k in 18:
+						var p6: Vector2 = (b[0] as Vector2) + Vector2.from_angle(k * TAU / 18.0) * r + Vector2(0, f * f * 30.0)
+						_sq(p6, 4.0, Color(bc.r, bc.g, bc.b, 1.0 - f))
+						if f < 0.5:
+							_sq(p6 - Vector2.from_angle(k * TAU / 18.0) * 8.0, 4.0, Color(1, 1, 1, 0.5 * (1.0 - f * 2.0)))
+					if f < 0.15:
+						GameFx.disc(self, b[0], 60.0, Color(bc.r, bc.g, bc.b, 0.12 * (1.0 - f / 0.15)))
+				# the lanterns swaying on their string, flickering
+				for i in SumoArt.LANTERN_X.size():
+					var lx: float = SumoArt.LANTERN_X[i]
+					var sway := roundf(sin(t * 1.3 + i * 0.9) * 1.2) * 4.0
+					var lc2 := Vector2(lx + sway, SumoArt._string_y(lx) + 32.0)
+					var fl := 0.1 + 0.05 * sin(t * 11.0 + i * 2.3) + 0.03 * sin(t * 23.0 + i)
+					GameFx.disc(self, lc2, 40.0, Color(1, 0.6, 0.3, fl))
+					draw_line(Vector2(lx, SumoArt._string_y(lx)), lc2 - Vector2(0, 30), Color8(30, 24, 30), 4.0)
+					var tex: Texture2D = lanterns[i % 2]
+					var sz := tex.get_size() * SumoArt.PX
+					draw_texture_rect(tex, Rect2(lc2 - sz / 2.0, sz), false)

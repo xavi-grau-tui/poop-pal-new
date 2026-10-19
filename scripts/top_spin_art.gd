@@ -435,20 +435,24 @@ static func _n(x: float, y: float, seed_n: int) -> float:
 
 ## The place round the bowl (w x h board px), the bowl's drop shadow on it, and the world's light
 ## baked over it. c: the bowl's middle (board px), rr: its outer radius (board px)
+const MARGIN := 6                       # (board px) the place is painted this far past the screen (the 3D tilt shifts it)
+
 static func room_image(kind: String, w: int, h: int, c: Vector2, rr: float) -> Image:
 	var key := "room_%s_%d_%d_%s_%.1f" % [kind, w, h, c, rr]
 	if _cache.has(key):
 		return _cache[key]
-	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var img := Image.create(w + MARGIN * 2, h + MARGIN * 2, false, Image.FORMAT_RGBA8)
 	var sc := c + Vector2(3.0, 4.0)                  # the bowl's shadow: down and right of it
-	for y in h:
-		for x in w:
-			var col := _surface(kind, x, y, w, h)
+	for y in range(-MARGIN, h + MARGIN):
+		for x in range(-MARGIN, w + MARGIN):
+			var ex := clampi(x, 0, w - 1)                 # (past the screen: the edge carried on)
+			var ey := clampi(y, 0, h - 1)
+			var col := _surface(kind, ex, ey, w, h)
 			var sd := Vector2(x + 0.5, y + 0.5).distance_to(sc)
 			if sd < rr + 1.0 or (sd < rr + 2.5 and dith(0.5, x, y)):
 				col = col.lerp(Color8(30, 22, 40), 0.42)
-			col = lit(kind, col, Vector2(x, y), w, h)
-			img.set_pixel(x, y, col)
+			col = lit(kind, col, Vector2(ex, ey), w, h)
+			img.set_pixel(x + MARGIN, y + MARGIN, col)
 	_cache[key] = img
 	return img
 
