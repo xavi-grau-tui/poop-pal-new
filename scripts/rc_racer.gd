@@ -389,13 +389,26 @@ class Crowd extends Node2D:
 			var tmp = others[i]
 			others[i] = others[j]
 			others[j] = tmp
-		var crowd_mix: Array[Texture2D] = []
+		# (the others: the pals whose colours go with this place, the user 2026-10-19: picked from
+		# the 24 nearest the world's colours, 14 of them at random)
+		var scored: Array = []
 		for id in others:
-			if crowd_mix.size() >= 14:
-				break
 			var path2 := "res://textures/minigames/balls/%s.png" % id
 			if ResourceLoader.exists(path2):
-				crowd_mix.append(load(path2))
+				var tx2: Texture2D = load(path2)
+				scored.append([_colour_gap(tx2, haze), tx2])
+		scored.sort_custom(func(x, y): return x[0] < y[0])
+		var pool := scored.slice(0, 24)
+		for i2 in range(pool.size() - 1, 0, -1):
+			var j2 := rng.randi() % (i2 + 1)
+			var tmp2 = pool[i2]
+			pool[i2] = pool[j2]
+			pool[j2] = tmp2
+		var crowd_mix: Array[Texture2D] = []
+		for e in pool:
+			if crowd_mix.size() >= 14:
+				break
+			crowd_mix.append(e[1])
 		pals.append_array(mine)
 		pals.append_array(crowd_mix)
 		if pals.is_empty():
@@ -434,6 +447,7 @@ class Crowd extends Node2D:
 	var haze := Color(0.8, 0.88, 0.95)
 	var _hue_cache := {}
 	func _hued(who: int, hue: int) -> Texture2D:
+		return pals[who]                         # (their own colours: the user, 2026-10-19)
 		var key := Vector2i(who, hue)
 		if _hue_cache.has(key):
 			return _hue_cache[key]
@@ -448,13 +462,28 @@ class Crowd extends Node2D:
 					continue
 				# (the user, 2026-10-19: in the tones of the world's air, as if seen from far:
 				# every colour, its outline too, faded towards the haze)
-				var a0 := c.a
-				c = c.lerp(haze, HAZE)
-				c.a = a0
 				img.set_pixel(x, y, c)
 		var out := ImageTexture.create_from_image(img)
 		_hue_cache[key] = out
 		return out
+	## How far a pal's ball is from a place's colour: its main colour (the average of its bright,
+	## coloured px) against the place's hue and lightness
+	func _colour_gap(tex: Texture2D, place: Color) -> float:
+		var img := tex.get_image()
+		img.decompress()
+		var sum := Color(0, 0, 0, 0)
+		var n := 0
+		for y in range(0, img.get_height(), 2):
+			for x in range(0, img.get_width(), 2):
+				var c := img.get_pixel(x, y)
+				if c.a > 0.5 and c.v > 0.35:
+					sum += c
+					n += 1
+		if n == 0:
+			return 99.0
+		var m := Color(sum.r / n, sum.g / n, sum.b / n)
+		var dh := absf(wrapf(m.h - place.h, -0.5, 0.5)) * (minf(m.s, place.s) * 2.0 + 0.2)
+		return dh * 3.0 + absf(m.v - place.v) + absf(m.s - place.s) * 0.5
 	## A wave of hops along the stand, starting from `from` (mat px)
 	func cheer(from: Vector2, hops := 1) -> void:
 		for d in dots:
@@ -1267,18 +1296,22 @@ class SkyDock extends Node2D:
 			var yy := -30.0
 			while yy <= 30.0:
 				var half_x := sqrt(maxf(0.0, 30.0 * 30.0 - yy * yy))
-				draw_rect(Rect2((hub + Vector2(-half_x, yy * 0.55)).snapped(Vector2(4, 4)), Vector2(half_x * 2.0, 4).snapped(Vector2(4, 4))), Color(0.92, 0.95, 1.0, 0.4))
+				draw_rect(Rect2((hub + Vector2(-half_x, yy * 0.55)).snapped(Vector2(4, 4)), Vector2(half_x * 2.0, 4).snapped(Vector2(4, 4))), Color(1, 1, 1, 0.22))
 				yy += 4.0
 			# (its guard ring: a dark rim round the blur, so it reads on any sky)
 			for ka in 24:
 				var rq := (hub + Vector2(cos(ka * TAU / 24.0) * 32.0, sin(ka * TAU / 24.0) * 32.0 * 0.55)).snapped(Vector2(4, 4))
-				draw_rect(Rect2(rq - Vector2(2, 2), Vector2(4, 4)), Color8(40, 30, 40))
+				draw_rect(Rect2(rq - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, 0.55))
 			var ang := t * 22.0 + corner.x * 0.01
 			for sgn in [-1.0, 1.0]:
 				for j in 5:
 					var bq: Vector2 = (hub + Vector2(cos(ang), sin(ang) * 0.55) * sgn * (6.0 + j * 5.0)).snapped(Vector2(4, 4))
-					draw_rect(Rect2(bq - Vector2(4, 4), Vector2(8, 8)), Color8(40, 30, 40))
-					draw_rect(Rect2(bq - Vector2(2, 2), Vector2(4, 4)), Color8(236, 240, 248))
+					draw_rect(Rect2(bq - Vector2(4, 2), Vector2(8, 4)), Color(1, 1, 1, 0.9))
+				# (a fainter blade a moment behind it: the sweep)
+				for sgn2 in [-1.0, 1.0]:
+					for j3 in 5:
+						var bq2: Vector2 = (hub + Vector2(cos(ang - 0.6), sin(ang - 0.6) * 0.55) * sgn2 * (6.0 + j3 * 5.0)).snapped(Vector2(4, 4))
+						draw_rect(Rect2(bq2 - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, 0.4))
 			draw_rect(Rect2(hub - Vector2(6, 6), Vector2(12, 12)), Color8(40, 30, 40))
 			draw_rect(Rect2(hub - Vector2(2, 2), Vector2(4, 4)), Color8(226, 70, 64))
 		for k in lights.size():
@@ -4679,9 +4712,9 @@ const RIVAL_TIERS := [
 	{ "name": "average", "speed": 0.95, "corner": 0.35, "wander": 0.14, "slip_every": 16.0, "react": 0.3, "dodge": 0.8 },
 	{ "name": "ace", "speed": 1.0, "corner": 0.15, "wander": 0.05, "slip_every": 0.0, "react": 0.12, "dodge": 0.97 },
 ]
-## Each world's air, the crowd fading into it (as if seen from far)
-const CROWD_HAZE := { "garden": Color8(214, 236, 214), "night": Color8(70, 78, 120), "lagoon": Color8(246, 196, 176),
-	"reef": Color8(190, 236, 232), "sky": Color8(210, 232, 246), "sunset": Color8(248, 190, 168) }
+## Each world's colour: the crowd's other pals are the ones that go with it
+const CROWD_HAZE := { "garden": Color8(120, 190, 90), "night": Color8(90, 100, 170), "lagoon": Color8(236, 140, 110),
+	"reef": Color8(70, 190, 200), "sky": Color8(150, 200, 240), "sunset": Color8(240, 150, 110) }
 const PLANE_BODY := Color8(250, 210, 84)          # (every plane's yellow body: yours and the rivals')
 const RIVAL_PLANE_COLS := [Color8(70, 130, 220), Color8(150, 100, 210), Color8(110, 190, 110)]   # the rival planes' wings: blue, purple, green
 const RIVAL_COLS := [[Color8(70, 130, 220), Color8(46, 92, 170)], [Color8(240, 200, 70), Color8(196, 150, 40)], [Color8(110, 190, 110), Color8(70, 140, 76)]]
