@@ -38,6 +38,9 @@ const STEP := 8.0
 const LAPS := 3
 const COUNTDOWN := 3
 const VIEW := Rect2(27, 92, 896, 830)
+## The ground's shaders cover the whole play area (the user, 2026-10-19: some stages left a black
+## frame round the race, effects drawn past it), the camera still centred on VIEW
+const FULL := Rect2(0, 0, 950, 948)
 const HUD_BAND := Rect2(27, 26, 896, 66)
 
 const LAND := 0
@@ -726,7 +729,7 @@ func _setup_shaders() -> void:
 	board_mat.set_shader_parameter("n_gaps", n_j)
 	deep_mat.set_shader_parameter("world", world_no)
 	deep_mat.set_shader_parameter("parallax", PARALLAX[world_no])
-	deep_mat.set_shader_parameter("view_size", VIEW.size)
+	deep_mat.set_shader_parameter("view_size", FULL.size)
 	# (Saturn's Rings: where the Earth is, and the planet far out past the flight)
 	var land_mid := Vector2.ZERO
 	var nl := 0
@@ -947,7 +950,7 @@ func _place_craft() -> void:
 	glow.modulate.a = 0.35 + 0.15 * sin(_t * 9.0) + 0.3 * boost
 	deep_shadow.visible = not grounded and deep.visible
 	if deep_shadow.visible:
-		var mid := VIEW.get_center()
+		var mid := FULL.get_center()                  # (the deep layer's parallax turns about the ground's middle)
 		var on_screen := world.position + car_pos * zoom
 		deep_shadow.position = (mid + (on_screen - mid) * PARALLAX[world_no] + Vector2(40, 66)).round()
 		deep_shadow.rotation = yaw
@@ -977,8 +980,8 @@ func _create_nodes() -> void:
 	bg.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT)
 	add_child(bg)
 	deep = ColorRect.new()
-	deep.position = VIEW.position
-	deep.size = VIEW.size
+	deep.position = FULL.position
+	deep.size = FULL.size
 	deep_mat = ShaderMaterial.new()
 	deep_mat.shader = load("res://scripts/shaders/pal_prix_2_deep.gdshader")
 	deep.material = deep_mat
@@ -988,8 +991,8 @@ func _create_nodes() -> void:
 	deep_shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(deep_shadow)
 	board = ColorRect.new()
-	board.position = VIEW.position
-	board.size = VIEW.size
+	board.position = FULL.position
+	board.size = FULL.size
 	board_mat = ShaderMaterial.new()
 	board_mat.shader = load("res://scripts/shaders/pal_prix_2_board.gdshader")
 	board.material = board_mat
@@ -1055,10 +1058,10 @@ func _create_nodes() -> void:
 	pops.font = lcd_font
 	world.add_child(pops)
 	speed_lines = PalPrix2Fx.SpeedLines.new()
-	speed_lines.view = VIEW
+	speed_lines.view = FULL
 	add_child(speed_lines)
 	aurora = PalPrix2Fx.Aurora.new()
-	aurora.view = VIEW
+	aurora.view = FULL
 	aurora.visible = false
 	add_child(aurora)
 
@@ -1203,11 +1206,11 @@ func _follow(amount: float) -> void:
 	if shake > 0.0:
 		pos += Vector2(randi_range(-1, 1), randi_range(-1, 1)) * 4.0 * ceilf(shake * 2.0)
 	world.position = pos
-	var origin := world.position - VIEW.position
+	var origin := world.position - FULL.position
 	board_mat.set_shader_parameter("origin", origin)
 	board_mat.set_shader_parameter("zoom", zoom)
 	board_mat.set_shader_parameter("t", _t)
-	deep_mat.set_shader_parameter("cam", (VIEW.get_center() - world.position) / zoom)
+	deep_mat.set_shader_parameter("cam", (FULL.get_center() - world.position) / zoom)
 	if world_no == 5:
 		altitude = lerpf(altitude, _altitude(), minf(1.0, amount * 0.3))
 		deep_mat.set_shader_parameter("altitude", altitude)
