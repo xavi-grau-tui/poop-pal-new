@@ -270,7 +270,10 @@ class Burst extends Node2D:
 ## in the window's light), "tiles" (soap bubbles rising, catching the light), "gut" (glowing
 ## spores floating, a slow pulse), "sewer" (drips falling from above, rings where they land),
 ## "factory" (a lamp's flicker, sparks dropping from a weld), "space" (stars twinkling, now and
-## then a shooting star). `view`: where it draws (the play area by default)
+## then a shooting star). Splash Hoops' (its scenes): "lagoon", "reef" (light glittering under the
+## surface, bubbles rising), "sun" (a warmer glitter), "rain" (bubbles), "night" (plankton
+## glowing as it drifts), "deep" (marine snow drifting down). `view`: where it draws (the play area
+## by default)
 class Ambience extends Node2D:
 	var kind := ""
 	var c := Vector2.ZERO
@@ -293,7 +296,8 @@ class Ambience extends Node2D:
 		H = area.end.y
 		motes.clear()
 		var n: int = { "tatami": 30, "veranda": 18, "lacquer": 12, "workshop": 22, "festival": 16,
-			"wood": 24, "tiles": 14, "gut": 18, "sewer": 6, "factory": 10, "space": 40 }.get(k, 0)
+			"wood": 24, "tiles": 14, "gut": 18, "sewer": 6, "factory": 10, "space": 40,
+			"lagoon": 16, "sun": 16, "reef": 18, "rain": 10, "night": 26, "deep": 30 }.get(k, 0)
 		for i in n:
 			var vel := Vector2(randf_range(-4.0, 10.0), randf_range(-16.0, -4.0))
 			match k:
@@ -307,6 +311,12 @@ class Ambience extends Node2D:
 					vel = Vector2(randf_range(-30.0, 30.0), randf_range(80.0, 160.0))
 				"space":
 					vel = Vector2.ZERO
+				"lagoon", "sun", "reef", "rain":
+					vel = Vector2(randf_range(-6.0, 6.0), randf_range(-44.0, -26.0))     # (bubbles rising)
+				"night":
+					vel = Vector2(randf_range(-8.0, 8.0), randf_range(-8.0, 8.0))
+				"deep":
+					vel = Vector2(randf_range(-4.0, 4.0), randf_range(10.0, 18.0))        # (marine snow)
 			motes.append([Vector2(randf_range(view.position.x, W), randf_range(view.position.y, H)), vel, randf() * TAU])
 		flash = 0.0
 		next_flash = randf_range(3.0, 6.0)
@@ -315,7 +325,7 @@ class Ambience extends Node2D:
 		for m in motes:
 			m[0] += (m[1] as Vector2) * delta + Vector2(sin(t * 0.7 + m[2]) * 6.0, 0) * delta
 			if m[0].y < view.position.y + 64.0:
-				m[0] = Vector2(randf_range(view.position.x, W), H)
+				m[0] = Vector2(randf_range(view.position.x, W), H if kind not in ["lagoon", "sun", "reef", "rain"] else view.position.y + view.size.y * 0.78)
 			if m[0].y > H:
 				m[0] = Vector2(randf_range(view.position.x, W), view.position.y + 64.0)
 				m[2] = randf() * TAU
@@ -393,6 +403,30 @@ class Ambience extends Node2D:
 				for m in motes:
 					var p4: Vector2 = m[0]
 					draw_rect(Rect2(GameFx.snap(p4), Vector2(4, 4)), Color(1, 0.6, 0.3, 0.3 + 0.2 * sin(t * 5.0 + m[2])))
+			"lagoon", "sun", "reef", "rain":
+				# light glittering just under the surface (not in the rain), bubbles rising
+				if kind != "rain":
+					var gc := Color(1, 0.92, 0.7) if kind == "sun" else Color(0.9, 1.0, 0.97)
+					for g in 22:
+						var gx := view.position.x + fposmod(g * 97.0 + sin(t * 0.3 + g) * 30.0, view.size.x)
+						var gy := view.position.y + 12.0 + fposmod(g * 53.0, 150.0)
+						var on := sin(t * 2.2 + g * 1.7)
+						if on > 0.6:
+							var q8 := GameFx.snap(Vector2(gx, gy))
+							var a8 := (on - 0.6) * 1.2 * (1.0 - fposmod(g * 53.0, 150.0) / 170.0)
+							draw_rect(Rect2(q8, Vector2(8, 4)), Color(gc.r, gc.g, gc.b, a8))
+				for m in motes:
+					var p8: Vector2 = GameFx.snap(m[0])
+					var br2 := 4.0 + 4.0 * float(int(m[2] * 10.0) % 2)
+					GameFx.light_ring(self, p8, br2, Color(0.9, 1.0, 1.0), 8, 4.0, 0.22)
+			"night":
+				# plankton glowing as it drifts
+				for m in motes:
+					GameFx.glow(self, m[0], 4.0, Color(0.5, 1.0, 0.95), 0.25 + 0.2 * sin(t * 1.8 + m[2] * 3.0))
+			"deep":
+				# marine snow drifting down through the dark
+				for m in motes:
+					draw_rect(Rect2(GameFx.snap(m[0]), Vector2(4, 4)), Color(0.8, 0.9, 1.0, 0.16 + 0.1 * sin(t + m[2])))
 			"wood":
 				# dust drifting through the window's light (a slanting band from the top-left)
 				for m in motes:

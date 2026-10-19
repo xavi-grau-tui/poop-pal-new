@@ -31,6 +31,14 @@ extends BaseMinigame
 ##        centre and rise up a column there; let go and the ball drops into the 300.
 ##        Too short and it doesn't get high enough.
 ## A ball sitting right on a nozzle goes straight up and back down with one pump only.
+## The look (the user, 2026-10-19: the toy games at the race games' quality, one suite; GameFx,
+## docs/ideas_roadmap.md "The games' look"): the race games' band set in the toy's plastic top (its
+## foot line the clock running down, in the world's plastic), the 3D tilt (the scene printed behind
+## the water shifts as the phone tilts, the baskets, the balls and the sand still: an aquarium),
+## each world's water alive (light glittering under the surface and bubbles rising, plankton
+## glowing at night, marine snow in the deep: GameFx.Ambience), bursts for a basket filled, the
+## splash's second chance and the pufferfish, confetti for a clear, the race games' banner.
+##
 ## Desktop: also Left/Right arrow keys (or A / D) for the two pumps.
 
 const S := 3.0                          # world px per art pixel (sprites are drawn x3)
@@ -209,7 +217,15 @@ var _stars_left := 3
 var tex := {}
 var theme := {}                         # this world's look (SplashArt.THEMES)
 var theme_index := -1
-var tank_sprite: Sprite2D
+var tank_sprite: Sprite2D              # the front: the plastic top band and the sand (still)
+var tank_back: Sprite2D                # the back panel behind the water (it shifts: the 3D tilt)
+var fx: GameFx.Burst
+var ambience: GameFx.Ambience
+var back_shadows: Node2D               # the pieces' soft shadows on the back panel (they shift with it)
+var band_bar: ColorRect                # (the band's foot line: the clock running down)
+const PLASTIC := Color8(44, 70, 102)   # the HUD band: the toy's blue plastic...
+const PLASTIC_FOOT := Color8(26, 42, 64)
+const HUD_TEXT := Color(0.96, 0.95, 0.9)
 var nozzle_sprites: Array[Sprite2D] = []
 var glows: Array[Sprite2D] = []         # night: the halos behind balls and basket rims (they pulse)
 var glow_t := 0.0
@@ -293,7 +309,9 @@ func _apply_theme(w: int) -> void:
 	theme = SplashArt.THEMES[w]
 	var old := "res://textures/minigames/splash/"
 	var rim: Array = theme["rim"]
-	tex["tank"] = SplashArt.tank(317, 316, BAND_Y, TANK_L, TANK_R, floor_at, NOZZLES, theme)
+	var layers := SplashArt.tank_layers(317, 316, BAND_Y, floor_at, theme)
+	tex["tank_back"] = layers[0]
+	tex["tank"] = layers[1]
 	tex["cup_rim"] = SplashArt.recolour(old + "cup_rim.png", rim[0], rim[1], rim[2])
 	tex["cup_net"] = SplashArt.net(old + "cup_net.png", theme["net"])
 	tex["nozzle"] = SplashArt.recolour(old + "nozzle.png", rim[0], rim[1], rim[2])
@@ -306,6 +324,10 @@ func _apply_theme(w: int) -> void:
 		tex["glow_rim"] = SplashArt.glow(44, 26, rim[0])
 	if tank_sprite:
 		tank_sprite.texture = tex["tank"]
+		tank_back.texture = tex["tank_back"]
+		var top := 402.0 if theme["scene"] == "sun" else BAND_Y          # (the sunset's sky: no bubbles in it)
+		ambience.setup(String(theme["scene"]), Vector2(PLAY_WIDTH / 2.0, 500.0), 420.0, Rect2(0, top, PLAY_WIDTH, PLAY_HEIGHT - top))
+		band_bar.color = (theme["rim"][1] as Color)
 		for n in nozzle_sprites:
 			n.texture = tex["nozzle"]
 
@@ -490,7 +512,45 @@ func _make_cup(center: Vector2, points: int) -> Dictionary:
 
 # ================================================================== LOOP
 
+## The 3D tilt (the user, 2026-10-19: like the iPhone's 3D photos, as in Pal Prix): tilting the
+## phone shifts the scene printed behind the water (it's the far side of the tank), the baskets,
+## the balls, the pal and the sand still (what you see is where they are); the water's glitter and
+## bubbles drift the other way, a little; measured from the pose at the level's start, smoothed;
+## off with DEPTH_3D. Px per full tilt:
+const DEPTH_3D := true
+const DEPTH_FAR := 14.0
+const DEPTH_NEAR := 6.0
+var _depth_tilt := Vector2.ZERO
+var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, the Mac has no sensor)
+func _depth_3d() -> void:
+	var want := qa_depth_tilt
+	if DEPTH_3D and has_tilt_sensor() and state == State.PLAY:
+		want = device_tilt().limit_length(0.6) / 0.6
+	_depth_tilt = _depth_tilt.lerp(want, 0.12)
+	tank_back.position = (_depth_tilt * DEPTH_FAR).round()
+	back_shadows.position = tank_back.position
+	back_shadows.queue_redraw()
+	ambience.position = (-_depth_tilt * DEPTH_NEAR).round()
+
+## The pieces' soft shadows on the back panel (the light from the surface, top-left): each basket,
+## each ball and the pal, down and right of it, on the panel (they shift with it: the 3D tilt)
+func _draw_back_shadows() -> void:
+	var o := Vector2(16, 18)
+	var col := Color(0.04, 0.08, 0.16, 0.13)
+	for c in cups:
+		var p: Vector2 = c["pos"] + o
+		var k := 0.0
+		while k < CUP_H:
+			var hw := lerpf(CUP_W * 0.5, CUP_W * 0.36, k / CUP_H)
+			back_shadows.draw_rect(Rect2(GameFx.snap(p + Vector2(-hw, -CUP_H / 2.0 + k)), Vector2(roundf(hw * 2.0 / 4.0) * 4.0, 4)), col)
+			k += 4.0
+	for b in balls:
+		GameFx.disc(back_shadows, b["pos"] + o, BALL_R, col)
+	if not diver.is_empty():
+		GameFx.disc(back_shadows, diver["pos"] + o, DIVER_R * 0.85, col)
+
 func _process(delta: float) -> void:
+	_depth_3d()
 	if not is_running:
 		return
 	_update_jets(delta)
@@ -704,6 +764,11 @@ func _bounce_off_point(b: Dictionary, q: Vector2, r: float) -> void:
 
 func _fill_cup(_b: Dictionary, c: Dictionary) -> void:
 	c["full"] = true
+	# in: sparkles and a ring of light off the basket, in its plastic's colour
+	var at: Vector2 = (c["rim_node"] as Node2D).position
+	fx.sparkle(at, 12, Color8(255, 236, 160), 1.0)
+	fx.ring(at, (theme["rim"][0] as Color), 20.0, 110.0, 0.35, 6.0)
+	fx.flash(at, 30.0, Color(1, 1, 0.85))
 	c["net"].modulate = Color(1.7, 1.3, 0.55)        # a filled basket lights up gold
 	var tw := create_tween()
 	tw.tween_property(c["rim_node"], "scale", Vector2(S * 1.15, S * 0.85), 0.08)
@@ -721,6 +786,8 @@ func _level_clear() -> void:
 	state = State.CLEAR
 	var stars := _stars_now()
 	_show_banner("Clear!", 1.1)
+	for i in 3:
+		fx.confetti(Vector2(160.0 + i * 316.0, BAND_Y + 60.0), 12, [theme["rim"][0], Color8(255, 214, 90), Color(1, 1, 1), Color8(140, 220, 255)])
 	await get_tree().create_timer(1.3).timeout
 	if not is_running:
 		return
@@ -1032,6 +1099,9 @@ func _second_chance() -> bool:
 	_refresh_boost_icon()
 	_sfx("res://sounds/fx/water-pouring-98795.mp3", -10.0, 0.8)
 	_float_text("+%d s" % int(time_left), Vector2(PLAY_WIDTH / 2.0, 120), 200)
+	# a wave of water over the tank: rings rolling out from the clock
+	fx.ring(Vector2(PLAY_WIDTH / 2.0, BAND_Y + 20.0), Color8(110, 200, 255), 30.0, 460.0, 0.7, 10.0)
+	fx.ring(Vector2(PLAY_WIDTH / 2.0, BAND_Y + 20.0), Color(1, 1, 1), 20.0, 300.0, 0.5, 6.0)
 	var wave := ColorRect.new()
 	wave.color = Color(0.62, 0.84, 0.98, 0.35)
 	wave.size = Vector2(220, PLAY_HEIGHT - BAND_Y)
@@ -1205,12 +1275,18 @@ func _create_static_nodes() -> void:
 	bg.color = OUTLINE
 	bg.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT)
 	add_child(bg)
+	tank_back = _sprite(tex["tank_back"], Vector2.ZERO)   # the back panel (the 3D tilt shifts it)
+	tank_back.centered = false
+	add_child(tank_back)
+	back_shadows = Node2D.new()                     # the baskets', balls' and pal's shadows on the panel
+	back_shadows.draw.connect(_draw_back_shadows)
+	add_child(back_shadows)
+	rain_layer = Node2D.new()                       # (the storm's moving rain: behind everything else)
+	add_child(rain_layer)
 	var tank := _sprite(tex["tank"], Vector2.ZERO)
 	tank.centered = false
 	add_child(tank)
 	tank_sprite = tank
-	rain_layer = Node2D.new()                       # (the storm's moving rain: behind everything else)
-	add_child(rain_layer)
 
 	for x in NOZZLES:
 		var nz := _sprite(tex["nozzle"], Vector2(x, FLOOR_Y - 12))
@@ -1242,6 +1318,11 @@ func _create_static_nodes() -> void:
 	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(flash)
 
+	ambience = GameFx.Ambience.new()                # the water's living light, added on
+	var add := CanvasItemMaterial.new()
+	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	ambience.material = add
+	add_child(ambience)
 	# the deep's darkness: over the tank and everything in it, under the HUD (its band stays lit)
 	dark_layer = ColorRect.new()
 	dark_layer.position = Vector2(0, BAND_Y)
@@ -1254,36 +1335,38 @@ func _create_static_nodes() -> void:
 	dark_layer.material = mat
 	dark_layer.visible = false
 	add_child(dark_layer)
-	hud_level = _make_label(Vector2(40, 26), Vector2(160, 52), 38, HORIZONTAL_ALIGNMENT_LEFT, OUTLINE)
+	fx = GameFx.Burst.new()                         # sparkles, rings, confetti (they glow in the dark too)
+	add_child(fx)
+	# the HUD: the race games' band, set in the toy's plastic top
+	band_bar = GameFx.build_band(self, PLASTIC, PLASTIC_FOOT)["bar"]
+	hud_level = _make_label(Vector2(45, 28), Vector2(150, 52), 32, HORIZONTAL_ALIGNMENT_LEFT, HUD_TEXT)
 	boost_icon = TextureRect.new()
 	boost_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	boost_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	boost_icon.size = Vector2(35, 45)
-	boost_icon.position = Vector2(170, 30)
+	boost_icon.size = Vector2(28, 36)
+	boost_icon.position = Vector2(170, 36)
 	boost_icon.visible = false
 	add_child(boost_icon)
-	hud_time = _make_label(Vector2(PLAY_WIDTH / 2 - 85, 26), Vector2(170, 52), 38, HORIZONTAL_ALIGNMENT_CENTER, OUTLINE)
+	hud_time = _make_label(Vector2(227, 28), Vector2(220, 52), 32, HORIZONTAL_ALIGNMENT_CENTER, HUD_TEXT)
 	# the three stars still possible, right of the clock
 	for k in 3:
 		var st := TextureRect.new()
 		st.texture = UiArt.star(true)
 		st.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		st.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		st.size = Vector2(39, 39)
+		st.size = Vector2(36, 36)
 		st.pivot_offset = st.size / 2.0
-		st.position = Vector2(PLAY_WIDTH / 2 + 92 + k * 42, 32)
+		st.position = Vector2(459 + k * 40, 36)
 		add_child(st)
 		hud_stars.append(st)
 	# (the baskets' tray goes on the band's right: _build_tray, per level)
 
-	banner = _make_label(Vector2(0, PLAY_HEIGHT / 2 - 60), Vector2(PLAY_WIDTH, 120), 54, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
-	banner.add_theme_color_override("font_outline_color", OUTLINE)
-	banner.add_theme_constant_override("outline_size", 14)
-	banner.modulate.a = 0.0
+	banner = GameFx.banner(self, lcd_font, OUTLINE, PLAY_HEIGHT / 2.0)
 
 func _refresh_hud() -> void:
 	hud_time.text = "%d" % ceili(time_left)
-	hud_time.add_theme_color_override("font_color", Color(0.75, 0.15, 0.2) if time_left < 10.0 else OUTLINE)
+	hud_time.add_theme_color_override("font_color", Color(1.0, 0.45, 0.4) if time_left < 10.0 else HUD_TEXT)
+	band_bar.size.x = GameFx.HUD_BAND.size.x * clampf(time_left / maxf(_level_time(), 1.0), 0.0, 1.0)
 
 func _sprite(t: Texture2D, pos: Vector2) -> Sprite2D:
 	var s := Sprite2D.new()
@@ -1307,11 +1390,7 @@ func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: C
 	return l
 
 func _show_banner(text: String, hold: float) -> void:
-	banner.text = text
-	var t := create_tween()
-	t.tween_property(banner, "modulate:a", 1.0, 0.15)
-	t.tween_interval(hold)
-	t.tween_property(banner, "modulate:a", 0.0, 0.3)
+	GameFx.show_banner(banner, text, hold)
 
 func _float_text(text: String, at: Vector2, width := 120.0) -> void:
 	var l := _make_label(at + Vector2(-width / 2.0, -70), Vector2(width, 40), 28, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.95, 0.85))
