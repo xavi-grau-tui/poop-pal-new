@@ -213,6 +213,8 @@ class TopView extends Node2D:
 	var fast := 0.0                   # 0..1 how fast it spins
 	var dir := 1.0
 	var lean := Vector2.ZERO          # px: the face off the tip
+	var view := Vector2.ZERO          # px: the 3D tilt's lean (the face off the tip, as seen from the side;
+	                                  # in the close-up the tip moves instead: the face stays in the dial's middle)
 	var squat := 0.0                  # 0..1 guarding
 	var fall := 0.0                   # 0..1 toppled
 	var fall_dir := Vector2.RIGHT
@@ -227,7 +229,7 @@ class TopView extends Node2D:
 	func face_offset() -> Vector2:
 		var k := _k()
 		var n: int = (_look_now()["slices"] as Array).size() + 1
-		var off := Vector2(0, -n * 4.0 * k * (1.0 - 0.5 * squat)) + lean * k
+		var off := Vector2(0, -n * 4.0 * k * (1.0 - 0.5 * squat)) + lean * k + (Vector2.ZERO if hi else view)
 		if fall > 0.0:
 			off = off.lerp((fall_dir * n * 7.0 + Vector2(0, -6)) * k, fall)
 		return off.snapped(Vector2(4, 4))
@@ -252,7 +254,7 @@ class TopView extends Node2D:
 			GameFx.light_ring(self, face, rf * 4.0 + 12.0 * k, ac, 30, 4.0 * k, 0.65 * aura, -angle * 0.35)
 		for kk in n + 1:
 			var f := float(kk) / float(n)
-			var off := Vector2(0, -kk * step) + lean * k * f
+			var off := Vector2(0, -kk * step) + lean * k * f + view * (f - 1.0 if hi else f)
 			if fall > 0.0:
 				off = off.lerp((fall_dir * kk * 7.0 + Vector2(0, -kk * 1.5)) * k, fall)
 			off = off.snapped(Vector2(4, 4))
@@ -282,6 +284,7 @@ class TopView extends Node2D:
 ## A bumper peg on the floor: its slices, bottom first; it flashes and pops up when hit
 class PegView extends Node2D:
 	var slices: Array[Texture2D] = []
+	var view := Vector2.ZERO          # px: the 3D tilt's lean at its top
 	var flash := 0.0
 	var pop := 0.0
 	func _process(delta: float) -> void:
@@ -294,7 +297,8 @@ class PegView extends Node2D:
 			var tex := slices[k]
 			var up := 4.0 if k == slices.size() - 1 and pop > 0.0 else 0.0
 			var sz := tex.get_size() * 4.0
-			draw_texture_rect(tex, Rect2(Vector2(0, -k * 4.0 - up) - sz / 2.0, sz), false)
+			var at := (Vector2(0, -k * 4.0 - up) + view * float(k) / float(maxi(1, slices.size() - 1))).snapped(Vector2(4, 4))
+			draw_texture_rect(tex, Rect2(at - sz / 2.0, sz), false)
 		if flash > 0.0:
 			GameFx.disc(self, Vector2(0, -8), 24.0, Color(1, 1, 1, 0.75 * flash))
 
@@ -367,6 +371,8 @@ var scene: Node2D
 var stadium: Sprite2D                 # the bowl's floor (the tops' plane: it stays put)
 var stadium_rim: Sprite2D             # the rim's far half (under the tops)...
 var stadium_front: Sprite2D           # ...and its near half (over them)
+var rim_back_sides: Array[Sprite2D] = []     # the rim's copies between the floor and its top (the 3D
+var rim_front_sides: Array[Sprite2D] = []    # tilt: its sides showing as it leans), bottom first
 var floor_layer: Node2D
 var marks: GameFx.Burst
 var trails: GameFx.Burst
@@ -619,10 +625,15 @@ func _paint_scene(data: Dictionary) -> void:
 					if c.a > 0.0:
 						var bp := C / PX + Vector2(x - half, y - half)
 						img.set_pixel(x, y, TopSpinArt.lit(bowl["room"], c, bp, int(PLAY_WIDTH / PX) + 1, int(PLAY_HEIGHT / PX) + 1))
-		_bowl_cache[key] = [ImageTexture.create_from_image(imgs[0]), ImageTexture.create_from_image(imgs[1]), ImageTexture.create_from_image(imgs[2])]
+		_bowl_cache[key] = [ImageTexture.create_from_image(imgs[0]), ImageTexture.create_from_image(imgs[1]), ImageTexture.create_from_image(imgs[2]),
+			ImageTexture.create_from_image(_rim_side_image(imgs[1], imgs)), ImageTexture.create_from_image(_rim_side_image(imgs[2], imgs))]
 	stadium.texture = _bowl_cache[key][0]
 	stadium_rim.texture = _bowl_cache[key][1]
 	stadium_front.texture = _bowl_cache[key][2]
+	for sp in rim_back_sides:
+		sp.texture = _bowl_cache[key][3]
+	for sp in rim_front_sides:
+		sp.texture = _bowl_cache[key][4]
 	stadium.position = C
 	stadium_rim.position = C
 	stadium_front.position = C
@@ -1426,28 +1437,78 @@ func _update_whir(delta: float) -> void:
 	whir.pitch_scale = lerpf(whir.pitch_scale, 0.55 + 0.8 * k, minf(1.0, delta * 8.0))
 	whir.volume_db = lerpf(whir.volume_db, lerpf(-38.0, -22.0, minf(k, 1.0)), minf(1.0, delta * 6.0))
 
-## The 3D tilt (the user, 2026-10-19: like the iPhone's 3D photos, as in Pal Prix): tilting the
-## phone shifts the layers by their depth, the floor and the tops still (so what you see is where
-## they are): the place below the bowl one way, the raised rim (and the dust in the air, the
-## lights on the rim) the other; measured from the pose at the match's start and again at the
-## drop (the steering's), smoothed; off with DEPTH_3D. Pixels per full tilt, on the screen:
+## The 3D tilt (the user, 2026-10-19: like the iPhone's 3D photos, as in Pal Prix; then: make it
+## obvious): tilting the phone turns the bowl as if you looked at it from that side. The floor and
+## the tops' tips stay still (what you see is where they are); the place below the bowl slides one
+## way, the raised rim leans the other, solid (its copies stacked from the floor up to its top, so
+## its sides show), the tops and the pegs lean with it by their height (the pal on top furthest),
+## the dust in the air and the rim's lights with the rim; measured from the pose at the match's
+## start and again at the drop (the steering's), smoothed; off with DEPTH_3D. Px per full tilt
+## (DEPTH_FULL: the tilt's sine for it, ~27 degrees), on the screen:
 const DEPTH_3D := true
-const DEPTH_FAR := 16.0
-const DEPTH_NEAR := 8.0
+const DEPTH_FULL := 0.45
+const DEPTH_FAR := 40.0               # the place (painted TopSpinArt.MARGIN past the screen)
+const DEPTH_NEAR := 28.0              # the rim's top
+const DEPTH_TOP := 18.0               # a top's face (a peg's top: a third of it)
+const RIM_SIDES := 6                  # the rim's copies under its top (every DEPTH_NEAR / 7 px)
 var _depth_tilt := Vector2.ZERO
 var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, the Mac has no sensor)
 func _depth_3d() -> void:
 	var want := qa_depth_tilt
 	if DEPTH_3D and has_tilt_sensor() and phase != Phase.RESULT:
-		want = device_tilt().limit_length(0.6) / 0.6
+		want = device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
 	var far := (_depth_tilt * DEPTH_FAR).round()
 	var near := (-_depth_tilt * DEPTH_NEAR).round()
 	backdrop.position = far - Vector2.ONE * TopSpinArt.MARGIN * PX
+	for j in RIM_SIDES:
+		var at := C + (-_depth_tilt * DEPTH_NEAR * float(j) / float(RIM_SIDES + 1)).round()
+		rim_back_sides[j].position = at
+		rim_front_sides[j].position = at
 	stadium_rim.position = C + near
 	stadium_front.position = C + near
 	rim_fx.position = near
 	room_fx.position = near
+	var lean := -_depth_tilt * DEPTH_TOP
+	for v in top_nodes.get_children() + held.get_children():
+		if v is TopView:
+			v.view = lean
+		elif v is PegView and not v.view.is_equal_approx(lean / 3.0):
+			v.view = lean / 3.0
+			v.queue_redraw()
+
+## The rim's side for the 3D tilt: its shape, each pixel the rim's colour at that angle (across
+## its middle, so its stripes and lights don't streak down the side), darkened
+func _rim_side_image(src: Image, imgs: Array) -> Image:
+	var out := src.duplicate() as Image
+	var half := src.get_width() / 2.0
+	var rm := (R + RIM_W * 0.55) / PX
+	for y in src.get_height():
+		for x in src.get_width():
+			if src.get_pixel(x, y).a == 0.0:
+				continue
+			var d := Vector2(x - half + 0.5, y - half + 0.5)
+			var q := Vector2i((d.normalized() * rm + Vector2(half, half)).floor())
+			var c := src.get_pixel(x, y)
+			for img: Image in [imgs[1], imgs[2]]:
+				if q.x >= 0 and q.y >= 0 and q.x < img.get_width() and q.y < img.get_height() and img.get_pixel(q.x, q.y).a > 0.0:
+					c = img.get_pixel(q.x, q.y)
+					break
+			out.set_pixel(x, y, c.darkened(0.38))
+	return out
+
+## The rim's copies under its top (the 3D tilt's sides), darker the lower they are
+func _rim_sides() -> Array[Sprite2D]:
+	var out: Array[Sprite2D] = []
+	for j in RIM_SIDES:
+		var sp := Sprite2D.new()
+		sp.scale = Vector2(PX, PX)
+		sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sp.position = C
+		sp.modulate = Color(1, 1, 1).darkened(0.24 - 0.035 * j)
+		scene.add_child(sp)
+		out.append(sp)
+	return out
 
 ## QA only (tools/qa sets it): plays by itself to check the levels and the effects: winds on the
 ## gold, drops on a rival, dashes at the nearest one now and then, guards when one flashes
@@ -1771,6 +1832,7 @@ func _create_static_nodes() -> void:
 	stadium.scale = Vector2(PX, PX)
 	stadium.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	scene.add_child(stadium)
+	rim_back_sides = _rim_sides()
 	stadium_rim = Sprite2D.new()                    # the rim's far half and inner wall (under the tops)
 	stadium_rim.scale = Vector2(PX, PX)
 	stadium_rim.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -1785,6 +1847,7 @@ func _create_static_nodes() -> void:
 	top_nodes = Node2D.new()                        # the tops and the pegs, the nearer in front
 	top_nodes.y_sort_enabled = true
 	scene.add_child(top_nodes)
+	rim_front_sides = _rim_sides()
 	stadium_front = Sprite2D.new()                  # the near rim, over the tops
 	stadium_front.scale = Vector2(PX, PX)
 	stadium_front.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

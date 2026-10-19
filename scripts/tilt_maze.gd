@@ -45,9 +45,9 @@ extends BaseMinigame
 ## backgrounds. Taken once (BaseMinigame.take_secret). The finale of world 6 holds the game's case.
 ##
 ## The look (the user, 2026-10-19: the toy games at the race games' quality, one suite; GameFx,
-## docs/ideas_roadmap.md "The games' look"): the 3D tilt (the inner walls rise off the floor as the
-## phone tilts, their sides showing; the floor, the frame and the ball still, so what you see is
-## where they are), each world's light over the board and something alive in it (GameFx.Ambience:
+## docs/ideas_roadmap.md "The games' look"): the 3D tilt (the walls and the frame stand up off the
+## floor, solid, and lean as the phone tilts, their sides showing, the rail's HUD with them; the
+## floor and the ball still, so what you see is where they are), each world's light over the board and something alive in it (GameFx.Ambience:
 ## dust in the window's light, soap bubbles, glowing spores, drips, a weld's sparks, twinkling
 ## stars), Pal Prix 2177's bursts for the moments (a marble taken, the trapdoor opening, a fall,
 ## an enemy's hit, a hard bump), a shake on the big ones, the race games' banner.
@@ -188,7 +188,9 @@ const KNOCK := 560.0                  # how hard it's knocked back, px/s
 
 var scene: Node2D                     # the board and everything on it (it shakes; the HUD stays put)
 var board: Sprite2D                   # the floor and the frame (still)
-var walls: Sprite2D                   # the maze's inner walls (they rise off the floor: the 3D tilt)
+var walls: Sprite2D                   # the walls' tops, the frame too (they rise off the floor: the 3D tilt)
+var wall_sides: Array[Sprite2D] = []  # ...their sides, copies stacked under the tops, bottom first
+var in_walls: Node2D                  # what's set in the walls (the magnets): it rises with them
 var fx: GameFx.Burst
 var ambience: GameFx.Ambience
 var shake := 0.0
@@ -349,6 +351,9 @@ func _build_level() -> void:
 	var imgs := _paint_board()
 	board.texture = ImageTexture.create_from_image(imgs[0])
 	walls.texture = ImageTexture.create_from_image(imgs[1])
+	var sides := ImageTexture.create_from_image(imgs[2])
+	for sp in wall_sides:
+		sp.texture = sides
 	ambience.setup(theme["kind"], ORIGIN + Vector2(BOARD_PX, BOARD_PX) * PX / 2.0, BOARD_PX * PX / 2.0, Rect2(ORIGIN, Vector2(BOARD_PX, BOARD_PX) * PX))
 	bg_rect.color = theme["outline"]
 	_spawn_level_nodes()
@@ -763,8 +768,10 @@ func _paint_board() -> Array:
 
 	var data := PackedByteArray()
 	data.resize(n * n * 4)
-	var wdata := PackedByteArray()                 # (the inner walls, apart: clear elsewhere)
+	var wdata := PackedByteArray()                 # (the walls' tops, apart: clear elsewhere)
 	wdata.resize(n * n * 4)
+	var sdata := PackedByteArray()                 # (their sides: the copies stacked under the tops)
+	sdata.resize(n * n * 4)
 	var side: Color = (theme["wall"][3] as Color).darkened(0.3)
 	var noise := RandomNumberGenerator.new()
 	noise.seed = 99
@@ -781,7 +788,6 @@ func _paint_board() -> Array:
 			var lx := x % t
 			var i := ty * GRID + tx
 			var c: Color
-			var inner := tiles[i] == 1 and tx > 0 and ty > 0 and tx < GRID - 1 and ty < GRID - 1
 			if tiles[i] == 1:
 				var d_up := ly if up[i] else 99
 				var d_dn := (t - 1 - ly) if dn[i] else 99
@@ -792,12 +798,15 @@ func _paint_board() -> Array:
 				var vertical := (up[i] == 0 or dn[i] == 0) and lf[i] + rt[i] > 0
 				c = TiltMazeArt.wall_px(theme, x, y, m, d_up, d_dn, d_lf, d_rt, vertical)
 				c = _lit(c, x, y)
-				if inner:
-					wdata[k] = c.r8
-					wdata[k + 1] = c.g8
-					wdata[k + 2] = c.b8
-					wdata[k + 3] = 255
-					c = _lit(side, x, y)                    # (under it: its side, seen as it rises)
+				wdata[k] = c.r8
+				wdata[k + 1] = c.g8
+				wdata[k + 2] = c.b8
+				wdata[k + 3] = 255
+				c = _lit(side, x, y)                        # (under it: its side, seen as it rises)
+				sdata[k] = c.r8
+				sdata[k + 1] = c.g8
+				sdata[k + 2] = c.b8
+				sdata[k + 3] = 255
 			else:
 				c = TiltMazeArt.floor_px(theme, x, y, knots)
 				# drop shadow of the walls (light from the top-left), two steps
@@ -817,7 +826,7 @@ func _paint_board() -> Array:
 	for j in range(path_cells.size() - 1):
 		_ink_line(img, _to_px(_cell_center(path_cells[j])), _to_px(_cell_center(path_cells[j + 1])))
 	_ink_ring(img, _to_px(start_pos), 7.0)
-	return [img, Image.create_from_data(n, n, false, Image.FORMAT_RGBA8, wdata)]
+	return [img, Image.create_from_data(n, n, false, Image.FORMAT_RGBA8, wdata), Image.create_from_data(n, n, false, Image.FORMAT_RGBA8, sdata)]
 
 ## The world's light over the board (board px; the race games' way: dithered steps, subtle): the
 ## window's slanting light on the wooden toy, a soft bright corner on the tiles, the gut's lining
@@ -901,13 +910,6 @@ func _create_static_nodes() -> void:
 	board.scale = Vector2(PX, PX)
 	board.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	scene.add_child(board)
-	walls = Sprite2D.new()                       # the inner walls, over their own sides (the 3D tilt)
-	walls.centered = false
-	walls.position = ORIGIN
-	walls.scale = Vector2(PX, PX)
-	walls.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	scene.add_child(walls)
-
 	current_layer = CurrentLayer.new()
 	current_layer.lanes = currents
 	scene.add_child(current_layer)
@@ -949,6 +951,27 @@ func _create_static_nodes() -> void:
 	ball.scale = Vector2(BALL_SCALE, BALL_SCALE)
 	ball.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	scene.add_child(ball)
+	# the walls, the frame too, standing up off the floor (the 3D tilt): their sides (copies stacked
+	# from the floor up, darker the lower), their tops, what's set in them (the magnets); over the
+	# ball, so a wall leaning over it hides it a little, as a real one would
+	wall_sides.clear()
+	for j in WALL_SIDES:
+		var sp := Sprite2D.new()
+		sp.centered = false
+		sp.position = ORIGIN
+		sp.scale = Vector2(PX, PX)
+		sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sp.modulate = Color(1, 1, 1).darkened(0.3 - 0.3 * float(j) / float(WALL_SIDES))
+		scene.add_child(sp)
+		wall_sides.append(sp)
+	walls = Sprite2D.new()
+	walls.centered = false
+	walls.position = ORIGIN
+	walls.scale = Vector2(PX, PX)
+	walls.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	scene.add_child(walls)
+	in_walls = Node2D.new()
+	scene.add_child(in_walls)
 	fx = GameFx.Burst.new()                      # sparks, rings, puffs, confetti
 	scene.add_child(fx)
 	ambience = GameFx.Ambience.new()             # the world's living light, added on
@@ -1020,8 +1043,10 @@ func _spawn_level_nodes() -> void:
 		_sprite(TiltMazeArt.goo(int(GOO_R / DETAIL)), g)
 	for h in holes:
 		h["node"] = _sprite(TiltMazeArt.hole(world), h["pos"])
+	for n in in_walls.get_children():
+		n.queue_free()
 	for m in magnets:
-		_sprite(TiltMazeArt.magnet(), m)
+		_sprite(TiltMazeArt.magnet(), m, in_walls)
 	var pick := TiltMazeArt.pickup(world)
 	for cp in checkpoints:
 		cp["node"] = _sprite(pick, cp["pos"])
@@ -1198,23 +1223,41 @@ func _make_shadow_texture() -> Texture2D:
 
 # ================================================================== LOOP
 
-## The 3D tilt (the user, 2026-10-19: like the iPhone's 3D photos, as in Pal Prix): tilting the
-## phone lifts the maze's inner walls off the floor, the way they lean their sides show; the floor,
-## the frame, the ball and everything on the floor stay still (what you see is where it is), the
-## world's dust and spores drift the walls' way, a little more; measured from the pose at the
-## level's start (and MAIN's re-levelling), smoothed; off with DEPTH_3D. Px per full tilt:
+## The 3D tilt (the user, 2026-10-19: like the iPhone's 3D photos, as in Pal Prix; then: make it
+## obvious, the sides too): tilting the phone shows the maze from that side. The walls and the
+## frame stand up off the floor, solid (copies stacked from the floor up to their tops, darker
+## the lower), and lean away from the way you tilt it, their sides showing; the HUD printed on the
+## frame's top rail and the magnets set in the walls go with them; the floor, the ball and all on
+## the floor stay still (what you see is where it is), the world's dust and spores drift the walls'
+## way, a little more; measured from the pose at the level's start (and MAIN's re-levelling),
+## smoothed; off with DEPTH_3D. Px per full tilt (DEPTH_FULL: its sine, ~27 degrees):
 const DEPTH_3D := true
-const DEPTH_NEAR := 8.0
+const DEPTH_FULL := 0.45
+const DEPTH_NEAR := 24.0              # the walls' tops (the frame's, at most, just inside the screen)
+const WALL_SIDES := 5                 # the copies under the tops (every DEPTH_NEAR / 6 px)
 var _depth_tilt := Vector2.ZERO
 var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, the Mac has no sensor)
 func _depth_3d() -> void:
 	var want := qa_depth_tilt
 	if DEPTH_3D and has_tilt_sensor() and state != State.CLEAR:
-		want = device_tilt().limit_length(0.6) / 0.6
+		want = device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
-	var near := (-_depth_tilt * DEPTH_NEAR).round()
+	var up := -_depth_tilt * DEPTH_NEAR
+	var near := up.round()
+	for j in wall_sides.size():
+		wall_sides[j].position = ORIGIN + (up * float(j + 1) / float(WALL_SIDES + 1)).round()
 	walls.position = ORIGIN + near
-	ambience.position = (near * 1.5).round()
+	in_walls.position = near
+	ambience.position = (up * 1.25).round()
+	# the rail's HUD (each piece kept where it was made, plus the rail's lift)
+	var rail: Array = [hud_level, hud_time]
+	rail.append_array(hud_stars)
+	rail.append_array(life_hearts)
+	rail.append_array(tray)
+	for c: Control in rail:
+		if not c.has_meta("rail_at"):
+			c.set_meta("rail_at", c.position)
+		c.position = c.get_meta("rail_at") + near
 
 ## A small shake for a big moment (the HUD stays put)
 func _kick(amount: float) -> void:

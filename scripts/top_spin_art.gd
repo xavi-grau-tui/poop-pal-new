@@ -435,7 +435,7 @@ static func _n(x: float, y: float, seed_n: int) -> float:
 
 ## The place round the bowl (w x h board px), the bowl's drop shadow on it, and the world's light
 ## baked over it. c: the bowl's middle (board px), rr: its outer radius (board px)
-const MARGIN := 6                       # (board px) the place is painted this far past the screen (the 3D tilt shifts it)
+const MARGIN := 12                      # (board px) the place is painted this far past the screen (the 3D tilt shifts it)
 
 static func room_image(kind: String, w: int, h: int, c: Vector2, rr: float) -> Image:
 	var key := "room_%s_%d_%d_%s_%.1f" % [kind, w, h, c, rr]
