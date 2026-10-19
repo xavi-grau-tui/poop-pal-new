@@ -421,7 +421,7 @@ class Crowd extends Node2D:
 				# colour filter of its own, a bright hue, a touch softer than the race)
 				# (each seat its pal in its own colours: the pal's colours turned round the rainbow, a
 				# little brighter; the whole stand a touch see-through, behind the race)
-				var hue := rng.randi_range(0, HUES - 1)
+				var hue := 0 if rng.randf() < 0.33 else rng.randi_range(1, HUES - 1)
 				dots.append([p.snapped(Vector2(4, 4)), who, -10.0, 1, -10.0, Vector2.ZERO, 20.0, rng.randf() * TAU, rng.randf() * 3.0, flag, _hued(who, hue)])
 		# (drawn back to front: the far rows first)
 		dots.sort_custom(func(x, y): return x[0].y < y[0].y)
@@ -446,8 +446,10 @@ class Crowd extends Node2D:
 				var c := img.get_pixel(x, y)
 				if c.a < 0.1 or c.v < 0.3 or c.s < 0.15:
 					continue
+				# (soft: pastel, not vivid; the user, 2026-10-19)
 				c.h = fposmod(c.h + float(hue) / float(HUES), 1.0)
-				c.s = minf(1.0, c.s * 1.15)
+				c.s = c.s * 0.62
+				c.v = minf(1.0, c.v * 1.06 + 0.04)
 				img.set_pixel(x, y, c)
 		var out := ImageTexture.create_from_image(img)
 		_hue_cache[key] = out
@@ -1111,10 +1113,10 @@ class AirFx extends Node2D:
 		flow = flow.lerp(-heading_v, minf(1.0, delta * 3.0)).normalized()
 		var view: Rect2 = rc.view_rect().grow(60.0)
 		var racing: bool = rc.state == 1
-		var rate := 46.0 if racing else 12.0
-		if streaks.size() < 60 and randf() < delta * rate:
+		var rate := 90.0 if racing else 20.0
+		if streaks.size() < 110 and randf() < delta * rate:
 			var p := Vector2(randf_range(view.position.x, view.end.x), randf_range(view.position.y, view.end.y))
-			streaks.append([p, 0.0, randf_range(0.6, 1.2), randf_range(20.0, 52.0)])
+			streaks.append([p, 0.0, randf_range(0.6, 1.2), randf_range(36.0, 84.0)])
 		var speed := 520.0 if racing else 90.0
 		for st in streaks:
 			st[0] += flow * speed * delta
@@ -1124,12 +1126,14 @@ class AirFx extends Node2D:
 	func _draw() -> void:
 		for st in streaks:
 			var f: float = st[1] / st[2]
-			var a := sin(f * PI) * 0.34
+			var a := sin(f * PI) * 0.55
 			var ln: float = float(st[3]) * (0.6 + 0.4 * sin(f * PI))
 			var k := 0.0
 			while k < ln:
 				var q := ((st[0] as Vector2) - flow * k).snapped(Vector2(4, 4))
-				draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, a * (1.0 - k / ln * 0.7)))
+				var fade := 1.0 - k / ln * 0.75
+				draw_rect(Rect2(q - Vector2(4, 4) + Vector2(4, 4), Vector2(8, 8)), Color(0.35, 0.4, 0.55, a * fade * 0.25))   # (a faint shade, so it shows on white clouds)
+				draw_rect(Rect2(q - Vector2(4, 4), Vector2(8, 8)), Color(1, 1, 1, a * fade))
 				k += 4.0
 
 ## EXPERIMENT (the user, 2026-10-18: "like the iPhone's 3D photos"): tilting the phone shifts
