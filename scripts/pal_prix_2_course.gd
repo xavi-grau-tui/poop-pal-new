@@ -1,6 +1,6 @@
 extends RefCounted
 class_name PalPrix2Course
-## Pal Prix 2's course: Pal Prix's circuits (a random patch of grid squares, the course round its
+## Pal Prix 2177's course: Pal Prix's circuits (a random patch of grid squares, the course round its
 ## outline, every corner rounded: it never touches itself), with bigger squares (long bends taken
 ## flat out, wide roads), cut into stretches of LAND, SEA and AIR with a transform gate where one
 ## turns into the next (always on a straight, with room before and after). It also makes the

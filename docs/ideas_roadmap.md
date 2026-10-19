@@ -17,8 +17,8 @@ come back to, and each feeding the rest (rewards, foods, drinks, secrets). Every
 light, playful and visually intuitive: icons over text, learn by doing. Asia first (Japan above all).
 
 ## Where things stand (2026-10-16, late)
-- 2026-10-19: Pal Prix 2 (the Turbo League) built on branch `pal-prix-2`, for the user to try:
-  see "PAL PRIX 2" under "To build" (what's in it, what's still to do).
+- 2026-10-19: Pal Prix 2177 (the Turbo League) built on branch `pal-prix-2`, for the user to try:
+  see "PAL PRIX 2177" under "To build" (what's in it, what's still to do).
 - Branch `complete-games` (not merged, for the user to review: what stays, what changes): the
   skeleton's systems (meal clock, coins on the LCD, every boost, drink levels, the daily special
   shelf, Lucky Pinch every 4th new pal); the first five games each at 6 worlds x 9 levels with a
@@ -116,7 +116,7 @@ To build:
   6 Grand Prix (a sunset over a sea of clouds: storm clouds, rival planes). Lives (3 little toys):
   a crash costs one. Balanced with the QA autopilot (tools/qa until=done: every race's result and
   crashes printed; hands=off: nobody steers, it must not finish). Its song: see "Music prompts".
-  PAL PRIX 2 (the user, 2026-10-19, a note for the future): the FINAL game, a reward for the
+  PAL PRIX 2177 (the user, 2026-10-19, a note for the future; named 2177 by the user: "the future", a nod to Cyberpunk 2077, 100 years on): the FINAL game, a reward for the
   player (Pal Prix is very fun). The step: winning the Grand Prix cup (6-9) invites the pal to the
   next league, the toys turbo-charged. Hover cars, Wipeout-like (anti-grav, neon, magnetic edges:
   Neon City, Canyon) · jet skis / hydrofoils (Rapids: waterfalls as jumps, Ice Fjord) · rocket
@@ -127,7 +127,7 @@ To build:
   boost (hold through a long bend, still two buttons). Cosmic special foods (Moon Rock, Stardust
   Sugar) in the space worlds.
   BUILT (2026-10-19, branch `pal-prix-2`, for the user to try): game 11, the 7th card (after Tummy
-  Tunes), not bought: winning Pal Prix 6-9 opens it ("The Turbo League: Pal Prix 2!" pops up on
+  Tunes), not bought: winning Pal Prix 6-9 opens it ("The Turbo League: Pal Prix 2177!" pops up on
   that result; a save that already won it finds it open). scripts/pal_prix_2.gd (+ _course, _art,
   _fx; the ground is two shaders: scripts/shaders/pal_prix_2_board / _deep). The two world lists
   COMBINED as the user's build-up, each step in one of the places (to confirm): 1 Neon City (land
@@ -271,7 +271,7 @@ To build:
     Length: at least 2 minutes (user). Say it in the prompt, add sections in Suno's lyrics box
     ([Instrumental] [Main Riff] [Variation] [Main Riff] [Breakdown: bass and drums] [Main Riff]
     [Variation] [Main Riff], no [Intro]), or Extend the one you like.
-  - PAL PRIX 2 (2026-10-19, to generate; its own sound family first, none of Pal Prix's sentences:
+  - PAL PRIX 2177 (2026-10-19, to generate; its own sound family first, none of Pal Prix's sentences:
     the turbo league is futuristic, faster, a reward): "Neon synthwave chiptune racing
     instrumental, shimmering sixteenth-note arpeggiated synth bass from the first beat, a bright
     soaring square-wave lead with a hopeful heroic hook, gated electronic drums with a punchy snare,

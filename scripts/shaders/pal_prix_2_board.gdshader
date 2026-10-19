@@ -1,5 +1,5 @@
 shader_type canvas_item;
-// Pal Prix 2's ground (scripts/pal_prix_2.gd): the near layer of every world, painted per board
+// Pal Prix 2177's ground (scripts/pal_prix_2.gd): the near layer of every world, painted per board
 // px (4 mat px) on the games' chunky grid: few flat colours in steps with a 2x2 dither between
 // them, raised pieces outlined dark with a side face and a shadow, lit from the top left (the
 // Tilt Maze / Pal Prix rules). It reads the course from two textures (PalPrix2Course): every

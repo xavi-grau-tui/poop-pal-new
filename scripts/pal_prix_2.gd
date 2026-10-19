@@ -1,5 +1,5 @@
 extends BaseMinigame
-## Pal Prix 2, the Turbo League: the final game, a reward. Winning Pal Prix's Grand Prix (6-9)
+## Pal Prix 2177, the Turbo League: the final game, a reward. Winning Pal Prix's Grand Prix (6-9)
 ## invites the pal to the next league, where its toy is turbo-charged and TRANSFORMS: one craft
 ## that is a hover car on land, a jet ski on the water and a rocket in the air. Each change
 ## happens at a gate on the course: the craft spins and unfolds in a puff (the hover pods fold

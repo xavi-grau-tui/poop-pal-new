@@ -1,5 +1,5 @@
 shader_type canvas_item;
-// Pal Prix 2's deep layer (scripts/pal_prix_2.gd): what's far below where the ground opens (a
+// Pal Prix 2177's deep layer (scripts/pal_prix_2.gd): what's far below where the ground opens (a
 // jump's gap, the drop under a flight) and all round in space. It moves slower than the ground
 // (parallax: it's far away), on the same chunky board px, hazier than what's near. Neon City:
 // the streets far down with their traffic; the Rapids: the jungle valley, its river, mist

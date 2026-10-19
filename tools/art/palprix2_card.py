@@ -1,9 +1,9 @@
-"""Pal Prix 2's Games-menu card (the Turbo League): its logo and its pattern, from Pal Prix's.
+"""Pal Prix 2177's Games-menu card (the Turbo League): its logo and its pattern, from Pal Prix's.
 
     python3 tools/art/palprix2_card.py     -> textures/menus/palprix2.png, pattern_rocket_navy.png
 
 The logo is Pal Prix's own lettering (textures/menus/palprix.png) recoloured from terracotta to a
-night blue with neon light, a big "2" added after PAL in the same blocky letters (dark outline,
+night blue with neon light, the year "2177" added after PAL in the same blocky letters (dark outline,
 light upper half, darker lower half, a darker foot, the same faint grain). The pattern keeps
 Pal Prix's trophy pattern's layout (pattern_trophy_terracotta.png: 7 x 7 px glyphs at x3 on a
 staggered grid, so it tiles the same) with a little rocket in each place.
@@ -45,41 +45,46 @@ def jitter(c, rng, k=3):
     return tuple(max(0, min(255, v + rng.randint(-k, k))) for v in c)
 
 
-# a chunky "2" in the letters' stroke (each px x4: 32 x 36 px, strokes 12 px)
-TWO = [
-    ".######.",
-    "########",
-    "###..###",
-    ".....###",
-    "...####.",
-    ".####...",
-    "###.....",
-    "########",
-    "########",
-]
+# "2177" in chunky digits (each px x3: 18 x 24 px, strokes 6 px) beside PAL's L
+DIGITS = {
+    "2": [".####.", "##..##", "....##", "...##.", "..##..", ".##...", "##....", "######"],
+    "1": ["..##..", ".###..", "..##..", "..##..", "..##..", "..##..", "..##..", ".####."],
+    "7": ["######", "....##", "...##.", "..##..", "..##..", ".##...", ".##...", ".##..."],
+}
+YEAR = "2177"
 
 
 def logo():
     src = Image.open(os.path.join(MENUS, 'palprix.png')).convert('RGBA')
     rng = random.Random(7)
-    # (wider than Pal Prix's: the 2 goes after PAL's L; the card centres the logo)
-    out = Image.new('RGBA', (src.width + 40, src.height), (0, 0, 0, 0))
+    # (wider than Pal Prix's: the year goes after PAL's L; the card centres the logo)
+    out = Image.new('RGBA', (src.width + 48, src.height), (0, 0, 0, 0))
     for y in range(src.height):
         for x in range(src.width):
             k = classify(src.getpixel((x, y)))
             if k:
                 out.putpixel((x, y), jitter(NEW[k], rng, 2 if k != 'out' else 0) + (255,))
-    # the 2: the letters' height (PAL's rows 6..48 with their outline), outlined 3 px, lit upper
-    # half, darker lower half, a darker foot
-    k4, o = 4, 3
-    gw, gh = len(TWO[0]) * k4, len(TWO) * k4
-    gx, gy = 157, 9
-    inside = lambda x, y: 0 <= x < gw and 0 <= y < gh and TWO[y // k4][x // k4] == '#'
-    for y in range(-o, gh + o):
-        for x in range(-o, gw + o):
+    k3, o, gap = 3, 3, 3
+    dw, dh = 6 * k3, 8 * k3
+    gx, gy = 121, 8
+    rows = []
+    for ch in YEAR:
+        rows.append(DIGITS[ch])
+    def inside(x, y):
+        if y < 0 or y >= dh or x < 0:
+            return False
+        d, lx = divmod(x, dw + gap)
+        if d >= len(rows) or lx >= dw:
+            return False
+        return rows[d][y // k3][lx // k3] == '#'
+    tw = len(rows) * (dw + gap) - gap
+    for y in range(-o, dh + o):
+        for x in range(-o, tw + o):
             px, py = gx + x, gy + y
+            if not (0 <= px < out.width and 0 <= py < out.height):
+                continue
             if inside(x, y):
-                k = 'light' if y < gh * 0.45 else ('foot' if y >= gh - 3 else 'dark')
+                k = 'light' if y < dh * 0.45 else ('foot' if y >= dh - 3 else 'dark')
                 out.putpixel((px, py), jitter(NEW[k], rng, 2) + (255,))
             elif any(inside(x + dx, y + dy) for dy in range(-o, o + 1) for dx in range(-o, o + 1)):
                 out.putpixel((px, py), NEW['out'] + (255,))

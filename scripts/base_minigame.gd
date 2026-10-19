@@ -121,8 +121,8 @@ func finish_level(level: int, stars: int, best := -1.0, best_lower := true) -> v
 	var won := GameData.record_level(idx, level, stars) if stars > 0 else 0
 	GameData.set_last_level(idx, level)
 	if GameData.invited_now:
-		# Pal Prix's Grand Prix won: the invitation to Pal Prix 2 pops up once the result is in
-		var invite := { "icon": PalPrix2Art.icon("rocket"), "name": "Pal Prix 2!", "kind": "game" }
+		# Pal Prix's Grand Prix won: the invitation to Pal Prix 2177 pops up once the result is in
+		var invite := { "icon": PalPrix2Art.icon("rocket"), "name": "Pal Prix 2177!", "kind": "game" }
 		get_tree().create_timer(2.6).timeout.connect(func():
 			if is_inside_tree():
 				show_prize(invite, "The Turbo League:"))

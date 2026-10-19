@@ -1,6 +1,6 @@
 extends RefCounted
 class_name PalPrix2Fx
-## Pal Prix 2's moving pieces (scripts/pal_prix_2.gd), each a Node2D that draws itself on the
+## Pal Prix 2177's moving pieces (scripts/pal_prix_2.gd), each a Node2D that draws itself on the
 ## games' 4 px grid like Pal Prix's: the craft's trails (its neon light ribbons, drift sparks,
 ## spray, the transform's puff, contrails), the speed lines over the view, the sea lanes' neon
 ## buoys, the air lanes' beacons (their lights chasing the way to go), the transform gates' arches,

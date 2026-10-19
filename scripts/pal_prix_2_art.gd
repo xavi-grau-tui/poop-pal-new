@@ -1,6 +1,6 @@
 extends RefCounted
 class_name PalPrix2Art
-## Pal Prix 2's pixel pieces (the Turbo League): the one craft that turns from a hover car into a
+## Pal Prix 2177's pixel pieces (the Turbo League): the one craft that turns from a hover car into a
 ## jet ski into a rocket, and the course's pieces. Hard pixels on the games' 4 px grid, a dark
 ## outline, lit from the top left (the Tilt Maze rules), drawn in code like Pal Prix's toys. The
 ## craft is "sprite-stacked" like them: its slices, bottom first, the same 30 x 26 canvas for all
