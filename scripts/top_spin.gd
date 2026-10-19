@@ -1272,19 +1272,25 @@ func _ring_out(t: Top) -> void:
 		return
 	t.alive = false
 	t.braced = false
-	_sfx("res://sounds/fx/sfx_sounds_falling4.wav", -12.0, 0.8)
-	# out through the gap: off the bowl's edge, tumbling down to the floor, a puff at the gap
-	var out := t.pos + (t.pos - C).normalized() * 140.0
+	# out through the gap (the user: no vanishing with a noise, it just falls out): on over the
+	# floor's edge the way it was going, a drop down off the bowl (a bit smaller: further below),
+	# toppled where it lands with a soft tap and a puff, and left lying there
+	var dir := (t.pos - C).normalized()
+	var edge := t.pos + dir * maxf(0.0, R + RIM_W + t.r * 0.5 - (t.pos - C).length())
+	var land := edge + dir * 26.0 + Vector2(0, 40)
 	var v := t.root
-	v.fall_dir = (t.pos - C).normalized()
-	fx.puff(t.pos + (t.pos - C).normalized() * t.r, 10, Color(1, 1, 1), 0.8)
-	fx.ring(t.pos, bowl["accent"], 20.0, 90.0, 0.3, 6.0)
-	_kick(0.3)
+	v.fall_dir = dir
+	fx.puff(t.pos + dir * t.r, 8, Color(1, 1, 1), 0.6)
 	var tw := create_tween()
-	tw.tween_property(v, "position", GameFx.snap(out), 0.45)
-	tw.parallel().tween_property(v, "scale", Vector2(0.5, 0.5), 0.45)
-	tw.parallel().tween_property(v, "fall", 0.7, 0.45)
-	tw.parallel().tween_property(v, "modulate:a", 0.0, 0.45)
+	tw.tween_property(v, "position", GameFx.snap(edge), 0.16)
+	tw.tween_property(v, "position:x", GameFx.snap(land).x, 0.3)
+	tw.parallel().tween_property(v, "position:y", GameFx.snap(land).y, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(v, "scale", Vector2(0.85, 0.85), 0.3)
+	tw.parallel().tween_property(v, "fall", 1.0, 0.3)
+	tw.tween_callback(func():
+		_sfx("res://sounds/fx/clack.mp3", -20.0, 0.0, 0.8)
+		fx.dust(land, 8, Color(0.85, 0.8, 0.75), 0.8)
+		_kick(0.12))
 	if t.prize:
 		_win_prize(t)
 	elif not t.is_player:
@@ -1478,22 +1484,40 @@ func _depth_3d() -> void:
 			v.queue_redraw()
 
 ## The rim's side for the 3D tilt: its shape, each pixel the rim's colour at that angle (across
-## its middle, so its stripes and lights don't streak down the side), darkened
+## its middle, so its stripes and lights don't streak down the side), darkened. At a way out the
+## angle's colour is the rim's nearest one beside it (not the cut's dark edge: the user saw black
+## slabs at the gaps' ends)
 func _rim_side_image(src: Image, imgs: Array) -> Image:
 	var out := src.duplicate() as Image
 	var half := src.get_width() / 2.0
 	var rm := (R + RIM_W * 0.55) / PX
+	const STEPS := 720
+	var ring: Array = []
+	for i in STEPS:
+		var q := Vector2i((Vector2.from_angle(TAU * i / STEPS) * rm + Vector2(half, half)).floor())
+		var c := Color(0, 0, 0, 0)
+		for img: Image in [imgs[1], imgs[2]]:
+			if q.x >= 0 and q.y >= 0 and q.x < img.get_width() and q.y < img.get_height() and img.get_pixel(q.x, q.y).a > 0.0:
+				c = img.get_pixel(q.x, q.y)
+				break
+		ring.append(c if c.get_luminance() > 0.2 else Color(0, 0, 0, 0))     # (not the outline: the rim's own colours)
+	for i in STEPS:                                  # (the gaps: the nearest rim colour beside them)
+		if (ring[i] as Color).a > 0.0:
+			continue
+		for k in range(1, STEPS / 2):
+			if (ring[(i + k) % STEPS] as Color).a > 0.0:
+				ring[i] = ring[(i + k) % STEPS]
+				break
+			if (ring[(i - k + STEPS) % STEPS] as Color).a > 0.0:
+				ring[i] = ring[(i - k + STEPS) % STEPS]
+				break
 	for y in src.get_height():
 		for x in src.get_width():
 			if src.get_pixel(x, y).a == 0.0:
 				continue
 			var d := Vector2(x - half + 0.5, y - half + 0.5)
-			var q := Vector2i((d.normalized() * rm + Vector2(half, half)).floor())
-			var c := src.get_pixel(x, y)
-			for img: Image in [imgs[1], imgs[2]]:
-				if q.x >= 0 and q.y >= 0 and q.x < img.get_width() and q.y < img.get_height() and img.get_pixel(q.x, q.y).a > 0.0:
-					c = img.get_pixel(q.x, q.y)
-					break
+			var i := int(fposmod(d.angle(), TAU) / TAU * STEPS) % STEPS
+			var c: Color = ring[i] if (ring[i] as Color).a > 0.0 else src.get_pixel(x, y)
 			out.set_pixel(x, y, c.darkened(0.38))
 	return out
 
@@ -1505,7 +1529,7 @@ func _rim_sides() -> Array[Sprite2D]:
 		sp.scale = Vector2(PX, PX)
 		sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		sp.position = C
-		sp.modulate = Color(1, 1, 1).darkened(0.24 - 0.035 * j)
+		sp.modulate = Color(1, 1, 1).darkened(0.3 if j == 0 else 0.2)   # (one shade, the lowest darker: no stripes down the side)
 		scene.add_child(sp)
 		out.append(sp)
 	return out

@@ -292,8 +292,8 @@ static func bowl_images(bowl: Dictionary, r: float, rim_w: float, rim_h: float, 
 				# the floor runs on out through it) ---
 				var g1 := _gap_at(gaps, gap_half, ang1)
 				if g1 >= 0.0:
-					if g1 > 0.86:
-						col = OUTLINE                                    # the cut's edges
+					if g1 > 1.0 - 1.2 / (gap_half * d1):
+						col = OUTLINE                                    # the cut's edges (1 px)
 				else:
 					var t := (d1 - rr) / rw
 					var lit := (p - lip).normalized().dot(light_dir)
@@ -322,7 +322,7 @@ static func bowl_images(bowl: Dictionary, r: float, rim_w: float, rim_h: float, 
 				# --- the far inner wall, between the floor's edge and the lip ---
 				var g2 := _gap_at(gaps, gap_half, ang1)
 				if g2 >= 0.0:
-					if g2 > 0.86:
+					if g2 > 1.0 - 1.2 / (gap_half * maxf(d1, 1.0)):
 						col = OUTLINE
 				else:
 					var k := clampf((d0 - rr) / maxf(rh, 0.01), 0.0, 1.0)
@@ -333,7 +333,9 @@ static func bowl_images(bowl: Dictionary, r: float, rim_w: float, rim_h: float, 
 			if d0 < rr + rw - 0.5:
 				# --- the floor (on under the rim, and out through the ways out): its material, shaded as a
 				# hollow, the rim's shadow, puddles ---
-				var in_gap := d0 >= rr and _gap_at(gaps, gap_half, ang0) >= 0.0
+				# (in a way out by the floor's middle or the raised rim's: the rim's cut is measured
+				# from its lip, so beside each cut a wedge of floor shows as the rim shifts)
+				var in_gap := d0 >= rr and (_gap_at(gaps, gap_half, ang0) >= 0.0 or _gap_at(gaps, gap_half, ang1) >= 0.0)
 				var fc := _floor_px(bowl, p - c, x, y)
 				if in_gap and d0 >= rr + rw - 1.5:
 					fc = OUTLINE                                          # (the floor's edge, where it ends)
@@ -352,7 +354,7 @@ static func bowl_images(bowl: Dictionary, r: float, rim_w: float, rim_h: float, 
 						if sd0 < 70.0:
 							fc = _slime_px(sd0, x, y)
 				else:
-					fc = fc.darkened(0.3)                                 # (under the rim: only seen as it shifts)
+					fc = fc.darkened(0.15)                                # (under the rim: only seen as it shifts)
 				floor_img.set_pixel(x, y, fc)
 			if col.a > 0.0:
 				(front if is_front else back).set_pixel(x, y, col)
