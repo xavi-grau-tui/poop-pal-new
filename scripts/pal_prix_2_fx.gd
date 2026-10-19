@@ -336,10 +336,13 @@ class Ring extends Node2D:
 			if (q.dot(d) <= 0.0) != upper:
 				continue
 			var p := PalPrix2Fx.snap(q)
-			var glow := 0.5 + 0.5 * sin(t * 6.0 + a * 2.0)
+			var glow := 0.5 + 0.5 * sin(t * 6.0 - a * 3.0)
+			draw_rect(Rect2(p - Vector2(12, 12), Vector2(24, 24)), Color(col.r, col.g, col.b, 0.18))
 			draw_rect(Rect2(p - Vector2(8, 8), Vector2(16, 16)), OUTLINE)
-			var c := col.lerp(Color(1, 1, 1), glow * (0.5 if state == 1 else 0.2))
-			draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), c)
+			var c := col.lerp(Color(1, 1, 1), glow * 0.45)
+			draw_rect(Rect2(p - Vector2(6, 6), Vector2(12, 12)), c)
+			if glow > 0.7:
+				draw_rect(Rect2(p - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1))
 
 ## A current on the water (the jet ski's boost plate): chevrons flowing down the lane over a warm
 ## glow, like Pal Prix's
@@ -593,6 +596,40 @@ class Aurora extends Node2D:
 			if view.has_point(p):
 				draw_rect(Rect2(p, Vector2(4, 4)), Color(1, 1, 1, 0.7))
 
+## The canyon's wind across the flight in a gust: pale streaks blowing over it, at the rocket's
+## height, with a few grains of sand in it
+class Gusts extends Node2D:
+	var zones: Array = []                 # [points (the flight there), the way it blows]
+	var bits: Array = []                  # [position, velocity, age, sand]
+	func setup(z: Array) -> void:
+		zones = z
+		bits.clear()
+		visible = not zones.is_empty()
+	func _process(delta: float) -> void:
+		if zones.is_empty():
+			return
+		for z in zones:
+			if randf() < delta * 30.0:
+				var pts: PackedVector2Array = z[0]
+				var at := pts[randi() % pts.size()]
+				var way: Vector2 = z[1]
+				bits.append([at - way * 300.0 + Vector2(randf_range(-80, 80), randf_range(-80, 80)), way * randf_range(420.0, 560.0), 0.0, randf() < 0.3])
+		for b in bits:
+			b[0] += (b[1] as Vector2) * delta
+			b[2] += delta
+		bits = bits.filter(func(b): return b[2] < 1.2)
+		queue_redraw()
+	func _draw() -> void:
+		for b in bits:
+			var p: Vector2 = PalPrix2Fx.snap(b[0])
+			var v: Vector2 = (b[1] as Vector2).normalized()
+			var a := 0.6 * sin(b[2] / 1.2 * PI)
+			if b[3]:
+				draw_rect(Rect2(p, Vector2(4, 4)), Color(0.95, 0.75, 0.5, a))
+				continue
+			for k in 6:
+				draw_rect(Rect2(PalPrix2Fx.snap(p - v * k * 6.0), Vector2(4, 4)), Color(1, 0.97, 0.92, a * (1.0 - k / 6.0)))
+
 ## A gravity well (the space worlds): a swirl that pulls the craft in; its arms turning, its eye
 ## pulsing, rings sinking in
 class Well extends Node2D:
@@ -609,14 +646,17 @@ class Well extends Node2D:
 			for k in 28:
 				var q := PalPrix2Fx.snap(Vector2.from_angle(k * TAU / 28.0) * rr)
 				draw_rect(Rect2(q - Vector2(2, 2), Vector2(4, 4)), Color(col.r, col.g, col.b, a))
-		for arm in 3:
-			for k in 22:
-				var rad := 16.0 + k * (r / 26.0)
-				var ang := -t * 2.0 + arm * TAU / 3.0 + rad * 0.018
+		PalPrix2Fx.disc(self, Vector2.ZERO, r * 0.45, Color(col.r, col.g, col.b, 0.1))
+		PalPrix2Fx.disc(self, Vector2.ZERO, r * 0.25, Color(col.r, col.g, col.b, 0.16))
+		for arm in 4:
+			for k in 26:
+				var rad := 16.0 + k * (r / 28.0)
+				var ang := -t * 2.4 + arm * TAU / 4.0 + rad * 0.02
 				var q2 := PalPrix2Fx.snap(Vector2.from_angle(ang) * rad)
-				var a2 := 0.75 * (1.0 - float(k) / 22.0)
+				var a2 := 0.95 * (1.0 - float(k) / 26.0)
+				draw_rect(Rect2(q2 - Vector2(6, 6), Vector2(12, 12)), Color(col.r, col.g, col.b, a2 * 0.5))
 				draw_rect(Rect2(q2 - Vector2(4, 4), Vector2(8, 8)), Color(col.r, col.g, col.b, a2))
-				draw_rect(Rect2(q2 - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, a2 * 0.6))
+				draw_rect(Rect2(q2 - Vector2(2, 2), Vector2(4, 4)), Color(1, 0.9, 1, a2 * 0.9))
 		var eye := 12.0 + 4.0 * roundf(sin(t * 3.0))
 		PalPrix2Fx.disc(self, Vector2.ZERO, eye + 4.0, OUTLINE)
 		PalPrix2Fx.disc(self, Vector2.ZERO, eye, Color8(20, 10, 40))

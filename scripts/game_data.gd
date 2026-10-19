@@ -89,6 +89,8 @@ func _start() -> void:
 	for idx in 12:
 		_init_game(idx, idx == FIRST_GAME)   # Splash Hoops — unlocked by default (FIRST_GAME)
 	load_data()
+	if level_stars(PAL_PRIX_2_KEY[0], PAL_PRIX_2_KEY[1]) > 0:
+		games[PAL_PRIX_2]["unlocked"] = true          # (the Grand Prix won before Pal Prix 2 came)
 	if SaveSlot.real():
 		return
 	if RESET_SCORES_ON_LAUNCH:
@@ -188,6 +190,8 @@ func record_level(game_index: int, level: int, stars: int) -> int:
 	stars = clampi(stars, 0, 3)
 	var before := level_stars(game_index, level)
 	games[game_index]["last"] = level
+	if stars > 0:
+		invited_now = _invite_pal_prix_2(game_index, level)
 	if stars <= before:
 		save_data()
 		return 0
@@ -204,6 +208,17 @@ func record_level(game_index: int, level: int, stars: int) -> int:
 	Collection.report_game_stars(game_index, game_stars(game_index))    # (each game's gift track)
 	save_data()
 	return earned
+
+## Pal Prix 2's invitation (the user, 2026-10-19: the final game, a reward): winning Pal Prix's
+## Grand Prix cup (its last level) opens it, no coins. invited_now: it happened on this clear (the
+## game shows it on its result card)
+var invited_now := false
+func _invite_pal_prix_2(game_index: int, level: int) -> bool:
+	if [game_index, level] != PAL_PRIX_2_KEY or is_unlocked(PAL_PRIX_2):
+		return false
+	games[PAL_PRIX_2]["unlocked"] = true
+	game_unlocked.emit(PAL_PRIX_2)
+	return true
 
 ## A level was played to its end (cleared or not): the game opens on its level menu from now on
 func set_last_level(game_index: int, level: int) -> void:

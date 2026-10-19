@@ -33,6 +33,7 @@ uniform int n_pads = 0;
 uniform vec4 gaps[8];                   // jumps: (first point, last point, ramp points, kind)
 uniform int n_gaps = 0;
 uniform float t = 0.0;                  // the race's clock (s)
+uniform bool icy = false;               // (the Ice Fjord's icy roads: frost on them)
 
 varying vec2 local;
 
@@ -535,7 +536,7 @@ vec3 water_px(vec2 bp, Hit hs, float edge_d) {
 			float rad = 3.0 + hash3(cell, 63.0) * 3.5;
 			vec2 o = bp + 0.5 - cen;
 			float wob = rad * (1.0 + 0.1 * sin(atan(o.y, o.x) * 3.0 + hash3(cell, 64.0) * 6.0));
-			if (hash3(cell, 65.0) < 0.5 && length(o) < wob + 1.0) {
+			if (hash3(cell, 65.0) < 0.22 && length(o) < wob + 1.0) {
 				if (length(o) > wob) return OUTLINE;
 				return o.x + o.y < 0.0 ? c8(240.0, 248.0, 255.0) : c8(190.0, 214.0, 240.0);
 			}
@@ -642,6 +643,13 @@ vec3 road_px(vec2 bp, Hit h) {
 	if (world == 3) base = c8(58.0, 70.0, 100.0);
 	if (world == 5) base = c8(70.0, 74.0, 88.0);
 	vec3 col = base;
+	if (icy) {
+		// frost: the road glazed pale blue in patches, streaks of ice catching the light
+		float fr = fbm(bp * 0.08);
+		if (fr > 0.45) base = mix(base, c8(150.0, 190.0, 230.0), fr > 0.55 ? 0.45 : (bayer(bp) < 0.5 ? 0.3 : 0.0));
+		col = base;
+		if (abs(fract((bp.x - bp.y) * 0.05 + fr) - 0.5) < 0.02 && fr > 0.5) col = c8(220.0, 240.0, 255.0);
+	}
 	if (mod(along_px, 16.0) < 1.0) col = base * 0.85;                              // a seam across
 	if (abs(abs(lat) - hw * 0.34) < 0.5 && mod(along_px, 10.0) < 5.0) col = mix(base, accent(), 0.25);
 	if (abs(lat) < 0.7 && mod(along_px, 12.0) < 6.0) col = mix(vec3(1.0), accent(), 0.3);    // the middle
@@ -836,6 +844,22 @@ vec4 ground(vec2 lp) {
 	if (water) {
 		float ed2 = (space ? rs - hs.d : rs - hs.d);
 		g = water_px(bp, hs, ed2);
+		// a waterfall step across the river (a jump): the white lip, the water falling (moving),
+		// the dark drop at its foot
+		for (int j2 = 0; j2 < n_gaps; j2++) {
+			vec4 J2 = gaps[j2];
+			if (int(J2.w + 0.5) != SEA) continue;
+			float a5 = ahead(J2.x, hs.along);
+			if (a5 > -1.0 && a5 < 4.0 && hs.d < rs - 2.0) {
+				if (a5 < 0.0) g = vec3(1.0);
+				else if (a5 < 3.0) {
+					float fall = fract(a5 / 3.0 - t * 2.5 + hash(vec2(floor(hs.d * hs.side / 2.0), 7.0)));
+					g = fall < 0.45 ? c8(236.0, 252.0, 255.0) : (fall < 0.75 ? c8(160.0, 230.0, 236.0) : c8(90.0, 190.0, 206.0));
+				} else {
+					g = c8(30.0, 120.0, 140.0);
+				}
+			}
+		}
 		if (space && ed2 < 3.0) {
 			// (the stream's glowing rim, dithered off into space)
 			g = mix(g, c8(255.0, 140.0, 230.0), 0.5);

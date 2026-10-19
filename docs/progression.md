@@ -49,6 +49,7 @@ What is NOT in the game, and why:
 | 4 | Paper Sumo    | 60 -> 50                | buttons + tilt + rhythm    | Milky (Sturdy)          | Microchip (4-9), Golden Seed (5-9) |
 | 5 | Top Spin      | 90 -> 70                | everything at once         | Fruity (Lucky)          | Dragon Oil (5-9)                   |
 | 6 | Tummy Tunes   | 135 -> 100              | timing (3 buttons)         | -                       | Stardust Sugar (5-9)               |
+| 7 | Pal Prix 2    | won: Pal Prix 6-9       | switching (land, sea, air) | -                       | Moon Rock (5-6), Stardust Sugar (6-6) |
 
 - Order (DONE in code, 2026-10-16): Pal Prix 3rd, Paper Sumo 4th (GameMenuSwitcher.ORDER,
   GameData.LAUNCH_GAMES, GAME_PRICE by position). Pal Prix uses only the buttons, so it's an easier
@@ -143,6 +144,12 @@ and its finale; the details are in each game's script header.)
   Bowl (it flushes halfway: a whirlpool pulls every top to the middle) · 5 Clockwork Bowl (a floor
   of turning gears; finale -> Dragon Oil) · 6 Dragon Festival (three tops at once; finale: the
   dragon top). A level = one match.
+- Pal Prix 2, the Turbo League (BUILT 2026-10-19 on `pal-prix-2`, the final game: a reward, not
+  bought; Pal Prix 6-9 opens it): one craft that turns from a hover car to a jet ski to a rocket at
+  gates on the course. 1 Neon City (land + sea) · 2 Rapids (sea + air) · 3 Canyon (land + air) ·
+  4 Ice Fjord (all three) · 5 Asteroid Belt (with rivals) · 6 Saturn's Rings (Earth to space and
+  back). Faster, not harder: no hearts, magnetic walls, boosts (chains, drift, slipstream);
+  stars = the laps, the par (1st with rivals), the turbo time.
 - Tummy Tunes (LATER; one toy instrument per world, loved by the user): 1 Toy Xylophone (single
   notes on the beat) · 2 Toy Piano (chords: two buttons at once) · 3 Toy Drums (holds and rolls) ·
   4 Music Box (off-beats, tempo changes) · 5 Star Stage (all of it, faster; finale: the star song
@@ -433,5 +440,6 @@ DECIDED (user, 2026-10-17/18): Pal Prix 2 car + 2 boat + 2 plane worlds (the car
 its two; 2026-10-18: ordered car, boat, plane, then the second of each) · lives in Tilt Maze and Pal Prix (3, +1 for a splashy pal; out = the level again) · guard
 rails to try · the crowd: pals of every kind, screaming at a crash · the first case early and
 simple, then fancier ones · the specials page once a special food is yours.
-OPEN: Tummy Tunes' 6th world (Toy Trumpet or The Tummy) · Pal Prix's places (see the roadmap: more
+OPEN: Pal Prix 2's worlds (built with the two lists combined: each step of the build-up in one
+of the places; the user to confirm) · Tummy Tunes' 6th world (Toy Trumpet or The Tummy) · Pal Prix's places (see the roadmap: more
 places per toy, boats and planes in every world, a toy that changes mid-race).

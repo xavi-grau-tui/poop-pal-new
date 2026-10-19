@@ -274,6 +274,7 @@ var gates_layer: Node2D                # the transform gates' arches (over every
 var pops: PalPrix2Fx.Pops
 var speed_lines: PalPrix2Fx.SpeedLines
 var aurora: PalPrix2Fx.Aurora
+var gust_fx: PalPrix2Fx.Gusts
 var hud_lap: Label
 var hud_time: Label
 var hud_place: Label
@@ -450,6 +451,7 @@ func _begin(n: int) -> void:
 	intro_icon = PalPrix2Art.icon(FORM_NAMES[form])
 	aurora.visible = world_no == 3
 	speed_lines.tint = Color8(220, 230, 255) if world_no >= 4 else Color(1, 1, 1)
+	_qa_start_at()
 	_place_craft()
 	_follow(1.0)
 	_refresh_hud()
@@ -565,7 +567,7 @@ func _place_features() -> void:
 			if course.kind_at(i) != on_kind or not course.straight(i, 10, 10) or not free_at.call(i - 8, i + 8):
 				continue
 			var sd := -1.0 if rng.randf() < 0.5 else 1.0
-			var r: float = { "rocks": 30.0, "bergs": 40.0, "asteroids": 38.0 }[kind_name]
+			var r: float = { "rocks": 30.0, "bergs": 46.0, "asteroids": 46.0 }[kind_name]
 			var pos: Vector2 = course.centre[i] + course.normal(i) * sd * rng.randf_range(0.36, 0.5) * course.half_w
 			obstacles.append({ "kind": kind_name, "i": i, "pos": pos, "base": pos, "r": r, "k": placed + level, "side": sd })
 			used.append([i - 8, i + 8])
@@ -645,6 +647,7 @@ func _setup_shaders() -> void:
 	board_mat.set_shader_parameter("has_sea", course.kinds.has(SEA))
 	board_mat.set_shader_parameter("has_air", course.kinds.has(AIR))
 	board_mat.set_shader_parameter("face_h", float(FACE_H[world_no]))
+	board_mat.set_shader_parameter("icy", ice)
 	var gv: Array = []
 	for g in course.gates:
 		gv.append(Vector4(float(g["i"]), float(g["from"]), float(g["to"]), 0.0))
@@ -752,7 +755,7 @@ func _spawn_course_things() -> void:
 				var halves: Array = []
 				for upper in [false, true]:
 					var rg := PalPrix2Fx.Ring.new()
-					rg.position = course.centre[i2] + course.normal(i2) * float(p2["lat"])
+					rg.position = course.centre[i2] + course.normal(i2) * float(p2["lat"]) - Vector2(0, AIR_H)
 					rg.n = course.normal(i2)
 					rg.r = float(p2["w"])
 					rg.upper = upper
@@ -780,6 +783,13 @@ func _spawn_course_things() -> void:
 		things.add_child(spr)
 		ob["node"] = spr
 		_thing_nodes.append(spr)
+	var zones := []
+	for g2 in gusts:
+		var pts := PackedVector2Array()
+		for i3 in range(int(g2[0]), int(g2[1]), 4):
+			pts.append(course.centre[i3 % count] - Vector2(0, AIR_H))
+		zones.append([pts, course.normal((int(g2[0]) + int(g2[1])) / 2) * float(g2[2])])
+	gust_fx.setup(zones)
 	for w in wells:
 		var wl := PalPrix2Fx.Well.new()
 		wl.position = w["pos"]
@@ -976,6 +986,8 @@ func _create_nodes() -> void:
 	front.add_child(driver)
 	ring_front = Node2D.new()
 	world.add_child(ring_front)
+	gust_fx = PalPrix2Fx.Gusts.new()
+	world.add_child(gust_fx)
 	gates_layer = Node2D.new()
 	world.add_child(gates_layer)
 	pops = PalPrix2Fx.Pops.new()
@@ -1428,6 +1440,10 @@ func _transforms(was: float, _delta: float) -> void:
 		var c := course.count
 		if floorf((progress - gi) / c) > floorf((was - gi) / c):
 			_transform(g)
+		elif floorf((progress - gi) / c) < floorf((was - gi) / c) and tf_t <= 0.0:
+			# (turned round and back through a gate: the form it had before it, no fanfare)
+			form = int(g["from"])
+			_set_form(form, 1.0)
 
 func _transform(g: Dictionary) -> void:
 	var i := int(g["i"])
@@ -1694,6 +1710,60 @@ func _autopilot() -> float:
 	if absf(diff) < 0.06:
 		return 0.0
 	return signf(diff)
+
+## QA only (tools/qa/shoot.sh ... at=jump): the race starts a little before the first of this
+## level's things of that kind (jump, step, pad, ring, rock, berg, asteroid, well, sling, gust,
+## gate, secret), so a screenshot shows it
+func _qa_start_at() -> void:
+	var want := ""
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("at="):
+			want = a.substr(3)
+	if want == "":
+		return
+	var at := -1
+	match want:
+		"jump", "step":
+			for j in jumps:
+				if (j["kind"] == LAND) == (want == "jump"):
+					at = int(j["a"])
+					break
+		"pad", "ring", "sling":
+			for p in pads:
+				if (want == "pad" and p["kind"] != AIR) or (want == "ring" and p["kind"] == AIR and not p["sling"]) or (want == "sling" and p["sling"]):
+					at = int(p["i"])
+					break
+		"rock", "berg", "asteroid":
+			for ob in obstacles:
+				if String(ob["kind"]).begins_with(want):
+					at = int(ob["i"])
+					break
+		"well":
+			if not wells.is_empty():
+				at = int(wells[0]["i"])
+		"gust":
+			if not gusts.is_empty():
+				at = int(gusts[0][0]) + 10
+		"gate":
+			if not course.gates.is_empty():
+				at = int(course.gates[0]["i"])
+		"gate2":
+			if course.gates.size() > 1:
+				at = int(course.gates[1]["i"])
+		"secret":
+			at = int(secret.get("at", -1))
+	if at < 0:
+		print("QA at=%s: none on level %d" % [want, level])
+		return
+	var i := posmod(at - 110, course.count)
+	car_pos = course.centre[i]
+	heading = course.direction(i).angle()
+	near = i
+	progress = float(i)
+	form = course.kind_at(i)
+	_set_form(form, 1.0)
+	car_h = AIR_H if form == AIR else 0.0
+	cam = car_pos
 
 # ================================================================== FINISH
 

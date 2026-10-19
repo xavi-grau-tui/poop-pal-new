@@ -205,8 +205,8 @@ void fragment() {
 		float wv = sin(bp.x * 0.3 + sin(bp.y * 0.15) * 2.0) * sin(bp.y * 0.5);
 		vec3 sky = c8(46.0, 110.0, 180.0);
 		if (wv > 0.85) sky = c8(90.0, 150.0, 210.0);
-		if (n3 > 0.6) sky = (n3 > 0.66 || bayer(bp) < 0.5) ? c8(240.0, 246.0, 255.0) : c8(190.0, 212.0, 238.0);
-		else if (n3 > 0.55 && bayer(bp) < 0.5) sky = c8(150.0, 186.0, 226.0);
+		if (n3 > 0.68) sky = (n3 > 0.73 || bayer(bp) < 0.5) ? c8(240.0, 246.0, 255.0) : c8(190.0, 212.0, 238.0);
+		else if (n3 > 0.64 && bayer(bp) < 0.5) sky = c8(150.0, 186.0, 226.0);
 		sky = mix(sky, c8(170.0, 200.0, 235.0), 0.25);
 		vec3 sp = space(rel, bp);
 		vec4 pl2 = planet_px(rel, 46.0, true);

@@ -17,6 +17,8 @@ come back to, and each feeding the rest (rewards, foods, drinks, secrets). Every
 light, playful and visually intuitive: icons over text, learn by doing. Asia first (Japan above all).
 
 ## Where things stand (2026-10-16, late)
+- 2026-10-19: Pal Prix 2 (the Turbo League) built on branch `pal-prix-2`, for the user to try:
+  see "PAL PRIX 2" under "To build" (what's in it, what's still to do).
 - Branch `complete-games` (not merged, for the user to review: what stays, what changes): the
   skeleton's systems (meal clock, coins on the LCD, every boost, drink levels, the daily special
   shelf, Lucky Pinch every 4th new pal); the first five games each at 6 worlds x 9 levels with a
@@ -124,6 +126,27 @@ To build:
   to the walls, slowed, never off), boost chains on a good line, slipstream behind rivals, a drift
   boost (hold through a long bend, still two buttons). Cosmic special foods (Moon Rock, Stardust
   Sugar) in the space worlds.
+  BUILT (2026-10-19, branch `pal-prix-2`, for the user to try): game 11, the 7th card (after Tummy
+  Tunes), not bought: winning Pal Prix 6-9 opens it ("The Turbo League: Pal Prix 2!" pops up on
+  that result; a save that already won it finds it open). scripts/pal_prix_2.gd (+ _course, _art,
+  _fx; the ground is two shaders: scripts/shaders/pal_prix_2_board / _deep). The two world lists
+  COMBINED as the user's build-up, each step in one of the places (to confirm): 1 Neon City (land
+  + sea: a raised neon road over the rooftops, the harbour) · 2 Rapids (sea + air: the river, off
+  the falls into the jungle valley) · 3 Canyon (land + air: the mesas, the canyon floor far below)
+  · 4 Ice Fjord (all three in a lap: the glacier, the fjord, the aurora) · 5 Asteroid Belt (all
+  three with rivals: a road on an asteroid, a stream of stardust, open space) · 6 Saturn's Rings
+  (Earth to space and back: the launch coast, the ocean, the sky turning into space with Saturn).
+  Each world's 4th and 7th levels bring a thing: boost chains, jumps over roof gaps · waterfall
+  steps, rocks · boost rings, canyon winds · icy roads, icebergs · asteroids, gravity wells ·
+  slingshots round moons. No hearts (a race always finishes); stars: the 3 laps, the par time (with
+  rivals: 1st), the turbo time (the boosts' time). Secrets: 2-6 (fizzy: a gift over a waterfall
+  step), 3-6 (sturdy: crates on the road), 4-6 (lucky), 5-6 Moon Rock (sturdy), 6-6 Stardust Sugar
+  (lucky). QA: tools/qa/shoot.sh game=11 ... at=jump|step|pad|ring|rock|berg|asteroid|well|sling|
+  gust|gate|secret starts the race just before that thing.
+  STILL TO DO: its own song (prompt in "Music prompts"; Pal Prix's "Pixel Chase" stands in), its
+  own sounds (the hover hum, the transform's puff, the boost: Pal Prix's for now), its gift track
+  and prizes (a Turbo case for 6-9, stickers: coins stand in), tuning the speed, the drift and the
+  par / turbo times on the phone.
   ITS CORE (the user, 2026-10-19): MIXED RACES, land, sea and air in one evolving vehicle (the
   transforming craft below): a hover car splashes in at the shore as a jet ski, takes off a launch
   ramp as a rocket; each change at a fixed gate (a ramp into the water, off a wave, a launch pad),
@@ -244,6 +267,15 @@ To build:
     Length: at least 2 minutes (user). Say it in the prompt, add sections in Suno's lyrics box
     ([Instrumental] [Main Riff] [Variation] [Main Riff] [Breakdown: bass and drums] [Main Riff]
     [Variation] [Main Riff], no [Intro]), or Extend the one you like.
+  - PAL PRIX 2 (2026-10-19, to generate; its own sound family first, none of Pal Prix's sentences:
+    the turbo league is futuristic, faster, a reward): "Neon synthwave chiptune racing
+    instrumental, shimmering sixteenth-note arpeggiated synth bass from the first beat, a bright
+    soaring square-wave lead with a hopeful heroic hook, gated electronic drums with a punchy snare,
+    sparkling bell-like arpeggios rushing past like stars, 112 BPM, euphoric fast and smooth, the
+    arrangement stays the same from start to end with small variations, full-length track about 2
+    minutes 30 seconds with a long repeating form, narrow dynamics, warm rounded mix with warm
+    prominent lows, seamless loop-like ending" (lyrics box as above). Then loop it with
+    tools/audio/loop_track.py and set game_music_path in scripts/pal_prix_2.gd.
 
 - Drafts written by Claude (2026-10-08 / 10-15), not all used; references for new tracks:
   - Paper Sumo, a grander showdown (for a boss or final level): "Soft pixel chiptune game battle

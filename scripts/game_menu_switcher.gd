@@ -37,7 +37,8 @@ const CARD_ART := {
 const EXTRA_PAGES := 4
 
 ## The order of the cards (2026-10-16: Pal Prix 3rd, Paper Sumo 4th), easy to hard: Splash Hoops,
-## Tilt Maze, Pal Prix, Paper Sumo, Top Spin, Tummy Tunes, then the ones on hold (Pal Dash, Tile
+## Tilt Maze, Pal Prix, Paper Sumo, Top Spin, Tummy Tunes, Pal Prix 2 (the final game: its card shows
+## once Pal Prix's Grand Prix is won), then the ones on hold (Pal Dash, Tile
 ## Break, Germ Zap, Flipper Belly, the classic Pipe Dream). Only the display order: each game keeps
 ## its own number (GameScreen.game_scenes, GameData, Collection.REWARDS).
 const ORDER := [2, 1, 0, 9, 8, 6, 11, 3, 4, 5, 7, 10]
@@ -206,6 +207,12 @@ func _update_game_card_labels(page_index: int) -> void:
 			progress_label.text = str(GameData.coins)
 			_value_coin(score_label, true)
 			_value_coin(progress_label, true)
+		elif index == GameData.PAL_PRIX_2:
+			# (not bought: won with Pal Prix's Grand Prix cup)
+			head1.text = "Win Pal Prix"
+			score_label.text = "6-9"
+			head2.text = ""
+			progress_label.text = ""
 		else:
 			head1.text = "Coming soon"
 			score_label.text = ""

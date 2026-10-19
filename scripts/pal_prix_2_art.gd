@@ -283,7 +283,11 @@ static func _lump(r: float, k: int, cols: Array, bumps := 0.22) -> Image:
 static func iceberg(k := 0) -> Texture2D:
 	var key := "berg_%d" % k
 	if not _cache.has(key):
-		var img := _lump(9.0, k, [Color8(250, 252, 255), Color8(206, 226, 246), Color8(150, 184, 222)], 0.3)
+		var foot := _lump(13.0, k, [Color8(90, 160, 200), Color8(60, 130, 176), Color8(40, 100, 150)], 0.28)
+		var img := Image.create(foot.get_width(), foot.get_height() + 4, false, Image.FORMAT_RGBA8)
+		img.blend_rect(foot, Rect2i(Vector2i.ZERO, foot.get_size()), Vector2i(0, 4))
+		var body := _lump(10.5, k, [Color8(250, 252, 255), Color8(206, 226, 246), Color8(150, 184, 222)], 0.3)
+		img.blend_rect(body, Rect2i(Vector2i.ZERO, body.get_size()), Vector2i((img.get_width() - body.get_width()) / 2, (img.get_height() - body.get_height()) / 2 - 1))
 		# its top, a step up: a smaller lump lit brighter
 		var top := _lump(5.0, k + 50, [Color(1, 1, 1), Color8(228, 240, 252), Color8(186, 210, 238)], 0.25)
 		img.blend_rect(top, Rect2i(Vector2i.ZERO, top.get_size()), Vector2i(img.get_width() / 2 - top.get_width() / 2 - 2, img.get_height() / 2 - top.get_height() / 2 - 3))
@@ -294,7 +298,7 @@ static func iceberg(k := 0) -> Texture2D:
 static func asteroid(k := 0) -> Texture2D:
 	var key := "rock_%d" % k
 	if not _cache.has(key):
-		var img := _lump(9.5, k, [Color8(170, 160, 186), Color8(120, 110, 136), Color8(74, 66, 88)], 0.28)
+		var img := _lump(12.0, k, [Color8(170, 160, 186), Color8(120, 110, 136), Color8(74, 66, 88)], 0.28)
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 919 * k + 1
 		for n in 3:
