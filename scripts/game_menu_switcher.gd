@@ -30,16 +30,17 @@ const CARD_ART := {
 	8: { "logo": "res://textures/menus/topspin.png", "background": "res://textures/menus/pattern_top_slate.png" },
 	9: { "logo": "res://textures/menus/papersumo.png", "background": "res://textures/menus/pattern_sumo_vermilion.png" },
 	10: { "logo": "res://textures/menus/pipedream.png", "background": "res://textures/menus/pattern_pipe_brown.png" },  # the classic Pipe Dream
+	11: { "logo": "res://textures/menus/palprix2.png", "background": "res://textures/menus/pattern_rocket_navy.png" },  # Pal Prix 2, the Turbo League
 }
 
 ## Prototype cards not in the scene yet: copies of the last card (and its dot), added at launch
-const EXTRA_PAGES := 3
+const EXTRA_PAGES := 4
 
 ## The order of the cards (2026-10-16: Pal Prix 3rd, Paper Sumo 4th), easy to hard: Splash Hoops,
 ## Tilt Maze, Pal Prix, Paper Sumo, Top Spin, Tummy Tunes, then the ones on hold (Pal Dash, Tile
 ## Break, Germ Zap, Flipper Belly, the classic Pipe Dream). Only the display order: each game keeps
 ## its own number (GameScreen.game_scenes, GameData, Collection.REWARDS).
-const ORDER := [2, 1, 0, 9, 8, 6, 3, 4, 5, 7, 10]
+const ORDER := [2, 1, 0, 9, 8, 6, 11, 3, 4, 5, 7, 10]
 ## The cards in this menu: ORDER, or only the six launch games in BOOT + PROGRESSION (the real
 ## game: the four on hold aren't there)
 var order: Array = ORDER

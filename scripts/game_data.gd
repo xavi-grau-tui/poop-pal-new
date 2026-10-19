@@ -30,8 +30,9 @@ var unlock_thresholds := {}
 ## The game everyone starts with (the Games menu's first card: GameMenuSwitcher.ORDER)
 const FIRST_GAME := 2   # Splash Hoops
 
-## The six launch games, in the Games menu's order (the four others are on hold)
-const LAUNCH_GAMES := [2, 1, 0, 9, 8, 6]
+## The launch games, in the Games menu's order (the four others are on hold); Pal Prix 2 (11),
+## the final one, isn't bought: winning Pal Prix's Grand Prix (6-9) opens it (PAL_PRIX_2_KEY)
+const LAUNCH_GAMES := [2, 1, 0, 9, 8, 6, 11]
 ## Every locked launch game can be bought from the start, each at its own price (user, 2026-10-10:
 ## no "opens after Tilt Maze" gate). The prices follow the menu's easy -> hard order, so Tilt Maze
 ## (5) is the natural 2nd game and the last ones take a while (docs/progression.md, the skeleton:
@@ -43,7 +44,10 @@ const LEVELS_PER_WORLD := 9
 ## The games with a level menu, and how many levels: 6 worlds of 9 in every game (the skeleton,
 ## 2026-10-16; world 6 = the masters' world). Tummy Tunes waits for its songs.
 const WORLDS_PER_GAME := 6
-const LEVEL_COUNTS := { 2: 54, 1: 54, 0: 54, 9: 54, 8: 54 }
+const LEVEL_COUNTS := { 2: 54, 1: 54, 0: 54, 9: 54, 8: 54, 11: 54 }
+## Pal Prix 2 (the Turbo League): its invitation is Pal Prix's last level, the Grand Prix cup
+const PAL_PRIX_2 := 11
+const PAL_PRIX_2_KEY := [0, 54]
 
 var coins := 0
 
@@ -51,6 +55,7 @@ var coins := 0
 var progress_target := {
 	0: 300,  # Pal Prix (levels: its stars count instead)
 	10: 300, # Pipe Dream (the classic, an extra card): 300 pipes = 100%
+	11: 300, # Pal Prix 2 (levels: its stars count instead)
 	1: 1500, # Tilt Maze: 1500 points = 100%
 	2: 2000, # Splash Hoops
 	3: 3000, # Pal Dash
@@ -81,7 +86,7 @@ func _start() -> void:
 	games = {}
 	coins = 0
 	daily_day = ""
-	for idx in 11:
+	for idx in 12:
 		_init_game(idx, idx == FIRST_GAME)   # Splash Hoops — unlocked by default (FIRST_GAME)
 	load_data()
 	if SaveSlot.real():
