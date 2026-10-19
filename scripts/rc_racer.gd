@@ -364,8 +364,9 @@ class Crowd extends Node2D:
 	var party := false                   # (the finish: everyone keeps bouncing)
 	var away := Vector2.UP                # from the track towards the stand's back
 	var style := "stand"                  # "stand" / "pier" / "cloud"
-	func setup(r: Rect2, horizontal: bool, seed_n: int, away_dir := Vector2.UP, kind := "stand") -> void:
+	func setup(r: Rect2, horizontal: bool, seed_n: int, away_dir := Vector2.UP, kind := "stand", air := Color(0.8, 0.88, 0.95)) -> void:
 		rect = r
+		haze = air
 		along_x = horizontal
 		away = away_dir
 		style = kind
@@ -421,7 +422,7 @@ class Crowd extends Node2D:
 				# colour filter of its own, a bright hue, a touch softer than the race)
 				# (each seat its pal in its own colours: the pal's colours turned round the rainbow, a
 				# little brighter; the whole stand a touch see-through, behind the race)
-				var hue := 0 if rng.randf() < 0.33 else rng.randi_range(1, HUES - 1)
+				var hue := 0
 				dots.append([p.snapped(Vector2(4, 4)), who, -10.0, 1, -10.0, Vector2.ZERO, 20.0, rng.randf() * TAU, rng.randf() * 3.0, flag, _hued(who, hue)])
 		# (drawn back to front: the far rows first)
 		dots.sort_custom(func(x, y): return x[0].y < y[0].y)
@@ -429,27 +430,27 @@ class Crowd extends Node2D:
 	## A pal's ball with its colours turned round the rainbow (0 = as it is): its outline and its
 	## eyes (the dark and the grey) kept, the rest shifted, a little more saturated
 	const HUES := 6
+	const HAZE := 0.38                     # how far the crowd fades into the world's air
+	var haze := Color(0.8, 0.88, 0.95)
 	var _hue_cache := {}
 	func _hued(who: int, hue: int) -> Texture2D:
 		var key := Vector2i(who, hue)
 		if _hue_cache.has(key):
 			return _hue_cache[key]
 		var tex: Texture2D = pals[who]
-		if hue == 0:
-			_hue_cache[key] = tex
-			return tex
 		var img := tex.get_image()
 		img.decompress()
 		img.convert(Image.FORMAT_RGBA8)
 		for y in img.get_height():
 			for x in img.get_width():
 				var c := img.get_pixel(x, y)
-				if c.a < 0.1 or c.v < 0.3 or c.s < 0.15:
+				if c.a < 0.1:
 					continue
-				# (soft: pastel, not vivid; the user, 2026-10-19)
-				c.h = fposmod(c.h + float(hue) / float(HUES), 1.0)
-				c.s = c.s * 0.62
-				c.v = minf(1.0, c.v * 1.06 + 0.04)
+				# (the user, 2026-10-19: in the tones of the world's air, as if seen from far:
+				# every colour, its outline too, faded towards the haze)
+				var a0 := c.a
+				c = c.lerp(haze, HAZE)
+				c.a = a0
 				img.set_pixel(x, y, c)
 		var out := ImageTexture.create_from_image(img)
 		_hue_cache[key] = out
@@ -1706,7 +1707,7 @@ func _try_crowd(dir: Vector2, horizontal: bool, normal: Vector2, long: float) ->
 					ok = false
 					break
 		if ok:
-			crowd.setup(r, horizontal, course_seed * 13 + 1, normal * side, { "car": "stand", "boat": "pier", "plane": "cloud" }[vehicle])
+			crowd.setup(r, horizontal, course_seed * 13 + 1, normal * side, { "car": "stand", "boat": "pier", "plane": "cloud" }[vehicle], CROWD_HAZE[look])
 			crowd.visible = true
 			return true
 	return false
@@ -4678,6 +4679,9 @@ const RIVAL_TIERS := [
 	{ "name": "average", "speed": 0.95, "corner": 0.35, "wander": 0.14, "slip_every": 16.0, "react": 0.3, "dodge": 0.8 },
 	{ "name": "ace", "speed": 1.0, "corner": 0.15, "wander": 0.05, "slip_every": 0.0, "react": 0.12, "dodge": 0.97 },
 ]
+## Each world's air, the crowd fading into it (as if seen from far)
+const CROWD_HAZE := { "garden": Color8(214, 236, 214), "night": Color8(70, 78, 120), "lagoon": Color8(246, 196, 176),
+	"reef": Color8(190, 236, 232), "sky": Color8(210, 232, 246), "sunset": Color8(248, 190, 168) }
 const PLANE_BODY := Color8(250, 210, 84)          # (every plane's yellow body: yours and the rivals')
 const RIVAL_PLANE_COLS := [Color8(70, 130, 220), Color8(150, 100, 210), Color8(110, 190, 110)]   # the rival planes' wings: blue, purple, green
 const RIVAL_COLS := [[Color8(70, 130, 220), Color8(46, 92, 170)], [Color8(240, 200, 70), Color8(196, 150, 40)], [Color8(110, 190, 110), Color8(70, 140, 76)]]
