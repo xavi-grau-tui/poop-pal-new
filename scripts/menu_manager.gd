@@ -26,6 +26,11 @@ func _ready():
 	var tilt := preload("res://scripts/tilt_parallax.gd").new()
 	tilt.name = "TiltParallax"
 	get_parent().add_child.call_deferred(tilt)
+	# (the dev launcher's SHRINE: the shrine in the gut's place, a try-out of the yokai migration)
+	if DevLaunch.shrine:
+		var sh := preload("res://scripts/shrine.gd").new()
+		sh.name = "Shrine"
+		pet_view.add_child.call_deferred(sh)
 	# double-tap the Poop Pal logo to turn the device around and see its back
 	var flip := preload("res://scripts/device_flip.gd").new()
 	flip.name = "DeviceFlip"

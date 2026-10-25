@@ -450,7 +450,7 @@ var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, th
 func _depth_3d() -> void:
 	var want := qa_depth_tilt
 	if DEPTH_3D and has_tilt_sensor() and is_running:
-		want = device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL
+		want = -device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL     # (the same axis as Tilt Maze and Top Spin: tilt up = see the upper side)
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
 	painted_back.position = (_depth_tilt * DEPTH_FAR).round() - Vector2.ONE * SumoArt.MARGIN * SumoArt.PX
 	life.position = (_depth_tilt * DEPTH_FAR).round()

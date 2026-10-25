@@ -73,6 +73,16 @@ light, playful and visually intuitive: icons over text, learn by doing. Asia fir
   `run/main_scene.debug` in project.godot; release builds start the real main scene and never see it.
 
 ## Open questions & pending (one list; keep it updated, details in the sections below)
+
+- **Yokai migration** (branch `yokai-migration`, docs/yokai_migration.md): the shrine, feeding,
+  drinks and the boost aura are built. Next: shrine decor (hanging, pairs on the slab, colours) and
+  backgrounds (sky colour, cloud types and seasonal elements). No merge to main until those work in
+  the shrine. The gut is kept, not deleted.
+  Later (definitely): late-game homes (cyber shrine, capsule apartment, moon shrine, golden
+  temple...). Focus now: no new components; finish the plan and polish the look (the menu slides,
+  the device).
+  Some day: homogenize the whole app's look towards the shrine's softness (same colours and
+  outlines, less definition, done at the source; details in docs/yokai_migration.md).
 To decide:
 - HUNGER (the user, 2026-10-19, to design): a pal not fed for a while (X hours) refuses to play
   the games until it's fed (a hungry face, a "feed me first" on the game card); other penalties
@@ -328,10 +338,48 @@ Also possible anywhere: stronger drinks (levels 2-3 of a type), Pedia hints (a m
 silhouette + its food), music tracks, a few coins. Other games follow the same idea (Paper Sumo:
 beat the robot -> the Microchip).
 
+## Tutorials for every game, guide cards, the shrine's bonus (the user, 2026-10-20: TO BUILD)
+Every game gets a first-time tutorial (the shared helpers already exist: BaseMinigame.show_coach /
+hide_coach, make_button_hint, the coach card; Top Spin's and Paper Sumo's are the model: one step at
+a time, each waits until you've done it, FORWARD skips). What each one teaches:
+- SPLASH HOOPS: the pumps, then that TILTING the phone to the sides bends the balls' path (the
+  current already reads the tilt: TILT_PUSH). A short guided shot: "tilt left... the balls drift
+  left", a basket placed so the tilt is needed.
+- TILT MAZE: "plays best with the phone lying flat, but you can hold it any way: press [main] to
+  set how you're holding it as level" (MAIN already recalibrates). A phone-flat icon, then a
+  phone-tilted icon with the calibrate press.
+- RC PRIX and RC PRIX 2177: a quick driving tutorial with an RC REMOTE drawn on screen (its two
+  sticks / buttons lighting as the device buttons are pressed: steer, throttle), on a short loop of
+  track; 2177 the same remote in its own colours, plus its own thing (the transforms).
+- PAPER SUMO: has one (hop -> lean -> push out); make its TILT step as clear as the others (the
+  same phone-tilt icon).
+- TOP SPIN: has one (wind -> drop -> roll -> dash -> guard -> fight): keep.
+- Then TUMMY TUNES, the "guitar hero" type game, built after the tutorials (with its own).
+One shared PHONE-TILT icon (a little phone rocking left / right, forward / back) for every tilt
+step, so the gesture reads the same everywhere.
+
+GUIDE CARDS ("markers": the welcome card's look, shown once, on the pet screen, the button they name
+doing the bip-bip; see Onboarding below). Built: the welcome, "Say hi", the hatch, the first bonus.
+Missing, to list and build together (check the wording when the yokai migration settles the words):
+the games button after the hatch, the first star and sticker (with the device flip), G1-G4 (coins,
+a new game ready, needs bigger food, the shop), the first drink / boost, the first evolution, the
+first pedia entry, the send-off (flush) the first time it's possible, the decor and backgrounds the
+first time one is won, the shrine's tilt (yokai migration: "tilt the phone: look inside").
+
+LUCKY PINCH in the shrine (yokai migration): the bonus (the claw machine with its exclusive prizes,
+about one a day) stays; only its ANNOUNCEMENT changes. Today a claw comes down into the pal's cam
+window with a glowing capsule. In the shrine: the bell rope rings by itself (Shrine.ring()), a
+glowing capsule (or a festival omikuji slip) drops onto the offering stand in front of the spirit,
+the LCD says BONUS! and the Games button blinks, as now. The claw stays the game itself (a festival
+stall, like the other games); the claw coming into a shrine would not fit. Proposed, to confirm.
+
 ## What to implement next (pick a few to offer)
 Sizes: S = a session, M = a few sessions, L = a big block. "Needs" = do that first.
 Once the skeleton is confirmed, its build order (docs/progression.md, section 7) comes first: the
 meal clock by what the meal did, the food sparkle, coins on the LCD, Pal Prix worlds 3-5...
+
+First (the user, 2026-10-20): the tutorials for every game and the missing guide cards (section
+"Tutorials for every game, guide cards, the shrine's bonus" above), then Tummy Tunes.
 
 Quick wins (S)
 1. Evolution guidance, layer 1: a sparkle / "?" badge on foods that lead to an undiscovered pal,

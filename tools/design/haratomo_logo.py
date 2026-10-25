@@ -6,7 +6,8 @@ highlights top-left, a shaded bottom band, cream inside the holes).
     <python with Pillow + numpy> tools/design/haratomo_logo.py"""
 import numpy as np
 from collections import deque
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
+import sys
 
 from pathlib import Path
 
@@ -85,6 +86,40 @@ R_ = glyph(40, SMALL_H, [(0, 0, ST - 1, SMALL_H - 1), (0, 0, 39, BAR + 1), (39 -
 # m: lowercase, three legs under one top
 M_ = glyph(64, SMALL_H, [(0, 0, 63, SMALL_H - 1)], holes=[(ST, 14, 24, SMALL_H - 1), (39, 14, 63 - ST, SMALL_H - 1)])
 
+def capital_k():
+    m = Image.new("L", (52, BH), 0)
+    d = ImageDraw.Draw(m)
+    d.rectangle((0, 0, ST - 1, BH - 1), fill=255)
+    d.polygon([(ST - 2, 21), (43, 0), (51, 0), (51, 5), (29, 26),
+               (51, 47), (51, 51), (43, 51), (ST - 2, 31)], fill=255)
+    return render(chamfer(np.asarray(m) > 0))
+
+def balanced_k():
+    """Keep the approved lower-arm silhouette and mirror it for the upper arm."""
+    ref = Image.open(Path(__file__).with_name("kamitomo_k_ref.png")).convert("RGBA")
+    ref = ref.resize((52, 52), Image.Resampling.NEAREST)
+    px = np.asarray(ref)
+    fill = (px[:, :, 3] > 128) & (px[:, :, 0] > 140)
+    lower = fill.copy()
+    lower[:26, :] = False
+    lower[:, :ST - 1] = False
+    # Carry the source arm all the way to the baseline, then mirror it. The
+    # source tip stopped five grid rows short of the full-height K endpoints.
+    lower_half = Image.fromarray(lower[26:47, :].astype(np.uint8) * 255)
+    extended = np.zeros_like(fill)
+    extended[26:, :] = np.asarray(lower_half.resize((52, 26), Image.Resampling.NEAREST)) > 0
+    stem = np.zeros_like(fill)
+    stem[:, :ST] = True
+    shape = chamfer(stem) | extended | np.flipud(extended)
+    # The source arm already has rounded, tapered ends; chamfering it again
+    # shortens both tips and leaves them visibly shy of the stem's top/bottom.
+    return render(shape)
+
+K_ = capital_k()
+# Match the small letters' full cap-height and main stroke weight. The first pass used a narrow
+# 10 px stem and placed it at the capitals' top, making the i read smaller than the other letters.
+I_ = glyph(34, SHT, [(8, 0, 24, 12), (8, 16, 24, SHT - 1)])
+
 def flood(free, seeds):
     seen = np.zeros_like(free)
     q = deque()
@@ -142,25 +177,58 @@ _y = np.array(YOU); _y[~((_y[..., 3] > 0) & (_y[..., 0] < 100))] = 0; YOU = Imag
 def word(parts):
     """parts: (image, top) pasted left to right, outlines overlapping like the original."""
     x, canvas = 4, Image.new("RGBA", (800, 150), (0, 0, 0, 0))
-    for im, top in parts:
+    for i, (im, top) in enumerate(parts):
         l, _, r, _ = im.getbbox()
         canvas.alpha_composite(im, (x - l, top))
-        x += r - l + GAP                 # each letter keeps its own outline, a small gap between
+        # Keep the previously requested extra breathing room before the lowercase i.
+        gap = GAP + 2 if i + 1 < len(parts) and parts[i + 1][0] is I_ else GAP
+        x += r - l + gap                 # each letter keeps its own outline, a small gap between
     return canvas, x - GAP
 
 def place(im, small):
     return (im, (SMALL_TOP if small else BIG_TOP) - PAD)
 
-parts = [place(H_, False), (A_, 0), place(R_, True), (A_, 0), place(T_, False), (O_, 0), place(M_, True), (O_, 0)]
+if "--kamitomo" in sys.argv:
+    parts = [place(K_, False), (A_, 0), place(M_, True), place(I_, True), place(T_, False), (O_, 0), place(M_, True), (O_, 0)]
+else:
+    parts = [place(H_, False), (A_, 0), place(R_, True), (A_, 0), place(T_, False), (O_, 0), place(M_, True), (O_, 0)]
 logo, right = word(parts)
 # the original 便友, right-aligned under the word as now
-kan = orig.crop((280, 68, 425, 135))    # copied as drawn, its soft edge pixels included
-l, t, r, btm = kan.getbbox()
-kan = kan.crop((l, t, r, btm))
-# x1.25: Logo2 is shown at 0.74 width vs the old logo's 0.93, so on screen they keep the
-# original's width (and each ~4 px dot becomes an even 5 px)
-kan = kan.resize((round(kan.width * KANJI_STRETCH), kan.height), Image.NEAREST)
-logo.alpha_composite(kan, (right - kan.width + 1, 72 + t))   # (right edge where it was)
+if "--kamitomo" in sys.argv:
+    # The source logo's 友 is already the right pixel shape and colour for "tomo".
+    tomo = orig.crop((352, 70, 425, 135))
+    tomo = tomo.crop(tomo.getbbox())
+    # Use the reviewed Kami silhouette so it matches the wider, block-built kanji direction.
+    jp_mask = Image.open(Path(__file__).with_name("kamitomo_kanji_ref.png")).convert("RGBA").getchannel("A")
+    jp_mask = jp_mask.resize((68, tomo.height), Image.Resampling.NEAREST)
+    mask = np.asarray(jp_mask) >= 128
+    tex = np.asarray(tomo.resize(jp_mask.size, Image.Resampling.NEAREST))
+    ink = (68, 48, 34, 255)
+    pixels = np.zeros((jp_mask.height, jp_mask.width, 4), dtype=np.uint8)
+    pixels[mask] = ink
+    kami = Image.fromarray(pixels, "RGBA")
+    kan = Image.new("RGBA", (kami.width + 4 + tomo.width, max(kami.height, tomo.height)), (0, 0, 0, 0))
+    kan.alpha_composite(kami, (0, 0))
+    kan.alpha_composite(tomo, (kami.width + 4, 0))
+    kan = kan.resize((round(kan.width * KANJI_STRETCH), kan.height), Image.NEAREST)
+    t = 0
+else:
+    kan = orig.crop((280, 68, 425, 135))    # copied as drawn, its soft edge pixels included
+    l, t, r, btm = kan.getbbox()
+    kan = kan.crop((l, t, r, btm))
+    # x1.25: Logo2 is shown at 0.74 width vs the old logo's 0.93, so on screen they keep the
+    # original's width (and each ~4 px dot becomes an even 5 px)
+    kan = kan.resize((round(kan.width * KANJI_STRETCH), kan.height), Image.NEAREST)
+logo.alpha_composite(kan, (right - kan.width + 1, 72 + t))
 logo = logo.crop(logo.getbbox())
-logo.save(ROOT + "textures/console/logo2.png")
-print("wrote textures/console/logo2.png", logo.size)
+if "--kamitomo" in sys.argv:
+    # Replace only K; the reviewed lower-arm silhouette is mirrored for its upper arm. The Latin
+    # layout width stays fixed, so the final O retains its current position.
+    k_ref = balanced_k().crop(balanced_k().getbbox()).resize((62, 64), Image.Resampling.NEAREST)
+    image = np.asarray(logo).copy()
+    image[:64, :64] = 0
+    logo = Image.fromarray(image, "RGBA")
+    logo.alpha_composite(k_ref, (0, 0))
+out = "logo_kamitomo.png" if "--kamitomo" in sys.argv else "logo2.png"
+logo.save(str(Path(ROOT) / "textures" / "console" / out))
+print("wrote textures/console/" + out, logo.size)

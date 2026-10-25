@@ -147,9 +147,24 @@ func _build_special_page() -> void:
 func populate_special():
 	_set_items(2, FoodLibrary.get_special_set())
 
+## Alternate menu-only food and drink sprites for the New Shrine build. The catalog textures
+## remain the source of truth for gameplay, and the regular Shrine keeps the original icons.
+func _new_shrine_menu_icon(source: Texture2D, category: String) -> Texture2D:
+	if not DevLaunch.new_shrine or source == null:
+		return source
+	var filename := source.resource_path.get_file()
+	if filename.is_empty():
+		return source
+	var alternate := "res://textures/%s/new_shrine/%s" % [category, filename]
+	if ResourceLoader.exists(alternate):
+		var texture := load(alternate) as Texture2D
+		if texture != null:
+			return texture
+	return source
+
 func _fill_special(option_node: Node, food_data: Dictionary) -> void:
 	var locked: bool = food_data.get("locked", false)
-	option_node.get_node("Icon").texture = food_data.icon
+	option_node.get_node("Icon").texture = _new_shrine_menu_icon(food_data.icon, "food")
 	option_node.get_node("Icon").modulate = Color.WHITE
 	option_node.get_node("Name").text = food_data.name
 	_set_type_tag(option_node, food_data.family)
@@ -169,7 +184,7 @@ const LOCKED_FOOD_NAME := { "baby": "Sho food", "kid": "Chu food", "adult": "Dai
 
 func _fill_food(option_node: Node, food_data: Dictionary) -> void:
 	var locked: bool = food_data.get("locked", false)
-	option_node.get_node("Icon").texture = food_data.icon
+	option_node.get_node("Icon").texture = _new_shrine_menu_icon(food_data.icon, "food")
 	# a locked food: its silhouette (like a pal not found yet), a padlock, "Kid food"
 	option_node.get_node("Icon").modulate = Color(0.1, 0.06, 0.05, 0.85) if locked else Color.WHITE
 	option_node.get_node("Name").text = LOCKED_FOOD_NAME.get(food_data.get("tier", ""), "Food") if locked else food_data.name
@@ -232,7 +247,7 @@ func populate_drinks():
 
 func _fill_drink(option_node: Node, drink_data: Dictionary) -> void:
 	var locked: bool = drink_data.get("locked", false)
-	option_node.get_node("Icon").texture = drink_data.icon
+	option_node.get_node("Icon").texture = _new_shrine_menu_icon(drink_data.icon, "drinks")
 	option_node.get_node("Icon").modulate = Color(0.1, 0.06, 0.05, 0.85) if locked else Color.WHITE
 	option_node.get_node("Name").text = "New drink" if locked else drink_data.name
 	_set_type_tag(option_node, drink_data.type, int(drink_data.get("level", 1)))

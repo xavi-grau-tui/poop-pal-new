@@ -1274,7 +1274,7 @@ var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, th
 func _depth_3d() -> void:
 	var want := qa_depth_tilt
 	if DEPTH_3D and has_tilt_sensor() and state != State.CLEAR:
-		want = device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL
+		want = -device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL     # (the user: it was inverted; tilt up = see the upper walls)
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
 	var up := -_depth_tilt * DEPTH_NEAR
 	depth_up = up

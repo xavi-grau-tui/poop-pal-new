@@ -12,6 +12,7 @@ extends Node
 ##   out=DIR       where the PNGs go (default user://qa)
 ##   boost=B:L     the pal has boost B (splash, fizz, focus, sturdy, lucky) at level L before each level
 ##   skill=N       the autopilot's skill, where a game has one (Paper Sumo: 1 or 2)
+##   shrine=1      the existing shrine art; new_shrine=1 the new forest frame; hour=H its sky's time
 ##   unlock=all    start like ALL UNLOCKED (every item owned, a random pal)
 ##   case=ID       the device wears that case (with unlock=all)
 ##   menutest=N    drive the game's level menu: FORWARD N times, tap, hold; print what plays
@@ -19,6 +20,10 @@ extends Node
 ##   until=done    on to the next level as soon as this one is over (at most `wait` s)
 ##   hands=off     (Pal Prix) the toy isn't steered at all: can it finish by itself?
 ##   intro=1       the game's how-to card over each level
+##   diapos=F,f;G,g;S,s  the menus' slides (diapositive1-3) recoloured for a look test: each menu's
+##                 frame and inner panel colours (#hex), food;games;settings
+##   extra=PATH    (game=pet) a scratch GDScript (extends Node, func run(cap)) run on the pet screen:
+##                 it can change what it likes and take pictures with cap._shot(name)
 ##   depth=x,y     a pretend phone tilt for the 3D layers (the games', the pet screen's), -1..1 each
 ## Prints "QA DONE" and quits when finished. The testing save is wiped at every launch anyway.
 
@@ -45,7 +50,13 @@ func _ready() -> void:
 	for size in ["baby", "kid", "adult"]:
 		Shop.foods[size] = FoodLibrary.FAMILIES.duplicate()
 	if args.has("unlock"):
-		DevLaunch.unlock_everything()                       # (ALL UNLOCKED: every item, a random pal)
+		DevLaunch.unlock_everything()
+	DevLaunch.new_shrine = args.has("new_shrine")
+	DevLaunch.shrine = args.has("shrine") or DevLaunch.new_shrine
+	if args.has("hour"):
+		Shrine.qa_hour = float(args["hour"])            # (hour=H: the shrine's sky at a pretend time)                       # (ALL UNLOCKED: every item, a random pal)
+	if args.has("rain"):
+		Shrine.rain_now = int(args["rain"])             # (rain=1 light, 2 heavy: the shrine's rain)
 	if not PetState.has_poop():
 		PetState.form_id = "picklet"
 		PetState.meals = ["sour"]
@@ -68,8 +79,14 @@ func _run() -> void:
 	if args.has("case"):
 		Collection.equip("cases", str(args["case"]))       # (the device wears it: case=<id>, with unlock=all)
 		await _wait(0.5)
+	if args.has("diapos"):
+		_recolour_diapos(str(args["diapos"]))
 	var game: String = args.get("game", "pet")
 	if args.has("menu"):
+		if args.has("depth"):                              # (a pretend tilt: the slides' 3D)
+			var tp0 := get_tree().root.find_child("TiltParallax", true, false)
+			if tp0:
+				tp0.qa_tilt = Vector2(float(str(args["depth"]).get_slice(",", 0)), float(str(args["depth"]).get_slice(",", 1)))
 		await _open_menu(str(args["menu"]))
 		_quit()
 		return
@@ -83,6 +100,12 @@ func _run() -> void:
 			if tp:
 				tp.qa_tilt = Vector2(float(str(args["depth"]).get_slice(",", 0)), float(str(args["depth"]).get_slice(",", 1)))
 				await get_tree().create_timer(1.0).timeout
+		if args.has("extra"):                              # (extra=/path/x.gd: a scratch script's run(capture) on the pet screen)
+			var ex: Node = load(str(args["extra"])).new()
+			get_tree().root.add_child(ex)
+			await ex.run(self)
+			_quit()
+			return
 		await _shot("pet")
 		_quit()
 		return
@@ -178,6 +201,55 @@ func _open_menu(which: String) -> void:
 		await _shot("menu_" + which.replace(":", "_"))
 		return
 	print("QA: no such menu ", which)
+
+## diapos=...: each menu's slide recoloured (a look test, never saved): the outline kept, the frame
+## and the inner panel (found by filling from the middle) each in its new colour, their own light
+## and grain kept (the new colour scaled by each pixel's brightness against its area's mean)
+func _recolour_diapos(spec: String) -> void:
+	var paths := ["Main UI/Menus/FoodMenu/Menu/Background", "Main UI/Menus/GameMenu/Menu/Background", "Main UI/Menus/Settings Menu/Menu/Sprite2D"]
+	var sets := spec.split(";")
+	for i in mini(3, sets.size()):
+		var sp := get_tree().root.get_node_or_null("PoopPal/" + paths[i]) as Sprite2D
+		var cols := sets[i].split(",")
+		if sp and cols.size() == 2:
+			sp.texture = _recolour_slide(sp.texture, Color.html(cols[0]), Color.html(cols[1]))
+
+func _recolour_slide(tex: Texture2D, frame: Color, inner: Color) -> Texture2D:
+	var img := tex.get_image()
+	if img.is_compressed():
+		img.decompress()
+	img.convert(Image.FORMAT_RGBA8)
+	var w := img.get_width()
+	var h := img.get_height()
+	var dark := func(c: Color) -> bool: return c.a < 0.5 or c.get_luminance() < 0.3
+	var in_set := {}
+	var stack: Array[Vector2i] = [Vector2i(w / 2, h / 2)]
+	while not stack.is_empty():
+		var q: Vector2i = stack.pop_back()
+		if q.x < 0 or q.y < 0 or q.x >= w or q.y >= h or in_set.has(q) or dark.call(img.get_pixelv(q)):
+			continue
+		in_set[q] = true
+		stack.append_array([q + Vector2i(1, 0), q - Vector2i(1, 0), q + Vector2i(0, 1), q - Vector2i(0, 1)])
+	var sums := [0.0, 0.0]
+	var counts := [0, 0]
+	for y in h:
+		for x in w:
+			var c := img.get_pixel(x, y)
+			if dark.call(c):
+				continue
+			var k := 1 if in_set.has(Vector2i(x, y)) else 0
+			sums[k] += c.get_luminance()
+			counts[k] += 1
+	for y in h:
+		for x in w:
+			var c := img.get_pixel(x, y)
+			if dark.call(c):
+				continue
+			var k := 1 if in_set.has(Vector2i(x, y)) else 0
+			var f: float = c.get_luminance() / maxf(0.01, sums[k] / maxf(1.0, counts[k]))
+			var t: Color = inner if k == 1 else frame
+			img.set_pixel(x, y, Color(clampf(t.r * f, 0, 1), clampf(t.g * f, 0, 1), clampf(t.b * f, 0, 1), c.a))
+	return ImageTexture.create_from_image(img)
 
 ## menutest=N: drives the game's level menu with the device buttons' own calls (what a player
 ## does): FORWARD N times (the next world), then a HOLD on the selected level; prints what plays

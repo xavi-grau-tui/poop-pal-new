@@ -12,15 +12,17 @@ var rig: Node2D
 var capsule: Sprite2D
 var S := 5.3                                     # one claw pixel = one pal pixel (set in play)
 
-func play(poop: Node2D) -> void:
+## window: where it comes down, in PetView's coordinates (the shrine's opening); the gut's cam by default
+func play(poop: Node2D, window := Rect2()) -> void:
 	var base: Vector2 = poop.get("base_position") if poop.get("base_position") != null else poop.position
-	position = base + WINDOW.position
-	size = WINDOW.size
+	var win := WINDOW if window.size == Vector2.ZERO else Rect2(window.position - base, window.size)
+	position = base + win.position
+	size = win.size
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# where the pal's head is (its visible body top), in this window's coords
 	var body: Rect2 = poop.get("_body_rect") if poop.get("_body_rect") != null else Rect2(-30, 0, 60, 50)
-	var head_y := -WINDOW.position.y + body.position.y * poop.scale.y
+	var head_y := -win.position.y + body.position.y * poop.scale.y
 	# painted on the pals' own grid (their art pixel is 2 texture px), so it matches the pal
 	S = 2.0 * absf(poop.get("base_scale").x if poop.get("base_scale") != null else poop.scale.x)
 	rig = Node2D.new()

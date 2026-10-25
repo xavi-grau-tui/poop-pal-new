@@ -1179,7 +1179,7 @@ var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, th
 func _depth_3d() -> void:
 	var want := qa_depth_tilt
 	if DEPTH_3D and has_tilt_sensor() and state != State.DONE:
-		want = device_tilt().limit_length(0.6) / 0.6
+		want = -device_tilt().limit_length(0.6) / 0.6     # (the same axis as Tilt Maze and Top Spin: tilt up = see the upper side)
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
 	var far := (_depth_tilt * float(DEPTH_FAR[vehicle]) / ZOOM).round()
 	var near := (-_depth_tilt * float(DEPTH_NEAR[vehicle]) / ZOOM).round()

@@ -19,18 +19,18 @@ var current_page := 0
 # Card art for games whose cards are still "?" placeholders in the scene.
 # Shown once the game is unlocked.
 const CARD_ART := {
-	0: { "logo": "res://textures/menus/palprix.png", "background": "res://textures/menus/pattern_trophy_terracotta.png" },   # Pal Prix (was Pipe Dream)
-	1: { "logo": "res://textures/menus/tiltmaze.png", "background": "res://textures/menus/pattern_ball_moss.png" },
-	2: { "logo": "res://textures/menus/splashhoops.png", "background": "res://textures/menus/pattern_drop_sage.png" },
+	0: { "logo": "res://textures/menus/rcprix_pixel.png", "background": "res://textures/menus/pattern_trophy_terracotta.png" },   # Pal Prix (was Pipe Dream)
+	1: { "logo": "res://textures/menus/tiltmaze_pixel.png", "background": "res://textures/menus/pattern_ball_moss.png" },
+	2: { "logo": "res://textures/menus/splashhoops_stacked.png", "background": "res://textures/menus/pattern_drop_sage.png" },
 	3: { "logo": "res://textures/menus/paldash.png", "background": "res://textures/menus/pattern_corn_caramel.png" },
 	4: { "logo": "res://textures/menus/tilebreak.png", "background": "res://textures/menus/pattern_brick_terracotta.png" },
 	5: { "logo": "res://textures/menus/germzap.png", "background": "res://textures/menus/pattern_germ_olive.png" },
-	6: { "logo": "res://textures/menus/tummytunes.png", "background": "res://textures/menus/pattern_note_lilac.png" },
+	6: { "logo": "res://textures/menus/tummytunes_pixel.png", "background": "res://textures/menus/pattern_note_lilac.png" },
 	7: { "logo": "res://textures/menus/flipperbelly.png", "background": "res://textures/menus/pattern_flipper_rose.png" },
-	8: { "logo": "res://textures/menus/topspin.png", "background": "res://textures/menus/pattern_top_slate.png" },
-	9: { "logo": "res://textures/menus/papersumo.png", "background": "res://textures/menus/pattern_sumo_vermilion.png" },
+	8: { "logo": "res://textures/menus/topspin_pixel.png", "background": "res://textures/menus/pattern_top_slate.png" },
+	9: { "logo": "res://textures/menus/papersumo_pixel.png", "background": "res://textures/menus/pattern_sumo_vermilion.png" },
 	10: { "logo": "res://textures/menus/pipedream.png", "background": "res://textures/menus/pattern_pipe_brown.png" },  # the classic Pipe Dream
-	11: { "logo": "res://textures/menus/palprix2.png", "background": "res://textures/menus/pattern_rocket_navy.png" },  # Pal Prix 2177, the Turbo League
+	11: { "logo": "res://textures/menus/rcprix2177_pixel.png", "background": "res://textures/menus/pattern_rocket_navy.png" },  # Pal Prix 2177, the Turbo League
 }
 
 ## Prototype cards not in the scene yet: copies of the last card (and its dot), added at launch
@@ -209,7 +209,7 @@ func _update_game_card_labels(page_index: int) -> void:
 			_value_coin(progress_label, true)
 		elif index == GameData.PAL_PRIX_2:
 			# (not bought: won with Pal Prix's Grand Prix cup)
-			head1.text = "Win Pal Prix"
+			head1.text = "Win RC Prix"
 			score_label.text = "6-9"
 			head2.text = ""
 			progress_label.text = ""

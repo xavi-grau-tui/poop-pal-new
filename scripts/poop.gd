@@ -17,6 +17,7 @@ var base_scale := Vector2.ONE
 var base_position := Vector2.ZERO
 
 const MYSTERY_SCALE := 2.2   # the "EAT" sign shown before the first meal
+const WISP_SCALE := 3.2      # the shrine's waiting wisp (its picture is small pixel art)
 var mystery: Sprite2D
 var mystery_tween: Tween
 var flush_charge := 0.0
@@ -74,6 +75,8 @@ func _ready():
 func _process(delta: float) -> void:
 	_time += delta
 	_follow_accessory()
+	if _trail:
+		_sendoff_trail(delta)
 	if flush_charge > 0.0:
 		rotation = sin(_time * 38.0) * 0.07 * flush_charge
 		position = base_position + Vector2(sin(_time * 53.0) * 4.0 * flush_charge, 0)
@@ -288,6 +291,7 @@ func _update_body_rect() -> void:
 
 func _setup_boost_badge() -> void:
 	boost_badge = Sprite2D.new()
+	boost_badge.name = "BoostBadge"
 	boost_badge.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	boost_badge.scale = Vector2(5, 5)
 	boost_badge.position = BOOST_BADGE_POS
@@ -306,6 +310,10 @@ func _on_boost_changed(id: String, animate := true) -> void:
 	if _badge_bob:
 		_badge_bob.kill()
 	_refresh_aura()
+	# Keep the pet's aura and boost state, but never show the floating icon in either shrine launch.
+	if DevLaunch.shrine or DevLaunch.new_shrine or get_parent().get_node_or_null("Shrine"):
+		boost_badge.hide()
+		return
 	if id == "":
 		if boost_badge.visible and animate:
 			var t := create_tween()
@@ -392,7 +400,7 @@ func _play_hatch() -> void:
 	modulate = Color(1, 1, 1, 1)
 	fx_tween = create_tween()
 	fx_tween.tween_property(self, "scale", base_scale, 0.7).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-	_play_sfx("res://sounds/fx/gamecoin.wav", -8.0)
+	_play_sfx(_new_form_sfx(), -8.0)
 	get_tree().create_timer(0.45).timeout.connect(_say_hi)
 	await fx_tween.finished
 	_transforming = false
@@ -401,6 +409,39 @@ func _play_hatch() -> void:
 ## A new pal greets you: a little "hi!" noise, a tiny hop and "hi!" floating up the cam
 func _say_hi() -> void:
 	_say("hi!", "res://sounds/fx/hi.wav")
+
+## The new form's sound: the coin in the gut, a small bell in the shrine (yokai migration)
+func _new_form_sfx() -> String:
+	return "res://sounds/fx/spirit_ting.wav" if get_parent().has_node("Shrine") else "res://sounds/fx/gamecoin.wav"
+
+## The shrine's offering lands on the tray (shrine.gd): a quick double hop, it has seen it
+func notice_food() -> void:
+	if _transforming or not PetState.has_poop():
+		return
+	var hop := create_tween()
+	for k in 2:
+		hop.tween_property(self, "position:y", base_position.y - 12.0, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		hop.tween_property(self, "position:y", base_position.y, 0.11).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+## One bite of the offering (shrine.gd): a quick lunge down to the tray and back
+func bite() -> void:
+	if _transforming or not PetState.has_poop():
+		return
+	var t := create_tween()
+	t.tween_property(self, "position:y", base_position.y + 10.0, 0.09).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	t.tween_property(self, "position:y", base_position.y, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+## The shrine's drink: the spirit takes in its essence (shrine.gd): it glows in the drink's colour
+## and shivers happily
+func absorb_essence(col: Color) -> void:
+	if _transforming or not PetState.has_poop():
+		return
+	var t := create_tween()
+	t.tween_property(self, "modulate", Color(col.r * 1.5, col.g * 1.5, col.b * 1.5, 1.0), 0.15)
+	for k in 6:
+		t.tween_property(self, "rotation", 0.07 * (1 if k % 2 == 0 else -1), 0.05)
+	t.tween_property(self, "rotation", 0.0, 0.05)
+	t.tween_property(self, "modulate", Color.WHITE, 0.6)
 
 ## Flush: the pal says goodbye before it spins away
 func say_bye() -> void:
@@ -466,7 +507,7 @@ func _play_evolve() -> void:
 		sprite_frames = PetState.build_sprite_frames()
 		play("idle")
 		_refresh_accessory()
-		_play_sfx("res://sounds/fx/gamecoin.wav", -6.0))
+		_play_sfx(_new_form_sfx(), -6.0))
 	# 4) spring back out
 	fx_tween.tween_property(self, "scale", base_scale, 0.8).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	fx_tween.parallel().tween_property(self, "modulate", Color(1, 1, 1, 1), 0.5)
@@ -477,6 +518,9 @@ func _play_evolve() -> void:
 func play_flush() -> void:
 	set_flush_charge(0.0)
 	_stop_all_tweens()
+	if get_parent().has_node("Shrine"):
+		await _play_sendoff()
+		return
 	fx_tween = create_tween()
 	fx_tween.tween_property(self, "rotation", TAU * 2.0, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	fx_tween.parallel().tween_property(self, "scale", Vector2.ZERO, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
@@ -486,6 +530,47 @@ func play_flush() -> void:
 	rotation = 0.0
 	position = base_position
 	scale = base_scale
+
+## The shrine's send-off (the flush's place): the spirit glows white, shrinks into a little ball of
+## light and rises out through the roof (main_button.gd then flashes a ring of light up there and
+## rings the bell)
+func _play_sendoff() -> void:
+	fx_tween = create_tween()
+	fx_tween.tween_property(self, "modulate", Color(3.5, 3.5, 3.2, 1.0), 0.3)
+	fx_tween.parallel().tween_property(self, "scale", base_scale * 1.15, 0.3).set_trans(Tween.TRANS_SINE)
+	fx_tween.tween_property(self, "scale", base_scale * 0.42, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	fx_tween.tween_callback(func():
+		_trail = true
+		z_index = 3)                                # (in front of the roof as it goes up, so it's seen leaving)
+	fx_tween.tween_property(self, "position", base_position + Vector2(0, -620), 1.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	fx_tween.parallel().tween_property(self, "modulate:a", 0.0, 0.3).set_delay(1.0)
+	await fx_tween.finished
+	_trail = false
+	z_index = 0
+	modulate = Color(1, 1, 1, 0)
+	rotation = 0.0
+	position = base_position
+	scale = base_scale
+
+var _trail := false
+var _trail_t := 0.0
+
+## Little bits of light left behind as the spirit rises (the send-off)
+func _sendoff_trail(delta: float) -> void:
+	_trail_t -= delta
+	if _trail_t > 0.0:
+		return
+	_trail_t = 0.035
+	var d := ColorRect.new()
+	d.color = Color(1.0, 0.98, 0.88, 0.9)
+	d.size = Vector2(9, 9)
+	d.position = position + Vector2(randf_range(-14, 14), randf_range(-6, 10)) - d.size * 0.5
+	d.z_index = z_index + 1
+	get_parent().add_child(d)
+	var t := d.create_tween()
+	t.tween_property(d, "position:y", d.position.y + randf_range(10, 30), 0.5)
+	t.parallel().tween_property(d, "modulate:a", 0.0, 0.5)
+	t.tween_callback(d.queue_free)
 
 func set_flush_charge(value: float) -> void:
 	flush_charge = value
@@ -509,6 +594,7 @@ func _spawn_mystery() -> void:
 func _show_mystery() -> void:
 	if not mystery:
 		return
+	_mystery_look()
 	mystery.visible = true
 	mystery.modulate.a = 0.0
 	mystery.position = base_position + body_offset
@@ -521,6 +607,52 @@ func _show_mystery() -> void:
 	bob.tween_property(mystery, "position:y", base_position.y + body_offset.y, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	mystery.set_meta("bob", bob)
 
+## In the shrine the waiting sign is a wandering wisp, not the EAT sign (yokai migration)
+func _mystery_look() -> void:
+	var shrine := get_parent().has_node("Shrine")
+	if shrine and not (mystery.texture is AnimatedTexture):
+		mystery.texture = BoostAura.wisp_texture()
+		mystery.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	elif not shrine and mystery.texture is AnimatedTexture:
+		mystery.texture = load("res://textures/menus/eat_pink.png")
+	mystery.scale = Vector2.ONE * _mystery_scale()
+
+func _mystery_scale() -> float:
+	return WISP_SCALE if mystery and mystery.texture is AnimatedTexture else MYSTERY_SCALE
+
+## The first offering in the shrine (shrine.gd): the wisp drifts down to it ...
+func wisp_go(to: Vector2, time := 0.6) -> void:
+	if not mystery or not mystery.visible:
+		return
+	if mystery.has_meta("bob"):
+		(mystery.get_meta("bob") as Tween).kill()
+	var t := create_tween()
+	t.tween_property(mystery, "position", to, time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await t.finished
+
+## ... swells as it takes the offering in ...
+func wisp_swell() -> void:
+	if not mystery:
+		return
+	var s0 := Vector2.ONE * _mystery_scale()
+	var t := create_tween()
+	t.tween_property(mystery, "scale", s0 * 1.45, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(mystery, "scale", s0 * 1.2, 0.3)
+	await t.finished
+
+## ... and floats back to its place (bobbing again)
+func wisp_home() -> void:
+	if not mystery:
+		return
+	var home := base_position + body_offset
+	var t := create_tween()
+	t.tween_property(mystery, "position", home, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await t.finished
+	var bob = create_tween().set_loops()
+	bob.tween_property(mystery, "position:y", home.y - 18, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	bob.tween_property(mystery, "position:y", home.y, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	mystery.set_meta("bob", bob)
+
 func _hide_mystery() -> void:
 	if not mystery or not mystery.visible:
 		return
@@ -529,11 +661,11 @@ func _hide_mystery() -> void:
 	if mystery_tween:
 		mystery_tween.kill()
 	mystery_tween = create_tween()
-	mystery_tween.tween_property(mystery, "scale", Vector2(MYSTERY_SCALE, MYSTERY_SCALE) * 1.4, 0.1)
+	mystery_tween.tween_property(mystery, "scale", Vector2.ONE * _mystery_scale() * 1.4, 0.1)
 	mystery_tween.parallel().tween_property(mystery, "modulate:a", 0.0, 0.15)
 	mystery_tween.tween_callback(func():
 		mystery.visible = false
-		mystery.scale = Vector2(MYSTERY_SCALE, MYSTERY_SCALE))
+		mystery.scale = Vector2.ONE * _mystery_scale())
 
 func _play_sfx(path: String, volume_db: float, pitch := 1.0) -> void:
 	var stream = load(path) as AudioStream

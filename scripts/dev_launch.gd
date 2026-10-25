@@ -11,6 +11,8 @@ class_name DevLaunch
 ##                      food and drink level, special foods in the pantry, every dress-up item, gut
 ##                      decor, background, sticker and case (to put on: flip the device), the whole
 ##                      Shop to look through and 999 coins (no meal / drink wait either)
+##   SHRINE             ALL UNLOCKED pet screen using the existing migration shrine art
+##   NEW SHRINE         same dev setup using the selected forest hokora frame
 ##   BOOT + PROGRESSION the real game as a player gets it, from the very start, KEPT between
 ##                      launches (its own save, user://progress/, see SaveSlot): every testing switch
 ##                      off, only the six launch games, the unboxing only the first time, the meal
@@ -28,6 +30,10 @@ static var skip_boot := false
 static var all_open := false
 ## (kept for the cases' code: on in ALL UNLOCKED)
 static var case_demo := false
+## SHRINE / NEW SHRINE: show the pet screen with one of the shrine art sets
+static var shrine := false
+## NEW SHRINE: use the separate pale forest-frame art and its fit-to-screen scale
+static var new_shrine := false
 
 func _ready() -> void:
 	var bg := ColorRect.new()
@@ -46,10 +52,27 @@ func _ready() -> void:
 	title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
 	add_child(title)
 	var last := _last_choice()
-	_button("FULL BOOT", "unboxing + boot", 480, last == "full", _full)
-	_button("ALL UNLOCKED", "every game, level, item, sticker and case; a random pal", 760, last in ["games", "case", "rich"], _games)
-	_button("BOOT + PROGRESSION", _progress_summary(), 1040, last == "progress", _progress)
-	_start_over_button(1320)
+	_button("FULL BOOT", "unboxing + boot", 420, last == "full", _full)
+	_button("ALL UNLOCKED", "every game, level, item, sticker and case; a random pal", 660, last in ["games", "case", "rich"], _games)
+	_button("SHRINE", "existing shrine model", 900, last == "shrine", _shrine)
+	_button("NEW SHRINE", "chosen forest hokora frame; smaller screen fit", 1140, last == "new_shrine", _new_shrine)
+	_button("BOOT + PROGRESSION", _progress_summary(), 1380, last == "progress", _progress)
+	_start_over_button(1640)
+	_rain_toggle(font)
+
+## (the shrine's rain, forced for testing: off / light / heavy, a tap cycles it)
+func _rain_toggle(font: Font) -> void:
+	var names := ["RAIN: OFF", "RAIN: LIGHT", "RAIN: HEAVY"]
+	var b := Button.new()
+	b.text = names[Shrine.rain_now]
+	b.position = Vector2(740, 230)
+	b.size = Vector2(300, 70)
+	b.add_theme_font_override("font", font)
+	b.add_theme_font_size_override("font_size", 30)
+	b.pressed.connect(func():
+		Shrine.rain_now = (Shrine.rain_now + 1) % 3
+		b.text = names[Shrine.rain_now])
+	add_child(b)
 
 func _button(text: String, sub: String, y: float, highlighted: bool, action: Callable) -> void:
 	var font = load("res://fonts/pixChicago.ttf")
@@ -84,6 +107,8 @@ func _button(text: String, sub: String, y: float, highlighted: bool, action: Cal
 
 func _full() -> void:
 	_save_choice("full")
+	shrine = false
+	new_shrine = false
 	skip_boot = false
 	all_open = false
 	case_demo = false
@@ -91,6 +116,8 @@ func _full() -> void:
 
 func _progress() -> void:
 	_save_choice("progress")
+	shrine = false
+	new_shrine = false
 	skip_boot = false
 	all_open = false
 	case_demo = false
@@ -150,11 +177,24 @@ func _start_over_button(y: float) -> void:
 
 func _games(choice := "games") -> void:
 	_save_choice(choice)
+	shrine = choice in ["shrine", "new_shrine"]
+	new_shrine = choice == "new_shrine"
 	skip_boot = true
 	all_open = true
 	case_demo = true
 	unlock_everything()
+	if shrine:
+		# (the user: always the sour baby, so it can be fed and evolved every time)
+		PetState.form_id = "picklet"
+		PetState.meals = []
+		PetState.save_data()
 	get_tree().change_scene_to_file(MAIN_SCENE)
+
+func _shrine() -> void:
+	_games("shrine")
+
+func _new_shrine() -> void:
+	_games("new_shrine")
 
 ## ALL UNLOCKED: every game, every pal found, every food and drink level, the special foods,
 ## every collectable of every kind, 999 coins, and a random pal (the testing save only)
@@ -200,9 +240,9 @@ static func open_games(tree: SceneTree) -> void:
 func _last_choice() -> String:
 	var f := FileAccess.open(PREFS, FileAccess.READ)
 	if not f:
-		return "games"
+		return "new_shrine"
 	var data = JSON.parse_string(f.get_as_text())
-	return data.get("choice", "games") if data is Dictionary else "games"
+	return data.get("choice", "new_shrine") if data is Dictionary else "new_shrine"
 
 func _save_choice(choice: String) -> void:
 	var f := FileAccess.open(PREFS, FileAccess.WRITE)

@@ -57,7 +57,7 @@ const TILT_ACCEL := 1100.0
 const RIVAL_TILT := 0.4               # how much your tilting moves the rivals
 const FRICTION := 0.5
 const MAX_SPEED := 950.0
-const OUT_SPEED := 260.0              # outward speed needed to fly out through a gap
+const OUT_SPEED := 260.0              # outward speed to fly out through a gap (slower: it falls once past the floor's edge)
 const DECAY := 1.2                    # spin lost per second, always
 const BRACE_DRAIN := 3.0
 const BRACE_MASS := 3.0
@@ -968,23 +968,26 @@ func _move_top(t: Top, tilt: Vector2, dt: float) -> void:
 	t.vel = t.vel.limit_length(MAX_SPEED)
 	t.pos += t.vel * dt
 
-	# the rim: bounce, or fly out through a gap if fast enough
+	# the rim: bounce; at a way out there's no rim (the user: it's open, the floor runs out), so a top
+	# fast enough flies out, and any top whose middle passes the floor's edge falls over it
 	off = t.pos - C
 	var r_lim := R - 6.0 - t.r
 	if off.length() > r_lim:
 		var n := off.normalized()
 		var vn := t.vel.dot(n)
-		if _in_gap(n.angle()) and vn > OUT_SPEED:
-			_ring_out(t)
-			return
-		t.pos = C + n * r_lim
-		if vn > 0.0:
-			t.vel -= 1.55 * vn * n
-			if vn > 150.0:
-				_sfx("res://sounds/fx/wood_tap.wav", -18.0, 0.0, 1.3)
-				# off the rim: chips of light, a scrape on the floor
-				fx.spray(t.pos + n * t.r, -n, int(clampf(vn / 90.0, 3, 8)), [Color(1, 1, 1), bowl["rim_hi"]], 0.8, 0.7)
-				marks.scuff(t.pos, Color(0.12, 0.06, 0.14, 0.2), 1.6)
+		if _in_gap(n.angle()):
+			if vn > OUT_SPEED or off.length() > R + RIM_W * 0.5:
+				_ring_out(t)
+				return
+		else:
+			t.pos = C + n * r_lim
+			if vn > 0.0:
+				t.vel -= 1.55 * vn * n
+				if vn > 150.0:
+					_sfx("res://sounds/fx/wood_tap.wav", -18.0, 0.0, 1.3)
+					# off the rim: chips of light, a scrape on the floor
+					fx.spray(t.pos + n * t.r, -n, int(clampf(vn / 90.0, 3, 8)), [Color(1, 1, 1), bowl["rim_hi"]], 0.8, 0.7)
+					marks.scuff(t.pos, Color(0.12, 0.06, 0.14, 0.2), 1.6)
 
 	for i in bumpers.size():
 		var b := bumpers[i]
@@ -1464,13 +1467,17 @@ var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, th
 func _depth_3d() -> void:
 	var want := qa_depth_tilt
 	if DEPTH_3D and has_tilt_sensor() and phase != Phase.RESULT:
-		want = device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL
+		want = -device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL     # (the user: it was inverted; tilt up = see the upper walls)
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
 	var far := (_depth_tilt * DEPTH_FAR).round()
 	var near := (-_depth_tilt * DEPTH_NEAR).round()
 	backdrop.position = far - Vector2.ONE * TopSpinArt.MARGIN * PX
+	# the rim's sides, stacked from the floor (its top is painted RIM_H higher: the copy moved down by
+	# RIM_H stands on the floor) up to its top, so at rest its near side shows below it and a tilt
+	# swings the side round
+	var floor_at := C + Vector2(0, RIM_H)
 	for j in RIM_SIDES:
-		var at := C + (-_depth_tilt * DEPTH_NEAR * float(j) / float(RIM_SIDES + 1)).round()
+		var at := floor_at.lerp(C + near, float(j) / float(RIM_SIDES)).round()
 		rim_back_sides[j].position = at
 		rim_front_sides[j].position = at
 	stadium_rim.position = C + near

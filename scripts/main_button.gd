@@ -151,7 +151,13 @@ func _process(delta: float) -> void:
 			_reset_hold()
 			_confirming = false
 			return
-		if sel and sel.has_node("ConfirmSound"):
+		var shrine := get_node_or_null("../PetView/Shrine")
+		if sel and shrine and (_is_food_option(sel) or sel.get_parent().name == "VBoxDrink"):
+			# (the shrine: an offering, not a bite: two soft claps, as before a prayer)
+			var clap := _play_sfx("res://sounds/fx/offer_clap.wav", -8.0)
+			if clap:
+				await get_tree().create_timer(clap.stream.get_length()).timeout
+		elif sel and sel.has_node("ConfirmSound"):
 			var csp : AudioStreamPlayer2D = sel.get_node("ConfirmSound")
 			if csp.stream:
 				csp.play()
@@ -243,7 +249,11 @@ func _spawn_food_or_drink_effect(sel: Node) -> void:
 # ------------------------------------------------------------------ PET CYCLE
 func _feed_after_fall(spawner: Node, texture: Texture2D, food: Dictionary) -> void:
 	# Let the food fall and digest first, then hatch / evolve the poop
-	await spawner.spawn_food_chunks(texture)
+	var shrine = spawner.get_parent().get_node_or_null("Shrine")
+	if shrine:
+		await shrine.offer_food(texture)      # (the shrine: onto the sanbo, eaten in three bites)
+	else:
+		await spawner.spawn_food_chunks(texture)
 	if not food.is_empty():
 		PetState.feed(food)
 		if food.get("family", "") in ["tech", "cosmic", "legend"]:
@@ -254,7 +264,11 @@ func _feed_after_fall(spawner: Node, texture: Texture2D, food: Dictionary) -> vo
 		food_menu.populate_special()
 
 func _drink_after_pour(spawner: Node, drink: Dictionary) -> void:
-	await spawner.spawn_drink_stream()
+	var shrine = spawner.get_parent().get_node_or_null("Shrine")
+	if shrine:
+		await shrine.offer_drink(spawner.stream_color, drink)   # (the shrine: poured into a cup, its essence drawn out)
+	else:
+		await spawner.spawn_drink_stream()
 	PetState.drink(drink)
 	var food_menu = get_node_or_null("../Menus/FoodMenu")
 	if food_menu and food_menu.has_method("populate_drinks"):
@@ -268,7 +282,10 @@ func _flush_poop() -> void:
 		poop.set_flush_charge(0.0)
 		poop.say_bye()
 		await get_tree().create_timer(0.55).timeout
-	var flush_sfx := _play_sfx("res://sounds/fx/sfx_sounds_falling8.mp3", flush_sound_db)
+	var shrine := get_node_or_null("../PetView/Shrine")
+	# (the shrine: a send-off, a soft rising chime instead of the drain's whoosh)
+	var flush_sfx := _play_sfx("res://sounds/fx/spirit_rise.wav" if shrine else "res://sounds/fx/sfx_sounds_falling8.mp3",
+			flush_sound_db + (4.0 if shrine else 0.0))
 	Input.vibrate_handheld(80)
 	var whoosh_end := Time.get_ticks_msec() + int(flush_fade_time * 1000.0)
 	# the flush sound is longer than the spin: fade it out so it's gone before the cling
@@ -283,7 +300,12 @@ func _flush_poop() -> void:
 	await get_tree().create_timer(remaining + cling_delay).timeout
 	# ...and out it comes: a little sparkle + cling at the end of the gut
 	var gut = get_node_or_null("../PetView/Intestine-front")
-	if gut and gut.has_method("play_flush_sparkle"):
+	if shrine:
+		# ...gone through the roof: a ring of light up there and the bell
+		_play_sfx("res://sounds/fx/spirit_ting.wav", -10.0)
+		shrine.sendoff_ring()
+		shrine.ring(1.4)
+	elif gut and gut.has_method("play_flush_sparkle"):
 		_play_sfx("res://sounds/fx/flush_cling.wav", -12.0)
 		gut.play_flush_sparkle()
 	PetState.flush()

@@ -36,7 +36,8 @@ func _ready() -> void:
 	_build()
 	if DevLaunch.skip_boot:                # (development only: STRAIGHT TO GAMES)
 		_finish()
-		DevLaunch.open_games(get_tree())
+		if not DevLaunch.shrine:           # (SHRINE: stay on the pet screen)
+			DevLaunch.open_games(get_tree())
 		return
 	# straight out of the box the device has no power yet: wait for the battery strip
 	while Unboxing.waiting():

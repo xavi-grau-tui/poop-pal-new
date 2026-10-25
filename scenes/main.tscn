@@ -84,14 +84,19 @@
 [ext_resource type="Script" uid="uid://br65ke7ejkwg0" path="res://scripts/collection_menu.gd" id="98_coll"]
 [ext_resource type="Script" uid="uid://dj723c5131mb7" path="res://scripts/boot_sequence.gd" id="99_boot"]
 [ext_resource type="Texture2D" uid="uid://b4lookriaasyv" path="res://textures/console/logo2.png" id="100_logo2"]
+[ext_resource type="Texture2D" path="res://textures/console/logo_kamitomo.png" id="101_kamitomo"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_w48qg"]
 shader = ExtResource("3_ycdy4")
 shader_parameter/scroll_speed = 0.07
+shader_parameter/top_down = 0.0
+shader_parameter/bottom_up = 0.0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_vivmo"]
 shader = ExtResource("5_w48qg")
 shader_parameter/scroll_speed = 0.14
+shader_parameter/top_down = 0.0
+shader_parameter/bottom_up = 0.0
 
 [sub_resource type="Animation" id="Animation_0cp0l"]
 length = 0.001
@@ -519,7 +524,7 @@ z_index = 4
 y_sort_enabled = true
 position = Vector2(785.5, -1727.46)
 scale = Vector2(0.750951, 1.05414)
-texture = ExtResource("100_logo2")
+texture = ExtResource("101_kamitomo")
 
 [node name="V1" type="Sprite2D" parent="Main UI/Console"]
 z_index = 4

@@ -231,4 +231,12 @@ func _play_visit() -> void:
 	pet_view.add_child(visit)
 	pet_view.move_child(visit, poop.get_index() + 1)
 	visit.tree_exited.connect(end_visit)
+	# the shrine (the dev launcher's SHRINE, the yokai migration): the claw comes down through the
+	# hatch in its inner ceiling, inside its opening
+	var shrine := pet_view.get_node_or_null("Shrine")
+	if shrine and shrine.has_method("claw_window"):
+		shrine.set_hatch(true)
+		visit.tree_exited.connect(shrine.set_hatch.bind(false))
+		visit.play(poop, shrine.claw_window())
+		return
 	visit.play(poop)

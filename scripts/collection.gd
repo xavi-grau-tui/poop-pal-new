@@ -79,7 +79,7 @@ const CASES := {
 	# the games' own cases: each one the prize of its masters' world finale (6-9)
 	"maze": { "name": "Labyrinth", "unlock": "Tilt Maze: 6-9", "tones": ["#623e24", "#d6ac72", "#f6e0b6"] },
 	"splash": { "name": "Lagoon", "unlock": "Splash Hoops: 6-9", "tones": ["#1c4e64", "#60b8c8", "#dcf8fa"] },
-	"prix": { "name": "Grand Prix", "unlock": "Pal Prix: 6-9", "tones": ["#6e2222", "#dc5448", "#fcf0e6"] },
+	"prix": { "name": "Grand Prix", "unlock": "RC Prix: 6-9", "tones": ["#6e2222", "#dc5448", "#fcf0e6"] },
 	"sumo": { "name": "Dohyo", "unlock": "Paper Sumo: 6-9", "tones": ["#6e4628", "#dec28a", "#f6e2ba"] },
 	"spin": { "name": "Koma", "unlock": "Top Spin: 6-9", "tones": ["#0c0c14", "#222234", "#e2b652"] },
 	# the Shop's: a print each (blossoms, lemon slices, clouds, sprinkles)
@@ -98,9 +98,9 @@ const STICKERS := {
 	"pufferfish": { "name": "Pufferfish", "unlock": "Splash Hoops: 4-6" },
 	"seashell": { "name": "Seashell", "unlock": "Splash Hoops: 5-6" },
 	"anglerfish": { "name": "Anglerfish", "unlock": "Splash Hoops: 6-6" },
-	"traffic_cone": { "name": "Traffic Cone", "unlock": "Pal Prix: 4-6" },
-	"rubber_duck": { "name": "Rubber Duck", "unlock": "Pal Prix: 5-6" },
-	"gold_cup": { "name": "Gold Cup", "unlock": "Pal Prix: 6-6" },
+	"traffic_cone": { "name": "Traffic Cone", "unlock": "RC Prix: 4-6" },
+	"rubber_duck": { "name": "Rubber Duck", "unlock": "RC Prix: 5-6" },
+	"gold_cup": { "name": "Gold Cup", "unlock": "RC Prix: 6-6" },
 	"koi": { "name": "Koi", "unlock": "Paper Sumo: 2-6" },
 	"wind_up_key": { "name": "Wind-up Key", "unlock": "Paper Sumo: 4-6" },
 	"kabuto": { "name": "Kabuto", "unlock": "Paper Sumo: 5-6" },
@@ -110,7 +110,7 @@ const STICKERS := {
 	# the gift tracks' gold stickers (150 stars)
 	"gold_shell": { "name": "Gold Shell", "unlock": "Splash Hoops: 150 stars" },
 	"gold_marble": { "name": "Gold Marble", "unlock": "Tilt Maze: 150 stars" },
-	"gold_car": { "name": "Gold Car", "unlock": "Pal Prix: 150 stars" },
+	"gold_car": { "name": "Gold Car", "unlock": "RC Prix: 150 stars" },
 	"gold_yokozuna": { "name": "Gold Yokozuna", "unlock": "Paper Sumo: 150 stars" },
 	"gold_top": { "name": "Gold Top", "unlock": "Top Spin: 150 stars" },
 }
@@ -179,7 +179,7 @@ const BACKGROUNDS := {
 		"layers": ["res://textures/pet-background/balloons_far.png", "res://textures/pet-background/balloons_near.png"],
 		"icon": "res://textures/pet-background/icons/balloons.png",
 		"unlocked": false,
-		"unlock": "Pal Prix: 5 stars",
+		"unlock": "RC Prix: 5 stars",
 	},
 	"paper_cranes": {
 		"name": "Paper Cranes",
@@ -198,7 +198,7 @@ const BACKGROUNDS := {
 		"unlock": "Top Spin: 5 stars",
 	},
 	"mint_sky": { "name": "Mint", "kind": "color", "hue": 0.36, "layers": [], "unlocked": false, "unlock": "Tilt Maze: 100 stars" },
-	"peach_sky": { "name": "Peach", "kind": "color", "hue": 0.05, "layers": [], "unlocked": false, "unlock": "Pal Prix: 100 stars" },
+	"peach_sky": { "name": "Peach", "kind": "color", "hue": 0.05, "layers": [], "unlocked": false, "unlock": "RC Prix: 100 stars" },
 	"teal_sky": { "name": "Teal", "kind": "color", "hue": 0.5, "layers": [], "unlocked": false, "unlock": "Paper Sumo: 100 stars" },
 	"blue_sky": { "name": "Blue", "kind": "color", "hue": 0.58, "layers": [], "unlocked": false, "unlock": "Top Spin: 100 stars" },
 	"pink": { "name": "Pink", "kind": "color", "hue": 0.0, "layers": [], "unlocked": true, "unlock": "" },
@@ -226,7 +226,7 @@ const ACCESSORIES := {
 	"sumo_topknot": { "name": "Sumo Topknot", "dir": "res://textures/pet/accessories/sumo_topknot/", "unlocked": false, "unlock": "Paper Sumo: 6-6" },
 	# the gift tracks' (30 stars)
 	"explorer_hat": { "name": "Explorer Hat", "dir": "res://textures/pet/accessories/explorer_hat/", "unlocked": false, "unlock": "Tilt Maze: 30 stars" },
-	"racing_helmet": { "name": "Racing Helmet", "dir": "res://textures/pet/accessories/racing_helmet/", "unlocked": false, "unlock": "Pal Prix: 30 stars" },
+	"racing_helmet": { "name": "Racing Helmet", "dir": "res://textures/pet/accessories/racing_helmet/", "unlocked": false, "unlock": "RC Prix: 30 stars" },
 	"gyoji_hat": { "name": "Gyoji Hat", "dir": "res://textures/pet/accessories/gyoji_hat/", "unlocked": false, "unlock": "Paper Sumo: 30 stars" },
 	"propeller_cap": { "name": "Propeller Cap", "dir": "res://textures/pet/accessories/propeller_cap/", "unlocked": false, "unlock": "Top Spin: 30 stars" },
 	"mystery_acc_4": { "name": "???", "dir": "", "unlocked": false, "unlock": "" },
@@ -252,11 +252,11 @@ const DECOR := {
 	"maple_leaves": { "name": "Maple Leaves", "kind": "complement", "frames": ["res://textures/pet/decor/maple_leaves-1.png", "res://textures/pet/decor/maple_leaves-2.png"], "icon": "res://textures/pet/decor/icons/maple_leaves.png", "unlocked": false, "unlock": "Paper Sumo: 3-6" },
 	# the gift tracks' (15 stars: an add-on; 60: a gut colour)
 	"bead_garland": { "name": "Bead Garland", "kind": "complement", "frames": ["res://textures/pet/decor/bead_garland-1.png", "res://textures/pet/decor/bead_garland-2.png"], "icon": "res://textures/pet/decor/icons/bead_garland.png", "unlocked": false, "unlock": "Tilt Maze: 15 stars" },
-	"checker_bunting": { "name": "Checker Flags", "kind": "complement", "frames": ["res://textures/pet/decor/checker_bunting-1.png", "res://textures/pet/decor/checker_bunting-2.png"], "icon": "res://textures/pet/decor/icons/checker_bunting.png", "unlocked": false, "unlock": "Pal Prix: 15 stars" },
+	"checker_bunting": { "name": "Checker Flags", "kind": "complement", "frames": ["res://textures/pet/decor/checker_bunting-1.png", "res://textures/pet/decor/checker_bunting-2.png"], "icon": "res://textures/pet/decor/icons/checker_bunting.png", "unlocked": false, "unlock": "RC Prix: 15 stars" },
 	"shimenawa": { "name": "Shimenawa", "kind": "complement", "frames": ["res://textures/pet/decor/shimenawa-1.png", "res://textures/pet/decor/shimenawa-2.png"], "icon": "res://textures/pet/decor/icons/shimenawa.png", "unlocked": false, "unlock": "Paper Sumo: 15 stars" },
 	"pinwheels": { "name": "Pinwheels", "kind": "complement", "frames": ["res://textures/pet/decor/pinwheels-1.png", "res://textures/pet/decor/pinwheels-2.png"], "icon": "res://textures/pet/decor/icons/pinwheels.png", "unlocked": false, "unlock": "Top Spin: 15 stars" },
 	"lime_gut": { "name": "Lime Gut", "kind": "color", "hue": 0.25, "frames": [], "unlocked": false, "unlock": "Tilt Maze: 60 stars" },
-	"amber_gut": { "name": "Amber Gut", "kind": "color", "hue": 0.07, "frames": [], "unlocked": false, "unlock": "Pal Prix: 60 stars" },
+	"amber_gut": { "name": "Amber Gut", "kind": "color", "hue": 0.07, "frames": [], "unlocked": false, "unlock": "RC Prix: 60 stars" },
 	"blue_gut": { "name": "Blue Gut", "kind": "color", "hue": 0.6, "frames": [], "unlocked": false, "unlock": "Paper Sumo: 60 stars" },
 	"berry_gut": { "name": "Berry Gut", "kind": "color", "hue": -0.06, "frames": [], "unlocked": false, "unlock": "Top Spin: 60 stars" },
 	"mystery_decor_3": { "name": "???", "frames": [], "unlocked": false, "unlock": "" },
@@ -376,13 +376,13 @@ func source_text(category: String, id: String) -> String:
 	for r in REWARDS:
 		if r["category"] == category and r["id"] == id:
 			if r.has("pedia"):
-				return "%d pals found" % r["pedia"]
+				return "%d spirits found" % r["pedia"]
 			if r.has("total_stars"):
 				return "%d stars in all" % r["total_stars"]
 			return "%s: %d stars" % [GAME_NAMES.get(r.get("game", -1), "A game"), r["stars"]]
 	return catalog(category).get(id, {}).get("unlock", "")
 
-const GAME_NAMES := { 0: "Pal Prix", 1: "Tilt Maze", 2: "Splash Hoops", 6: "Tummy Tunes", 8: "Top Spin", 9: "Paper Sumo" }
+const GAME_NAMES := { 0: "RC Prix", 1: "Tilt Maze", 2: "Splash Hoops", 6: "Tummy Tunes", 8: "Top Spin", 9: "Paper Sumo" }
 
 ## A prize from a game (a vault, a secret, a finale): "sticker:<id>", "food:<special food>",
 ## "acc:<id>", "bg:<id>", "decor:<id>", "case:<id>" or "coins:<n>". Gives it and says what it was:

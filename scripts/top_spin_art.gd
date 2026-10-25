@@ -310,14 +310,9 @@ static func bowl_images(bowl: Dictionary, r: float, rim_w: float, rim_h: float, 
 					if d1 < rr + 1.0 or d1 >= rr + rw - 1.0:
 						col = OUTLINE
 					is_front = p.y > lip.y
-			elif d1 >= rr + rw and d0 < rr + rw and p.y > c.y - rh:
-				# --- the rim's outer side face, on the near side ---
-				if _gap_at(gaps, gap_half, ang0) < 0.0:
-					var down := clampf((d0 - (rr + rw - rh)) / rh, 0.0, 1.0)
-					col = (bowl["rim_dark"] as Color).darkened(0.1 + 0.3 * down)
-					if d0 >= rr + rw - 1.0:
-						col = OUTLINE
-					is_front = true
+			# (the rim's outer side face on the near side is no longer painted here: the 3D tilt's
+			# stacked sides draw it, from the floor up, so it follows the tilt; painted, it stayed put
+			# and showed as dark notches at the sides when tilting down: the user)
 			elif d0 >= rr and d1 < rr:
 				# --- the far inner wall, between the floor's edge and the lip ---
 				var g2 := _gap_at(gaps, gap_half, ang1)

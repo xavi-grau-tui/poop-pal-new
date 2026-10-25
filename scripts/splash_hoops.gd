@@ -227,6 +227,7 @@ var box_walls: Node2D                  # the tank's inside walls, seen as it til
 var box_shift := Vector2.ZERO          # (the back panel's shift: where the walls end)
 var cup_backs: Node2D                  # the baskets' depth: copies stacked behind them (the 3D tilt)
 var scene_life: SplashArt.SceneLife    # what moves on the back panel (fish, jellyfish, clouds, the beam...)
+var floor_life: SplashArt.FloorLife    # theme-colored glints and bubbles around the fixed W-shaped floor
 var band_bar: ColorRect                # (the band's foot line: the clock running down)
 const PLASTIC := Color8(44, 70, 102)   # the HUD band: the toy's blue plastic...
 const PLASTIC_FOOT := Color8(26, 42, 64)
@@ -338,7 +339,10 @@ func _theme_nodes() -> void:
 	tank_sprite.texture = tex["tank"]
 	tank_back.texture = tex["tank_back"]
 	scene_life.setup(String(theme["scene"]), theme["water"], floor_at)
-	var top := 402.0 if theme["scene"] == "sun" else BAND_Y          # (the sunset's sky: no bubbles in it)
+	floor_life.setup(String(theme["scene"]), floor_at, theme["floor_fx"])
+	# The sunset remains visible beyond the surface, while its lower half still gets underwater
+	# ambience. The other scenes are submerged from the screen's waterline downward.
+	var top := 275.0 if theme["scene"] == "sun" else BAND_Y
 	ambience.setup(String(theme["scene"]), Vector2(PLAY_WIDTH / 2.0, 500.0), 420.0, Rect2(0, top, PLAY_WIDTH, PLAY_HEIGHT - top))
 	band_bar.color = (theme["rim"][1] as Color)
 	for n in nozzle_sprites:
@@ -568,7 +572,7 @@ var qa_depth_tilt := Vector2.ZERO      # (tools/qa depth=x,y: a pretend tilt, th
 func _depth_3d() -> void:
 	var want := qa_depth_tilt
 	if DEPTH_3D and has_tilt_sensor() and state == State.PLAY:
-		want = device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL
+		want = -device_tilt().limit_length(DEPTH_FULL) / DEPTH_FULL     # (the same axis as Tilt Maze and Top Spin: tilt up = see the upper side)
 	_depth_tilt = _depth_tilt.lerp(want, 0.12)
 	var far := (_depth_tilt * DEPTH_FAR).round()
 	tank_back.position = far - Vector2.ONE * SplashArt.MARGIN * S
@@ -1408,6 +1412,8 @@ func _create_static_nodes() -> void:
 	tank.centered = false
 	add_child(tank)
 	tank_sprite = tank
+	floor_life = SplashArt.FloorLife.new()
+	add_child(floor_life)
 
 	for x in NOZZLES:
 		var nz := _sprite(tex["nozzle"], Vector2(x, FLOOR_Y - 12))

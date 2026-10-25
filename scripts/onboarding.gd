@@ -74,8 +74,17 @@ func _ready() -> void:
 	if food_button and food_button.button_pressed:
 		menu_was_open = true                     # (opened that fast: the card waits until it closes)
 		return
-	_show_card("Welcome to HaraTomo! Press [img=66x81]%s[/img] to eat something and meet your new pal." % FOOD_ICON)
+	_show_card(_welcome_text())
 	_start_beat(food_button)
+
+## The shrine's words (yokai migration: an offering, a spirit friend); the gut keeps its own
+func _in_shrine() -> bool:
+	return get_node_or_null("../PetView/Shrine") != null
+
+func _welcome_text() -> String:
+	if _in_shrine():
+		return "Welcome to HaraTomo! Press [img=66x81]%s[/img] to offer some food to the shrine and meet your new spirit friend." % FOOD_ICON
+	return "Welcome to HaraTomo! Press [img=66x81]%s[/img] to eat something and meet your new pal." % FOOD_ICON
 
 func _process(_delta: float) -> void:
 	if hatched or not food_button:
@@ -100,7 +109,7 @@ func _process(_delta: float) -> void:
 		await get_tree().create_timer(0.5).timeout
 		if _gone() or food_chosen or hatched or menu_was_open or not PetState.needs_first_meal():
 			return
-		_show_card("Welcome to HaraTomo! Press [img=66x81]%s[/img] to eat something and meet your new pal." % FOOD_ICON)
+		_show_card(_welcome_text())
 		_start_beat(food_button)
 
 func _on_form_changed(id: String, reason: String) -> void:
@@ -121,7 +130,10 @@ func _on_form_changed(id: String, reason: String) -> void:
 	var info: Array = UiArt.TYPE_TAGS.get(fam, [fam.capitalize(), Color.WHITE])
 	var col: Color = TYPE_INK.get(fam, INK)
 	var type_txt := "[color=#%s]%s[/color] [img=40]res://textures/menus/tiers/%s.png[/img]" % [col.to_html(false), info[0], fam]
-	_show_card("Say hi to %s! It's a %s pal. What you eat decides how it grows." % [pal_name, type_txt])
+	if _in_shrine():
+		_show_card("Say hi to %s! It's a %s spirit. What you offer decides how it grows." % [pal_name, type_txt])
+	else:
+		_show_card("Say hi to %s! It's a %s pal. What you eat decides how it grows." % [pal_name, type_txt])
 	await get_tree().create_timer(6.0).timeout
 	if _gone():
 		return

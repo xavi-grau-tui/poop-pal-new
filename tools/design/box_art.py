@@ -34,7 +34,10 @@ CHICAGO = str(ROOT / "fonts" / "pixChicago.ttf")
 JP = "/System/Library/Fonts/ヒラギノ角ゴシック W7.ttc"
 
 SKY, SKY_LT, SKY_DK = (110, 196, 232), (150, 216, 242), (52, 120, 170)
-NAVY = (34, 58, 100)
+NAVY = (36, 50, 80)                 # the bands' slate navy (and the logo's outline)
+# the lid's kraft cardboard (the user, 2026-10-21, from a photo reference: in place of the blue sun rays)
+KRAFT, KRAFT_LT, KRAFT_DK = (196, 166, 122), (206, 178, 136), (178, 148, 106)
+RIM, RIM_LT, RIM_LT2 = (120, 96, 66), (214, 190, 150), (210, 186, 146)
 INK = (64, 46, 33)
 CREAM = (250, 240, 222)
 YELLOW, ORANGE = (255, 214, 72), (240, 140, 52)
@@ -48,8 +51,8 @@ DEV_X, DEV_Y = (W - DEV_W) // 2, 500
 HOLE_M = 34                                          # window margin around the device
 HOLE = (DEV_X - HOLE_M, DEV_Y - HOLE_M, DEV_X + DEV_W + HOLE_M, DEV_Y + DEV_H + HOLE_M)
 HOLE_R = 28
-LOGO_Y = 150                                         # the HaraTomo logo's top (full-size px)
-TAG_Y = (HOLE[1] - 66) // P                          # the Japanese tagline: just above the window
+LOGO_Y = 190                                         # the HaraTomo logo's top (full-size px; lower since the tagline went)
+TAG_Y = (HOLE[1] - 66) // P                          # (where the Japanese tagline was, above the window: removed)
 
 
 def up(img):
@@ -77,6 +80,22 @@ def sunburst(img, cx, cy, rays=18, a=SKY, b=SKY_LT):
     arr = np.zeros((img.height, img.width, 4), np.uint8)
     arr[band == 0] = a + (255,)
     arr[band == 1] = b + (255,)
+    img.alpha_composite(Image.fromarray(arr, "RGBA"))
+
+
+def kraft(img, seed=3):
+    """Kraft cardboard on the print grid: its brown, faint vertical corrugation lines, fibre specks"""
+    rng = np.random.default_rng(seed)
+    h, w = img.height, img.width
+    col = np.tile(np.array(KRAFT, np.float32), (h, w, 1))
+    stripe = np.arange(w) % 5 == 0
+    col[:, stripe] = np.array(KRAFT_DK, np.float32) * 0.5 + col[:, stripe] * 0.5
+    col *= (1 + rng.normal(0, 0.025, (h, w)))[..., None]
+    col[rng.random((h, w)) < 0.03] = np.array(KRAFT_DK, np.float32)
+    col[rng.random((h, w)) < 0.015] = np.array(KRAFT_LT, np.float32)
+    arr = np.zeros((h, w, 4), np.uint8)
+    arr[..., :3] = np.clip(col, 0, 255)
+    arr[..., 3] = 255
     img.alpha_composite(Image.fromarray(arr, "RGBA"))
 
 
@@ -115,6 +134,8 @@ def print_logo():
             if not body:                                  # a hole (or a kanji's inner patch)
                 for y, x in comp:
                     a[y, x, 3] = 0
+    lum = a[..., :3].astype(float) @ np.array([.3, .59, .11])
+    a[(a[..., 3] > 0) & (lum < 90), :3] = NAVY            # its outline and kanji in the bands' navy (the user)
     return Image.fromarray(a, "RGBA")
 
 
@@ -148,7 +169,7 @@ def insert_base():
     art = low()
     d = ImageDraw.Draw(art)
     d.rectangle((0, 0, LW, LH), fill=(36, 62, 104))                 # the box's walls
-    d.rectangle((6, 6, LW - 7, LH - 7), fill=INSERT)
+    d.rounded_rectangle((6, 6, LW - 7, LH - 7), radius=9, fill=INSERT)  # (round corners: the user, 2026-10-21)
     for y in range(14, LH - 10, 12):                                # printed dots
         for x in range(12 + (y // 12 % 2) * 6, LW - 10, 12):
             d.point((x, y), fill=DOTS)
@@ -249,9 +270,11 @@ def booklet_cover(w, h):
 
 # ------------------------------------------------------------------ the lid
 
-def window(img):
+def window(img, with_film=True):
     """The die-cut hole, left see-through: only the lid's edge shadow on what lies beneath,
-    and the clear plastic over it all (a faint sheen, diagonal glare, bright edges)."""
+    and the clear plastic over it all (a faint sheen, diagonal glare, bright edges). The game
+    puts the plastic on as its own layer (window_film.png: its glare slides with the 3D tilt),
+    so lid.png has none; the splash has it baked in."""
     x0, y0, x1, y1 = HOLE
     w, h = x1 - x0, y1 - y0
     hole = Image.new("L", (W, H), 0)
@@ -263,9 +286,9 @@ def window(img):
     shade = (np.array(hole) > 0) & ~(np.array(inner) > 0)
     a[shade] = (0, 0, 0, 72)                                        # the lid's thickness
     img.paste(Image.fromarray(a, "RGBA"))
-    film = Image.new("RGBA", (w, h), (255, 255, 255, 22))
+    film = Image.new("RGBA", (w, h), (232, 244, 252, 40))              # (more noticeable: the user, 2026-10-21)
     g = ImageDraw.Draw(film)
-    for off, wd, al in ((60, 120, 56), (230, 40, 44), (320, 18, 38), (620, 70, 30)):
+    for off, wd, al in ((60, 120, 92), (230, 40, 74), (320, 18, 64), (620, 70, 54), (860, 26, 44)):
         g.polygon(((off, 0), (off + wd, 0), (off + wd - h * 0.5, h), (off - h * 0.5, h)), fill=(255, 255, 255, al))
     g.rounded_rectangle((0, 0, w - 1, h - 1), radius=HOLE_R, outline=(255, 255, 255, 150), width=4)
     g.rounded_rectangle((6, 6, w - 7, h - 7), radius=HOLE_R - 4, outline=(255, 255, 255, 50), width=2)
@@ -273,28 +296,23 @@ def window(img):
     ImageDraw.Draw(m).rounded_rectangle((0, 0, w - 1, h - 1), radius=HOLE_R, fill=255)
     clip = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     clip.paste(film, (0, 0), m)
-    img.alpha_composite(clip, (x0, y0))
+    window.film = clip
+    if with_film:
+        img.alpha_composite(clip, (x0, y0))
     ImageDraw.Draw(img).rounded_rectangle((x0 - 3, y0 - 3, x1 + 3, y1 + 3), radius=HOLE_R + 3,
                                           outline=(214, 236, 248), width=3)
 
 
-def lid_layer():
+def lid_layer(with_film=True):
     img = Image.new("RGBA", (W, H), NAVY + (255,))
     art = low()
-    sunburst(art, LW // 2, 300, rays=16)
+    kraft(art)
     d = ImageDraw.Draw(art)
     d.rectangle((0, 0, LW, 30), fill=NAVY)                          # top band
     d.rounded_rectangle((8, 7, 92, 23), radius=7, fill=WHITE)
     text(d, (50, 15), "Kobaya Tech", 8, NAVY, font=CHICAGO)
     text(d, (LW - 10, 15), "KBT-0721", 8, WHITE, font=CHICAGO, anchor="rm")
-    jp = ImageFont.truetype(JP, 13)                                 # tagline
-    tag = Image.new("L", (200, 20), 0)
-    ImageDraw.Draw(tag).text((100, 10), "おなかのともだち", font=jp, fill=255, anchor="mm")
-    tag = tag.point(lambda v: 255 if v > 110 else 0)
-    for dx in (-1, 0, 1):
-        for dy in (-1, 0, 1):
-            art.paste(NAVY + (255,), (LW // 2 - 100 + dx, TAG_Y + dy), tag)
-    art.paste(WHITE + (255,), (LW // 2 - 100, TAG_Y), tag)
+    # (no Japanese tagline under the logo: the user, 2026-10-21)
     d.rectangle((0, LH - 62, LW, LH), fill=NAVY)                    # bottom band
     text(d, (LW // 2, LH - 46), "FEED  -  PLAY  -  EVOLVE", 16, WHITE)
     text(d, (LW // 2, LH - 28), "120+ PALS TO DISCOVER!", 16, YELLOW)
@@ -308,14 +326,14 @@ def lid_layer():
     k = 820 / logo.width
     logo = logo.resize((round(logo.width * k), round(logo.height * k * 1.12)), Image.NEAREST)
     img.alpha_composite(logo, (W // 2 - logo.width // 2, LOGO_Y))
-    window(img)
+    window(img, with_film)
     # the three babies beside the window
     for name, x, y in (("picklet", -14, 640), ("ember", 880, 990), ("sprig", -14, 1320)):
         img.alpha_composite(baby(name, 165, pixel=P), (x, y))
     d = ImageDraw.Draw(img)
-    d.rectangle((0, 0, W - 1, H - 1), outline=(30, 50, 86), width=9)    # the lid's rim
-    d.line((9, 9, W - 10, 9), fill=(180, 228, 248), width=3)
-    d.line((9, 9, 9, H - 10), fill=(160, 220, 245), width=3)
+    d.rectangle((0, 0, W - 1, H - 1), outline=RIM, width=9)            # the lid's rim: a cardboard edge
+    d.line((9, 9, W - 10, 9), fill=RIM_LT, width=3)
+    d.line((9, 9, 9, H - 10), fill=RIM_LT2, width=3)
     return img
 
 
@@ -331,7 +349,8 @@ def closed_box():
 def main():
     BOX_DIR.mkdir(exist_ok=True)
     cut_corners()
-    lid_layer().save(BOX_DIR / "lid.png")
+    lid_layer(with_film=False).save(BOX_DIR / "lid.png")     # (its plastic is window_film.png)
+    window.film.save(BOX_DIR / "window_film.png")
     insert_base().save(BOX_DIR / "insert.png")
     booklet_layer().save(BOX_DIR / "booklet.png")
     seal_layer().save(BOX_DIR / "seal.png")

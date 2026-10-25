@@ -35,3 +35,7 @@ docs/mockups/pal_brainstorm/v3/out/
 
 # python caches
 __pycache__/
+
+# Xcode builds and generated images (local only)
+build/
+output/

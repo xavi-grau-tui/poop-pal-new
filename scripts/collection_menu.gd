@@ -22,12 +22,12 @@ extends Node2D
 enum View { HUB, PEDIA, DETAIL, BACKGROUNDS, ACCESSORIES, DECOR, SHOP, CASES }
 
 const HUB_CARDS := [
-	{ "view": View.SHOP, "logo": "res://textures/menus/coinshop.png", "pattern": "res://textures/menus/pattern_coin_caramel.png" },
-	{ "view": View.PEDIA, "logo": "res://textures/menus/palpedia.png", "pattern": "res://textures/menus/pooploopbackground.png" },
-	{ "view": View.ACCESSORIES, "logo": "res://textures/menus/dressup.png", "pattern": "res://textures/menus/pattern_glasses_cream.png" },
-	{ "view": View.DECOR, "logo": "res://textures/menus/gutdecor.png", "pattern": "res://textures/menus/pattern_bulb_caramel.png" },
-	{ "view": View.BACKGROUNDS, "logo": "res://textures/menus/backgrounds.png", "pattern": "res://textures/menus/pattern_cloud_sage.png" },
-	{ "view": View.CASES, "logo": "res://textures/menus/cases.png", "pattern": "res://textures/menus/pattern_case_slate.png" },
+	{ "view": View.SHOP, "logo": "res://textures/menus/coinshop.png", "new_shrine_logo": "res://textures/menus/new_shrine_titles/coin_shop.png", "pattern": "res://textures/menus/pattern_coin_caramel.png" },
+	{ "view": View.PEDIA, "logo": "res://textures/menus/palpedia.png", "new_shrine_logo": "res://textures/menus/new_shrine_titles/tomo_pedia.png", "pattern": "res://textures/menus/pooploopbackground.png" },
+	{ "view": View.ACCESSORIES, "logo": "res://textures/menus/dressup.png", "new_shrine_logo": "res://textures/menus/new_shrine_titles/dress_up.png", "pattern": "res://textures/menus/pattern_glasses_cream.png" },
+	{ "view": View.DECOR, "logo": "res://textures/menus/gutdecor.png", "new_shrine_logo": "res://textures/menus/new_shrine_titles/home_decor.png", "pattern": "res://textures/menus/pattern_bulb_caramel.png" },
+	{ "view": View.BACKGROUNDS, "logo": "res://textures/menus/backgrounds.png", "new_shrine_logo": "res://textures/menus/new_shrine_titles/backgrounds.png", "pattern": "res://textures/menus/pattern_cloud_sage.png" },
+	{ "view": View.CASES, "logo": "res://textures/menus/cases.png", "new_shrine_logo": "res://textures/menus/new_shrine_titles/cases.png", "pattern": "res://textures/menus/pattern_case_slate.png" },
 ]
 ## Cosmetic list views: their Collection category
 const LISTS := {
@@ -295,7 +295,8 @@ func _build_hub_cards(menu: Node) -> void:
 	var template := games.get_node("VBoxGame1/Game")
 	for info in HUB_CARDS:
 		var card := template.duplicate()
-		card.get_node("TopFrame/Control/GameLogo").texture = load(info["logo"])
+		var logo_path: String = info["new_shrine_logo"] if DevLaunch.new_shrine else info["logo"]
+		card.get_node("TopFrame/Control/GameLogo").texture = load(logo_path)
 		card.get_node("TopFrame/Control/Background").texture = load(info["pattern"])
 		card.set_meta("action", { "type": "open", "view": info["view"] })
 		# "NEW!" tag on the top-right corner of the picture: something was unlocked inside
@@ -382,7 +383,7 @@ func _update_hub_card_info() -> void:
 
 func _build_pedia() -> void:
 	var fam: String = PEDIA_FAMILIES[pedia_family]
-	title.text = "%s PALS" % String(UiArt.TYPE_TAGS[fam][0]).to_upper()
+	title.text = "%s SPIRITS" % String(UiArt.TYPE_TAGS[fam][0]).to_upper()      # (yokai migration: spirits)
 	var all := _pedia_family_ids(fam)
 	var found := 0
 	for id in all:
@@ -779,7 +780,7 @@ func _build_shop() -> void:
 	if items.is_empty():                        # all bought for now: say when more comes
 		var row := _food_card(1, UiArt.question())
 		(row.get_meta("name_label") as Label).text = "Nothing new"
-		(row.get_meta("status_label") as Label).text = "Grow your pal to see more"
+		(row.get_meta("status_label") as Label).text = "Grow your spirit to see more"
 		row.set_meta("action", { "type": "locked" })
 		_add_item(row)
 		return

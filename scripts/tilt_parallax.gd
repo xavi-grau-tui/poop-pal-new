@@ -3,13 +3,16 @@ extends Node
 ## little behind the gut (the gut, the cam and the pal stay put), so the gut seems to float in
 ## front of the background, like the iPhone's perspective wallpapers.
 ##
-## Whatever angle you hold the phone at slowly becomes "neutral" (only the movement counts).
+## Whatever angle you hold the phone at slowly becomes "neutral" (only the movement counts), lying
+## down or held up in front of you.
 ## Deeper layers move more. Desktop (no tilt sensor): the mouse position does it.
 ## The user (2026-10-19): more noticeable, like the toy games' 3D tilt: the layers slide 2-3x as
 ## far, each one enlarged round its middle by its slide so no edge shows (the sky's own size, the
 ## screen's, is kept in its "screen_rect" meta for the boot screen and the welcome card). Then (the
 ## user: the gut too): the gut, the cam and the pal (PetView, all together) slide the other way,
-## FRONT px, so the front and the back pull apart. PetView is also slid by the menus' animations:
+## FRONT px, so the front and the back pull apart; the menus' slides too, each as one card (the user:
+## the slide against the background, not its frame against its panel). PetView is also slid by the
+## menus' animations:
 ## while one plays it's left alone, then the shift goes back on top of where it ended.
 
 const LAYERS := {                    # node under PetBackground -> how far it slides (px)
@@ -19,25 +22,39 @@ const LAYERS := {                    # node under PetBackground -> how far it sl
 }
 const FRONT := 14.0                  # the gut, the cam and the pal: towards you
 const GAIN := 2.6                    # tilt (in g) -> -1..1
-const SETTLE := 0.5                  # how fast the neutral angle follows the phone (per second)
+const SETTLE := 0.08                 # how fast the neutral angle follows the phone (per second; slow, so a held tilt stays)
 const SMOOTH := 8.0                  # follow speed of the layers
 const INVERT := false                # flip if it moves the wrong way on the phone
 
 var _bg: Node2D
 var _home := {}                      # layer -> its scene position
-var _neutral := Vector2.ZERO
-var _has_neutral := false
+var _n0 := Vector3.ZERO              # the neutral pose (gravity's direction, slowly following the phone)
+## A new way of holding the phone (upright -> lying down...): more than POSE_CHANGE from the neutral
+## for POSE_HOLD seconds re-centres it quickly (the user: back to the front view), so only tilts
+## within it keep the 3D turned
+const POSE_CHANGE := 0.6              # radians (~35 degrees)
+const POSE_HOLD := 1.2             # (the user: a bit longer before it re-centres)
+const RECENTER := 5.0                 # per second, while re-centring
+var _away := 0.0
+var _recentering := false
 var _offset := Vector2.ZERO
 var qa_tilt := Vector2.ZERO          # (tools/qa depth=x,y on the pet screen: a pretend tilt)
 var _view: Node2D                    # PetView
 var _view_anim: AnimationPlayer
 var _view_applied := Vector2.ZERO    # the shift on PetView now
+var _menus: Array[Node2D] = []        # the menus (each moved whole; their animations move their child "Menu")
+var _menus_applied := Vector2.ZERO
 
 func _ready() -> void:
 	_bg = get_node_or_null("../PetBackground") as Node2D
 	if not _bg:
 		set_process(false)
 		return
+	var mr := get_node_or_null("../Menus")
+	if mr:
+		for m in mr.get_children():
+			if m is Node2D:
+				_menus.append(m)
 	_view = get_node_or_null("../PetView") as Node2D
 	if _view:
 		_view_anim = _view.get_node_or_null("AnimationPlayer") as AnimationPlayer
@@ -71,6 +88,11 @@ func _process(delta: float) -> void:
 			var want := (_offset * FRONT).round()
 			_view.position += want - _view_applied
 			_view_applied = want
+	var mw := (_offset * FRONT).round()
+	for m in _menus:
+		if is_instance_valid(m):
+			m.position += mw - _menus_applied
+	_menus_applied = mw
 
 ## -1..1 on both axes
 func _input_tilt(delta: float) -> Vector2:
@@ -78,12 +100,22 @@ func _input_tilt(delta: float) -> Vector2:
 	if g == Vector3.ZERO:
 		g = Input.get_accelerometer()
 	if g != Vector3.ZERO:
-		var t := Vector2(g.x, -g.y) / 9.8
-		if not _has_neutral:
-			_neutral = t
-			_has_neutral = true
-		_neutral = _neutral.lerp(t, clampf(delta * SETTLE, 0.0, 1.0))
-		var d := (t - _neutral) * GAIN
+		# measured against the neutral pose in any pose (the user: the phone is held up in front of
+		# you, not lying down): its left-right and its forward-back, as the games do (device_tilt)
+		var n := g.normalized()
+		if _n0 == Vector3.ZERO:
+			_n0 = n
+		var ang := acos(clampf(n.dot(_n0), -1.0, 1.0))
+		_away = _away + delta if ang > POSE_CHANGE else 0.0
+		if _away > POSE_HOLD:
+			_recentering = true
+		if _recentering and ang < 0.04:
+			_recentering = false
+		var rate := RECENTER if _recentering else SETTLE
+		_n0 = _n0.slerp(n, clampf(delta * rate, 0.0, 1.0)).normalized()
+		var ex := (Vector3.RIGHT - _n0 * _n0.x).normalized()
+		var ey := _n0.cross(ex)
+		var d := Vector2(n.dot(ex), n.dot(ey)) * GAIN
 		return Vector2(clampf(d.x, -1.0, 1.0), clampf(d.y, -1.0, 1.0))
 	if OS.has_feature("mobile"):
 		return Vector2.ZERO

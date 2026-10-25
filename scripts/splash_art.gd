@@ -45,34 +45,45 @@ const BALLS := {
 const THEMES := [
 	{ # 1 Morning Lagoon: the toy as it always was, and a sunny lagoon printed behind it
 		"water": WATER, "rays": true, "scene": "lagoon",
+		"background": "res://textures/minigames/splash/new_shrine/lagoon.png",
+		"floor_texture": "res://textures/minigames/splash/new_shrine/floor/lagoon.png",
+		"floor_fx": Color8(255, 238, 178, 175),
 		"sand": [CASE, CASE_LIGHT, CASE_SHADE],
 		"rim": [CORAL_LIGHT, CORAL, CORAL_DARK], "net": NET,
 		"balls": ["pink", "yellow", "mint"], "bubble": Color(0.94, 0.98, 0.97), "glow": false,
 		"label": OUTLINE, "menu": Color8(150, 182, 168) },
 	{ # 2 Sunset Drift: an orange evening sky, a low striped sun over the sea
 		"water": [Color8(252, 206, 146), Color8(246, 172, 118), Color8(214, 120, 108), Color8(170, 94, 112), Color8(126, 72, 110)],
-		"rays": false, "scene": "sun",
+		"rays": false, "scene": "sun", "background": "res://textures/minigames/splash/new_shrine/sunset.png",
+		"floor_texture": "res://textures/minigames/splash/new_shrine/floor/sunset.png",
+		"floor_fx": Color8(255, 202, 174, 180),
 		"sand": [Color8(238, 198, 160), Color8(252, 224, 192), Color8(212, 168, 134)],
 		"rim": [Color8(134, 216, 210), Color8(70, 168, 170), Color8(40, 118, 128)], "net": NET,
 		"balls": ["violet", "teal", "white"], "bubble": Color(1.0, 0.95, 0.88), "glow": false,
 		"label": OUTLINE, "menu": Color8(230, 148, 108) },
 	{ # 3 Pufferfish Reef: bright turquoise, corals, seaweed and little fish on the back
 		"water": [Color8(150, 226, 216), Color8(112, 208, 206), Color8(78, 184, 198), Color8(56, 154, 184), Color8(42, 124, 166)],
-		"rays": true, "scene": "reef",
+		"rays": true, "scene": "reef", "background": "res://textures/minigames/splash/new_shrine/reef.png",
+		"floor_texture": "res://textures/minigames/splash/new_shrine/floor/reef.png",
+		"floor_fx": Color8(255, 212, 186, 185),
 		"sand": [Color8(246, 236, 210), Color8(255, 250, 234), Color8(220, 206, 176)],
 		"rim": [Color8(255, 228, 122), Color8(240, 184, 60), Color8(186, 128, 34)], "net": NET,
 		"balls": ["pink", "purple", "orange"], "bubble": Color(0.94, 0.99, 1.0), "glow": false,
 		"label": OUTLINE, "menu": Color8(92, 176, 186) },
 	{ # 4 Night Lights: deep blue, a moon and stars, glowing plankton; balls and baskets glow
 		"water": [Color8(54, 66, 118), Color8(44, 54, 102), Color8(36, 44, 88), Color8(28, 36, 74), Color8(22, 28, 60)],
-		"rays": false, "scene": "night",
+		"rays": false, "scene": "night", "background": "res://textures/minigames/splash/new_shrine/night.png",
+		"floor_texture": "res://textures/minigames/splash/new_shrine/floor/night.png",
+		"floor_fx": Color8(136, 244, 248, 205),
 		"sand": [Color8(70, 76, 114), Color8(98, 106, 146), Color8(54, 58, 94)],
 		"rim": [Color8(176, 255, 246), Color8(82, 228, 222), Color8(36, 150, 172)], "net": Color8(204, 255, 248),
 		"balls": ["glow_pink", "glow_lime", "glow_cyan"], "bubble": Color(0.72, 1.0, 0.95), "glow": true,
 		"label": Color8(214, 255, 248), "menu": Color8(52, 60, 108) },
 	{ # 5 Storm: grey-green water under dark clouds, rain; the current pushes everything
 		"water": [Color8(128, 144, 146), Color8(108, 126, 130), Color8(90, 108, 116), Color8(72, 92, 102), Color8(58, 76, 88)],
-		"rays": false, "scene": "rain",
+		"rays": false, "scene": "rain", "background": "res://textures/minigames/splash/new_shrine/storm.png",
+		"floor_texture": "res://textures/minigames/splash/new_shrine/floor/storm.png",
+		"floor_fx": Color8(208, 225, 218, 165),
 		"sand": [Color8(178, 172, 158), Color8(206, 200, 186), Color8(148, 142, 130)],
 		"rim": [Color8(255, 192, 112), Color8(240, 134, 52), Color8(180, 88, 32)], "net": NET,
 		"balls": ["yellow", "red", "white"], "bubble": Color(0.9, 0.95, 0.96), "glow": false,
@@ -80,7 +91,9 @@ const THEMES := [
 	{ # 6 Deep Sea (the masters' world): almost black water, glowing life; you see what the light
 	  # shows (your pal's glow, the anglerfish's lure); the lure pulls the balls to its jaws
 		"water": [Color8(26, 40, 62), Color8(20, 32, 52), Color8(16, 26, 44), Color8(12, 20, 36), Color8(10, 16, 30)],
-		"rays": false, "scene": "deep",
+		"rays": false, "scene": "deep", "background": "res://textures/minigames/splash/new_shrine/deep.png",
+		"floor_texture": "res://textures/minigames/splash/new_shrine/floor/deep.png",
+		"floor_fx": Color8(190, 118, 255, 205),
 		"sand": [Color8(46, 52, 70), Color8(66, 74, 96), Color8(34, 38, 54)],
 		"rim": [Color8(255, 196, 240), Color8(232, 120, 214), Color8(150, 62, 160)], "net": Color8(255, 220, 246),
 		"balls": ["glow_cyan", "glow_lime", "glow_pink"], "bubble": Color(0.6, 0.9, 1.0), "glow": true,
@@ -100,8 +113,30 @@ static func tank_layers(w_px: int, h_px: int, band_y: float, floor_at: Callable,
 	var water: Array = theme["water"]
 	var sand: Array = theme["sand"]
 	var scene: String = theme["scene"]
+	var floor_art: Image = null
+	if theme.has("floor_texture"):
+		var floor_texture := load(String(theme["floor_texture"])) as Texture2D
+		if floor_texture:
+			floor_art = floor_texture.get_image()
+			if floor_art.is_compressed():
+				floor_art.decompress()
+			# The generated swatches are reduced on the nearest pixel grid to the toy's artwork.
+			floor_art.resize(w_px, 128, Image.INTERPOLATE_NEAREST)
+	var art_back: Image = null
+	if theme.has("background"):
+		var background_texture := load(String(theme["background"])) as Texture2D
+		if background_texture:
+			art_back = background_texture.get_image()
+			if art_back.is_compressed():
+				art_back.decompress()
 	for y in range(-MARGIN, h_px + MARGIN):
 		for x in range(-MARGIN, w_px + MARGIN):
+			if art_back:
+				# The top plastic band hides the upper 35 art px of the tank. Map the full generated
+				# scene into the visible water window so the sun, moon and surface landmarks stay visible.
+				var source_y := int(roundf((float(y) - band_y / P) / (float(h_px) - band_y / P) * art_back.get_height()))
+				back.set_pixel(x + MARGIN, y + MARGIN, art_back.get_pixel(clampi(x, 0, art_back.get_width() - 1), clampi(source_y, 0, art_back.get_height() - 1)))
+				continue
 			var bx := (x + 0.5) * P
 			var by := (y + 0.5) * P
 			var bfy: float = floor_at.call(bx)
@@ -130,8 +165,19 @@ static func tank_layers(w_px: int, h_px: int, band_y: float, floor_at: Callable,
 					cb = OUTLINE
 				front.set_pixel(x, y, cb)
 			elif wy > fy:
-				var cs := _sand(int(wx / P), int(wy / P), wy - fy, sand)
-				front.set_pixel(x, y, _sand_decor(scene, wx, wy, fy, cs, sand))
+				var depth := wy - fy
+				var floor_col: Color
+				if depth < P * 2:
+					floor_col = OUTLINE
+				elif depth < P * 3:
+					floor_col = sand[1]
+				elif floor_art:
+					var mat_x := clampi(int(wx / P), 0, floor_art.get_width() - 1)
+					var mat_y := posmod(int(depth / P), floor_art.get_height())
+					floor_col = floor_art.get_pixel(mat_x, mat_y)
+				else:
+					floor_col = _sand(int(wx / P), int(wy / P), depth, sand)
+				front.set_pixel(x, y, floor_col)
 	return [ImageTexture.create_from_image(back), ImageTexture.create_from_image(front)]
 
 ## The sand floor: a 2 px outline along its top, a lit lip, then the sand's own colour with
@@ -611,43 +657,52 @@ static func diver(path: String, width := 30) -> Texture2D:
 const PUFF := Color8(232, 200, 110)
 const PUFF_BELLY := Color8(250, 238, 204)
 const PUFF_SPOT := Color8(184, 136, 66)
+const PUFF_SHADE := Color8(204, 158, 78)
+const PUFF_FIN := Color8(220, 176, 94)
+const PUFF_FIN_SHADE := Color8(166, 116, 62)
 
-## The pufferfish, facing left (flip it to face right): hand-drawn, chunkier than the rest (the
-## game shows it at twice the scale). Calm: an oval fish with a tail and a few spines on its back;
-## puffed up (scared): a round ball with spines all round and its mouth in an "o".
-##   o outline · y body · s spot · b belly · k pupil · w eye white · m mouth
+## The pufferfish, facing left (flip it to face right). Its calm pose has a clearer tail and fins;
+## its startled pose rounds out, with denser spines and a more readable open mouth.
+##   o outline · y body · s spot · b belly · d shadow · f fin · h fin shade
+##   k pupil · w eye white · m mouth · p mouth shade
 const PUFFER_CALM := [
-	"...o.o.o.......",
-	"..ooooooooo....",
-	".oyysyyyysyo.oo",
-	"okwyyyyyyyyyoyo",
-	"oyyyysyyyyyyyyo",
-	"myyyyyyyyyyyoyo",
-	"obbbbbbbbbbo.oo",
-	".obbbbbbbbo....",
-	"..oooooooo.....",
+	"........oo..........",
+	".......oyyo.........",
+	"...oooooyyyyoo..oo..",
+	".oyyssyyyyyyyyyooyyo",
+	"oyyyysyyyyyyyyyyoyoo",
+	"okwyysyyyyyyyyyyyyyo",
+	"myyydyyyyyfhyyyyyyyo",
+	"oyyyydyyyyyyyyyyyyyo",
+	".oyyydbbbbbbbbyyyyyo",
+	"..oyybbbbbbbbbyyyo..",
+	"...ooooooooooooo...."
 ]
 const PUFFER_PUFFED := [
-	"o......o......o",
-	".o.....o.....o.",
-	".....ooooo.....",
-	"...ooyyysyoo...",
-	"..oyysyyyyyyo..",
-	"..okwyyyysyyo..",
-	".oyyyyyyyyyyyo.",
-	"oomyyysyyyyyyoo",
-	".oyyyyyyyyysyo.",
-	"..obbbbbbbbbo..",
-	"..obbbbbbbbbo..",
-	"...oobbbbboo...",
-	".....ooooo.....",
-	".o.....o.....o.",
-	"o......o......o",
+	"....o...o...o.....",
+	".....o..o..o......",
+	"..o..oooooooo..o..",
+	"...ooyyyyyyyyo....",
+	"..oyyssyyyyyyyo...",
+	".oyysyyyyyyyyyyo..",
+	"oyyyysyyyyysyyyyo.",
+	"oyyyysyyyyysyyyyo.",
+	"okwyysyyyyyyyyyyo.",
+	"oyyyydyyyyyyyyyyo.",
+	"pmyyydyyyyysyyyyo.",
+	"oyyyydyyyyyyyyyyo.",
+	".oyyydbbbbbbyyyo..",
+	"..oyybbbbbbbbbyo..",
+	"...oybbbbbbbbbo...",
+	"....oooooooooo....",
+	"..o..o......o..o..",
+	".o..............o.",
 ]
 
 static func puffer(puffed: bool) -> Texture2D:
-	var cols := { "o": OUTLINE, "y": PUFF, "s": PUFF_SPOT, "b": PUFF_BELLY, "k": OUTLINE,
-		"w": Color.WHITE, "m": CORAL_DARK }
+	var cols := { "o": OUTLINE, "y": PUFF, "s": PUFF_SPOT, "b": PUFF_BELLY, "d": PUFF_SHADE,
+		"f": PUFF_FIN, "h": PUFF_FIN_SHADE, "k": OUTLINE, "w": Color.WHITE,
+		"m": CORAL, "p": CORAL_DARK }
 	var rows: Array = PUFFER_PUFFED if puffed else PUFFER_CALM
 	var img := Image.create(rows[0].length(), rows.size(), false, Image.FORMAT_RGBA8)
 	for y in rows.size():
@@ -926,7 +981,7 @@ class SceneLife extends Node2D:
 					var x := inner
 					while x <= half:
 						for sgn in [-1.0, 1.0]:
-							var px: float = 720.0 + sgn * x
+							var px: float = 475.0 + sgn * x
 							if (int(px / 3.0) + int((250.0 + y) / 3.0)) % 2 == 0:
 								_px(px, 250.0 + y, 3.0, 3.0, Color8(255, 228, 160, 110))
 						x += 3.0
@@ -936,8 +991,8 @@ class SceneLife extends Node2D:
 				while yy < 820.0:
 					var half2 := 70.0 - (yy - 402.0) * 0.12
 					if half2 > 6.0 and int(yy / 3.0) % 4 == 0:
-						var x2 := 720.0 - half2
-						while x2 < 720.0 + half2:
+						var x2 := 475.0 - half2
+						while x2 < 475.0 + half2:
 							var h := sin(floor(x2 / 18.0) * 12.9898 + floor(yy / 3.0) * 78.233 + floor(t * 3.0 + yy * 0.02)) * 43758.5453
 							if h - floor(h) > 0.4:
 								_px(x2, yy, 15.0, 3.0, Color8(255, 210, 150, 150))
@@ -983,7 +1038,7 @@ class SceneLife extends Node2D:
 					var x3 := inner3
 					while x3 <= half3:
 						for sgn in [-1.0, 1.0]:
-							var px3: float = 190.0 + sgn * x3
+							var px3: float = 475.0 + sgn * x3
 							if (int(px3 / 3.0) + int((232.0 + y3) / 3.0)) % 2 == 0:
 								_px(px3, 232.0 + y3, 3.0, 3.0, Color8(160, 170, 220, 80))
 						x3 += 3.0
@@ -1027,28 +1082,16 @@ class SceneLife extends Node2D:
 				while wxs < 960.0:
 					var f2 := fposmod(wxs + t * 40.0, 90.0)
 					if f2 < 36.0:
-						_px(wxs, 214.0 + f2 * 0.3, 6.0, 3.0, Color8(214, 224, 222, 90))
+						_px(wxs, 340.0 + f2 * 0.3, 6.0, 3.0, Color8(214, 224, 222, 100))
 					wxs += 6.0
-				# the lighthouse's beam sweeping round: long when it points sideways, its lamp flaring
-				# as it faces you
-				var a2 := t * 0.9
-				var side := cos(a2)
-				var lamp := Vector2(800, 252)
-				var reach := 620.0 * absf(side)
-				var dirx := signf(side)
-				var x4 := 20.0
-				while x4 < reach:
-					var hw := 8.0 + x4 * 0.07
-					var fade := 1.0 - x4 / maxf(reach, 1.0)
-					var yc := lamp.y + x4 * 0.08
-					var yv := -hw
-					while yv <= hw:
-						if (int((lamp.x + dirx * x4) / 3.0) + int((yc + yv) / 3.0)) % 2 == 0:
-							_px(lamp.x + dirx * x4, yc + yv, 3.0, 3.0, Color(1.0, 0.94, 0.75, 0.3 * fade))
-						yv += 3.0
-					x4 += 3.0
-				var flare := clampf(1.0 - absf(side) * 3.0, 0.0, 1.0)
-				_disc(lamp, 10.0 + 14.0 * flare, Color(1.0, 0.92, 0.62, 0.5 + 0.4 * flare))
+				# A broad, faint underwater lightning reflection pulses beneath the animated storm
+				# surface. The screen flash and rain drops themselves are separate game layers.
+				var pulse := maxf(0.0, sin(t * 0.7))
+				if pulse > 0.93:
+					for i in 18:
+						var rx := fposmod(i * 83.0 + t * 42.0, 950.0)
+						var ry := 360.0 + fposmod(i * 47.0, 420.0)
+						_px(rx, ry, 18.0, 3.0, Color(0.78, 0.9, 0.86, 0.18))
 			"deep":
 				# the kraken's tentacles curling up from the dark, slowly
 				for tk in [[140.0, 0.0], [820.0, 2.0], [600.0, 4.0]]:
@@ -1061,3 +1104,63 @@ class SceneLife extends Node2D:
 						if fmod(y5, 26.0) < 6.0:
 							_px(x5 + w5 * 0.3, y5, w5 * 0.6, 3.0, Color8(110, 80, 130, 140))
 						y5 += 3.0
+
+## Subtle life close to the W-shaped floor. It is drawn over the fixed floor art and behind the
+## nozzles, balls and pal, so the original collision/gameplay silhouette stays exact.
+class FloorLife extends Node2D:
+	var kind := ""
+	var floor_at: Callable
+	var tint := Color.WHITE
+	var t := 0.0
+	func setup(k: String, f: Callable, c: Color) -> void:
+		kind = k
+		floor_at = f
+		tint = c
+		queue_redraw()
+	func _process(delta: float) -> void:
+		t += delta
+		queue_redraw()
+	func _px(x: float, y: float, w: float, h: float, c: Color) -> void:
+		draw_rect(Rect2(Vector2(x, y).snapped(Vector2(3, 3)), Vector2(maxf(3.0, roundf(w / 3.0) * 3.0), maxf(3.0, roundf(h / 3.0) * 3.0))), c)
+	func _draw() -> void:
+		if floor_at.is_null():
+			return
+		# Small bubbles breathe up from the two pump valleys and the middle crest, well behind play pieces.
+		var sources := [155.0, 300.0, 475.0, 650.0, 795.0]
+		for i in sources.size():
+			var lane: float = sources[i]
+			var phase := fposmod(t * (22.0 + i * 2.0) + i * 31.0, 108.0)
+			var x := lane + 5.0 * sin(t * 0.9 + i * 1.7)
+			var y: float = floor_at.call(x) - 10.0 - phase
+			if y < 125.0 or y > floor_at.call(x) - 6.0:
+				continue
+			var alpha := 0.42 + 0.22 * sin(t * 2.0 + i)
+			var bubble := Color(tint.r, tint.g, tint.b, alpha)
+			_px(x - 3.0, y, 3.0, 6.0, bubble)
+			_px(x + 3.0, y + 3.0, 3.0, 3.0, bubble)
+			_px(x, y + 6.0, 3.0, 3.0, bubble)
+		# A few moving, world-colored glints sit inside the sand fill, never along its outline.
+		for i in 7:
+			var x2 := 34.0 + fposmod(i * 137.0 + t * (9.0 + i % 3 * 3.0), 880.0)
+			var fy: float = floor_at.call(x2)
+			var depth := 14.0 + fposmod(i * 29.0, 49.0)
+			var y2 := fy + depth
+			if y2 > 938.0:
+				continue
+			var pulse := 0.3 + 0.7 * maxf(0.0, sin(t * 2.1 + i * 1.9))
+			var c := Color(tint.r, tint.g, tint.b, tint.a * pulse)
+			match kind:
+				"sun":
+					_px(x2, y2, 9.0, 3.0, c)
+				"rain":
+					_px(x2, y2, 12.0, 3.0, c)
+					_px(x2 + 6.0, y2 + 3.0, 6.0, 3.0, Color(c, c.a * 0.55))
+				"night", "deep":
+					_px(x2, y2, 3.0, 3.0, c)
+					if pulse > 0.68:
+						_px(x2 - 3.0, y2 + 3.0, 9.0, 3.0, Color(c, c.a * 0.45))
+				"reef":
+					_px(x2, y2, 3.0, 6.0, c)
+					_px(x2 + 3.0, y2 + 3.0, 3.0, 3.0, c)
+				_:
+					_px(x2, y2, 6.0, 3.0, c)
