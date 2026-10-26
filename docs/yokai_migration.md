@@ -82,24 +82,10 @@ the designs from this reference with the user.
 
 ## Foods and drinks
 
-Same structure (5 families x baby, kid, adult x 3; drinks: 5 types x 3). Mostly real offerings
-(what shrines are given, what yokai love, festival stalls), with **one "unusual" world food per
-family and size** as the surprising offering (the user: feeding yokai odd things is part of the
-fun; the stranger the offering, the stranger the evolution). Draft, to be confirmed:
-
-| Family | Baby | Kid | Adult |
-| --- | --- | --- | --- |
-| Green | Cucumber, Edamame, *Broccoli* | Onigiri, Kappa Maki, *Avocado Toast* | Shojin Tray, Zaru Soba, *Salad Bowl* |
-| Sweet | Mochi, Konpeito, *Chocolate* | Tsukimi Dango, Ohagi, *Glazed Donut* | Kagami Mochi, Dorayaki, *Pancakes* |
-| Greasy | Aburaage, Karaage, *Fries* | Inari Sushi, Takoyaki, *Hot Dog* | Kitsune Udon, Yakisoba, *Cheeseburger* |
-| Spicy | Red Togarashi, Shishito, *Jalapeño* | Ikayaki, Karashi Renkon, *Spicy Taco* | Oni Curry, Spicy Miso Ramen, *Shakshuka* |
-| Sour | Umeboshi, Yuzu, *Lemon* | Tsukemono, Ume Onigiri, *Pickle Jar* | Chirashi Sushi, Su-dako, *Ceviche* |
-
-Unusual world foods in *italics*. Drinks: Shrine Water, Barley Tea, Sakura Tea (watery) ·
-Ramune, Cider, *Cola* (fizzy) · Sencha, Matcha, *Coffee* (caffeinated) · Amazake, Coffee Milk,
-*Milkshake* (milky) · Mikan Juice, Yuzu Juice, *Smoothie* (fruity). No sake (all ages): Amazake
-and Shrine Water take its place. Specials stay (Microchip, Battery, Moon Rock, Alien Goo); legends:
-Golden Rice Ear, Moon Rabbit Mochi, Dragon Oil, Phoenix Pepper, Umibozu Brine.
+Agreed 2026-10-26, replacing the earlier draft: the full list, the 14 new icons to draw and the
+naming rule across countries are in **docs/kami_foods_and_drinks.md** (for the art designer).
+Mostly East Asian offerings plus a few world foods as the odd offering; the menu has to fit any
+home, not only the hokora. Same structure, each new food in the slot of the one it replaces.
 
 ## Minigames
 
