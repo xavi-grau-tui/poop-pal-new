@@ -165,7 +165,8 @@ static func layout_dots(dots: Array, count := -1, frame_dx := 0.0) -> void:
 	var rows: Array = [[n, mid, right]]
 	if n > DOTS_PER_ROW:
 		var top := int(ceil(n / 2.0))
-		rows = [[top, mid - ROW_OFFSET, right - DOT_STEP / 2.0], [n - top, mid + ROW_OFFSET, right]]
+		# (a shorter bottom row one place further left, so it sits centred under the top one: the user)
+		rows = [[top, mid - ROW_OFFSET, right - DOT_STEP / 2.0], [n - top, mid + ROW_OFFSET, right - DOT_STEP * (top - (n - top))]]
 	var k := 0
 	for row in rows:
 		var m: int = row[0]

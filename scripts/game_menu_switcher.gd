@@ -42,8 +42,8 @@ const EXTRA_PAGES := 4
 ## Break, Germ Zap, Flipper Belly, the classic Pipe Dream). Only the display order: each game keeps
 ## its own number (GameScreen.game_scenes, GameData, Collection.REWARDS).
 const ORDER := [2, 1, 0, 9, 8, 6, 11, 3, 4, 5, 7, 10]
-## The cards in this menu: ORDER, or only the six launch games in BOOT + PROGRESSION (the real
-## game: the four on hold aren't there)
+## The cards in this menu: only the seven launch games (the ones on hold are dropped in every start;
+## their cards and code stay, ORDER keeps their place)
 var order: Array = ORDER
 const LOCKED_LOGO := "res://textures/menus/mistery.png"
 var _locked_bg: Texture2D
@@ -69,8 +69,7 @@ func _ready():
 	legend.set_lines([["hold", "play"]])
 	$Menu/ForwardHint.position.x = MenuLegend.forward_center_x()    # (tapping does nothing here: forward flips)
 	_add_extra_pages()
-	if SaveSlot.real():
-		_drop_cards_on_hold()
+	_drop_cards_on_hold()          # (every start now, testing ones too: the user, 2026-10-26)
 	_build_coin_tag()
 	show_page(current_page)
 	LuckyPinch.changed.connect(func(_on): show_page(current_page))
@@ -96,7 +95,7 @@ func _add_extra_pages() -> void:
 		dots.append(dot)
 	MenuLegend.layout_dots(dots)                       # (two staggered rows when there are many)
 
-## The real game: only the launch games' cards (and their dots)
+## Only the launch games' cards (and their dots)
 func _drop_cards_on_hold() -> void:
 	var keep := []
 	for i in range(pages.size() - 1, -1, -1):
