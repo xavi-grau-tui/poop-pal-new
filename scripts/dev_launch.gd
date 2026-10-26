@@ -11,8 +11,9 @@ class_name DevLaunch
 ##                      food and drink level, special foods in the pantry, every dress-up item, gut
 ##                      decor, background, sticker and case (to put on: flip the device), the whole
 ##                      Shop to look through and 999 coins (no meal / drink wait either)
-##   SHRINE             ALL UNLOCKED pet screen using the existing migration shrine art
-##   NEW SHRINE         same dev setup using the selected forest hokora frame
+##   SHRINE             ALL UNLOCKED pet screen in the spirit shrine: the chosen forest hokora frame
+##                      and all the shrine art (the first hokora model stays in the code, unused here;
+##                      tools/qa shrine=1 still shows it)
 ##   BOOT + PROGRESSION the real game as a player gets it, from the very start, KEPT between
 ##                      launches (its own save, user://progress/, see SaveSlot): every testing switch
 ##                      off, only the six launch games, the unboxing only the first time, the meal
@@ -54,10 +55,9 @@ func _ready() -> void:
 	var last := _last_choice()
 	_button("FULL BOOT", "unboxing + boot", 420, last == "full", _full)
 	_button("ALL UNLOCKED", "every game, level, item, sticker and case; a random pal", 660, last in ["games", "case", "rich"], _games)
-	_button("SHRINE", "existing shrine model", 900, last == "shrine", _shrine)
-	_button("NEW SHRINE", "chosen forest hokora frame; smaller screen fit", 1140, last == "new_shrine", _new_shrine)
-	_button("BOOT + PROGRESSION", _progress_summary(), 1380, last == "progress", _progress)
-	_start_over_button(1640)
+	_button("SHRINE", "the forest hokora and all the new shrine art", 900, last in ["shrine", "new_shrine"], _new_shrine)
+	_button("BOOT + PROGRESSION", _progress_summary(), 1140, last == "progress", _progress)
+	_start_over_button(1400)
 	_rain_toggle(font)
 
 ## (the shrine's rain, forced for testing: off / light / heavy, a tap cycles it)
@@ -189,9 +189,6 @@ func _games(choice := "games") -> void:
 		PetState.meals = []
 		PetState.save_data()
 	get_tree().change_scene_to_file(MAIN_SCENE)
-
-func _shrine() -> void:
-	_games("shrine")
 
 func _new_shrine() -> void:
 	_games("new_shrine")
