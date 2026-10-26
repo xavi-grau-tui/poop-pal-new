@@ -166,14 +166,15 @@ func _new_shrine_menu_icon(source: Texture2D, category: String) -> Texture2D:
 ## px per art px (the squares are ~124 px: a drawing up to 30 art px fits, scaled by a whole number,
 ## no stretching, so no pixel comes out wider than another), centred on the square on whole pixels
 const ICON_PX := 4.0
-## the squares' centres (Main UI px) by the card's icon height in the scene: the scene's icons sat
-## a few px off their squares (measured on screen, the user: some looked cut on one side)
-const SQUARE_CENTRE := { -1059: Vector2(800.6, -1063.7), -865: Vector2(799.8, -861.7), -657: Vector2(799.9, -661.7) }
+## where the icon's square is in its card, from the card's frame (measured on screen: the scene's
+## icons sat a few px off their squares, and the drinks' first card is placed differently - the user)
+const SQUARE_IN_FRAME := Vector2(-215.5, -4.84)
 var _used_rects := {}
 func _set_icon(option_node: Node, tex: Texture2D) -> void:
 	var icon: Sprite2D = option_node.get_node("Icon")
 	if not icon.has_meta("centre"):
-		icon.set_meta("centre", SQUARE_CENTRE.get(int(roundf(icon.position.y)), icon.position))
+		var frame := option_node.get_node_or_null("Frame") as Node2D
+		icon.set_meta("centre", frame.position + SQUARE_IN_FRAME if frame else icon.position)
 	icon.texture = tex
 	icon.scale = Vector2.ONE * ICON_PX
 	icon.centered = false
