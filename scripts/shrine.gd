@@ -71,8 +71,9 @@ var _stream_pts := PackedVector2Array()
 var _stream_col := Color.WHITE
 var window: Node2D                    # the inside and its walls, seen only through the front's window
 ## The bell rope (suzu-no-o): the bell on the front, its red and white beads a chain hanging from it
-## (verlet), pulled by the real gravity (roll the phone: it swings to hang straight down), a breeze,
-## the front's own movement and every tilt of the phone (it swings); ring() kicks it
+## (verlet), pulled straight down the screen (the user, 2026-10-26: gravity always pushes them down;
+## steering it with the tilt pulled them sideways as the phone came back), a breeze, the front's own
+## movement and every tilt of the phone (it swings); ring() kicks it
 const ROPE_AT := Vector2(14, 30)      # left eave hanger on the chosen front frame (grid)
 const NEW_ROPE_AT := Vector2(11, 30)  # far left eave, beyond the pair of lanterns
 const ROPE_N := 7                     # beads (the user: modular, like the painted one; the last white one off)
@@ -86,7 +87,6 @@ const NEW_ROPE_KICK := 2.8            # the heavier bead chain reacts less to a 
 const NEW_ROPE_G := 900.0             # and takes longer to swing into a new resting angle
 const NEW_ROPE_BREEZE_SCALE := 0.28   # a much gentler ambient sway than the regular ribbon
 const NEW_ROPE_DAMP := 0.965          # settle the heavier beads without prolonged oscillation
-const NEW_ROPE_TILT_X := 0.32         # keep the chain closer to vertical as the phone tilts
 var rope: Array[Sprite2D] = []
 var rope_spine: Line2D
 var rope_count := ROPE_N
@@ -1120,12 +1120,9 @@ func _rope_step(dt: float) -> void:
 	var rope_at := NEW_ROPE_AT if DevLaunch.new_shrine else ROPE_AT
 	var bell_anchor := _g(rope_at.x, rope_at.y) + front.position
 	var anchor := bell_anchor + (Vector2(0, NEW_BELL_HANG * _gut_scale.y) if DevLaunch.new_shrine else Vector2.ZERO)
-	# Gravity follows the same two-axis phone tilt as the shrine's depth. Keep a strong screen-down
-	# component so the ornaments still hang naturally when the phone is held upright.
-	var down := Vector2(clampf(tilt.x * 0.75, -0.75, 0.75), clampf(1.0 - tilt.y * 0.65, 0.3, 1.7)).normalized()
+	# (gravity straight down the screen, whatever the tilt: the tilt only swings them, through the kicks)
+	var down := Vector2.DOWN
 	var rope_down := down
-	if DevLaunch.new_shrine:
-		rope_down = Vector2(clampf(tilt.x * NEW_ROPE_TILT_X, -NEW_ROPE_TILT_X, NEW_ROPE_TILT_X), clampf(1.0 - tilt.y * 0.3, 0.65, 1.35)).normalized()
 	var breeze := Vector2(sin(_t * 1.3) * 60.0 + sin(_t * 0.53) * 40.0, 0)
 	var rope_breeze := breeze * NEW_ROPE_BREEZE_SCALE if DevLaunch.new_shrine else breeze
 	var rope_gravity := NEW_ROPE_G if DevLaunch.new_shrine else ROPE_G
