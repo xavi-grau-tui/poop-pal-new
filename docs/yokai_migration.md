@@ -188,3 +188,8 @@ fully in the shrine (the user, 2026-10-20).
 - **Keep the gut** (the user, 2026-10-20: the spirit shrine is the official direction, but the gut
   stays, out of affection): don't delete its code, art or sounds; every non-SHRINE start keeps it.
   Later it could come back as a hidden or unlockable "classic" skin.
+
+
+## KamiTomo logo footprint (2026-10-26)
+
+- Kept the approved Kami (`KAMI`) lettering and 神 glyph. The Latin row is 64 px high; moved the 友 glyph down 4 px to restore the original 6 px gap below the letters. Restored the original HaraTomo TOMO word and 友 glyph at their exact source-image coordinates, so the suffix and the full 526×128 footprint match the old logo. The scene uses the original logo transform. Shifted only the KAMI word 8 px right to make the i–T gap match the other letter gaps; the installed preview was approved by the user.
