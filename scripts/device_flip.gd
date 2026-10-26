@@ -52,7 +52,7 @@ var settled := true                 # the settle buzz has fired for this turn
 
 func _ready() -> void:
 	front = get_parent().get_node("Main UI")
-	# double-tap whichever logo is showing (HaraTomo's Logo2, or the original Poop Pal one)
+	# double-tap whichever logo is showing (the KamiTomo logo on Logo2, or the original Poop Pal one)
 	logo = front.get_node("Console/LogoMain")
 	for n in ["Console/Logo2", "Console/LogoMain"]:
 		var l := front.get_node_or_null(n) as Sprite2D

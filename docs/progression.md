@@ -1,4 +1,4 @@
-# HaraTomo: the skeleton (progression foundation)
+# KamiTomo: the skeleton (progression foundation)
 
 DECIDED with the user 2026-10-16 (the open points are in section 8). The one place that says how the whole game fits together: the
 games and their difficulty, the pals and the meal clock, drinks and boosts, special foods, coins,

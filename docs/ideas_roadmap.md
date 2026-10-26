@@ -1,4 +1,4 @@
-# HaraTomo: roadmap and design notes
+# KamiTomo: roadmap and design notes
 
 Living document (started 2026-10-01, last big update 2026-10-11). It holds the aim, the decisions
 made, and what's still missing, so any new conversation can pick the work up from here.
@@ -444,7 +444,7 @@ Big (L)
   tools/design/console_buttons_new.py. Tummy Tunes' lanes follow the buttons left to right.
 - To weigh: classic handhelds put the main action button on the right.
 
-## What makes HaraTomo unique (the pillars; check new ideas against them)
+## What makes KamiTomo unique (the pillars; check new ideas against them)
 1. A physical toy in your phone (THE main hook): a handheld you unbox (seal, lid, films to peel,
    the battery strip), switch on, hold, flip over. Much of the dopamine comes purely from these
    tactile toy moments; keep adding them (button clicks, the back sticker, the booklet...).
@@ -480,7 +480,7 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
     experience and the gut-evolution idea are what set it apart.
 - Aim at Asia first (Japan above all, then Korea, China/Taiwan): poop-as-cute is mainstream there
   (the 💩 emoji, Unko Sensei, Dr. Slump's "unchi"). Plan for localization early: Japanese, Korean,
-  Chinese. The 便友 already on the console fits.
+  Chinese. The 神友 already on the console fits.
 - Know who it's for: kids, casual players, fans of quirky cute. Some people will bounce off the theme, and that's fine.
 
 ## The pals (the heart of it)
@@ -574,7 +574,7 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   explained at the moment it matters. "Do this next" signal everywhere: the button blinks
   bip-bip … bip-bip with a short, sharp buzz in sync.
 - DONE (scripts/onboarding.gd, only while no pal has ever existed): after the boot, "Welcome to
-  HaraTomo! Tap [food button] to eat something and meet your new pal." (the food button and the
+  KamiTomo! Tap [food button] to eat something and meet your new pal." (the food button and the
   EAT sign blink with the buzz; only the food button works); after the hatch, "Say hi to <name>!
   What you eat decides how it grows."
 - Boot (2026-10-09): no welcome text any more. After the Kobaya Tech logo the screen comes on
@@ -593,7 +593,7 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   3. Right after the hatch card, the games button blinks: "Tap [games button] to play games and
      earn ★ stars. Stars unlock new things!"
   4. First time in a game: its how-to card / tutorial (exists).
-  5. First star → the first sticker: "Your first sticker! Flip your HaraTomo over to stick it on."
+  5. First star → the first sticker: "Your first sticker! Flip your KamiTomo over to stick it on."
      (also teaches the device flip).
 - GUIDE CARDS for Progression v2 (PROPOSED 2026-10-10, the user: "after playing a game and exiting,
   the main screen should tell you: looks like you earned some coins, now you can X, or X..."). Same
@@ -630,7 +630,7 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
   6. Each new thing explained only when it opens: the first drink ("Drinks give your pal a boost in
      the next game"), the shop at its unlock ("The shop is open! Trade your [token] for treats and
      stickers", with tokens already earned), each new game, each new food type.
-- Teaching the turn: double-tap the HaraTomo logo (IDEAS 2026-10-14, not built). The peeled film
+- Teaching the turn: double-tap the KamiTomo logo (IDEAS 2026-10-14, not built). The peeled film
   says it once, at unboxing, when nobody needs it yet, and nothing on the logo hints at it. Teach the
   gesture itself (two taps), in-world, no text:
   - The logo's double pulse: until the device has been turned once, every so often the logo does
@@ -638,7 +638,7 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
     the gesture.
   - When the back first matters (the first case bought, or anything else for the back): the device
     tilts ~15° towards its back by itself and settles, then the logo does its tap-tap. The Shop's
-    case card can add, as packaging copy: "Turn your HaraTomo over to put it on."
+    case card can add, as packaging copy: "Turn your KamiTomo over to put it on."
   - One press on the logo: it answers with the second pulse ("once more").
   - Also weighed: a sideways swipe on the frame around the screen turns it too (like the swipe on
     the back), a natural first try with an object; the double-tap stays as the trick.
@@ -750,7 +750,7 @@ Shop: stickers and cases for the device, and the special foods by stars (user, 2
   after enough stars or the 4th game).
 - The "store" is pretend: buying a sticker or a case gives a QR coupon (the joke of a real
   shop voucher, inside the game). You "use" the coupon and get the item: it customises the
-  HaraTomo device itself, not the pal.
+  KamiTomo device itself, not the pal.
 - Where you use them: flip the device over (the existing DeviceFlip) -> the back is a little
   workshop: drag stickers onto the back (and over the case), peel them off again, and swap the
   case (the device's shell / colour; the realistic back already kept is one candidate case).
@@ -984,7 +984,7 @@ then pages); the section's name is the page title. Coins on the frame's top band
    2026-10-13; docs/mockups/case_melon_soda.png, the favourite: "this might be the way to go"):
    the screws, the device's dark edges and the back sticker are hidden under it; the case has
    its own darker rim, and the device's tan sides become one even darker-mint stripe top to
-   bottom; the buttons and the screen keep their own colours; HaraTomo (front) and Kobaya Tech
+   bottom; the buttons and the screen keep their own colours; KamiTomo (front) and Kobaya Tech
    (back, nothing else carved there) are CARVED into it, in
    the case's own colour (pressed in: a shade on the top-left inner edge, light on the bottom
    right). The menu buttons' (top three) borders are part of the case (user, 2026-10-13): raised
@@ -1575,9 +1575,9 @@ Style rules
 - It explains what's IN the game at release only; nothing "coming soon".
 
 Chapters (one page each unless noted)
-0. Cover + "Thank you for adopting a HaraTomo pal!" (a welcome and a playful safety joke).
+0. Cover + "Thank you for adopting a KamiTomo pal!" (a welcome and a playful safety joke).
 1. The general idea: raise a pal, feed it to make it evolve, play toy games, collect them all.
-2. Your HaraTomo device: a labelled drawing of the screen, the LCD score, the menu buttons (food,
+2. Your KamiTomo device: a labelled drawing of the screen, the LCD score, the menu buttons (food,
    games, collection, settings), MAIN (orange), FORWARD, the speaker / mute button, the back sticker.
    How to hold it for tilt games (lay it flat).
 3. Your pal: hatching with the first meal, poking it, flushing (hold MAIN), moods.
@@ -1652,7 +1652,7 @@ worlds, fewer drink tiers; the rest arrives in updates.
   1. Now, free: search the official databases for HaraTomo / ハラトモ / 腹友 / 便友 in classes 9
      (apps), 41 (entertainment, online games) and maybe 28 (toys): J-PlatPat (Japan), WIPO Global
      Brand Database, TMview (EU + many national offices), USPTO. A quick web search (2026-10-08)
-     found no app, game, brand or trademark called HaraTomo.
+     found no app, game, brand or trademark called HaraTomo. The name is now **KamiTomo 神友 / カミトモ** (2026-10-26): run the same search for it.
   2. Just before the game goes public (trailer, open TestFlight, store page): file ONE cheap home
      trademark (e.g. Spain's OEPM, ~low hundreds of euros for one class).
   3. Within 6 months of that filing, if the reaction is good: extend through the Madrid system

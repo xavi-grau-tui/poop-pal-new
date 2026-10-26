@@ -3,7 +3,7 @@
 # windowed with the given args, restores the save. Usage: tools/qa/shoot.sh game=1 levels=1,10 out=/tmp/x
 # (HEADLESS=1 runs it without a window: no pictures, but every script error shows up; LINES_OUT=n shows
 # n lines of its output instead of 40)
-UD="$HOME/Library/Application Support/Godot/app_userdata/HaraTomo"
+UD="$HOME/Library/Application Support/Godot/app_userdata/KamiTomo"
 BK="$(mktemp -d)"
 cp "${UD:?}"/*.json "${BK:?}"/ 2>/dev/null
 if [[ -n "$HEADLESS" ]]; then MODE=(--headless); else MODE=(--windowed --resolution 540x960); fi

@@ -51,7 +51,7 @@ print('ok')
 # ---------------------------------------------------------------- the game's layers (2026-10-13)
 # The front case is drawn in two layers so the buttons always sit on it, whatever their state:
 #   base: everything the case covers, and solid case under every button (drawn under them)
-#   top:  the carved HaraTomo and the screws' spots (drawn over the logo and the screws)
+#   top:  the carved logo (KamiTomo since 2026-10-26) and the screws' spots (drawn over the logo and the screws)
 # and the menu buttons get Melon Soda images of their own (their frame in the case's colours).
 from scipy.ndimage import binary_dilation, label as lab2
 base = out.copy()

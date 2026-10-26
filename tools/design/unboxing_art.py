@@ -65,7 +65,7 @@ def screen_print(w, h):
     sw = (SCREEN[2] - SCREEN[0]) // P
     sh = (SCREEN[3] - SCREEN[1]) // P
     cx = ox + sw // 2
-    t.text((cx, oy + 26), "WELCOME TO HARATOMO!", font=big, fill=INK + (255,), anchor="mm")
+    t.text((cx, oy + 26), "WELCOME TO KAMITOMO!", font=big, fill=INK + (255,), anchor="mm")
     title_bottom = txt.getbbox()[3]
     # the instructions are drawn on their own layer, then centred between the title and the logo
     block = Image.new("RGBA", (lw, lh), (0, 0, 0, 0))
@@ -76,7 +76,7 @@ def screen_print(w, h):
     y += 30
     steps = [
         ("1", "Peel off this film", "from the corner tab"),
-        ("2", "Double-tap the logo", "to turn your HaraTomo over"),
+        ("2", "Double-tap the logo", "to turn your KamiTomo over"),
         ("3", "Pull the battery tab", "out of the back to power on"),
     ]
     x0 = ox + 30

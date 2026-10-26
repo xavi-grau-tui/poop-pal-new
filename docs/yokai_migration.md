@@ -8,7 +8,7 @@ well. Main keeps the gut until the user decides; everything here happens on this
 
 | Now | Spirit version |
 | --- | --- |
-| HaraTomo 便友 | a new 4-letter word + Tomo (favourite so far: **KamiTomo 神友 / カミトモ**; check stores and trademarks) |
+| HaraTomo 便友 | **KamiTomo 神友 / カミトモ** (chosen; renamed everywhere 2026-10-26: logo, box, cases, back sticker, texts, app name; still to check stores and trademarks) |
 | the gut around the pal | a small weathered wooden hokora (to be redrawn; the try-out art is a reference only) |
 | food rains into the gut, it blinks | the whole food drops onto the sanbo (offering stand) and the spirit eats it in three bites, then blinks as before (BUILT: scripts/shrine.gd, offer_food) |
 | drink waterfall | the drink's own picture pours into a small cup on the tray; the spirit draws its essence out in its type's colour (BUILT: offer_drink) |

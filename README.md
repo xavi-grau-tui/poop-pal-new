@@ -1,6 +1,6 @@
-# HaraTomo 便友
+# KamiTomo 神友
 
-**HaraTomo** is a pixel-art virtual pet for the iPhone, played on a little handheld console drawn
+**KamiTomo** is a pixel-art virtual pet for the iPhone, played on a little handheld console drawn
 on screen. You raise a pal: what you feed it decides who it grows into, and its drinks give it the
 boosts that open the secrets of the games you play together.
 

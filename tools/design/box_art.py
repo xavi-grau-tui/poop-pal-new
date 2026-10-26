@@ -1,4 +1,4 @@
-"""The HaraTomo retail box (first launch, before the films): MOCKUPS for now.
+"""The KamiTomo retail box (first launch, before the films): MOCKUPS for now.
 
     <python with Pillow + numpy> tools/design/box_art.py [mockup_dir]
 
@@ -51,7 +51,7 @@ DEV_X, DEV_Y = (W - DEV_W) // 2, 500
 HOLE_M = 34                                          # window margin around the device
 HOLE = (DEV_X - HOLE_M, DEV_Y - HOLE_M, DEV_X + DEV_W + HOLE_M, DEV_Y + DEV_H + HOLE_M)
 HOLE_R = 28
-LOGO_Y = 190                                         # the HaraTomo logo's top (full-size px; lower since the tagline went)
+LOGO_Y = 190                                         # the KamiTomo logo's top (full-size px; lower since the tagline went)
 TAG_Y = (HOLE[1] - 66) // P                          # (where the Japanese tagline was, above the window: removed)
 
 
@@ -109,9 +109,9 @@ def starburst(d, cx, cy, r1, r2, n, fill, outline):
 
 
 def print_logo():
-    """logo2.png for printing: the cream inside the letters' holes and the kanji is the
+    """The console logo (logo_kamitomo.png) for printing: the cream inside the letters' holes and the kanji is the
     device's beige, so on the box it is left unprinted (the box shows through)."""
-    a = np.array(Image.open(ROOT / "textures" / "console" / "logo2.png").convert("RGBA"))
+    a = np.array(Image.open(ROOT / "textures" / "console" / "logo_kamitomo.png").convert("RGBA"))
     h, w = a.shape[:2]
     op = a[..., 3] > 0
     light = op & (a[..., 0] >= 100)
@@ -256,7 +256,7 @@ def booklet_cover(w, h):
     art.paste(INK + (255,), (0, bh - 30), t.point(lambda v: 255 if v > 110 else 0))
     text(d, (bw // 2, bh - 8), "Kobaya Tech", 8, SKY_DK, font=CHICAGO)
     cov = up(art).resize((w, h), Image.NEAREST)
-    logo = Image.open(ROOT / "textures" / "console" / "logo2.png").convert("RGBA")
+    logo = Image.open(ROOT / "textures" / "console" / "logo_kamitomo.png").convert("RGBA")
     k = (w - 60) / logo.width
     logo = logo.resize((round(logo.width * k), round(logo.height * k * 1.1)), Image.NEAREST)
     cov.alpha_composite(logo, (w // 2 - logo.width // 2, 96))

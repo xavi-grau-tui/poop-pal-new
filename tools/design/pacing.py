@@ -1,4 +1,4 @@
-"""HaraTomo pacing model v3 (the skeleton: docs/progression.md): WHEN does a player get WHAT?
+"""KamiTomo pacing model v3 (the skeleton: docs/progression.md): WHEN does a player get WHAT?
 
 Nothing is left to chance: a fixed player model (no dice: averages, so stars and coins come in
 fractions), the real prices, the real evolution tree and the skeleton's rules (game order, the

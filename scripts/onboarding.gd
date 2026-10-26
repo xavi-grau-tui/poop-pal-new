@@ -2,7 +2,7 @@ extends Node2D
 class_name Onboarding
 ## The guided start, on the main screen, for a player who has never had a pal (the very first
 ## launch; with the testing switches on, every launch). Added by BootSequence when it finishes.
-##   1. A card: "Welcome to HaraTomo! Press [food button] to eat something and meet your new pal."
+##   1. A card: "Welcome to KamiTomo! Press [food button] to eat something and meet your new pal."
 ##      The food button and the EAT sign blink bip-bip … bip-bip, with a short sharp buzz on each
 ##      bip, and only the food button works (MenuButtons checks Onboarding.active).
 ##   2. Once the first meal has hatched the pal: "Say hi to <name>! It's a <Type [icon]> pal. What you eat decides how it
@@ -83,8 +83,8 @@ func _in_shrine() -> bool:
 
 func _welcome_text() -> String:
 	if _in_shrine():
-		return "Welcome to HaraTomo! Press [img=66x81]%s[/img] to offer some food to the shrine and meet your new spirit friend." % FOOD_ICON
-	return "Welcome to HaraTomo! Press [img=66x81]%s[/img] to eat something and meet your new pal." % FOOD_ICON
+		return "Welcome to KamiTomo! Press [img=66x81]%s[/img] to offer some food to the shrine and meet your new spirit friend." % FOOD_ICON
+	return "Welcome to KamiTomo! Press [img=66x81]%s[/img] to eat something and meet your new pal." % FOOD_ICON
 
 func _process(_delta: float) -> void:
 	if hatched or not food_button:

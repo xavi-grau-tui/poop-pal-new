@@ -1,7 +1,7 @@
 # Art generators
 
 Python scripts that produced the generated art (paint large with soft shading, then
-downscale, to match the existing HaraTomo assets).
+downscale, to match the existing KamiTomo assets).
 
 Needs Python 3 with `pillow` and `numpy`:
 

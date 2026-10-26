@@ -214,9 +214,9 @@ def sticker():
     big = font("Arial Bold.ttf", 34)
     mid = font("Arial Bold.ttf", 25)
     t(sw - 32, 34, "MODEL NO. KBT-0721", big, anchor="ra")
-    t(sw - 32, 84, "HARATOMO", mid, anchor="ra")
-    pp_w = d.textlength("HARATOMO", font=mid) / K
-    t(sw - 44 - pp_w, 81, "便友", cjk_font(26), anchor="ra")
+    t(sw - 32, 84, "KAMITOMO", mid, anchor="ra")
+    pp_w = d.textlength("KAMITOMO", font=mid) / K
+    t(sw - 44 - pp_w, 81, "神友", cjk_font(26), anchor="ra")
 
     t(32, 96, "© 1996-1997 Kobaya Tech", mid)
     t(32, 128, "RATING: DC3V 0.3W", mid)
