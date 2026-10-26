@@ -39,6 +39,30 @@ well. Main keeps the gut until the user decides; everything here happens on this
   - **Sour**: water and rain (teru teru bozu, amabie, ningyo, umibozu; the frog king)
   - **Sweet**: moon and night (the moon rabbit, baku, zashiki-warashi, Kaguya, Tsukuyomi)
 
+### Flavours and realms (agreed 2026-10-26, for the creature design phase)
+
+Foods show a **flavour**; pals show a **realm** (never "a greasy pal"). Offerings shape which kind of
+spirit appears: feed a flavour and the pal grows towards its realm. The link is a game rule, not
+real-world logic, on purpose (the user: original rather than pragmatic; it's part of the discovery).
+In English the five flavours all start with S.
+
+| Food flavour (food tags) | Spirit realm (the pal's type) | Spirits in it |
+| --- | --- | --- |
+| Sprouty (was Green) | Mountain | kodama, tengu, mushroom spirits |
+| Savory (was Greasy) | Fox | kitsune, tanuki, festival spirits |
+| Spicy | Fire | oni, lantern ghosts, raiju, the phoenix |
+| Sour | River, or Rain (still open) | kappa, frogs, umibozu, kasa-obake (the umbrella spirit), teru teru bozu |
+| Sweet | Moon | the moon rabbit, baku, Kaguya |
+
+- The realms are our own groupings, though each matches real yokai groups (by habitat or kind:
+  mountain, shapeshifters, fire and thunder, water and rain, night and moon). They are not an
+  official folklore list.
+- The real Five Elements (Gogyō) link flavours to elements differently (sour = wood, sweet = earth,
+  salty = water, pungent = metal, bitter = fire). Not used as the rule; it can appear as flavour
+  text (Tomopedia lore).
+- Not applied in the game yet: the code keeps its internal family ids (green, greasy, ...). When done,
+  only the shown words and icons change (food tags: the flavour; a pal's type: its realm).
+
 ### Look rules (the brief)
 
 **Current visual reference (user-selected, 2026-10-23):**
