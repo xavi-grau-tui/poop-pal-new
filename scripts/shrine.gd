@@ -171,7 +171,8 @@ func _ready() -> void:
 	walls.draw.connect(_draw_walls)
 	window.add_child(walls)
 	var slab_side: Texture2D = load(asset_dir + "slab_side.png")
-	for j in SLAB_BACK_COPIES:
+	# (NEW SHRINE: the slab's 3D only out in front, from the frame's face; none behind it - the user)
+	for j in (0 if DevLaunch.new_shrine else SLAB_BACK_COPIES):
 		slab_back.append(_layer(slab_side, -3))
 	# the boxes (the stand and the wood, the stone slab on the stand, the wood on the slab) as one 3D
 	# scene: all their copies drawn back to front by depth, so the nearer piece covers the further
@@ -206,7 +207,7 @@ func _ready() -> void:
 					"side": side_index, "scale_y": float(spec[3])})
 				by_depth.append([spec[1], -1, plane])
 	var slab_back_depth := SLAB_BACK
-	for j in SLAB_BACK_COPIES:
+	for j in slab_back.size():
 		by_depth.append([lerpf(-slab_back_depth, FRONT, float(j) / SLAB_BACK_COPIES), 1, slab_back[j]])
 	by_depth.sort_custom(func(a, b): return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
 	for e in by_depth:
@@ -355,7 +356,7 @@ func _process(delta: float) -> void:
 		(land.material as ShaderMaterial).set_shader_parameter("tilt", tilt)
 	front.position = (tilt * FRONT).round()
 	slab.position = (tilt * SLAB).round() + _platform_offset()
-	for j in SLAB_BACK_COPIES:
+	for j in slab_back.size():
 		var slab_back_depth := SLAB_BACK
 		slab_back[j].position = (-tilt * slab_back_depth).lerp(tilt * FRONT, float(j) / SLAB_BACK_COPIES).round() + _platform_offset()
 	for j in SLAB_FRONT_COPIES:

@@ -261,6 +261,21 @@ def slab_layer():
     return L.finish()
 
 
+# NEW SHRINE's slab (the user, 2026-10-26: a bit shorter at its sides, in the forest frame's own
+# base stone and outline; only slab.png and slab_side.png, into textures/pet/shrine_new/:
+#   SHRINE_SLAB=new python3 tools/art/shrine.py)
+NEW_SLAB_X = (24, 87)
+NEW_STONE = [(240, 202, 164), (196, 150, 122), (252, 233, 192)]
+NEW_STONE_LINE = (36, 2, 18)
+NEW_SLAB_CORNERS = [(NEW_SLAB_X[0] - 0.5, 82.5), (NEW_SLAB_X[1], 82.5), (NEW_SLAB_X[0] - 0.5, 90), (NEW_SLAB_X[1], 90)]
+
+
+def slab_layer_new():
+    L = Layer()
+    L.add(rrect(NEW_SLAB_X[0], 83, NEW_SLAB_X[1], 90, 1), NEW_STONE, 3.5, outline=NEW_STONE_LINE, grain=0.05, cut_corners=True)
+    return L.finish()
+
+
 def sanbo_layers():
     """The offering stand (sanbo) on the slab's top, in front of the wood, where offerings land: two
     boxes for the 3D tilt (scripts/shrine.gd), its base (a cut-out in its face) and its tray, a
@@ -408,7 +423,7 @@ TRAY_CORNERS = _mirror([(40, 75), (40, 79.5)])             # the sanbo's tray an
 BASE_CORNERS = _mirror([(44.5, 77.5), (44, 84.5)])
 
 
-def side_of(front, outlined=False, light=0.78, seams=(), corners=()):
+def side_of(front, outlined=False, light=0.78, seams=(), corners=(), corner_col=CORNER_COL):
     """The front's silhouette in side colours, for the box's sides (copies stacked behind the front):
     its colours smoothed (no outlines or highlights: a stack of them must read as one surface),
     greyed and a little darker; outlined = the backmost copy's, with a contour; seams = grid rows
@@ -442,7 +457,7 @@ def side_of(front, outlined=False, light=0.78, seams=(), corners=()):
         o = np.asarray(im).copy()
         cw, chh = a.shape[1] / G, a.shape[0] / G
         for gx, gy in corners:
-            o[int(round(gy * chh)):int(round((gy + CORNER_DOT) * chh)), int(round(gx * cw)):int(round((gx + CORNER_DOT) * cw))] = (*CORNER_COL, 255)
+            o[int(round(gy * chh)):int(round((gy + CORNER_DOT) * chh)), int(round(gx * cw)):int(round((gx + CORNER_DOT) * cw))] = (*corner_col, 255)
         im = Image.fromarray(o, 'RGBA')
     if outlined:
         edge = al & ~ndimage.binary_erosion(al, iterations=9)
@@ -619,6 +634,12 @@ def slab_layer_bold():
 
 if __name__ == '__main__':
     here = os.path.dirname(os.path.abspath(__file__))
+    if os.environ.get('SHRINE_SLAB') == 'new':
+        out = os.path.join(here, '..', '..', 'textures', 'pet', 'shrine_new')
+        slab = slab_layer_new()
+        slab.save(os.path.join(out, 'slab.png'))
+        side_of(slab, light=0.97, corners=NEW_SLAB_CORNERS, corner_col=NEW_STONE_LINE).save(os.path.join(out, 'slab_side.png'))
+        sys.exit()
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(here, '..', '..', 'textures', 'pet', 'shrine')
     os.makedirs(out, exist_ok=True)
     back_layer().save(os.path.join(out, 'inside.png')) if SHAPE != 'bold' else back_layer_bold().save(os.path.join(out, 'inside.png'))
