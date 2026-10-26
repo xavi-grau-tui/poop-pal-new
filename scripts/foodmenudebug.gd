@@ -162,11 +162,63 @@ func _new_shrine_menu_icon(source: Texture2D, category: String) -> Texture2D:
 			return texture
 	return source
 
+## Every icon at one exact pixel size in its square (the user: crisp, consistent, centred): 4 x 4 screen
+## px per art px (the squares are ~124 px: a drawing up to 30 art px fits, scaled by a whole number,
+## no stretching, so no pixel comes out wider than another), centred on the square on whole pixels
+const ICON_PX := 4.0
+## the squares' centres (Main UI px) by the card's icon height in the scene: the scene's icons sat
+## a few px off their squares (measured on screen, the user: some looked cut on one side)
+const SQUARE_CENTRE := { -1059: Vector2(800.6, -1063.7), -865: Vector2(799.8, -861.7), -657: Vector2(799.9, -661.7) }
+var _used_rects := {}
+func _set_icon(option_node: Node, tex: Texture2D) -> void:
+	var icon: Sprite2D = option_node.get_node("Icon")
+	if not icon.has_meta("centre"):
+		icon.set_meta("centre", SQUARE_CENTRE.get(int(roundf(icon.position.y)), icon.position))
+	icon.texture = tex
+	icon.scale = Vector2.ONE * ICON_PX
+	icon.centered = false
+	if tex == null:
+		return
+	var key := tex.resource_path if tex.resource_path != "" else str(tex.get_instance_id())
+	if not _used_rects.has(key):
+		_used_rects[key] = tex.get_image().get_used_rect()
+	var r: Rect2i = _used_rects[key]
+	# the drawing's own box centred on the square, its top-left corner on a whole screen pixel
+	var centre: Vector2 = icon.get_meta("centre")
+	icon.offset = Vector2.ZERO
+	icon.position = (centre - (Vector2(r.position) + Vector2(r.size) / 2.0) * ICON_PX).round()
+
+## A card's name in its room (the user: Hot and Sour Soup ran past the label): one line if it fits,
+## else two lines split at a space, and smaller only if a line still doesn't fit
+const NAME_ROOM := 290.0
+const NAME_SIZE := 55
+func _set_name(option_node: Node, text: String) -> void:
+	var l: Label = option_node.get_node("Name")
+	var f: Font = l.get_theme_font("font")
+	var lines := [text]
+	if f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, NAME_SIZE).x > NAME_ROOM and " " in text:
+		var mid := text.length() / 2.0
+		var at := -1
+		for i in text.length():
+			if text[i] == " " and (at < 0 or absf(i - mid) < absf(at - mid)):
+				at = i
+		lines = [text.substr(0, at), text.substr(at + 1)]
+	var size := NAME_SIZE
+	while size > 30:
+		var widest := 0.0
+		for line in lines:
+			widest = maxf(widest, f.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x)
+		if widest <= NAME_ROOM:
+			break
+		size -= 3
+	l.add_theme_font_size_override("font_size", size)
+	l.text = "\n".join(lines)
+
 func _fill_special(option_node: Node, food_data: Dictionary) -> void:
 	var locked: bool = food_data.get("locked", false)
-	option_node.get_node("Icon").texture = _new_shrine_menu_icon(food_data.icon, "food")
+	_set_icon(option_node, _new_shrine_menu_icon(food_data.icon, "food"))
 	option_node.get_node("Icon").modulate = Color.WHITE
-	option_node.get_node("Name").text = food_data.name
+	_set_name(option_node, food_data.name)
 	_set_type_tag(option_node, food_data.family)
 	var n := Shop.pantry_count(food_data.name)
 	if not locked and n > 1:
@@ -184,10 +236,10 @@ const LOCKED_FOOD_NAME := { "baby": "Sho food", "kid": "Chu food", "adult": "Dai
 
 func _fill_food(option_node: Node, food_data: Dictionary) -> void:
 	var locked: bool = food_data.get("locked", false)
-	option_node.get_node("Icon").texture = _new_shrine_menu_icon(food_data.icon, "food")
+	_set_icon(option_node, _new_shrine_menu_icon(food_data.icon, "food"))
 	# a locked food: its silhouette (like a pal not found yet), a padlock, "Kid food"
 	option_node.get_node("Icon").modulate = Color(0.1, 0.06, 0.05, 0.85) if locked else Color.WHITE
-	option_node.get_node("Name").text = LOCKED_FOOD_NAME.get(food_data.get("tier", ""), "Food") if locked else food_data.name
+	_set_name(option_node, LOCKED_FOOD_NAME.get(food_data.get("tier", ""), "Food") if locked else food_data.name)
 	_set_type_tag(option_node, food_data.family, TIER_LEVEL.get(food_data.get("tier", ""), 0))
 	_set_lock(option_node, locked)
 	option_node.set_meta("food", food_data)
@@ -247,9 +299,9 @@ func populate_drinks():
 
 func _fill_drink(option_node: Node, drink_data: Dictionary) -> void:
 	var locked: bool = drink_data.get("locked", false)
-	option_node.get_node("Icon").texture = _new_shrine_menu_icon(drink_data.icon, "drinks")
+	_set_icon(option_node, _new_shrine_menu_icon(drink_data.icon, "drinks"))
 	option_node.get_node("Icon").modulate = Color(0.1, 0.06, 0.05, 0.85) if locked else Color.WHITE
-	option_node.get_node("Name").text = "New drink" if locked else drink_data.name
+	_set_name(option_node, "New drink" if locked else drink_data.name)
 	_set_type_tag(option_node, drink_data.type, int(drink_data.get("level", 1)))
 	_set_lock(option_node, locked)
 	option_node.set_meta("is_drink", true)

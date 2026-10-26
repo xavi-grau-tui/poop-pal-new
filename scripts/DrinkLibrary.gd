@@ -22,19 +22,19 @@ const BOOST_OF_TYPE := { "watery": "splash", "fizzy": "fizz", "caffeinated": "fo
 
 ## Every drink, level 1 to 3 per type (the line-up of the drafts, docs/mockups/drink_drafts/)
 var all_drinks = [
-	{ "name": "Water", "type": "watery", "level": 1, "icon": preload("res://textures/drinks/water.png"), "color": Color(0.75, 0.85, 1.0, 0.5) },
+	{ "name": "Shrine Water", "type": "watery", "level": 1, "icon": preload("res://textures/drinks/water.png"), "color": Color(0.75, 0.85, 1.0, 0.5) },
 	{ "name": "Barley Tea", "type": "watery", "level": 2, "icon": preload("res://textures/drinks/barleytea.png"), "color": Color(0.78, 0.55, 0.3, 0.5) },
 	{ "name": "Coconut Water", "type": "watery", "level": 3, "icon": preload("res://textures/drinks/coconutwater.png"), "color": Color(0.95, 0.94, 0.9, 0.5) },
 	{ "name": "Cola", "type": "fizzy", "level": 1, "icon": preload("res://textures/drinks/soda.png"), "color": Color(0.45, 0.22, 0.22, 0.45) },
-	{ "name": "Lemonade", "type": "fizzy", "level": 2, "icon": preload("res://textures/drinks/lemonade.png"), "color": Color(1.0, 0.95, 0.6, 0.45) },
-	{ "name": "Soda Float", "type": "fizzy", "level": 3, "icon": preload("res://textures/drinks/sodafloat.png"), "color": Color(0.55, 0.92, 0.6, 0.45) },
-	{ "name": "Tea", "type": "caffeinated", "level": 1, "icon": preload("res://textures/drinks/tea.png"), "color": Color(0.72, 0.5, 0.3, 0.5) },
+	{ "name": "Ramune", "type": "fizzy", "level": 2, "icon": preload("res://textures/drinks/ramune.png"), "color": Color(0.72, 0.9, 1.0, 0.45) },
+	{ "name": "Cream Soda", "type": "fizzy", "level": 3, "icon": preload("res://textures/drinks/sodafloat.png"), "color": Color(0.55, 0.92, 0.6, 0.45) },
+	{ "name": "Green Tea", "type": "caffeinated", "level": 1, "icon": preload("res://textures/drinks/tea.png"), "color": Color(0.72, 0.5, 0.3, 0.5) },
 	{ "name": "Coffee", "type": "caffeinated", "level": 2, "icon": preload("res://textures/drinks/coffee.png"), "color": Color(0.5, 0.32, 0.2, 0.5) },
 	{ "name": "Energy Drink", "type": "caffeinated", "level": 3, "icon": preload("res://textures/drinks/energydrink.png"), "color": Color(0.7, 0.95, 0.55, 0.45) },
 	{ "name": "Milk", "type": "milky", "level": 1, "icon": preload("res://textures/drinks/milk.png"), "color": Color(0.98, 0.98, 1.0, 0.55) },
 	{ "name": "Bubble Tea", "type": "milky", "level": 2, "icon": preload("res://textures/drinks/bubbletea.png"), "color": Color(0.85, 0.72, 0.58, 0.5) },
 	{ "name": "Milkshake", "type": "milky", "level": 3, "icon": preload("res://textures/drinks/milkshake.png"), "color": Color(1.0, 0.8, 0.86, 0.5) },
-	{ "name": "Orange Juice", "type": "fruity", "level": 1, "icon": preload("res://textures/drinks/orangejuice.png"), "color": Color(1.0, 0.75, 0.45, 0.45) },
+	{ "name": "Mikan Juice", "type": "fruity", "level": 1, "icon": preload("res://textures/drinks/orangejuice.png"), "color": Color(1.0, 0.75, 0.45, 0.45) },
 	{ "name": "Peach Juice", "type": "fruity", "level": 2, "icon": preload("res://textures/drinks/peachjuice.png"), "color": Color(1.0, 0.7, 0.62, 0.45) },
 	{ "name": "Smoothie", "type": "fruity", "level": 3, "icon": preload("res://textures/drinks/smoothie.png"), "color": Color(0.85, 0.4, 0.6, 0.45) },
 ]

@@ -91,6 +91,8 @@ var rope: Array[Sprite2D] = []
 var rope_spine: Line2D
 var rope_count := ROPE_N
 var bell: Sprite2D
+var _bp := Vector2.ZERO
+var _bq := Vector2.ZERO
 ## The paper lantern (chochin) on the right, the rope's mirror (the user): hung from one point
 ## under the beam, swinging round it (a pendulum, its picture turned) with the same pushes as the
 ## rope, as strongly; a candle inside, very faint: a warm glow, flickering, a little more at night
@@ -283,6 +285,8 @@ func _ready() -> void:
 		bell.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		bell.centered = false
 		bell.offset = Vector2(-bell.texture.get_width() * 0.5, -3.0)
+		_bp = _g(NEW_ROPE_AT.x, NEW_ROPE_AT.y) + front.position + Vector2(0, bell.texture.get_height() * 0.52 * _gut_scale.y)
+		_bq = _bp
 	lantern_glow = _lantern_glow()
 	lantern = _layer(load(asset_dir + "lantern.png"), 2)
 	if DevLaunch.new_shrine:
@@ -1092,6 +1096,7 @@ func ring(strength := 1.0) -> void:
 		_rq[i] -= Vector2(14.0 * strength * float(i) / rope_count * rope_kick / ROPE_KICK, 0)
 	_lq -= Vector2(4.0 * strength, 0)                  # (the lantern sways too: short, so a smaller push)
 	if DevLaunch.new_shrine:
+		_bq -= Vector2(4.0 * strength, 0)
 		_lq_left -= Vector2(4.0 * strength, 0)
 
 ## Where the claw visits (PetView coordinates): the shrine's opening, under the beam, the pal inside
@@ -1108,10 +1113,14 @@ func _rope_step(dt: float) -> void:
 	_t += dt
 	var rope_at := NEW_ROPE_AT if DevLaunch.new_shrine else ROPE_AT
 	var bell_anchor := _g(rope_at.x, rope_at.y) + front.position
-	var anchor := bell_anchor + (Vector2(0, NEW_BELL_HANG * _gut_scale.y) if DevLaunch.new_shrine else Vector2.ZERO)
 	var down := _real_down(dt)
 	var rope_down := down
 	var breeze := Vector2(sin(_t * 1.3) * 60.0 + sin(_t * 0.53) * 40.0, 0)
+	# Move the bell first so the chain's first attachment follows its rotated lower loop.
+	_bell_step(dt, down, breeze)
+	var anchor := bell_anchor
+	if DevLaunch.new_shrine:
+		anchor += Vector2(0, NEW_BELL_HANG * _gut_scale.y).rotated(bell.rotation)
 	var rope_breeze := breeze * NEW_ROPE_BREEZE_SCALE if DevLaunch.new_shrine else breeze
 	var rope_gravity := NEW_ROPE_G if DevLaunch.new_shrine else ROPE_G
 	var rope_damp := NEW_ROPE_DAMP if DevLaunch.new_shrine else 0.975
@@ -1149,6 +1158,22 @@ func _rope_step(dt: float) -> void:
 				# The sprite's long axis points down at zero rotation; align it to its chain tangent.
 				rope[i].rotation = atan2(tangent.y, tangent.x) - PI * 0.5
 	_lantern_step(dt, down, breeze)
+
+## The New Shrine's brass bell hangs from its top loop and tilts with gravity like the lanterns.
+func _bell_step(dt: float, down: Vector2, breeze: Vector2) -> void:
+	if not DevLaunch.new_shrine:
+		bell.rotation = 0.0
+		return
+	var top := _g(NEW_ROPE_AT.x, NEW_ROPE_AT.y) + front.position
+	var v := _bp - _bq
+	_bq = _bp
+	_bp += v * NEW_ROPE_DAMP + (down * NEW_ROPE_G + breeze * NEW_ROPE_BREEZE_SCALE) * dt * dt
+	var length := bell.texture.get_height() * 0.52 * _gut_scale.y
+	var d := _bp - top
+	if d.length() > 0.001:
+		var a := clampf(atan2(d.x, d.y), -0.6, 0.6)
+		_bp = top + Vector2(sin(a), cos(a)) * length
+	bell.rotation = -atan2(_bp.x - top.x, _bp.y - top.y)
 
 ## Where "down" is on the screen: the phone's real gravity in the screen's plane (held upright: straight
 ## down; rolled: leaning to the low side, for as long as it's held so), smoothed; lying flat there's

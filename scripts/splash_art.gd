@@ -105,6 +105,30 @@ const THEMES := [
 ## them), the front (the top band and the funnel floor; clear where the water is)]
 const MARGIN := 20                           # (art px) the back panel is painted this far past the screen (the 3D tilt shifts it)
 
+## A world's background laid out as the back panel (as tank_layers does: the picture fitted under the
+## band, MARGIN px past every edge), with blits so it's quick: the world menu shows it behind its levels
+## (SplashHoops.world_menu_look). Cached per picture.
+static var _panels := {}
+static func panel_of(path: String, w_px := 317, h_px := 316, band_y := 104.0) -> ImageTexture:
+	if _panels.has(path):
+		return _panels[path]
+	var src: Image = (load(path) as Texture2D).get_image()
+	if src.is_compressed():
+		src.decompress()
+	src.convert(Image.FORMAT_RGBA8)
+	var out := Image.create(w_px + MARGIN * 2, h_px + MARGIN * 2, false, Image.FORMAT_RGBA8)
+	for y in range(-MARGIN, h_px + MARGIN):
+		var sy := clampi(int(roundf((float(y) - band_y / P) / (float(h_px) - band_y / P) * src.get_height())), 0, src.get_height() - 1)
+		out.blit_rect(src, Rect2i(0, sy, mini(w_px, src.get_width()), 1), Vector2i(MARGIN, y + MARGIN))
+	var left := out.get_region(Rect2i(MARGIN, 0, 1, out.get_height()))
+	var right := out.get_region(Rect2i(MARGIN + w_px - 1, 0, 1, out.get_height()))
+	for k in MARGIN:                                       # (the edges' columns, run out past the screen)
+		out.blit_rect(left, Rect2i(0, 0, 1, out.get_height()), Vector2i(k, 0))
+		out.blit_rect(right, Rect2i(0, 0, 1, out.get_height()), Vector2i(MARGIN + w_px + k, 0))
+	var tex := ImageTexture.create_from_image(out)
+	_panels[path] = tex
+	return tex
+
 static func tank_layers(w_px: int, h_px: int, band_y: float, floor_at: Callable, theme: Dictionary) -> Array:
 	var back := Image.create(w_px + MARGIN * 2, h_px + MARGIN * 2, false, Image.FORMAT_RGBA8)
 	var front := Image.create(w_px, h_px, false, Image.FORMAT_RGBA8)

@@ -50,6 +50,13 @@ var cells: Array[Control] = []
 var dots: HBoxContainer
 var ring: HoldFrame
 var legend: HBoxContainer
+# a game's themed world page (BaseMinigame.world_menu_look): its picture, a haze over a world not
+# reached yet, a plate under the title in the world's frame
+var look := {}
+var world_bg: TextureRect
+var haze: ColorRect
+var plate: NinePatchRect
+const FRAME_MARGINS := [16, 13, 16, 13]          # (art px: left, top, right, bottom: the corners' trims)
 
 # result view
 var card: Control
@@ -103,6 +110,20 @@ func setup(owner_game: BaseMinigame, index: int, names: Array, level_count: int,
 	bg.size = Vector2(W, H) + (pattern.get_size() if pattern else Vector2.ZERO)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	select_root.add_child(bg)
+	world_bg = TextureRect.new()
+	world_bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	world_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	world_bg.visible = false
+	select_root.add_child(world_bg)
+	haze = ColorRect.new()
+	haze.size = Vector2(W, H)
+	haze.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	haze.visible = false
+	select_root.add_child(haze)
+	plate = _frame_rect(null, Vector2(480, 132))
+	plate.position = Vector2((W - 480) / 2.0, 6)
+	plate.visible = false
+	select_root.add_child(plate)
 	shade = ColorRect.new()
 	shade.color = Color(0.16, 0.1, 0.07, 0.12)
 	shade.size = Vector2(W, H)
@@ -195,6 +216,7 @@ func _build_page() -> void:
 	subtitle.text = world_names[page] if page < world_names.size() else ""
 	if game:
 		base.color = game.world_backdrop(page)
+	_apply_look()
 	var origin := Vector2((W - (3 * CELL.x + 2 * GAP.x)) / 2.0, GRID_TOP)
 	for slot in per:
 		var lvl := page * per + slot + 1
@@ -215,25 +237,73 @@ func _build_page() -> void:
 	_refresh_header()
 	_refresh_selection()
 
+## The world page's theme (a game's world_menu_look), or the plain page
+func _apply_look() -> void:
+	look = game.world_menu_look(page) if game else {}
+	var themed := not look.is_empty()
+	bg.visible = not themed
+	shade.visible = not themed
+	world_bg.visible = themed
+	title.add_theme_font_size_override("font_size", 50)
+	subtitle.add_theme_font_size_override("font_size", 30)
+	plate.visible = themed
+	haze.visible = themed and not look.get("reached", true)
+	if not themed:
+		return
+	world_bg.texture = look["back"]
+	world_bg.material = look.get("material")
+	world_bg.position = look.get("back_offset", Vector2.ZERO)
+	world_bg.scale = Vector2.ONE * float(look.get("back_scale", 1.0))
+	world_bg.size = (look["back"] as Texture2D).get_size()
+	haze.color = look.get("haze", Color(0.7, 0.72, 0.75, 0.7))
+	plate.texture = look["frame"]
+	title.add_theme_font_size_override("font_size", 40)          # (inside the plate's corners)
+	subtitle.add_theme_font_size_override("font_size", 28)
+
+## A frame of the world's (9-sliced on the art's own pixels, drawn x3) at `sz` (screen px)
+func _frame_rect(tex: Texture2D, sz: Vector2) -> NinePatchRect:
+	var f := NinePatchRect.new()
+	f.texture = tex
+	f.patch_margin_left = FRAME_MARGINS[0]
+	f.patch_margin_top = FRAME_MARGINS[1]
+	f.patch_margin_right = FRAME_MARGINS[2]
+	f.patch_margin_bottom = FRAME_MARGINS[3]
+	f.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	f.scale = Vector2(3, 3)
+	f.size = sz / 3.0
+	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return f
+
 func _cell(pos: Vector2, lvl: int) -> Control:
 	var open := GameData.level_open(game_index, lvl)
 	var stars := GameData.level_stars(game_index, lvl)
-	var p := Panel.new()
+	var p: Control
+	var ink := TEXT
+	if not look.is_empty():
+		# the world's own tile: its frame (the selected one swaps in: _refresh_selection), greyed when locked
+		p = Control.new()
+		var f := _frame_rect(look["frame"], CELL)
+		f.modulate = Color.WHITE if open else Color(0.62, 0.62, 0.66)
+		p.add_child(f)
+		p.set_meta("frame", f)
+		ink = look.get("ink", TEXT)
+	else:
+		p = Panel.new()
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = CREAM if open else Color8(196, 180, 156)
+		sb.border_color = CARD_BORDER
+		sb.set_border_width_all(6)
+		sb.border_width_bottom = 10
+		sb.set_corner_radius_all(10)
+		sb.anti_aliasing = false
+		p.add_theme_stylebox_override("panel", sb)
 	p.position = pos
 	p.size = CELL
 	p.pivot_offset = CELL / 2.0
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = CREAM if open else Color8(196, 180, 156)
-	sb.border_color = CARD_BORDER
-	sb.set_border_width_all(6)
-	sb.border_width_bottom = 10
-	sb.set_corner_radius_all(10)
-	sb.anti_aliasing = false
-	p.add_theme_stylebox_override("panel", sb)
 	grid.add_child(p)
 	var per := GameData.LEVELS_PER_WORLD
-	var num := _label(Vector2(0, 18), Vector2(CELL.x, 90), 64, TEXT if open else Color(TEXT, 0.45), p)
+	var num := _label(Vector2(0, 18), Vector2(CELL.x, 90), 64, ink if open else Color(ink, 0.45), p)
 	num.text = "%d-%d" % [(lvl - 1) / per + 1, (lvl - 1) % per + 1]
 	if open:
 		for k in 3:
@@ -270,6 +340,8 @@ func _refresh_selection() -> void:
 	for i in cells.size():
 		cells[i].scale = Vector2.ONE * (1.07 if i == selection else 1.0)
 		cells[i].z_index = 1 if i == selection else 0
+		if cells[i].has_meta("frame"):
+			(cells[i].get_meta("frame") as NinePatchRect).texture = look["frame_sel" if i == selection else "frame"]
 	if selection < cells.size():
 		# inside the raised card, just within its border
 		var c := cells[selection]

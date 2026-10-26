@@ -296,6 +296,25 @@ func level_backdrop() -> Color:
 func world_backdrop(w: int) -> Color:
 	return SplashArt.THEMES[clampi(w, 0, SplashArt.THEMES.size() - 1)]["menu"]
 
+## The world menu in each world's own look (the designer's handoff, docs/mockups/splash_hoops_world_menu:
+## the user, 2026-10-26): the world's moving background behind its levels, the level tiles in its own
+## frames (tools/art/splash_menu_frames.py), a world not reached yet seen through a haze
+const MENU_FRAMES := ["lagoon", "sunset", "reef", "night", "storm", "deep"]
+func world_menu_look(w: int) -> Dictionary:
+	var look: Dictionary = SplashArt.THEMES[clampi(w, 0, SplashArt.THEMES.size() - 1)]
+	if not look.has("background"):
+		return {}
+	var frames := "res://textures/minigames/splash/menu/frame_%s" % MENU_FRAMES[clampi(w, 0, 5)]
+	var water: Array = look["water"]
+	return {
+		"back": SplashArt.panel_of(String(look["background"])), "back_scale": S,
+		"back_offset": -Vector2.ONE * SplashArt.MARGIN * S, "material": life_material(look),
+		"frame": load(frames + ".png"), "frame_sel": load(frames + "_sel.png"),
+		"ink": Color8(250, 244, 214) if w >= 3 else Color8(92, 60, 44),
+		"reached": GameData.level_open(_game_index(), w * GameData.LEVELS_PER_WORLD + 1),
+		"haze": Color((water[1] as Color).lerp(Color(0.75, 0.78, 0.8), 0.5), 0.72),
+	}
+
 ## The golden hoops and chests as BaseMinigame secrets; the finales' prizes
 func secrets() -> Dictionary:
 	var out := {}
@@ -363,18 +382,22 @@ const WORLD_LIFE := {
 var surface_px := -1.0                 # the world's surface line on the panel (WORLD_LIFE "surface"), or none
 
 func _world_life() -> void:
-	tank_back.material = null
 	var cfg: Dictionary = WORLD_LIFE.get(String(theme["scene"]), {})
 	surface_px = float(cfg.get("surface", -1.0))
-	if cfg.is_empty() or not theme.has("background"):
-		return
+	tank_back.material = life_material(theme)
+
+## The world's moving background as a material ({} world: none)
+static func life_material(look: Dictionary) -> ShaderMaterial:
+	var cfg: Dictionary = WORLD_LIFE.get(String(look["scene"]), {})
+	if cfg.is_empty() or not look.has("background"):
+		return null
 	var life := ShaderMaterial.new()
 	life.shader = preload("res://scripts/shaders/splash_world_life.gdshader")
 	life.set_shader_parameter("life", load("res://textures/minigames/splash/new_shrine/life/%s.png" % cfg["map"]))
 	for k in cfg:
 		if k not in ["map", "surface"]:
 			life.set_shader_parameter(k, cfg[k])
-	tank_back.material = life
+	return life
 
 ## A ball (or the pal) through the surface line (the user: as if it left the water for a moment and
 ## came back): out, a spray of drops thrown up and a small ring on the line; back in, a splash ring and

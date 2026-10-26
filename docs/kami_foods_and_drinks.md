@@ -35,9 +35,9 @@ The 14 new icons. Everything else stays as it is.
 | # | Family / size | Replaces | New item | File | Notes for the art |
 |---|---|---|---|---|---|
 | 1 | Green / Baby | Avocado | Cucumber | cucumber.png | A whole fresh cucumber, the kappa's favourite |
-| 2 | Green / Kid | Salad Bowl | Rice Ball | riceball.png | A triangular rice ball with a strip of nori |
+| 2 | Green / Kid | Salad Bowl | Onigiri | riceball.png | A triangular rice ball with a strip of nori |
 | 3 | Sweet / Baby | Cookie | Konpeito | konpeito.png | Small star-shaped sugar candies, pastel colours, in a little pile or a small bag |
-| 4 | Sweet / Baby | Macaron | Rice Cake | ricecake.png | A soft round white mochi, maybe two stacked or dusted with powder |
+| 4 | Sweet / Baby | Macaron | Mochi | ricecake.png | A soft round white mochi, maybe two stacked or dusted with powder |
 | 5 | Sweet / Adult | Choco Cake | Mooncake | mooncake.png | A round golden cake with a pressed pattern on top |
 | 6 | Greasy / Baby | Onion Rings | Aburaage | aburaage.png | Golden fried tofu pouches; the fox's food (the fox line eats it) |
 | 7 | Greasy / Kid | Spaghetti | Yakisoba | yakisoba.png | Fried noodles on a plate or tray, with seaweed flakes and red pickled ginger |
@@ -45,7 +45,7 @@ The 14 new icons. Everything else stays as it is.
 | 9 | Greasy / Adult | Club Sandwich | Inari Sushi | inarisushi.png | Rice inside sweet fried tofu pouches; also linked to the fox |
 | 10 | Spicy / Baby | Spicy Chip | Spicy Rice Cracker | spicyricecracker.png | A round rice cracker with red chilli flakes |
 | 11 | Spicy / Kid | Chorizo | Ikayaki | ikayaki.png | A grilled squid on a stick, glossy and charred |
-| 12 | Sour / Adult | Tom Yum | Hot and Sour Soup | hotsoursoup.png | A bowl of dark red-brown soup with tofu strips and egg ribbons |
+| 12 | Sour / Adult | Hot and Sour Soup | Miso Soup | hotsoursoup.png | A bowl of miso broth with tofu cubes and scallion |
 | 13 | Watery drink / 3 | Coconut Water | Sakura Tea | sakuratea.png | Pale pink tea with a cherry blossom floating on it |
 | 14 | Fizzy drink / 2 | Lemonade | Ramune | ramune.png | The glass bottle with the marble in the neck, light blue |
 
@@ -76,11 +76,11 @@ New icons in **bold**, renames in *italics*.
 
 | Family | Baby | Kid | Adult |
 |---|---|---|---|
-| Green | Broccoli, Edamame, **Cucumber** | Avocado Toast, *Shojin Bowl*, **Rice Ball** | *Kappa Maki*, Dumplings, Veggie Bento |
-| Sweet | Chocolate, **Konpeito**, **Rice Cake** | Glazed Donut, Dorayaki, Rainbow Jelly | Pancakes, Purin, **Mooncake** |
+| Green | Broccoli, Edamame, **Cucumber** | Avocado Toast, *Shojin Bowl*, **Onigiri** | *Kappa Maki*, Dumplings, Veggie Bento |
+| Sweet | Chocolate, **Konpeito**, **Mochi** | Glazed Donut, Dorayaki, Rainbow Jelly | Pancakes, Purin, **Mooncake** |
 | Greasy | Fries, Fried Egg, **Aburaage** | Hot Dog, **Yakisoba**, **Okonomiyaki** | Cheeseburger, *Karaage*, **Inari Sushi** |
 | Spicy | Jalapeño, Chili Pepper, **Spicy Rice Cracker** | Drumstick, *Skewers*, **Ikayaki** | Shakshuka, Fire Ramen, Curry Bowl |
-| Sour | Lemon, Pickle, Green Apple | Grapefruit, Kimchi, Umeboshi | Ceviche, *Pickles*, **Hot and Sour Soup** |
+| Sour | Lemon, Pickle, Green Apple | Grapefruit, Kimchi, Umeboshi | Ceviche, *Pickles*, **Miso Soup** |
 
 Special foods and legends stay as they are (Microchip, Battery, Alien Goo, Moon Rock, Golden Seed,
 Stardust Sugar, Dragon Oil, Phoenix Pepper, Kraken Brine).
@@ -98,10 +98,9 @@ Stardust Sugar, Dragon Oil, Phoenix Pepper, Kraken Brine).
 ## Naming across countries
 
 - **Shared dishes get neutral English names**, and each translation uses the local word:
-  Dumplings (Gyoza / Jiaozi / Mandu), Rice Ball (Onigiri / Fantuan / Jumeokbap), Skewers
-  (Yakitori / Chuan'r / Kkochi), Rice Cake (Mochi / Niangao / Tteok), Barley Tea (Mugicha /
+  Dumplings (Gyoza / Jiaozi / Mandu), Skewers (Yakitori / Chuan'r / Kkochi), Barley Tea (Mugicha /
   Damai Cha / Boricha), Pickles (Tsukemono / Paocai / Jangajji).
-- **Dishes with a strong national identity keep their own name everywhere:** Kimchi, Kappa Maki,
+- **Dishes with a strong national identity keep their own name everywhere:** Onigiri, Mochi, Kimchi, Kappa Maki,
   Inari Sushi, Okonomiyaki, Yakisoba, Ikayaki, Mooncake, Ramune, Bubble Tea. Never translate
   Kimchi as "Paocai" (a real dispute between Korea and China).
 

@@ -81,6 +81,13 @@ func level_backdrop() -> Color:
 func world_backdrop(_w: int) -> Color:
 	return level_backdrop()
 
+## Override: a themed look for world `w`'s level page ({}: the plain one). Keys: "back" a picture
+## behind the levels (drawn at "back_scale", "back_offset", with "material"), "frame" / "frame_sel"
+## the level tiles' frames (9-sliced, art px x3), "ink" their numbers' colour, "reached" whether
+## the world is open (not yet: under a "haze")
+func world_menu_look(_w: int) -> Dictionary:
+	return {}
+
 ## Override: build and start level `n` (from score 0)
 func play_level(_n: int) -> void:
 	pass
