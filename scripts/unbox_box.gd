@@ -67,13 +67,14 @@ func _ready() -> void:
 	device.position = DEV_RECT.get_center()
 	inside.add_child(device)
 	# the box fades to black behind the device as it comes towards you: it lands with the
-	# game's black around its corners
+	# game's black around its corners (under the device, in the same node: above it, it blacked the
+	# device out as it landed)
 	fade_out = ColorRect.new()
 	fade_out.size = Vector2(1080, 1920)
 	fade_out.color = Color(0, 0, 0, 0)
 	fade_out.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(fade_out)
-	move_child(fade_out, device.get_index())
+	inside.add_child(fade_out)
+	inside.move_child(fade_out, device.get_index())
 	lid_shadow = ColorRect.new()
 	lid_shadow.size = Vector2(1080, 1920)
 	lid_shadow.color = Color(0, 0, 0, 0)
