@@ -49,6 +49,9 @@ const TANK_L := 18.0
 const TANK_R := 945.0
 const BAND_Y := 104.0                   # the toy's plastic top band (the HUD sits on it)
 const TANK_T := BAND_Y + 2.0
+## the left wall's front edge (the 3D tilt): the screen's window starts a little left of TANK_L,
+## and a wall from there left a strip of the panel showing (the user)
+const WALL_L := 9.0
 
 # Funnel floor (matches tools/art/minigame_art.py): lowest at each nozzle
 const NOZZLES := [237.0, 713.0]
@@ -334,10 +337,73 @@ func _apply_theme(w: int) -> void:
 	if tank_sprite:
 		_theme_nodes()
 
+## Each world's moving background (the user, 2026-10-26: the backgrounds alive, each in its own way):
+## scripts/shaders/splash_world_life.gdshader on the back panel, with the world's life map
+## (tools/art/splash_life_maps.py) and these settings, in the panel's pixels: "map" its life map, then
+## the shader's uniforms (the shafts' apex and rows, the ripple's and the surface's rows, the glitter's
+## box...). "surface": the surface line the balls splash out through (SURFACE_FX), or none.
+const WORLD_LIFE := {
+	"lagoon": { "map": "lagoon", "sway": 2.2, "rays": 0.11, "ray_apex": Vector2(192, 0), "ray_rows": Vector2(56, 215),
+		"ray_spread": 0.6, "ripple": 0.16, "ripple_rows": Vector2(56, 336) },
+	"sun": { "map": "sunset", "sway": 2.0, "wobble": 0.0, "rays": 0.1, "ray_apex": Vector2(180, 126), "ray_rows": Vector2(140, 228),
+		"ray_spread": 0.75, "ray_col": Color(1.0, 0.86, 0.66), "ripple": 0.1, "ripple_rows": Vector2(120, 150),
+		"surface_rows": Vector2(136, 147), "glitter_rect": Vector4(150, 118, 215, 152), "glitter": 0.28, "surface": 142.0 },
+	"reef": { "map": "reef", "sway": 2.0, "wobble": 0.0, "rays": 0.12, "ray_apex": Vector2(200, 8), "ray_rows": Vector2(56, 262),
+		"ray_spread": 0.8, "ripple": 0.12, "ripple_rows": Vector2(56, 112), "surface_rows": Vector2(56, 70), "twinkle": 0.25 },
+	"night": { "map": "night", "sway": 1.8, "wobble": 0.0, "rays": 0.07, "ray_apex": Vector2(176, 118), "ray_rows": Vector2(132, 262),
+		"ray_spread": 0.8, "ray_col": Color(0.8, 0.88, 1.0), "ripple": 0.08, "ripple_rows": Vector2(118, 140),
+		"surface_rows": Vector2(118, 138), "glitter_rect": Vector4(155, 95, 200, 140), "glitter": 0.3, "twinkle": 0.45, "surface": 128.0 },
+	"rain": { "map": "storm", "sway": 2.4, "wobble": 0.0, "rays": 0.08, "ray_apex": Vector2(180, 126), "ray_rows": Vector2(138, 232),
+		"ray_spread": 0.7, "ray_col": Color(0.86, 0.95, 0.82), "ripple": 0.08, "ripple_rows": Vector2(120, 145),
+		"surface_rows": Vector2(122, 146), "twinkle": 0.2, "flash_every": 9.0, "surface": 140.0 },
+	"deep": { "map": "deep", "sway": 2.0, "wobble": 0.0, "rays": 0.06, "ray_apex": Vector2(190, 0), "ray_rows": Vector2(20, 205),
+		"ray_spread": 0.35, "ray_col": Color(0.7, 0.95, 0.95), "twinkle": 0.35 },
+}
+
+var surface_px := -1.0                 # the world's surface line on the panel (WORLD_LIFE "surface"), or none
+
+func _world_life() -> void:
+	tank_back.material = null
+	var cfg: Dictionary = WORLD_LIFE.get(String(theme["scene"]), {})
+	surface_px = float(cfg.get("surface", -1.0))
+	if cfg.is_empty() or not theme.has("background"):
+		return
+	var life := ShaderMaterial.new()
+	life.shader = preload("res://scripts/shaders/splash_world_life.gdshader")
+	life.set_shader_parameter("life", load("res://textures/minigames/splash/new_shrine/life/%s.png" % cfg["map"]))
+	for k in cfg:
+		if k not in ["map", "surface"]:
+			life.set_shader_parameter(k, cfg[k])
+	tank_back.material = life
+
+## A ball (or the pal) through the surface line (the user: as if it left the water for a moment and
+## came back): out, a spray of drops thrown up and a small ring on the line; back in, a splash ring and
+## drops falling round it. The line moves with the panel (the 3D tilt). Only the look: the physics stay.
+func _surface_fx(b: Dictionary) -> void:
+	if surface_px < 0.0 or not b.has("prev"):
+		return
+	var line := tank_back.position.y + surface_px * S
+	var was_under: bool = (b["prev"] as Vector2).y > line
+	var under: bool = (b["pos"] as Vector2).y > line
+	if was_under == under:
+		return
+	var at := Vector2((b["pos"] as Vector2).x, line)
+	var water: Array = theme["water"]
+	var cols := [Color(1, 1, 1, 0.9), (water[0] as Color).lightened(0.4), (water[1] as Color).lightened(0.25)]
+	var speed := absf((b["vel"] as Vector2).y)
+	var k := clampf(speed / 300.0, 0.4, 1.0)
+	if not under:
+		fx.spray(at, Vector2.UP, int(6 * k) + 3, cols, 0.7, 0.55 * k)
+		fx.ring(at, Color(1, 1, 1, 0.7), 8.0, 34.0 * k + 10.0, 0.28, 4.0)
+	else:
+		fx.ring(at, Color(1, 1, 1, 0.8), 10.0, 44.0 * k + 12.0, 0.32, 4.0)
+		fx.spray(at, Vector2.UP, int(8 * k) + 3, cols, 1.1, 0.45 * k)
+
 ## The world's look on the nodes (once they exist: the first world's is set right after they're made)
 func _theme_nodes() -> void:
 	tank_sprite.texture = tex["tank"]
 	tank_back.texture = tex["tank_back"]
+	_world_life()
 	scene_life.setup(String(theme["scene"]), theme["water"], floor_at)
 	floor_life.setup(String(theme["scene"]), floor_at, theme["floor_fx"])
 	# The sunset remains visible beyond the surface, while its lower half still gets underwater
@@ -623,15 +689,17 @@ func _draw_box_walls() -> void:
 	if n > 0:
 		var right := d.x < 0.0                       # (the right wall faces the light from the left: lit)
 		var base: Color = SplashArt.CASE_SHADE if right else SplashArt.CASE_DARK
-		var x0 := TANK_R if right else TANK_L
+		var x0 := TANK_R if right else WALL_L
 		for k in n:
 			var f := (k + 0.5) / float(n)
 			var x := x0 - (k + 1) * S if right else x0 + k * S
 			var y0 := snappedf(top + maxf(0.0, d.y) * f, S)
 			var y := y0
-			while y < bot:
+			# (the sand's W in front of the walls: each column stops at the sand - the user)
+			var col_bot := minf(bot, snappedf(floor_at(x + S / 2.0), S))
+			while y < col_bot:
 				var band := clampi(int((y - top) / (water_bottom - top) * water.size()), 0, water.size() - 1)
-				var y1 := minf(bot, snappedf(top + (band + 1) * (water_bottom - top) / water.size(), S)) if band < water.size() - 1 else bot
+				var y1 := minf(col_bot, snappedf(top + (band + 1) * (water_bottom - top) / water.size(), S)) if band < water.size() - 1 else col_bot
 				var c: Color = base.lerp(water[band], 0.28).darkened(0.1 + 0.36 * steps.call(f))
 				if k == 0:
 					c = c.lightened(0.18)
@@ -645,7 +713,7 @@ func _draw_box_walls() -> void:
 		for k in m:
 			var f := (k + 0.5) / float(m)
 			var y := top + k * S
-			var xl := maxf(TANK_L, snappedf(TANK_L + d.x * f, S)) if d.x > 0.0 else TANK_L
+			var xl := maxf(WALL_L, snappedf(WALL_L + d.x * f, S)) if d.x > 0.0 else WALL_L
 			var xr := minf(TANK_R, snappedf(TANK_R + d.x * f, S)) if d.x < 0.0 else TANK_R
 			var c: Color = SplashArt.CASE_DARK.lerp(water[0], 0.25).darkened(0.18 + 0.32 * steps.call(f))
 			if k == m - 1:
@@ -786,6 +854,7 @@ func _physics(dt: float) -> void:
 		b["vel"] = v
 		_collide_tank(b, dt)
 		_collide_cups(b)
+		_surface_fx(b)
 	# balls (and the diver) bump into each other
 	for a in bodies.size():
 		for c in range(a + 1, bodies.size()):
@@ -1405,13 +1474,14 @@ func _create_static_nodes() -> void:
 	add_child(back_shadows)
 	rain_layer = Node2D.new()                       # (the storm's moving rain: behind everything else)
 	add_child(rain_layer)
-	box_walls = Node2D.new()                        # the tank's inside walls (the 3D tilt), behind the band and the sand
+	box_walls = Node2D.new()                        # the tank's inside walls (the 3D tilt)
 	box_walls.draw.connect(_draw_box_walls)
 	add_child(box_walls)
 	var tank := _sprite(tex["tank"], Vector2.ZERO)
 	tank.centered = false
 	add_child(tank)
 	tank_sprite = tank
+	move_child(box_walls, tank.get_index())          # (over the sand, down to the screen's bottom: the user)
 	floor_life = SplashArt.FloorLife.new()
 	add_child(floor_life)
 
