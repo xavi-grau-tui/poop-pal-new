@@ -71,9 +71,9 @@ var _stream_pts := PackedVector2Array()
 var _stream_col := Color.WHITE
 var window: Node2D                    # the inside and its walls, seen only through the front's window
 ## The bell rope (suzu-no-o): the bell on the front, its red and white beads a chain hanging from it
-## (verlet), pulled straight down the screen (the user, 2026-10-26: gravity always pushes them down;
-## steering it with the tilt pulled them sideways as the phone came back), a breeze, the front's own
-## movement and every tilt of the phone (it swings); ring() kicks it
+## (verlet), pulled by the phone's real gravity (the user, 2026-10-26: the bell and the lanterns all
+## alike, leaning while the phone stays tilted: the depth tilt re-centres itself, so it can't steer
+## them), a breeze and the front's own movement; ring() kicks it
 const ROPE_AT := Vector2(14, 30)      # left eave hanger on the chosen front frame (grid)
 const NEW_ROPE_AT := Vector2(11, 30)  # far left eave, beyond the pair of lanterns
 const ROPE_N := 7                     # beads (the user: modular, like the painted one; the last white one off)
@@ -81,9 +81,9 @@ const NEW_ROPE_N := 6                 # outlined oval beads under the outer bell
 const ROPE_SEG := 3.3                 # grid cells between them (they just overlap, as painted)
 const NEW_ROPE_SEG := 5.0             # slimmer ovals overlap more; the first meets the bell
 const NEW_BELL_HANG := 58.0           # keep the first oval tucked against the bell
-const ROPE_KICK := 10.0               # how much a tilt of the phone swings it
+const ROPE_KICK := 10.0               # how hard ring() swings it
 const ROPE_G := 1600.0                # px/s2
-const NEW_ROPE_KICK := 2.8            # the heavier bead chain reacts less to a phone movement
+const NEW_ROPE_KICK := 2.8            # the heavier bead chain swings less when rung
 const NEW_ROPE_G := 900.0             # and takes longer to swing into a new resting angle
 const NEW_ROPE_BREEZE_SCALE := 0.28   # a much gentler ambient sway than the regular ribbon
 const NEW_ROPE_DAMP := 0.965          # settle the heavier beads without prolonged oscillation
@@ -115,7 +115,6 @@ var _night := 0.0                     # (0 day .. 1 night: the lantern's glow sh
 ## claw_window): a small dark square, seen only when the tilt shows the ceiling, open while it visits
 const HATCH_W := 9.0                  # grid cells
 var hatch_open := false
-var _prev_tilt := Vector2.ZERO
 ## The sky behind it, with the real time: the sun on its arc round the shrine by day, the moon by
 ## night in its real phase, the sky and the clouds tinted at dawn, dusk and night
 var sun: Sprite2D
@@ -334,16 +333,6 @@ func _platform_offset() -> Vector2:
 func _process(delta: float) -> void:
 	var tp := get_node_or_null("/root/PoopPal/Main UI/TiltParallax")
 	var t: Vector2 = tp.get("_offset") if tp else Vector2.ZERO
-	# every tilt of the phone swings the rope (the lower beads more)
-	var dt_off := t - _prev_tilt
-	_prev_tilt = t
-	if _rp.size() == rope_count and dt_off.length() > 0.0005:
-		var rope_kick := NEW_ROPE_KICK if DevLaunch.new_shrine else ROPE_KICK
-		for i in rope_count:
-			_rq[i] += Vector2(dt_off.x, dt_off.y * 0.2) * rope_kick * float(i + 1) / rope_count   # (mostly sideways)
-		_lq += Vector2(dt_off.x, dt_off.y * 0.2) * ROPE_KICK * 0.45      # (it swings about as far as the rope)
-		if DevLaunch.new_shrine:
-			_lq_left += Vector2(dt_off.x, dt_off.y * 0.2) * ROPE_KICK * 0.45
 	_rope_step(minf(delta, 1.0 / 30.0))
 	_sky(t)
 	_rain_step(delta)
@@ -1120,8 +1109,7 @@ func _rope_step(dt: float) -> void:
 	var rope_at := NEW_ROPE_AT if DevLaunch.new_shrine else ROPE_AT
 	var bell_anchor := _g(rope_at.x, rope_at.y) + front.position
 	var anchor := bell_anchor + (Vector2(0, NEW_BELL_HANG * _gut_scale.y) if DevLaunch.new_shrine else Vector2.ZERO)
-	# (gravity straight down the screen, whatever the tilt: the tilt only swings them, through the kicks)
-	var down := Vector2.DOWN
+	var down := _real_down(dt)
 	var rope_down := down
 	var breeze := Vector2(sin(_t * 1.3) * 60.0 + sin(_t * 0.53) * 40.0, 0)
 	var rope_breeze := breeze * NEW_ROPE_BREEZE_SCALE if DevLaunch.new_shrine else breeze
@@ -1161,6 +1149,20 @@ func _rope_step(dt: float) -> void:
 				# The sprite's long axis points down at zero rotation; align it to its chain tangent.
 				rope[i].rotation = atan2(tangent.y, tangent.x) - PI * 0.5
 	_lantern_step(dt, down, breeze)
+
+## Where "down" is on the screen: the phone's real gravity in the screen's plane (held upright: straight
+## down; rolled: leaning to the low side, for as long as it's held so), smoothed; lying flat there's
+## little of it in the plane, so it tends back to straight down. No sensor (the Mac): straight down.
+var _down := Vector2.DOWN
+func _real_down(dt: float) -> Vector2:
+	var g := Input.get_gravity()
+	if g == Vector3.ZERO:
+		g = Input.get_accelerometer()
+	var want := Vector2.DOWN
+	if g != Vector3.ZERO:
+		want = (Vector2(g.x, -g.y) / 9.8 + Vector2.DOWN * 0.35).normalized()
+	_down = _down.slerp(want, clampf(dt * 8.0, 0.0, 1.0)).normalized()
+	return _down
 
 func _lantern_step(dt: float, down: Vector2, breeze: Vector2) -> void:
 	var lantern_at := NEW_LANTERN_AT if DevLaunch.new_shrine else LANTERN_AT
