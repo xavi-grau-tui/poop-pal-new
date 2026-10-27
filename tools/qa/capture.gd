@@ -52,6 +52,7 @@ func _ready() -> void:
 	if args.has("unlock"):
 		DevLaunch.unlock_everything()
 	DevLaunch.new_shrine = args.has("new_shrine")
+	DevLaunch.rc_new_art = args.has("rc_new_art")             # (RC Prix's Garden from the designer's pieces)
 	DevLaunch.shrine = args.has("shrine") or DevLaunch.new_shrine
 	if args.has("hour"):
 		Shrine.qa_hour = float(args["hour"])            # (hour=H: the shrine's sky at a pretend time)                       # (ALL UNLOCKED: every item, a random pal)

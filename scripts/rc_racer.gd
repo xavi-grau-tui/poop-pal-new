@@ -273,6 +273,16 @@ var knock_v := Vector2.ZERO
 var curb_t := 0.0                      # (the rumble's ticks)
 var _on_pad := false
 var half_w := 70.0
+## RC NEW ART (the dev launcher's trial, RcTiles): the Garden from the designer's square pieces
+var _tiles := {}                       # grid point -> its piece
+var _tile_pad := 0.0                   # grid point (0, 0) on the mat, world px
+var _start_square := Vector2i(-1, -1)
+var _pad_squares: Array = []           # [grid point, direction]
+var _gap_squares: Array = []           # [grid point, direction]
+var _rail_squares := {}                # corner squares with a tyre wall
+var _tile_shadow: Sprite2D             # the raised track's shadow on the lawn (a dark copy of it)
+var _tree_shade: Sprite2D              # the trees' shade over the lawn and the road
+var _slice_px := float(PX)             # the toy's slices' pixel size (the designer's car: finer)
 var centre := PackedVector2Array()     # the circuit's centre line, mat px, closed, every ~STEP px
 var count := 0                         # its points
 var lap_length := 0.0
@@ -1413,6 +1423,8 @@ func _begin(n: int) -> void:
 	_build_circuit()
 	_place_crowd()
 	_place_features()
+	if not _tiles.is_empty():
+		_snap_gaps()
 	_buoy_spots.clear()
 	board.texture = ImageTexture.create_from_image(_paint())
 	track.texture = ImageTexture.create_from_image(track_image)
@@ -1431,6 +1443,7 @@ func _begin(n: int) -> void:
 	canopy.visible = look == "garden" and not _trees.is_empty()
 	if canopy.visible:
 		canopy.texture = ImageTexture.create_from_image(_paint_canopy(int(mat_size.x / PX), int(mat_size.y / PX)))
+	_tile_art()
 	car_pos = centre[0]
 	heading = (centre[2] - centre[0]).angle()
 	near = 0
@@ -1495,7 +1508,7 @@ func _begin(n: int) -> void:
 
 func _build_circuit() -> void:
 	var spec: Array = LEVELS[level - 1]
-	half_w = spec[3]
+	half_w = RcTiles.half_width(level) if RcTiles.on(look) else spec[3]
 	var pad := EDGE * PX + half_w + MARGIN
 	var best: Array = []
 	var best_err := 1 << 40
@@ -1525,6 +1538,8 @@ func _build_circuit() -> void:
 	for c in best:
 		pts.append(Vector2(c - lo) * cell + Vector2(pad, pad))
 	_cross_pos = Vector2(_cross_grid - lo) * cell + Vector2(pad, pad)
+	_tile_pad = pad
+	_tiles = RcTiles.pieces(best.map(func(c): return Vector2i(c) - lo)) if RcTiles.on(look) else {}
 	centre = _resample(_rounded(pts))
 	count = centre.size()
 	lap_length = count * STEP
@@ -1553,9 +1568,19 @@ func _build_circuit() -> void:
 	for i in count:
 		rolled.append(centre[(best_i + i) % count])
 	centre = rolled
+	if not _tiles.is_empty():
+		# (the start line on a whole straight square: the pieces draw it in its middle)
+		_start_square = RcTiles.nearest_straight(_tiles, centre[0], pad, cell)
+		var k0 := RcTiles.nearest(centre, RcTiles.at(_start_square, pad, cell))
+		rolled = PackedVector2Array()
+		for i in count:
+			rolled.append(centre[(k0 + i) % count])
+		centre = rolled
 	bridge_range = _find_bridge() if extras.has("eight") and vehicle == "car" else Vector2i(-1, -1)
 	_find_rails(str(extras.get("rails", "")) if vehicle == "car" else "")
 	_place_pads(spec[6])
+	if not _tiles.is_empty():
+		_snap_to_squares()
 	par = ceilf(lap_length * LAPS / _speed() * PAR_SLACKS[vehicle] + PAR_PLUS - pads.size() * LAPS * PAD_SAVES)
 	for kind in PAR_PER_THING:
 		par += ceilf(int(extras.get(kind + "s", 0)) * PAR_PER_THING[kind] * LAPS)
@@ -1771,6 +1796,48 @@ func _place_pads(n: int) -> void:
 			mid = (mid + r[0] / 4) % count             # (off the start line)
 		var dir := (centre[(mid + 1) % count] - centre[mid]).normalized()
 		pads.append([centre[mid], dir])
+
+## RC NEW ART: the boost pads onto whole straight squares (the pieces draw them in the middle), and
+## which corner squares have a tyre wall
+func _snap_to_squares() -> void:
+	_pad_squares.clear()
+	var taken: Array = [_start_square]
+	for pd in pads:
+		var g := RcTiles.nearest_straight(_tiles, pd[0], _tile_pad, cell, taken)
+		if g.x < 0:
+			continue
+		taken.append(g)
+		var p := RcTiles.at(g, _tile_pad, cell)
+		var i := RcTiles.nearest(centre, p)
+		var dir := (centre[(i + 1) % count] - centre[i]).normalized()
+		pd[0] = p
+		pd[1] = dir
+		_pad_squares.append([g, dir])
+	_rail_squares.clear()
+	for i in _rail.size():
+		if _rail[i] != 0:
+			var g := Vector2i(((centre[i] - Vector2(_tile_pad, _tile_pad)) / cell).round())
+			if String(_tiles.get(g, "")).begins_with("corner"):
+				_rail_squares[g] = true
+
+## RC NEW ART: each jump onto a whole straight square, its hole in the square's middle (as the gap
+## pieces draw it), the ramp right before it
+func _snap_gaps() -> void:
+	_gap_squares.clear()
+	var taken: Array = [_start_square]
+	for pq in _pad_squares:
+		taken.append(pq[0])
+	for gi in gaps.size():
+		var mid: int = (gaps[gi][0] + gaps[gi][1]) / 2
+		var g := RcTiles.nearest_straight(_tiles, centre[mid], _tile_pad, cell, taken)
+		if g.x < 0:
+			continue
+		taken.append(g)
+		var p := RcTiles.at(g, _tile_pad, cell)
+		var i := RcTiles.nearest(centre, p)
+		var dir := (centre[(i + 1) % count] - centre[i]).normalized()
+		gaps[gi] = [RcTiles.nearest(centre, p - dir * RcTiles.GAP_HOLE), RcTiles.nearest(centre, p + dir * RcTiles.GAP_HOLE)]
+		_gap_squares.append([g, dir])
 
 ## A figure-8: two loops crossing once (a vertical stretch over a horizontal one), in squares:
 ## [loop A's width, height, loop B's width, height, notches]; notches put square bumps on the
@@ -3539,7 +3606,7 @@ func _place_car() -> void:
 	for i in n:
 		slices[i].rotation = heading
 		slices[i].position = (Vector2(0, -i * LAYER_UP) + tilt * float(i) / maxf(1.0, n - 1)).round()   # (lifted on screen, not turned)
-		slices[i].scale = Vector2(PX, PX * (1.0 - 0.42 * absf(bank))) if vehicle == "plane" else Vector2(PX, PX)
+		slices[i].scale = Vector2(PX, PX * (1.0 - 0.42 * absf(bank))) if vehicle == "plane" else Vector2(_slice_px, _slice_px)
 	shadow.position = car_pos.round() + Vector2(5, 8 + car_drop * 0.3)
 	shadow.rotation = heading
 	shadow.visible = state != State.FALL and vehicle != "plane"
@@ -3597,10 +3664,49 @@ func _place_car() -> void:
 		shadow.position = car_pos.round() + Vector2(5, 8)
 		shadow.modulate.a = 0.35 * (1.0 + car_drop / 120.0)
 
+## RC NEW ART: the floor, the track and the branches from the designer's pieces (finer: their pixels
+## RcTiles.ART_PX world px), the track's shadow a dark copy of it on the floor; otherwise the code's
+func _tile_art() -> void:
+	var k := RcTiles.ART_PX if not _tiles.is_empty() else float(PX)
+	for sp in [board, track, canopy]:
+		sp.scale = Vector2(k, k)
+	if _tile_shadow == null:
+		_tile_shadow = Sprite2D.new()
+		_tile_shadow.centered = false
+		_tile_shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_tile_shadow.modulate = RcTiles.SHADE_COL
+		board.add_child(_tile_shadow)                 # (on the floor: it moves with it in the 3D tilt)
+	_tile_shadow.visible = not _tiles.is_empty()
+	if _tree_shade == null:
+		_tree_shade = Sprite2D.new()
+		_tree_shade.centered = false
+		_tree_shade.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_tree_shade.modulate = RcTiles.TREE_SHADE_COL
+		world.add_child(_tree_shade)
+		world.move_child(_tree_shade, track.get_index() + 1)     # (over the track, under the car)
+	_tree_shade.visible = not _tiles.is_empty()
+	for lamp in lamps:
+		lamp.texture = RcTiles.tex("start_lamp") if not _tiles.is_empty() else _lamp_texture()
+		lamp.scale = Vector2(k, k)
+	if _tiles.is_empty():
+		return
+	var art := RcTiles.paint(self)
+	board.texture = ImageTexture.create_from_image(art[0])
+	track.texture = ImageTexture.create_from_image(art[1])
+	canopy.texture = ImageTexture.create_from_image(art[2])
+	canopy.visible = true
+	_tile_shadow.texture = track.texture
+	_tile_shadow.position = RcTiles.SHADE
+	_tree_shade.texture = canopy.texture
+	_tree_shade.scale = Vector2(k, k)
+	_tree_shade.position = RcTiles.TREE_SHADE * k
+
 ## The world's toy: its slices (made again on the car's node, the lower ones darker: its sides in
 ## shade, its top in the light), its shadow, the motor's voice (a boat's lower, a plane's buzzier)
 func _set_vehicle() -> void:
-	var layers: Array[Texture2D] = car_slices()
+	var layers: Array[Texture2D] = RcTiles.car_slices(car_slices()) if RcTiles.on(look) else car_slices()
+	_slice_px = RcTiles.ART_PX if RcTiles.on(look) else float(PX)
+	shadow.scale = Vector2(_slice_px, _slice_px)
 	match vehicle:
 		"boat":
 			layers = PalPrixArt.boat_slices()
@@ -3612,7 +3718,7 @@ func _set_vehicle() -> void:
 	for i in layers.size():
 		var sl := Sprite2D.new()
 		sl.texture = layers[i]
-		sl.scale = Vector2(PX, PX)
+		sl.scale = Vector2(_slice_px, _slice_px)
 		sl.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		var k := (0.85 if vehicle == "plane" else 0.62) + (0.15 if vehicle == "plane" else 0.38) * float(i) / (layers.size() - 1)
 		sl.modulate = Color(k, k, k)

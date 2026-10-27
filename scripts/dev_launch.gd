@@ -35,6 +35,9 @@ static var case_demo := false
 static var shrine := false
 ## NEW SHRINE: use the separate pale forest-frame art and its fit-to-screen scale
 static var new_shrine := false
+## RC NEW ART: RC Prix's Garden built from the designer's square pieces (RcTiles), a trial: the
+## original stays the default until it works as expected (the user, 2026-10-27); remembered
+static var rc_new_art := false
 
 func _ready() -> void:
 	var bg := ColorRect.new()
@@ -59,6 +62,22 @@ func _ready() -> void:
 	_button("BOOT + PROGRESSION", _progress_summary(), 1140, last == "progress", _progress)
 	_start_over_button(1400)
 	_rain_toggle(font)
+	_rc_art_toggle(font)
+
+## (RC Prix's Garden: the code's art or the designer's new pieces, a tap switches it)
+func _rc_art_toggle(font: Font) -> void:
+	rc_new_art = _prefs().get("rc_new_art", false)
+	var b := Button.new()
+	b.text = "RC ART: NEW" if rc_new_art else "RC ART: OLD"
+	b.position = Vector2(40, 230)
+	b.size = Vector2(300, 70)
+	b.add_theme_font_override("font", font)
+	b.add_theme_font_size_override("font_size", 30)
+	b.pressed.connect(func():
+		rc_new_art = not rc_new_art
+		b.text = "RC ART: NEW" if rc_new_art else "RC ART: OLD"
+		_save_choice(_last_choice()))
+	add_child(b)
 
 ## (the shrine's rain, forced for testing: off / light / heavy, a tap cycles it)
 func _rain_toggle(font: Font) -> void:
@@ -235,13 +254,16 @@ static func open_games(tree: SceneTree) -> void:
 	btn.menu_manager.request_menu_second_half(btn.target_menu)
 
 func _last_choice() -> String:
+	return _prefs().get("choice", "new_shrine")
+
+func _prefs() -> Dictionary:
 	var f := FileAccess.open(PREFS, FileAccess.READ)
 	if not f:
-		return "new_shrine"
+		return {}
 	var data = JSON.parse_string(f.get_as_text())
-	return data.get("choice", "new_shrine") if data is Dictionary else "new_shrine"
+	return data if data is Dictionary else {}
 
 func _save_choice(choice: String) -> void:
 	var f := FileAccess.open(PREFS, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({ "choice": choice }))
+		f.store_string(JSON.stringify({ "choice": choice, "rc_new_art": rc_new_art }))
