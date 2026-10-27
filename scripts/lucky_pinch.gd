@@ -831,7 +831,7 @@ func _add_sticker() -> void:
 	var st := Sprite2D.new()
 	st.texture = ImageTexture.create_from_image(img)
 	st.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	st.scale = Vector2(1.4, 1.4)                       # (the logo's 5 px art pixels → an even 7)
+	st.scale = Vector2.ONE * (298.0 / float(w))        # keep the sticker's previous on-screen width
 	st.rotation = -0.07
 	st.position = STICKER_AT
 	st.modulate = Color(0.82, 0.7, 0.86, 0.5)          # muted: a bit faded into the purple

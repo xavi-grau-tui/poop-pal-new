@@ -162,10 +162,11 @@ func _new_shrine_menu_icon(source: Texture2D, category: String) -> Texture2D:
 			return texture
 	return source
 
-## Every icon at one exact pixel size in its square (the user: crisp, consistent, centred): 4 x 4 screen
-## px per art px (the squares are ~124 px: a drawing up to 30 art px fits, scaled by a whole number,
-## no stretching, so no pixel comes out wider than another), centred on the square on whole pixels
+## Every icon crisp and filling its square (the user): scaled by a whole number (no pixel wider than
+## another), the biggest that keeps the drawing inside ICON_ROOM (the square, ~126 x 133 px, less a
+## small margin), at least 4x; a small drawing (Kimchi, 24 px) goes up to 5x; centred on whole pixels
 const ICON_PX := 4.0
+const ICON_ROOM := Vector2(120.0, 124.0)
 ## where the icon's square is in its card, from the card's frame (measured on screen: the scene's
 ## icons sat a few px off their squares, and the drinks' first card is placed differently - the user)
 const SQUARE_IN_FRAME := Vector2(-215.5, -4.84)
@@ -184,10 +185,12 @@ func _set_icon(option_node: Node, tex: Texture2D) -> void:
 	if not _used_rects.has(key):
 		_used_rects[key] = tex.get_image().get_used_rect()
 	var r: Rect2i = _used_rects[key]
+	var px := maxf(ICON_PX, floorf(minf(ICON_ROOM.x / maxf(1, r.size.x), ICON_ROOM.y / maxf(1, r.size.y))))
+	icon.scale = Vector2.ONE * px
 	# the drawing's own box centred on the square, its top-left corner on a whole screen pixel
 	var centre: Vector2 = icon.get_meta("centre")
 	icon.offset = Vector2.ZERO
-	icon.position = (centre - (Vector2(r.position) + Vector2(r.size) / 2.0) * ICON_PX).round()
+	icon.position = (centre - (Vector2(r.position) + Vector2(r.size) / 2.0) * px).round()
 
 ## A card's name in its room (the user: Hot and Sour Soup ran past the label): one line if it fits,
 ## else two lines split at a space, and smaller only if a line still doesn't fit
