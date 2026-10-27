@@ -16,7 +16,8 @@ from rcprix_templates import (CURB, FRAME, GROUND, OVERLAYS, ROAD,
                               ROAD_HALF, ROAD_HALF_WIDE, SPRITES, SQ, SIZES)
 from rcprix_garden_full import (GOLD, PLUM, RED, WHITE, frame_piece, overlay,
                                 small_sprite)
-from rcprix_garden_quality_sample import grass_sample, painted_source, polish_road
+from rcprix_garden_quality_sample import painted_source, polish_road
+from rcprix_garden_round3 import seamless_a, variant_from_a, bush as round3_bush
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "textures/minigames/rcprix/garden"
@@ -51,7 +52,7 @@ def tree_sprite(name,size):
 
 
 def bush_sprite(name,size):
-    return cutout_source("bush",size,flip_x=name.endswith("b"))
+    return round3_bush(name,size)
 
 
 def car_slices():
@@ -242,8 +243,10 @@ def generate():
             polished.save(OUT/f"{name}{suffix}.png")
         for name,_ in OVERLAYS:
             polished_overlay(name,half).save(OUT/f"{name}{suffix}.png")
-    for letter in "abc":
-        grass_sample(letter).save(OUT/f"grass_{letter}.png")
+    grass_a = seamless_a()
+    for letter, pixels in (("a",grass_a),("b",variant_from_a(grass_a,"b")),
+                           ("c",variant_from_a(grass_a,"c"))):
+        Image.fromarray(pixels,"RGBA").save(OUT/f"grass_{letter}.png")
     cars=car_slices()
     for i,im in enumerate(cars):
         im.save(OUT/f"car_slice_{i}.png")

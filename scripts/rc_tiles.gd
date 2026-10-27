@@ -24,6 +24,12 @@ const SHADE_COL := Color(0.05, 0.04, 0.1, 0.3)
 const TREE_SHADE := Vector2(18, 26)
 const TREE_SHADE_COL := Color(0.04, 0.1, 0.06, 0.3)
 const DECOR_SHADE := Vector2i(3, 4)   # a bush's or flowers' own little shadow
+const BUSHES := ["bush_a", "bush_b", "bush_c", "bush_d"]   # (those drawn so far are used)
+const BUSHES_PER_SQ := 0.6            # bushes per course square of lawn, all kinds together
+const SAME_BUSH_APART := 2.5 * SQ     # the same bush never nearer itself than this (the user: the same one twice on screen)
+## TRIAL until the designer's redrawn bushes come (NOTES_ROUND_4): the current ones are doubled
+## (Scale2x), their leaves then the trees' size; set false when the new ones are in
+const BUSH_X2 := true
 const DECOR_SHADE_A := 0.28
 const GAP_HOLE := 60.0                # a jump's hole, world px each side of its square's middle (the gap pieces')
 const RAMP_SHIFT := 50                # the ramp drawn this many art px back from its piece's middle, right before the hole
@@ -150,7 +156,11 @@ static func paint(rc) -> Array:
 			floor_img.blit_rect(grass[rng.randi() % 3], Rect2i(0, 0, SQ, SQ), Vector2i(x, y))
 	# decor on the lawn: off the track (and its tyre walls), the stand and the frame
 	var stand: Rect2 = Rect2(rc.crowd.rect.position / ART_PX, rc.crowd.rect.size / ART_PX).grow(6.0) if rc.crowd.visible else Rect2()
+	var placed: Array[Rect2i] = []                      # (decor never on other decor: the user, flowers were over bushes)
 	var clear := func(r: Rect2i) -> bool:
+		for q in placed:
+			if q.grow(4).intersects(r):
+				return false
 		if r.position.x < FRAME + 2 or r.position.y < FRAME + 2 or r.end.x > w - FRAME - 2 or r.end.y > h - FRAME - 2:
 			return false
 		if stand.intersects(Rect2(r)):
@@ -161,12 +171,30 @@ static func paint(rc) -> Array:
 					return false
 		return true
 	var area := float(w * h) / float(SQ * SQ)
-	for spec in [["bush_a", 0.5], ["bush_b", 0.5], ["flowers_a", 1.2], ["flowers_b", 1.2]]:
+	# the bushes, every kind drawn so far, each kind kept well apart from itself; then the flowers
+	var kinds: Array = BUSHES.filter(func(n): return ResourceLoader.exists(DIR + n + ".png"))
+	var where := {}                                     # bush kind -> its centres so far
+	for _k in int(area * BUSHES_PER_SQ):
+		for _try in 16:
+			var name: String = kinds[rng.randi() % kinds.size()]
+			var im := _bush(name)
+			var p := Vector2i(rng.randi_range(0, w - im.get_width()), rng.randi_range(0, h - im.get_height()))
+			var mid := Vector2(p) + Vector2(im.get_size()) / 2.0
+			if where.get(name, []).any(func(c): return c.distance_to(mid) < SAME_BUSH_APART):
+				continue
+			if clear.call(Rect2i(p, im.get_size())):
+				placed.append(Rect2i(p, im.get_size()))
+				where[name] = where.get(name, []) + [mid]
+				_stamp(floor_img, _shadow_of(im), p + DECOR_SHADE)
+				_stamp(floor_img, im, p)
+				break
+	for spec in [["flowers_a", 1.2], ["flowers_b", 1.2]]:
 		var im := img(spec[0])
 		for _k in int(area * float(spec[1])):
 			for _try in 12:
 				var p := Vector2i(rng.randi_range(0, w - im.get_width()), rng.randi_range(0, h - im.get_height()))
 				if clear.call(Rect2i(p, im.get_size())):
+					placed.append(Rect2i(p, im.get_size()))
 					_stamp(floor_img, _shadow_of(im), p + DECOR_SHADE)
 					_stamp(floor_img, im, p)
 					break
@@ -197,6 +225,16 @@ static func paint(rc) -> Array:
 			"tree_right": p.x = w - im.get_width()
 		_stamp(canopy, im, p)
 	return [floor_img, track, canopy]
+
+## A bush, doubled with Scale2x (a TRIAL, the user 2026-10-27: the designer's bushes, shrunk from big
+## pictures, looked denser than the trees, as if farther away; doubled, their leaves match the trees')
+static func _bush(name: String) -> Image:
+	if not BUSH_X2:
+		return img(name)
+	var key := name + "_x2"
+	if not _cache.has(key):
+		_cache[key] = scale2x(img(name))
+	return _cache[key]
 
 ## A sprite's shadow: its shape, dark and see-through
 static func _shadow_of(src: Image) -> Image:

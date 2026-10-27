@@ -73,7 +73,7 @@ def main():
                 board.alpha_composite(rnd.choice(grass), at(x, y))
     tiles = course()
     # decor on the lawn, away from the road
-    for name, n in (("bush_a", 5), ("bush_b", 5), ("flowers_a", 10), ("flowers_b", 10)):
+    for name, n in (("bush_a", 3), ("bush_b", 3), ("bush_c", 3), ("bush_d", 3), ("flowers_a", 10), ("flowers_b", 10)):
         im = art(name)
         for _ in range(n if im else 0):
             for _try in range(40):

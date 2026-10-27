@@ -39,7 +39,7 @@ SPRITES = [   # file, label, w, h
     *[(f"car_slice_{i}", f"Car slice {i + 1}", 44, 32) for i in range(6)],
     ("crate", "Crate", 20, 20), ("lamp_post", "Lamp post", 10, 18), ("start_lamp", "Start lamp", 32, 32),
     ("spring", "Spring", 24, 14), ("balloon", "Balloon", 18, 26), ("sparkle", "Sparkle", 18, 18), ("helmet", "Helmet", 16, 14),
-    ("bush_a", "Bush A", 60, 52), ("bush_b", "Bush B", 46, 40), ("flowers_a", "Flowers A", 16, 12), ("flowers_b", "Flowers B", 16, 12),
+    ("bush_a", "Bush A", 60, 52), ("bush_b", "Bush B", 46, 40), ("bush_c", "Bush C", 54, 46), ("bush_d", "Bush D", 40, 34), ("flowers_a", "Flowers A", 16, 12), ("flowers_b", "Flowers B", 16, 12),
     ("frame_corner_tl", "Frame corner TL", FRAME, FRAME), ("frame_corner_tr", "Frame corner TR", FRAME, FRAME),
     ("frame_corner_bl", "Frame corner BL", FRAME, FRAME), ("frame_corner_br", "Frame corner BR", FRAME, FRAME),
     ("frame_top", "Frame top", SQ, FRAME), ("frame_bottom", "Frame bottom", SQ, FRAME),
