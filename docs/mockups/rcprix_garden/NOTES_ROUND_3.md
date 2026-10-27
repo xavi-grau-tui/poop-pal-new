@@ -1,60 +1,57 @@
-# RC Prix · Garden: notes for round 3 (road and bushes)
+# RC Prix · Garden: notes for round 3 (bushes and grass seams)
 
-We played the quality set in the game. Thank you: the courses work well.
+We played the quality set in the game, and the courses work well. We now go **bit by bit**. This
+round is only two things: the bushes and the grass seams. The road comes in a later round.
 
-- **Approved, keep as they are:** grass A/B/C, the flowers, the trees. One fix in the grass: in
-  the game, faint straight lines show where grass squares meet (the edge reconciliation leaves a
-  visible strip). The pattern must carry on across every edge with no straight line, in any
-  combination of A, B and C next to each other. Check it on a big board in `course_preview.png`.
-- **Not needed any more: the car.** The game now uses its original car, redrawn at the new detail
-  in code. Leave the `car_slice_*` files as they are.
-- **Shadows and light are now done by the game:** the trees' shade, the track's shadow, the
-  bushes' and flowers' shadows. Don't draw shadows on the ground.
+- **Approved, don't change:** the trees (perfect), the flowers, the grass's look.
+- **Not needed any more:** the car. The game uses its original car; leave the `car_slice_*` files.
+- **Shadows are done by the game** (trees, track, bushes, flowers): never draw them on the ground.
 
-## What's wrong with the road and the bushes
+## 1. Bushes: the same pixel density as the trees
 
-They look **too defined and don't read as the same pixel art** as the grass and the trees. They were
-sampled pixel by pixel from painted, generated sources, which leaves:
+The trees are right. The bushes look denser and "too defined" because they're a whole bush shrunk
+into a small box: their leaves are 2–3 px across, while the trees' leaf clusters are about 8–12 px.
 
-- single-pixel speckle everywhere (the asphalt grain, the bush leaves);
-- many slightly different colours where pixel art would use a few clear tones;
-- detail finer than the grass and trees around them, so they look like a different style.
+- **The bushes' leaves must be the same size in pixels as the trees' leaves.** Same leaf shapes,
+  palette, lighting from the top left and outline as the trees. A bush is a few of the trees'
+  leaf clusters grouped together, not a tree made smaller.
+- **Never shrink a whole picture down.** Make the bush at the trees' scale. If you start from the
+  tree's source, use the same scale factor as for the trees.
+- **The boxes are bigger now** to fit tree-sized leaves: `bush_a` 60×52, `bush_b` 46×40
+  (templates updated). A bush is about 4–6 leaf clusters.
 
-## The rules for this round
+Test: put a bush next to a tree in one picture at 3×. They should look drawn with the same brush.
 
-1. **Few clear tones per material:**
-   - asphalt: 3 greys, plus 1 lighter grey for the worn centre band;
-   - curbs: red and white, 3 tones each (light top, mid, dark lower edge);
-   - side face: 3 oranges;
-   - bushes: 4 greens, like the trees.
+## 2. Grass: no lines where squares meet
 
-   No other in-between colours.
-2. **No single stray pixels.** Texture is made of small clusters of at least 2×2 pixels, placed
-   sparsely and evenly, never noise.
-3. **The same pixel scale as the grass and trees.** Look at the approved trees: their leaf
-   clusters and their outline are the standard. The road and bushes should look drawn by the same
-   hand.
-4. **Draw it, don't sample it.** Keep the script for the exact shapes (masks, joins, stripe
-   positions), but paint the shading with a limited palette instead of sampling a painted image.
+In the game, faint straight lines show where grass squares meet. We measured two causes:
 
-## The pieces
+1. **The edges are smoothed out.** In each square, the 2–3 px along every edge have about half
+   the texture of the inside, so a calmer strip runs along every seam.
+2. **A, B and C have different edges.** Where two different squares meet, their patches are cut
+   off in a straight line.
 
-- **Road (both widths, all pieces and overlays):**
-  - asphalt calm and even: the 3 greys in soft, large areas (darker shoulders, lighter worn centre
-    band), plus sparse 2×2 grain;
-  - curbs keep the raised look, with clean blocks and crisp edges, and the 3 tones each;
-  - the side face keeps its depth with 3 oranges.
+The fix, the standard way to make tile variants:
 
-  Overlays (start line, boost pads, ramps, tyre walls) follow the same rules.
-- **Bushes A and B:** the trees' style and palette at small size: a few leaf clusters, 4 greens,
-  the same outline as the trees. Calmer than now, so they don't compete with the car.
+1. **Make grass A truly seamless**, without blending the edges. Paint it, then shift it by half
+   a square (90 px) both ways so the seams cross in the middle, and repaint that cross by hand so
+   the patches carry on. Shift back. Its edges then join itself with no strip at all.
+2. **Make B and C from A, changing only the inside.** Keep a border band of about 16 px on all
+   four sides **exactly the same as A's**. Vary the patches, tufts and flowers only inside it.
+   Then any square joins any other exactly as A joins itself, so no lines in any combination.
+3. **Keep the texture strength the same everywhere**, edges included: no calmer or blurrier strip.
 
-Everything the game depends on stays exactly as it is: sizes, names, road masks, joins, overlay
-positions.
+Test: `python3 tools/art/rcprix_preview.py` lays a big board with A, B and C mixed. Look at it at
+2× (`course_preview_2x.png`); you shouldn't be able to see where any square ends.
 
-## Order and checks
+## Delivery
 
-1. First a sample: one straight, one corner and bush A. Wait for approval.
-2. Then all road pieces and overlays in both widths, and bush B.
-3. Before handing over: `check_rcprix_art.py` 76/76, 0 problems, plus the `rcprix_preview.py`
-   pictures (and `--wide`).
+`grass_a.png`, `grass_b.png`, `grass_c.png`, `bush_a.png` (60×52) and `bush_b.png` (46×40) in
+`textures/minigames/rcprix/garden/`. Run `python3 tools/art/check_rcprix_art.py` (76/76, 0 problems)
+and send the course preview pictures plus one picture of a bush next to a tree at 3×.
+
+## Later: the road
+
+For the round after this one: the road and its overlays look too defined and don't read as the
+same pixel art as the grass and trees (speckle, too many colours, finer detail). We'll send its
+notes then.
