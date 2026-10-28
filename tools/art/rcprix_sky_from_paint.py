@@ -58,6 +58,32 @@ def clean_cut(a):
     return a
 
 
+def drop_cut_puffs(a, start, end, along_x):
+    """A stand cloud's over layer: the puffs in its repeated middle (art px start..end along the stand) that reach
+    within 3 px of its ends are cut off by the repeat (a straight edge each time): dropped, the whole ones kept"""
+    t = a if along_x else a.transpose(1, 0, 2)
+    seen = np.zeros(t.shape[:2], bool)
+    h = t.shape[0]
+    for y in range(h):
+        for x in range(start, end):
+            if t[y, x, 3] == 0 or seen[y, x]:
+                continue
+            comp, stack = [], [(y, x)]
+            seen[y, x] = True
+            while stack:
+                cy, cx = stack.pop()
+                comp.append((cy, cx))
+                for ny, nx in ((cy + 1, cx), (cy - 1, cx), (cy, cx + 1), (cy, cx - 1)):
+                    if 0 <= ny < h and start <= nx < end and not seen[ny, nx] and t[ny, nx, 3] > 0:
+                        seen[ny, nx] = True
+                        stack.append((ny, nx))
+            xs = [c[1] for c in comp]
+            if min(xs) <= start + 2 or max(xs) >= end - 3:
+                for cy, cx in comp:
+                    t[cy, cx] = 0
+    return a
+
+
 def recolour_map(src, dst):
     m = {}
     for s, d in zip(src.reshape(-1, 4), dst.reshape(-1, 4)):
@@ -104,6 +130,9 @@ def main():
         a = load(p)
         if name.startswith("ring_"):
             a = clean_cut(a)
+        if name.startswith("stand_cloud_") and name.endswith("_over"):
+            # (the stand's pieces in art px: end_a 41, middle 80, after the cloud's margin of 22)
+            a = drop_cut_puffs(a, 22 + 41, 22 + 41 + 80, "front" in name or "back" in name)
         done[name] = a
     if "ring_124" in done and "ring_gold_124" in done:
         m = recolour_map(done["ring_124"], done["ring_gold_124"])
