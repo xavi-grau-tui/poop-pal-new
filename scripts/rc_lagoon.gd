@@ -455,6 +455,8 @@ static func decor(rc) -> Image:
 			if roll <= 0.0:
 				return DECOR[i]
 		return DECOR[0]
+	if ResourceLoader.exists(RcTiles.DIR + "frame_top.png"):
+		RcTiles._frame(out, w, h)                    # (the Garden's wooden frame: the same 20 px border, the user)
 	_start_line(out, rc)
 	# the islands first (the designer's, round 1b), on the spots rc_racer chose (_sandbars), with their palms
 	var isles: Array[Rect2i] = []

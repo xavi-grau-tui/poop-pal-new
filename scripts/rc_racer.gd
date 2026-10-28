@@ -929,6 +929,10 @@ class Crowd extends Node2D:
 ## exhaust; both on the 4 px grid
 class Trail extends Node2D:
 	var marks: Array = []             # [position, age, kind]
+	var fine := false                 # RC ART's Lagoon: the wake's foam on the 2 px grid, warm, breaking up as it fades
+	const FINE_FOAM := [[Vector2i(0, 0)], [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)],
+		[Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1)],
+		[Vector2i(-2, 0), Vector2i(2, 1), Vector2i(0, -2), Vector2i(1, 2), Vector2i(-1, -1)]]   # (a dot, a clump, a blob, specks)
 	var puff_t := 0.0
 	const LIFE := 0.28
 	func add(p: Vector2, heading: float, delta: float) -> void:
@@ -991,6 +995,14 @@ class Trail extends Node2D:
 	func _draw() -> void:
 		for m in marks:
 			var p: Vector2 = (m[0] as Vector2).snapped(Vector2(4, 4))
+			if m[2] == 3 and fine:
+				var ff: float = m[1] / 1.5
+				var shape: Array = FINE_FOAM[0 if ff < 0.1 else (1 if ff < 0.3 else (2 if ff < 0.6 else 3))]
+				var fp: Vector2 = (m[0] as Vector2).snapped(Vector2(2, 2))
+				for cell in shape:
+					draw_rect(Rect2(fp + Vector2(cell) * 2.0 + Vector2(2, 2), Vector2(2, 2)), Color(0.45, 0.2, 0.3, 0.16 * (1.0 - ff)))
+					draw_rect(Rect2(fp + Vector2(cell) * 2.0, Vector2(2, 2)), Color(1.0, 0.965, 0.92, 0.9 * (1.0 - ff)))
+				continue
 			if m[2] == 3:
 				# (foam: a little shadow under it so it stands out on light water, growing as it spreads)
 				var f3: float = m[1] / 1.5
@@ -1007,7 +1019,10 @@ class Trail extends Node2D:
 				draw_rect(Rect2(p - Vector2(4, 4), Vector2(8, 8)), Color(1.0, 0.95, 0.6, 1.0 - f5))
 				continue
 			if m[2] == 2:
-				draw_rect(Rect2(p - Vector2(2, 2), Vector2(4, 4)), Color(0.8, 0.9, 1.0, 0.8 * (1.0 - m[1] / 0.35)))
+				if fine:
+					draw_rect(Rect2((m[0] as Vector2).snapped(Vector2(2, 2)), Vector2(2, 2)), Color(1.0, 0.97, 0.94, 0.8 * (1.0 - m[1] / 0.35)))
+				else:
+					draw_rect(Rect2(p - Vector2(2, 2), Vector2(4, 4)), Color(0.8, 0.9, 1.0, 0.8 * (1.0 - m[1] / 0.35)))
 			elif m[2] == 0:
 				draw_rect(Rect2(p - Vector2(2, 2), Vector2(4, 4)), Color(1, 1, 1, 0.35 * (1.0 - m[1] / LIFE)))
 			else:
@@ -1846,6 +1861,7 @@ func _begin(n: int) -> void:
 		sky_dock.build(centre[0], d0, 20.0 * STEP, 6.0 * STEP, half_w * 0.72)
 	water_fx.visible = vehicle == "boat"
 	water_fx.fine_fish = RcLagoon.on(look)
+	trail.fine = RcLagoon.on(look)
 	water_fx.setup(self, slicks.filter(func(sl): return sl[1] == "whirl").map(func(sl): return sl[0]), Color8(255, 236, 214) if look == "lagoon" else Color8(236, 255, 252), pads if vehicle == "boat" else [], PAD_LEN, half_w - 34.0)
 	canopy.visible = look == "garden" and not _trees.is_empty()
 	if canopy.visible:
