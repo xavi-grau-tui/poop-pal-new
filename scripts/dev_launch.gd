@@ -44,8 +44,8 @@ static var rc_new_art := false
 static var rc_grade := 0
 static var rc_fx := false                          # RC Prix Garden's air (RcAtmosphere), a trial
 ## RINGS: the plane's rings all red, flashing gold as they're flown through (GOLD PASS), or the next one gold
-## (GOLD NEXT, as before): to compare on the phone (the user, 2026-10-29)
-static var rc_gold_pass := false
+## (GOLD NEXT, as before): to compare on the phone (the user, 2026-10-29: "I prefer it", GOLD PASS the default)
+static var rc_gold_pass := true
 
 func _ready() -> void:
 	var bg := ColorRect.new()
@@ -124,7 +124,7 @@ func _rc_fx_toggle(font: Font) -> void:
 
 ## (RC Prix's plane rings: the next one gold, or gold once flown through; a tap switches it)
 func _rc_rings_toggle(font: Font) -> void:
-	rc_gold_pass = _prefs().get("rc_gold_pass", false)
+	rc_gold_pass = _prefs().get("rc_gold_pass", true)
 	var b := Button.new()
 	b.text = "RINGS: GOLD PASS" if rc_gold_pass else "RINGS: GOLD NEXT"
 	b.position = Vector2(390, 310)

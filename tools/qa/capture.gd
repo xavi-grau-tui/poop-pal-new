@@ -55,7 +55,7 @@ func _ready() -> void:
 	DevLaunch.rc_new_art = args.has("rc_new_art")             # (RC Prix's Garden from the designer's pieces)
 	DevLaunch.rc_grade = int(args.get("rc_grade", "0"))      # (its colour grade, 0 as drawn)
 	DevLaunch.rc_fx = args.get("rc_fx", "0") == "1"         # (its air: clouds' shadows, sun, beams, mist)
-	DevLaunch.rc_gold_pass = args.get("rc_gold_pass", "0") == "1"   # (the plane's rings gold once flown through)
+	DevLaunch.rc_gold_pass = args.get("rc_gold_pass", "1") == "1"   # (the plane's rings gold once flown through)
 	DevLaunch.shrine = args.has("shrine") or DevLaunch.new_shrine
 	if args.has("hour"):
 		Shrine.qa_hour = float(args["hour"])            # (hour=H: the shrine's sky at a pretend time)                       # (ALL UNLOCKED: every item, a random pal)
