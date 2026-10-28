@@ -1126,10 +1126,11 @@ class Ring extends Node2D:
 				modulate = Color(1, 1, 1)
 			2:
 				if was == 1 or was == 4 or was == 0:
-					modulate = Color(1.4, 1.3, 1.0)
+					modulate = Color(1.15, 1.1, 1.0) if DevLaunch.rc_gold_pass else Color(1.4, 1.3, 1.0)   # (gold already: less flash)
+					var pop_t := 0.6 if DevLaunch.rc_gold_pass else 0.4   # (long enough to see it turn gold)
 					_pop = create_tween()
-					_pop.tween_property(self, "scale", Vector2.ONE * 1.3, 0.4).set_ease(Tween.EASE_OUT)
-					_pop.parallel().tween_property(self, "modulate", Color(1.4, 1.3, 1.0, 0.0), 0.4)
+					_pop.tween_property(self, "scale", Vector2.ONE * 1.3, pop_t).set_ease(Tween.EASE_OUT)
+					_pop.parallel().tween_property(self, "modulate", Color(1.4, 1.3, 1.0, 0.0), pop_t)
 				else:
 					modulate.a = 0.0
 			3:
@@ -1172,7 +1173,8 @@ class Ring extends Node2D:
 				img.set_pixel(cx, cy, col)
 		return [ImageTexture.create_from_image(img), Vector2(-ext, -ext), 4.0]
 	func _draw() -> void:
-		var look := "gold" if state == 1 else ("grey" if state == 3 else "candy")
+		# (the dev launcher's RINGS: gold once flown through, the next one red and pulsing; else the next one gold)
+		var look := "gold" if state == (2 if DevLaunch.rc_gold_pass else 1) else ("grey" if state == 3 else "candy")
 		if not _tex.has(look):
 			_tex[look] = RcSky.ring_half(r, look, n, d, upper) if art else _paint(look)
 		var tx: Array = _tex[look]

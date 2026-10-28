@@ -43,6 +43,9 @@ static var rc_new_art := false
 ## stand is always SOFT); 0 as drawn (the default), then RcTiles.GRADES; remembered
 static var rc_grade := 0
 static var rc_fx := false                          # RC Prix Garden's air (RcAtmosphere), a trial
+## RINGS: the plane's rings all red, flashing gold as they're flown through (GOLD PASS), or the next one gold
+## (GOLD NEXT, as before): to compare on the phone (the user, 2026-10-29)
+static var rc_gold_pass := false
 
 func _ready() -> void:
 	var bg := ColorRect.new()
@@ -70,6 +73,7 @@ func _ready() -> void:
 	_rc_art_toggle(font)
 	_rc_grade_toggle(font)
 	_rc_fx_toggle(font)
+	_rc_rings_toggle(font)
 
 ## (RC Prix's Garden: the code's art or the designer's new pieces, a tap switches it)
 func _rc_art_toggle(font: Font) -> void:
@@ -115,6 +119,21 @@ func _rc_fx_toggle(font: Font) -> void:
 	b.pressed.connect(func():
 		rc_fx = not rc_fx
 		b.text = "FX: ON" if rc_fx else "FX: OFF"
+		_save_choice(_last_choice()))
+	add_child(b)
+
+## (RC Prix's plane rings: the next one gold, or gold once flown through; a tap switches it)
+func _rc_rings_toggle(font: Font) -> void:
+	rc_gold_pass = _prefs().get("rc_gold_pass", false)
+	var b := Button.new()
+	b.text = "RINGS: GOLD PASS" if rc_gold_pass else "RINGS: GOLD NEXT"
+	b.position = Vector2(390, 310)
+	b.size = Vector2(300, 70)
+	b.add_theme_font_override("font", font)
+	b.add_theme_font_size_override("font_size", 24)
+	b.pressed.connect(func():
+		rc_gold_pass = not rc_gold_pass
+		b.text = "RINGS: GOLD PASS" if rc_gold_pass else "RINGS: GOLD NEXT"
 		_save_choice(_last_choice()))
 	add_child(b)
 
@@ -305,4 +324,4 @@ func _prefs() -> Dictionary:
 func _save_choice(choice: String) -> void:
 	var f := FileAccess.open(PREFS, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({ "choice": choice, "rc_new_art": rc_new_art, "rc_grade_scenery": rc_grade, "rc_fx": rc_fx }))
+		f.store_string(JSON.stringify({ "choice": choice, "rc_new_art": rc_new_art, "rc_grade_scenery": rc_grade, "rc_fx": rc_fx, "rc_gold_pass": rc_gold_pass }))
