@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dun7u3xcby0if"
+path="res://.godot/imported/Pixel Chase (1).mp3-23458a6a60ffdb562e3c9e4f62e96a45.mp3str"
+
+[deps]
+
+source_file="res://sounds/music/Pixel Chase (1).mp3"
+dest_files=["res://.godot/imported/Pixel Chase (1).mp3-23458a6a60ffdb562e3c9e4f62e96a45.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

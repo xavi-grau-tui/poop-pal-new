@@ -14,6 +14,8 @@ var is_game_over := false
 
 # Optional game-specific music path
 var game_music_path: String = ""
+# ...and more songs to play after it, in turn, then round again (each plays once to its end: GameScreen)
+var game_music_playlist: Array[String] = []
 var music_player: AudioStreamPlayer2D = null
 var previous_music_was_playing := false
 

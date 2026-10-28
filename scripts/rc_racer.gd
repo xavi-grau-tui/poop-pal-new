@@ -1780,6 +1780,7 @@ class GustFx extends Node2D:
 
 func _ready() -> void:
 	game_music_path = "res://sounds/music/Pixel Chase.ogg"     # (107.22 BPM, looped on bar lines: tools/audio/loop_track.py)
+	game_music_playlist = ["res://sounds/music/Pixel Chase (1).mp3"]   # (then this one, in turn: the user, 2026-10-28, less repetitive)
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	_create_nodes()
 	intro_text = "Steer your car"

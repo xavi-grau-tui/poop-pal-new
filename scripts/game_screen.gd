@@ -10,6 +10,8 @@ static var is_active := false
 var current_game: Node = null
 var current_game_index := -1
 var game_music_player: AudioStreamPlayer2D = null
+var _music_list: Array[String] = []      # the game's songs in turn (its game_music_path, then its playlist)
+var _music_i := 0
 
 # Map page indices to minigame scene paths.
 var game_scenes := {
@@ -61,10 +63,14 @@ func start_game(page_index: int) -> void:
 func _start_music_for_game() -> void:
 	if not current_game or current_game.game_music_path == "":
 		return
-	# Already playing the right song — do nothing
+	var songs: Array[String] = [current_game.game_music_path]
+	songs.append_array(current_game.game_music_playlist)
+	# Already playing one of the right songs — do nothing
 	if game_music_player and game_music_player.stream \
-		and game_music_player.stream.resource_path == current_game.game_music_path:
+		and songs.has(game_music_player.stream.resource_path):
 		return
+	_music_list = songs
+	_music_i = 0
 	# Stop any existing game music
 	_stop_game_music()
 	# Stop main music
@@ -73,7 +79,7 @@ func _start_music_for_game() -> void:
 		music_controller.stop()
 	# Create new player owned by GameScreen
 	game_music_player = AudioStreamPlayer2D.new()
-	var stream = load(current_game.game_music_path) as AudioStream
+	var stream = _song(0)
 	if stream:
 		game_music_player.stream = stream
 		game_music_player.autoplay = true
@@ -83,8 +89,22 @@ func _start_music_for_game() -> void:
 		if sound_btn and sound_btn.button_pressed:
 			game_music_player.volume_db = linear_to_db(0.0)
 
+## A song of the game's list, ready to play: with more than one, each plays once (no loop), the next follows
+func _song(i: int) -> AudioStream:
+	var stream := load(_music_list[i]) as AudioStream
+	if stream and _music_list.size() > 1 and "loop" in stream:
+		stream.loop = false
+	return stream
+
 func _on_game_music_finished() -> void:
-	if game_music_player and game_music_player.stream:
+	if not game_music_player:
+		return
+	if _music_list.size() > 1:                   # (the next song of the list, then round again)
+		_music_i = (_music_i + 1) % _music_list.size()
+		var next := _song(_music_i)
+		if next:
+			game_music_player.stream = next
+	if game_music_player.stream:
 		game_music_player.play()
 
 func _stop_game_music() -> void:
