@@ -1428,6 +1428,7 @@ class WaterFx extends Node2D:
 	const FISH_NEAR := 150.0              # the boat this close: they dart away and fade (mat px)
 	const FISH_BODY := [[1, 0], [0, 0], [-1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [-2, -1], [-2, 1]]
 	var fine_fish := false                # RC ART's Lagoon: a real fish silhouette on the art's 2 px grid
+	var art_currents := {}                # RC ART's Lagoon: the designer's current frames, "e"/"n"/"w"/"s" -> 4 textures
 	## A fish shadow on the 2 px grid: an oval body, side fins, a forked tail that wags (the same size as the old)
 	func _fine_fish(at: Vector2, fwd: Vector2, sd: Vector2, wag: float, shade: Color) -> void:
 		var c := at.snapped(Vector2(2, 2))
@@ -1514,6 +1515,14 @@ class WaterFx extends Node2D:
 		for cu in currents:
 			var c0: Vector2 = cu[0]
 			var dv: Vector2 = cu[1]
+			if not art_currents.is_empty():          # (RC ART's Lagoon: the designer's foam arrows, 4 frames a direction)
+				var key := ("e" if dv.x > 0.0 else "w") if absf(dv.x) > absf(dv.y) else ("s" if dv.y > 0.0 else "n")
+				var frames: Array = art_currents.get(key, [])
+				if frames.size() == 4:
+					var fr: Texture2D = frames[int(t * 8.0) % 4]
+					var sz := fr.get_size() * RcLagoon.ART_PX
+					draw_texture_rect(fr, Rect2((c0 - sz / 2.0).snapped(Vector2(2, 2)), sz), false)
+				continue
 			var side := Vector2(-dv.y, dv.x)
 			var shift := fposmod(t * 140.0, 32.0)
 			var u := -cur_len - 32.0 + shift
@@ -1862,6 +1871,7 @@ func _begin(n: int) -> void:
 		sky_dock.build(centre[0], d0, 20.0 * STEP, 6.0 * STEP, half_w * 0.72)
 	water_fx.visible = vehicle == "boat"
 	water_fx.fine_fish = RcLagoon.on(look)
+	water_fx.art_currents = RcLagoon.current_frames() if RcLagoon.on(look) else {}
 	trail.fine = RcLagoon.on(look)
 	water_fx.setup(self, slicks.filter(func(sl): return sl[1] == "whirl").map(func(sl): return sl[0]), Color8(255, 236, 214) if look == "lagoon" else Color8(236, 255, 252), pads if vehicle == "boat" else [], PAD_LEN, half_w - 34.0)
 	canopy.visible = look == "garden" and not _trees.is_empty()
@@ -3085,6 +3095,7 @@ func _paint_water(w: int, h: int) -> Image:
 	_keep = PackedByteArray()
 	_keep.resize(w * h)
 	var lagoon_isles := RcLagoon.on(look) and RcLagoon.has_islands()
+	var lagoon_jumps := RcLagoon.on(look) and RcLagoon.has_jumps()   # (the designer's jumps: RcLagoon._jumps draws them)
 	var k := 0
 	for y in h:
 		for x in w:
@@ -3099,7 +3110,7 @@ func _paint_water(w: int, h: int) -> Image:
 				if _island[i] != 0 and not lagoon_isles:
 					_keep[i] = 1
 				col = _water_px(x, y, d, hw)
-				if d <= hw + 2.0 and _in_gap(idx[i]):
+				if d <= hw + 2.0 and _in_gap(idx[i]) and not lagoon_jumps:
 					_keep[i] = 1
 					# a sandbar across the channel: the boat must jump it (wet at its edges)
 					col = Color8(240, 210, 150) if _in_gap(idx[i] - 1) and _in_gap(idx[i] + 1) else Color8(206, 176, 120)
@@ -3174,7 +3185,7 @@ func _paint_water(w: int, h: int) -> Image:
 			_buoy_spots.append([(at.round() + Vector2(0.5, 0.5)) * PX, nb % 2 == 0])
 			nb += 1
 	for i3 in count:
-		if _on_ramp(i3) or ((i3 <= 2 or i3 >= count - 2) and not RcLagoon.on(look)):   # (RC ART: its own start, RcLagoon)
+		if (_on_ramp(i3) and not (RcLagoon.on(look) and RcLagoon.has_jumps())) or ((i3 <= 2 or i3 >= count - 2) and not RcLagoon.on(look)):   # (RC ART: its own start and jumps, RcLagoon)
 			var c4 := centre[i3] / PX
 			var n4 := _normal(i3)
 			for o in range(-int(hw) + 5, int(hw) - 4):

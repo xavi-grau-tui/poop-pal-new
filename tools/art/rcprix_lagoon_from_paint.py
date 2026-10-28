@@ -31,7 +31,7 @@ SQUARES = ("water", "channel", "shallows", "sand")
 DETAIL = {"sand": (0.05, 0.16)}   # a square's detail range per material (the water is drawn by the game since round 1c)
 SPECKLE_MAX = 0.03         # at most this share of lone pixels in a square
 MIXED_MAX = 0.25           # at most this share of blocks may mix colours
-COLOURS_MAX = {"island": 14, "palm": 10, "rock": 8}   # a sprite's colours at most (the Garden's bush_a: 6); others 6
+COLOURS_MAX = {"island": 14, "palm": 10, "rock": 8, "jump": 24}   # a sprite's colours at most (the Garden's bush_a: 6); others 6
 
 
 def down(path):

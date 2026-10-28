@@ -455,6 +455,7 @@ static func decor(rc) -> Image:
 			if roll <= 0.0:
 				return DECOR[i]
 		return DECOR[0]
+	_jumps(out, rc)
 	if ResourceLoader.exists(RcTiles.DIR + "frame_top.png"):
 		RcTiles._frame(out, w, h)                    # (the Garden's wooden frame: the same 20 px border, the user)
 	_start_line(out, rc)
@@ -737,3 +738,41 @@ static func _rocks(out: Image, rc, rng: RandomNumberGenerator, taken: Array[Rect
 		out.blend_rect(sh, Rect2i(Vector2i.ZERO, sh.get_size()), pos + Vector2i(3, 2))
 		out.blend_rect(im, Rect2i(Vector2i.ZERO, im.get_size()), pos)
 		taken.append(r)
+
+## The designer's currents (round 3): 4 frames for each way the water flows; {} until they're all in
+static func current_frames() -> Dictionary:
+	var out := {}
+	for d in ["e", "n", "w", "s"]:
+		var arr: Array[Texture2D] = []
+		for i in 4:
+			var im := _decor_tex("current_%s_%d" % [d, i])
+			if im == null:
+				return {}
+			arr.append(ImageTexture.create_from_image(im))
+		out[d] = arr
+	return out
+
+## The designer's jumps (round 3), drawn on the board where each gap is: the floating ramp, then the sandbar
+## across the channel and its shallows, the way the boat goes (rc_racer's gaps, GAP_LEN of sandbar after
+## RAMP_LEN of ramp: 60 and 36 px). The sandbar's middle on the gap's middle
+static func _jumps(out: Image, rc) -> void:
+	for g in rc.gaps:
+		var g0: int = g[0]
+		var g1: int = g[1]
+		var mid: Vector2 = rc.centre[(g0 + g1) / 2] / ART_PX
+		var d: Vector2 = (rc.centre[g1] - rc.centre[g0]).normalized()
+		var key := ("e" if d.x > 0.0 else "w") if absf(d.x) > absf(d.y) else ("s" if d.y > 0.0 else "n")
+		var im := _decor_tex("jump_" + key)
+		if im == null:
+			continue
+		var at: Vector2                                # (the sandbar's middle in the picture: e 66, w 30 along; n 30, s 66)
+		match key:
+			"e": at = Vector2(66, im.get_height() / 2.0)
+			"w": at = Vector2(30, im.get_height() / 2.0)
+			"n": at = Vector2(im.get_width() / 2.0, 30)
+			_: at = Vector2(im.get_width() / 2.0, 66)
+		var pos := Vector2i((mid - at).round())
+		out.blend_rect(im, Rect2i(Vector2i.ZERO, im.get_size()), pos)
+
+static func has_jumps() -> bool:
+	return ResourceLoader.exists(DIR + "jump_e.png")
