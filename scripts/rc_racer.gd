@@ -4497,7 +4497,8 @@ func _place_car() -> void:
 		sky_shadow.position = ((under - world.position) / ZOOM).round()
 		sky_shadow.rotation = heading
 		sky_shadow.texture = slices[1].texture
-		sky_shadow.scale = Vector2(3, 3 * (1.0 - 0.42 * absf(bank)))
+		var sk := 2.0 if RcSky.on(look) else 3.0      # (RC ART: half the plane, it's far below; the user)
+		sky_shadow.scale = Vector2(sk, sk * (1.0 - 0.42 * absf(bank)))
 	# (in the air: the car up, its shadow left behind on the road)
 	if car_drop < 0.0:
 		shadow.position = car_pos.round() + Vector2(5, 8)
