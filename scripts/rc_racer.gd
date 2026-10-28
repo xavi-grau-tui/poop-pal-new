@@ -1705,7 +1705,7 @@ func _begin(n: int) -> void:
 
 func _build_circuit() -> void:
 	var spec: Array = LEVELS[level - 1]
-	half_w = RcTiles.half_width(level) if RcTiles.on(look) else spec[3]
+	half_w = RcTiles.half_width(level) if RcTiles.on(look) else (RcLagoon.half_width(level) if RcLagoon.on(look) else spec[3])
 	var pad := EDGE * PX + half_w + MARGIN
 	var best: Array = []
 	var best_err := 1 << 40
@@ -2766,6 +2766,10 @@ func _paint_water(w: int, h: int) -> Image:
 	rng.seed = 77 * course_seed + 5
 	_sandbars.clear()
 	_palms.clear()
+	_sea = PackedFloat32Array()
+	_clear = PackedFloat32Array()
+	if RcLagoon.on(look):
+		_sea_fields(w, h, hw)
 	for k in int(w * h / 16000) + 3:
 		var p := Vector2(rng.randi_range(EDGE + 30, w - EDGE - 30), rng.randi_range(EDGE + 20, h - EDGE - 20))
 		var sc := rng.randf_range(0.7, 1.15)
@@ -2777,6 +2781,9 @@ func _paint_water(w: int, h: int) -> Image:
 		for other in _sandbars:
 			if Vector2(((other[0] as Vector2) - p).x / 1.9, ((other[0] as Vector2) - p).y).length() < 22.0 * (sc + float(other[1])):
 				apart = false                            # (never two islands in one another)
+		var sc_i := _sea_cell(Vector2i(p))
+		if sc_i >= 0 and (_sea[sc_i] < 24.0 or _clear[sc_i] < 36.0 * sc * PX):
+			apart = false                                # (RC ART: only in water wide enough, never on the sand)
 		if apart and dist[int(p.y) * w + int(p.x)] > hw + SHORE_PAINT / PX + 16.0 + 40.0 * sc:
 			_sandbars.append([p, sc])
 	# the islands, stamped once (the user, 2026-10-18: more beautiful, like the car's tracks, the
@@ -2841,6 +2848,8 @@ func _paint_water(w: int, h: int) -> Image:
 			_coral_clump(cc, rng, w, h, 3, 6)
 	var data := PackedByteArray()
 	data.resize(w * h * 4)
+	_keep = PackedByteArray()
+	_keep.resize(w * h)
 	var k := 0
 	for y in h:
 		for x in w:
@@ -2850,9 +2859,13 @@ func _paint_water(w: int, h: int) -> Image:
 			var col: Color
 			if e < EDGE:
 				col = _frame_px(x, y, w, h, e)
+				_keep[i] = 1
 			else:
+				if _island[i] != 0:
+					_keep[i] = 1
 				col = _water_px(x, y, d, hw)
 				if d <= hw + 2.0 and _in_gap(idx[i]):
+					_keep[i] = 1
 					# a sandbar across the channel: the boat must jump it (wet at its edges)
 					col = Color8(240, 210, 150) if _in_gap(idx[i] - 1) and _in_gap(idx[i] + 1) else Color8(206, 176, 120)
 			col = _lit(col, x, y)
@@ -2948,6 +2961,109 @@ func _paint_water(w: int, h: int) -> Image:
 	track_image = Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, top)
 	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
 
+## RC ART's Lagoon (the user, 2026-10-28: sand in the narrow gaps between curves, the thin necks widened or
+## joined softly, but the big closed waters kept, with their islands): the open water "opened" like a
+## picture: only what a disc of SEA_R fits in stays water, the rest is sand, its edges rounded. On a coarse
+## grid (SEA_CELL board px), as fields the shader reads smoothly: _clear, how far each cell is from the
+## course's banks (world px), and _sea, how far inside the kept water (world px, <= 0: sand)
+const SEA_CELL := 2                    # board px per cell
+const SEA_R := 72.0                    # water narrower than about twice this becomes sand (world px)
+const POND_MIN := 2.0                  # closed-in water smaller than this many course squares becomes sand too
+func _sea_fields(w: int, h: int, hw: float) -> void:
+	_sea_w = (w + SEA_CELL - 1) / SEA_CELL
+	_sea_h = (h + SEA_CELL - 1) / SEA_CELL
+	var n := _sea_w * _sea_h
+	var land_at := hw + SHORE_PAINT / PX + RcLagoon.BANK_W / PX      # (past the bank: open water)
+	var cell := float(SEA_CELL * PX)                                  # world px per cell
+	var src := PackedByteArray()
+	src.resize(n)
+	for cy in _sea_h:
+		for cx in _sea_w:
+			var d := 1e9
+			for oy in SEA_CELL:
+				for ox in SEA_CELL:
+					var x := mini(cx * SEA_CELL + ox, w - 1)
+					var y := mini(cy * SEA_CELL + oy, h - 1)
+					d = minf(d, _dist[y * w + x])
+			src[cy * _sea_w + cx] = 1 if d <= land_at else 0
+	_clear = _chamfer(src, _sea_w, _sea_h)
+	var core := PackedByteArray()
+	core.resize(n)
+	for i in n:
+		_clear[i] *= cell
+		core[i] = 1 if _clear[i] >= SEA_R else 0
+	_sea = _chamfer(core, _sea_w, _sea_h)
+	for i in n:
+		_sea[i] = SEA_R - _sea[i] * cell
+	# a small pond closed in by the course (cut off from the open sea, the board's edge): sand as well
+	var seen := PackedByteArray()
+	seen.resize(n)
+	var small := POND_MIN * self.cell * self.cell / (cell * cell)            # (in cells)
+	for start in n:
+		if seen[start] != 0 or _sea[start] <= 0.0:
+			continue
+		var part := PackedInt32Array([start])
+		seen[start] = 1
+		var open := false
+		var head := 0
+		while head < part.size():
+			var i := part[head]
+			head += 1
+			var x := i % _sea_w
+			var y := i / _sea_w
+			if x == 0 or y == 0 or x == _sea_w - 1 or y == _sea_h - 1:
+				open = true
+			for j in [i - 1 if x > 0 else -1, i + 1 if x < _sea_w - 1 else -1, i - _sea_w if y > 0 else -1, i + _sea_w if y < _sea_h - 1 else -1]:
+				if j >= 0 and seen[j] == 0 and _sea[j] > 0.0:
+					seen[j] = 1
+					part.append(j)
+		if not open and part.size() < small:
+			for i in part:
+				_sea[i] = -SEA_R
+	# only edges by the water left draw a beach: away from it the sand goes on down (no traces of a filled pond)
+	var water := PackedByteArray()
+	water.resize(n)
+	for i in n:
+		water[i] = 1 if _sea[i] > 0.0 else 0
+	var to_water := _chamfer(water, _sea_w, _sea_h)
+	for i in n:
+		_sea[i] = minf(_sea[i], (1.5 - to_water[i]) * cell)
+
+## The distance from every cell to the nearest source cell (in cells), two passes
+static func _chamfer(src: PackedByteArray, w: int, h: int) -> PackedFloat32Array:
+	const D := 1.4142
+	var f := PackedFloat32Array()
+	f.resize(w * h)
+	for i in w * h:
+		f[i] = 0.0 if src[i] != 0 else 1e6
+	for y in h:
+		for x in w:
+			var i := y * w + x
+			var v := f[i]
+			if x > 0: v = minf(v, f[i - 1] + 1.0)
+			if y > 0:
+				v = minf(v, f[i - w] + 1.0)
+				if x > 0: v = minf(v, f[i - w - 1] + D)
+				if x < w - 1: v = minf(v, f[i - w + 1] + D)
+			f[i] = v
+	for y in range(h - 1, -1, -1):
+		for x in range(w - 1, -1, -1):
+			var i := y * w + x
+			var v := f[i]
+			if x < w - 1: v = minf(v, f[i + 1] + 1.0)
+			if y < h - 1:
+				v = minf(v, f[i + w] + 1.0)
+				if x < w - 1: v = minf(v, f[i + w + 1] + D)
+				if x > 0: v = minf(v, f[i + w - 1] + D)
+			f[i] = v
+	return f
+
+## A board px's cell in the fields above (-1: none)
+func _sea_cell(b: Vector2i) -> int:
+	if _sea.is_empty() or b.x < 0 or b.y < 0 or b.x >= _bw or b.y >= _bh:
+		return -1
+	return (b.y / SEA_CELL) * _sea_w + b.x / SEA_CELL
+
 ## The Lagoon's bank, dressed (the user, 2026-10-18): pebbles, starfish and shells on the sand,
 ## tufts of seagrass in the shallows beside it, all outlined like the rest
 const PEBBLE := [".##.", "#lm#", "#md#", ".##."]
@@ -2999,6 +3115,8 @@ func _lagoon_bank_decor(data: PackedByteArray, w: int, h: int, rng: RandomNumber
 func _paint_palm(data: PackedByteArray, w: int, h: int, foot: Vector2i) -> void:
 	var put := func(q: Vector2i, c: Color) -> void:
 		if q.x >= 0 and q.y >= 0 and q.x < w and q.y < h:
+			if _keep.size() == w * h:
+				_keep[q.y * w + q.x] = 1
 			var cc := _lit(c, q.x, q.y)
 			var j := (q.y * w + q.x) * 4
 			data[j] = cc.r8
@@ -3089,6 +3207,12 @@ static func _tint(data: PackedByteArray, i: int, col: Color, k: float) -> void:
 ## Reef's turquoise over coral
 var _island := PackedByteArray()       # the boat's worlds: the islands, per board px (_paint_water: ISLE_*)
 var _palms: Array[Vector2i] = []       # ...their palm trees' feet (board px)
+var _keep := PackedByteArray()         # ...and RC ART's Lagoon: 1 where the old board's pixel stays (islands, palms, sandbars, frame: RcLagoon)
+var _lagoon_decor: Sprite2D           # RC ART's Lagoon: starfish, shells, pebbles, seagrass (RcLagoon.decor)
+var _clear := PackedFloat32Array()     # ...and per coarse cell, how far from the course's banks (world px: _sea_fields)
+var _sea := PackedFloat32Array()       # ...and how far inside the water kept open (world px, <= 0: sand)
+var _sea_w := 0
+var _sea_h := 0
 const ISLE_GRASS := 1
 const ISLE_SAND := 2
 const ISLE_WET := 3
@@ -4042,6 +4166,17 @@ func _tile_art() -> void:
 		atmosphere = RcAtmosphere.new()
 		add_child(atmosphere)
 	atmosphere.stop()
+	if RcLagoon.on(look):                            # (RC ART's Lagoon: the board drawn again from the designer's squares)
+		board.material = RcLagoon.material(self)
+		if _lagoon_decor == null:
+			_lagoon_decor = Sprite2D.new()
+			_lagoon_decor.centered = false
+			_lagoon_decor.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			board.add_child(_lagoon_decor)             # (on the board: it moves with it in the 3D tilt)
+		_lagoon_decor.texture = ImageTexture.create_from_image(RcLagoon.decor(self))
+		_lagoon_decor.scale = Vector2.ONE * RcLagoon.ART_PX / PX
+	if _lagoon_decor:
+		_lagoon_decor.visible = RcLagoon.on(look)
 	if _tiles.is_empty():
 		return
 	var art := RcTiles.paint(self)
@@ -4915,6 +5050,9 @@ func is_open_water(p: Vector2) -> bool:
 		return false
 	var d := _dist[i]
 	var bank := half_w / PX + SHORE_PAINT / PX
+	var sc_i := _sea_cell(b)
+	if sc_i >= 0 and _sea[sc_i] <= 8.0 and d > bank:
+		return false                                 # (RC ART: the sand in the narrow gaps)
 	return d < bank - 1.0 or d > bank + 13.0
 
 ## The plane's guide: the course from the plane to the next ring and on to the one after (the
