@@ -200,6 +200,41 @@ The boat and plane worlds need their own piece lists and templates before step 2
 the sky are mostly drawn as continuous layers today, not as a road, so work out with the code what
 is a piece and what is a layer.
 
+## What the Lagoon taught (October 2026)
+
+The Lagoon (`docs/mockups/rcprix_lagoon/`: `PLAN.md`, `NOTES_ROUND_1B/1C/2.md`) went differently from the
+Garden, and better in the end. For the Sky, Night, Reef and Grand Prix:
+
+- **Pieces only where edges are hard.** Water has soft bands that run past a square, so the game keeps the
+  shapes (the distance to the centre line) and a shader fills them (`scripts/rc_lagoon.gd`). Narrow gaps fill
+  with sand, big lakes stay water: a morphological opening on a coarse grid (`rc_racer.gd` `_sea_fields`);
+  corners rounded by averaging the distance in the shader (`soften`).
+- **Big calm surfaces are drawn by the game, not painted.** The designer's painted water squares read as
+  TV static. The water is now flat colours plus moving layers (swell, crests, glints, foam, a sandy bottom
+  under them); the designer gives small animated sprites (glint, crest) and the textures that have a
+  pattern (sand). Expect the same for the sky and clouds.
+- **Style picture first, then 4x paintings.** Ask for 2-3 style pictures, the user picks one, then every piece
+  is painted at 4x (one game px = a 4x4 block) and `tools/art/rcprix_lagoon_from_paint.py` converts and checks
+  it. Script-drawn art and soft image-tool art both failed before that.
+- **The converter's checks** (fail early, before the user sees it): size, hard pixels, a detail range per
+  material (calm water low, sand 5-16%), lone pixels under 3% (speckle reads as static), a colour cap per kind
+  (decor 6, rocks 8, palms 10, islands 14, big pieces 24), tiling and identical borders across variants, mixed
+  4x4 blocks (soft brush or off the grid).
+- **Match each piece to its Garden counterpart, side by side at the same zoom** (sand vs grass, decor vs
+  flowers, islands vs bushes, palms vs trees, sparkles vs butterflies): `reference/pixel_density.png`.
+- **Keep the world's own colours.** Option 3's purple channel and teal shallows were rejected for the
+  original Lagoon's warm sunset; take a style picture's composition and finish, not necessarily its palette.
+- **Reuse the Garden's finished pieces,** recoloured in code where needed: the stands (on a pier, a peach
+  canopy, legs and posts foamed at the water), the start lights, the frame, the stands' flags at the finish,
+  the light effects in the world's colours (FX switch; Lagoon: no mist, the glow's ring edges faded wide).
+- **Decor:** several models per kind in 2-3 sizes, small (16 px max), favouring the small ones, the same kind
+  kept apart, outlines a darker shade of the piece's own colour (the game also does it: `_soft_outline`).
+  Pieces that don't read at game size come out (driftwood, beach grass, toys).
+- **3D props over our guides,** as the barriers: buoys (5 slices), currents and jumps (4 directions), with
+  `round*_guides/`. Their behaviour stays in code, only the look changes.
+- **Life without clutter:** fish shadows (finer pixels, darker), crabs that scuttle off as the boat passes (5
+  per course, not 10), a finer wake. The user prefers rich but calm.
+
 ## RC Prix 2177
 
 A separate game with its own code (`scripts/pal_prix_2.gd`, `pal_prix_2_art.gd`,

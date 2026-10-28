@@ -79,52 +79,15 @@ Doubling the detail: one art px = 2 world px, as the Garden. A boat square is 38
 Two widths (as the Garden): wide for levels 1–4 (half width 116) and narrow for 5–9 (106). The
 game uses those two instead of the per-level widths now.
 
-## Checklist (updated 2026-10-28)
+## Checklist (updated 2026-10-28: done for now, the user checked it on the phone)
 
-How it's built now: **the game draws the water** (the original Lagoon's warm colours, swell, crests, glints,
-foam, a sandy bottom showing through: `RcLagoon.SHADER`), **the designer draws the sand and everything with
-a shape**, matched side by side with its Garden counterpart (`NOTES_ROUND_1C.md`, `NOTES_ROUND_2.md`).
+All on screen is the new look (behind RC ART): water, sand, banks, islands, palms, rocks, decor, crabs, buoys,
+start pontoon and flags, the stand on a pier, currents, jumps, wake, fish, light effects, frame.
 
-### Done
-- [x] Renderer behind RC ART (old look a switch away), two channel widths, sand in narrow gaps and small
-      ponds, big lakes kept, rounded sand corners (`_sea_fields`, `SAND_ROUND`)
-- [x] Water drawn by the game in the original's warm colours (no purple, no teal), moving layers, the
-      designer's glint and crest frames, a sandy bottom under all the effects and never over them
-- [x] The designer's sand A, starfish A/B, seagrass A/B in the game
-- [x] Islands placed again (the `_sea` cap bug), the designer's island B and palm A on them
-- [x] The Garden's start gantry and lamps in the Lagoon
-- [x] A floating checkered start pontoon with flag posts (drawn by the game)
-- [x] The Garden's stand on a pier (posts in the water, foam), in the sunset's light
-- [x] Buoy paint guides (`round2_buoy_guides/`); the game takes the designer's slices when they're in
-- [x] Converter: a detail range per material, a speckle check, a colour limit
-- [x] The designer's round 2: decor variety (4 shells, 4 pebbles, 3 starfish, 3 seagrass), islands A–D, palm B
-- [x] Decor outlines in each piece's own colour, darker (the user: not near-black)
-- [x] Tiny shapeless bits on the sand (1–5 px, sand and shell colours, mixed sizes)
-- [x] The sandy bottom stronger (light and shade only, the user: "now fine")
-- [x] The Garden's light effects in sunset colours (FX switch): glow, beams, plum cloud shadows, no mist;
-      the glow's ring edges fade wide (the user saw "crossed sun beams")
-- [x] Rounder inner corners: the distance softened in the shader (`soften`)
-- [x] The designer's buoys (behaviour untouched) and pier posts with animated foam
+Still to come, not blocking:
+- [ ] Designer: sand B and C, splash and ripple frames, outlines in the files (shells, pebbles, starfish)
+- [ ] Code: hook the splash and ripple frames (crab dives, buoy hits, rings round buoys and rocks)
+- [ ] With the Garden: make the new art the default, remove the RC ART / COLOURS / FX switches and the old
+      drawing code, a last pass over all 18 levels
 
-### Designer (`NOTES_ROUND_2.md`)
-- [ ] Decor with variety: 3+ models per type in 2–3 sizes (starfish, shells, pebbles, seagrass), shells
-      and pebbles redone (light fills, thin outline), new kinds: crab, driftwood, beach grass, coconut,
-      toy sandcastle, toy bucket
-- [ ] Islands A–D redone to the Garden's pixel look (bushes/trees), sand beach all round; palm B; rocks A, B
-- [ ] Sand B and C
-- [ ] Splash and ripple frames
-- [ ] Fish shadows (3 frames)
-- [ ] Round 3, over our guides: sandbar jumps, the start pontoon
-- [ ] Islands' beach back to sand colours if the user confirms (the cleanup made it olive)
-- [ ] Decor outlines in the piece's own colour, darker, in the files themselves (the game does it now)
-
-### Code (me), as the art arrives
-- [ ] Decor: place the new kinds (crab, driftwood, grass tufts, coconut, sandcastle, bucket), mixed sizes,
-      the same kind kept apart (as the Garden's bushes)
-- [ ] Rocks in the water and at the islands' edges, with a foam ring
-- [ ] Fish shadows from the designer's frames (same behaviour)
-- [ ] Splash on buoy hits and beaching, ripple rings round buoys and rocks
-- [ ] Guides for the sandbar jumps, the start pontoon and the pier posts
-- [ ] Maybe seagulls over the water (the Garden's butterflies' role)
-- [ ] The old flat sandbar blocks until the new jumps
-- [ ] Final pass over all 9 levels (autopilot, every course), then the default with the Garden
+The lessons for the next worlds are in `docs/rcprix_art_process.md` ("What the Lagoon taught").
