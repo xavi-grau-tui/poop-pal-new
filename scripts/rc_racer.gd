@@ -1089,7 +1089,8 @@ class Ring extends Node2D:
 	var r := 100.0
 	var upper := true                     # the half the plane flies in through (over it), else the half it leaves by (under it)
 	var d := Vector2.DOWN                 # the way the course goes through it
-	var state := 0                        # 0 farther on, 1 the next one, 2 flown through, 3 missed, 4 the one after the next
+	var state := 0                        # 0 farther on, 1 the next one, 2 flown through, 3 missed, 4 the one after the next,
+	                                      # 5 flown through with the plane still in it (RINGS: GOLD PASS: gold with the chime)
 	var t := 0.0
 	var _shown := -1
 	var _pop: Tween
@@ -1124,8 +1125,10 @@ class Ring extends Node2D:
 				modulate = Color(1, 1, 1, 0.9)
 			1:
 				modulate = Color(1, 1, 1)
+			5:
+				modulate = Color(1.15, 1.1, 1.0)
 			2:
-				if was == 1 or was == 4 or was == 0:
+				if was == 1 or was == 4 or was == 0 or was == 5:
 					modulate = Color(1.15, 1.1, 1.0) if DevLaunch.rc_gold_pass else Color(1.4, 1.3, 1.0)   # (gold already: less flash)
 					var pop_t := 0.6 if DevLaunch.rc_gold_pass else 0.4   # (long enough to see it turn gold)
 					_pop = create_tween()
@@ -1174,7 +1177,7 @@ class Ring extends Node2D:
 		return [ImageTexture.create_from_image(img), Vector2(-ext, -ext), 4.0]
 	func _draw() -> void:
 		# (the dev launcher's RINGS: gold once flown through, the next one red and pulsing; else the next one gold)
-		var look := "gold" if state == (2 if DevLaunch.rc_gold_pass else 1) else ("grey" if state == 3 else "candy")
+		var look := "gold" if (state == 2 or state == 5 if DevLaunch.rc_gold_pass else state == 1) else ("grey" if state == 3 else "candy")
 		if not _tex.has(look):
 			_tex[look] = RcSky.ring_half(r, look, n, d, upper) if art else _paint(look)
 		var tx: Array = _tex[look]
@@ -4974,6 +4977,7 @@ func _check_rings() -> bool:
 			_sfx("res://sounds/fx/ring_chime.wav", -10.0, _ring_pitch(rings.find(rg)))
 			Input.vibrate_handheld(15)
 			trail.sparkle(rg["pos"])
+			_ring_fx_refresh()                       # (its look changes on the chime's own frame: the user)
 		else:
 			missed = true
 			_ring_fx_refresh()
@@ -5464,7 +5468,7 @@ func _ring_fx_refresh() -> void:
 			st = 2 if rg["hit"] else 3
 			if rg["hit"] and not rg.get("popped", false):
 				if progress < float((lap - 1) * count + int(rg["i"])) + RING_PAST:
-					st = 1                               # (the plane still in it: it pops once it's out)
+					st = 5 if DevLaunch.rc_gold_pass else 1   # (the plane still in it: gold with the chime, it pops once it's out)
 				else:
 					rg["popped"] = true                  # (and once popped it stays gone this lap, even
 														 # flying back past it: the user, 2026-10-18)
