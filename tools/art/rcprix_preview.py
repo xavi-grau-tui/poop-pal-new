@@ -63,6 +63,25 @@ def main():
             return None
         return Image.open(p).convert("RGBA")
 
+    def gap_from_straight(name):
+        """Match the runtime gap built from its current straight art."""
+        vertical = name == "gap_v"
+        im = art(("straight_v" if vertical else "straight_h") + wide)
+        if im is None:
+            return None
+        px = im.load()
+        a, b = SQ // 2 - 30, SQ // 2 + 30
+        for u in range(a, b):
+            for v in range(SQ):
+                x, y = (v, u) if vertical else (u, v)
+                px[x, y] = (0, 0, 0, 0)
+        for u in (a - 1, b):
+            for v in range(SQ):
+                x, y = (v, u) if vertical else (u, v)
+                if px[x, y][3]:
+                    px[x, y] = (40, 30, 40, 255)
+        return im
+
     board = Image.new("RGBA", (W * SQ + 2 * FRAME, H * SQ + 2 * FRAME), (90, 150, 70, 255))
     at = lambda x, y: (FRAME + x * SQ, FRAME + y * SQ)
     rnd = random.Random(7)
@@ -73,7 +92,7 @@ def main():
                 board.alpha_composite(rnd.choice(grass), at(x, y))
     tiles = course()
     # decor on the lawn, away from the road
-    for name, n in (("bush_a", 3), ("bush_b", 3), ("bush_c", 3), ("bush_d", 3), ("flowers_a", 10), ("flowers_b", 10)):
+    for name, n in (("bush_a", 3), ("bush_b", 3), ("bush_c", 3), ("bush_d", 3), ("bush_e", 4), ("bush_f", 4), ("bush_g", 4), ("flowers_a", 10), ("flowers_b", 10)):
         im = art(name)
         for _ in range(n if im else 0):
             for _try in range(40):
@@ -83,7 +102,7 @@ def main():
                     board.alpha_composite(im, (x0 + rnd.randrange(SQ - im.width), y0 + rnd.randrange(SQ - im.height)))
                     break
     for p, name in tiles.items():
-        im = art(name + wide)
+        im = gap_from_straight(name) if name.startswith("gap_") else art(name + wide)
         if im:
             board.alpha_composite(im, at(*p))
         if name.startswith("corner_"):

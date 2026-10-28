@@ -1,7 +1,7 @@
 """Round 3: larger bush clusters and grass tiles with a shared seamless edge.
 
-Only the five named PNGs are written. The road, trees, car and other approved
-sprites are never opened for writing by this script.
+After round 4, this rebuilds only the three grass tiles. The older bush
+generator remains below for historical reference but is no longer invoked.
 """
 
 from pathlib import Path
@@ -100,9 +100,7 @@ def generate():
     for letter,arr in (("a",a),("b",variant_from_a(a,"b")),
                        ("c",variant_from_a(a,"c"))):
         Image.fromarray(arr,"RGBA").save(OUT/f"grass_{letter}.png")
-    bush("bush_a",(60,52)).save(OUT/"bush_a.png")
-    bush("bush_b",(46,40)).save(OUT/"bush_b.png")
-    print("updated grass_a/b/c and bush_a/b only")
+    print("updated grass_a/b/c only; round-4 bushes remain untouched")
 
 
 if __name__=="__main__":

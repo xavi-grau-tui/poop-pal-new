@@ -199,7 +199,7 @@ const SECRETS := {
 }
 const FINALES := { 45: "food:Phoenix Pepper", 54: "case:prix" }
 const GAP_LEN := 120.0                # a jump's gap along the road (mat px)
-const RAMP_LEN := 72.0                # the ramp before it
+const RAMP_LEN := 72.0                # the ramp before it (RC NEW ART: as long as drawn, _ramp_len)
 const AIR_TIME := 0.42                # a jump (or a springboard) in the air
 const SLIP_TIME := 0.7                # oil / a puddle: the spin round and the stop
 const SLICK_R := 46.0                 # an oil slick's / a puddle's size on the road
@@ -307,11 +307,23 @@ var track: Sprite2D                    # the raised track, over it
 var track_image: Image
 var trail: Trail                       # the speed streaks behind the wheels and the exhaust puffs
 var crowd: Crowd                       # the little grandstand by the finish line
+var more_stands: Array[Crowd] = []     # RC NEW ART: more stands round the course (the user: more than one)
+const MORE_STANDS := 2                 # at most this many more
+## Every stand showing
+func _stands() -> Array:
+	return ([crowd] + more_stands).filter(func(c): return c.visible)
 var _cheer_cd := 0.0
+# (the user, 2026-10-28: the wave wasn't always seen) it starts while the car is still coming along the stand,
+# a bit before its end; only from the track right by it (420 all round set it off from other parts of the track)
+const CHEER_ACROSS := 40.0            # how far past the road's far edge the car may be (the reach covers the whole road:
+                                      # 170 from the stand missed a car on the far side of the wide early roads)
+const CHEER_AHEAD := 320.0            # how far before (or past) the stand's ends, along it (was 170)
+const CHEER_CD := 2.5
 var look_k := 0.0                      # how much the view looks ahead (0 at the start)
 var behind: Node2D                     # under the track: where a car falling off its far side goes
 var front: Node2D                      # over the track: the car
 var canopy: Sprite2D                   # the Garden's branches over everything
+var atmosphere: RcAtmosphere            # the Garden's air: clouds' shadows, sun, beams, mist (dev launcher FX)
 var ring_back: Node2D                  # the plane's rings: their lower halves (under it)...
 var ring_front: Node2D                 # ...and their upper ones (over it)
 var gust_fx: GustFx                    # the wind's streaks across the course
@@ -329,6 +341,8 @@ var prop: Sprite2D                     # the plane's propeller, spinning at its 
 var _prop_frame := 0
 var shadow: Sprite2D
 var car_drop := 0.0                    # how far the car has fallen (screen down, mat px)
+var _wrecked := false                  # fallen / sunk and not put back yet: no shadow (the user: out of
+                                       # lives, the shadow came back beside the fallen toy)
 var antenna: Line2D                    # a thin wire at the car's back, a ball on its tip
 var antenna_tip: Sprite2D
 var sway := 0.0                        # the antenna's lean (it swings out in the turns)
@@ -343,9 +357,15 @@ var boost_icon: TextureRect
 var rain_fx: RainFx
 var headlight: Sprite2D
 var banner: Label
+var lettering: RcLettering             # the race messages in the designer's racing font, when it has the letters
 var motor: AudioStreamPlayer
 var lights: Node2D                     # the start lights over the view (3 red, then all green)
 var lamps: Array[Sprite2D] = []
+var _ramp_len := RAMP_LEN             # where the car counts as on a ramp, before its gap (world px)
+var butterflies: RcButterflies         # RC NEW ART: the Garden's butterflies
+var _gantry_box: Array = []            # the drawn gantry (its two rects), hidden when the designer's is in
+var _gantry_art: Sprite2D              # RC NEW ART: the designer's gantry (start_gantry.png)
+var _art_lights := false               # the lamps are the designer's three states (start_lamp_off/red/green)
 var hint_left: HBoxContainer           # the controls along the bottom (shown at the start)
 var hint_right: HBoxContainer
 var lcd_font: Font
@@ -368,12 +388,26 @@ class Crowd extends Node2D:
 	var rect := Rect2()                  # the stand, mat px (axis-aligned)
 	var along_x := true                  # the stand runs left-right (else up-down)
 	var dots: Array = []                 # [position, its pal (pals index), when it hops (s), how many hops, scared until (s), its scatter, the hop's height, its own beat, its next idle hop (s), its flag (-1: none)]
+	var cheer_cd := 0.0                   # till the car can set off its next wave (s)
 	var watch := Vector2.ZERO             # where the toy is (mat px): they lean its way, hop more when it's near
 	var pals: Array[Texture2D] = []
 	var t := 0.0
 	var party := false                   # (the finish: everyone keeps bouncing)
 	var away := Vector2.UP                # from the track towards the stand's back
 	var style := "stand"                  # "stand" / "pier" / "cloud"
+	var art := false                      # RC NEW ART: the designer's stand pieces and flags (NOTES_ROUND_13)
+	const ART_DEPTH := 107                # the stand pieces' depth, art px (tools/art/rcprix_stand_from_reference.py)
+	const ART_SCALE := 1.0                # the course's pixel size (the user: 1.5x was too big, 1x the right call)
+	const ART_SEAT := 52.0                # a pal's seat along a bench (world px): one pal each, side by side
+	const ART_SIDE_IN := 40.0             # the first and last seats this far in from the stand's ends (world px)
+	const ART_SEATS := [30, 47, 64, 81]   # its four benches' tops, art px from its back (the awning)
+	const ART_SEATS_BACK := [13, 26, 52]  # from behind: the benches with room for a row (the far one too near the track); the
+	                                      # nearest row low enough for the canopy to hide their lower half (the user)
+	const ART_CANOPY_BACK := 48           # from behind: the canopy's top, art px
+	const ART_ROOF_FLAGS := [6, 43]       # roof flags over the end frame and over each middle's post, art px along
+	const ART_ROOF_ENDS := { "back": [6, 6] }   # the end flags, art px in from each end, where its awning reaches
+	const ART_ROOF_ENDS_FRONT := [18, 23] # (the front's awning starts on end_a's corner post, ends inside end_b)
+	var _backs := {}                      # pal texture -> its back view (seen from behind)
 	func setup(r: Rect2, horizontal: bool, seed_n: int, away_dir := Vector2.UP, kind := "stand", air := Color(0.8, 0.88, 0.95)) -> void:
 		rect = r
 		haze = air
@@ -425,7 +459,28 @@ class Crowd extends Node2D:
 			pals.append(PalBall.texture())
 		var n_mine := mine.size()
 		var long := r.size.x if horizontal else r.size.y
-		for tier in TIERS:
+		if art and style == "stand":
+			# the designer's stand: each bench filled along its length as people sit (the user, 2026-10-28:
+			# more of them, not spread so mathematically): from a different place on each bench, friends
+			# squeezed together, others a little apart, now and then a gap, each sitting a touch differently
+			for row in _art_rows().size():
+				var a := ART_SIDE_IN + rng.randf_range(0.0, ART_SEAT * 0.6)
+				while a <= long - ART_SIDE_IN:
+					if rng.randf() < 0.06:
+						a += ART_SEAT * rng.randf_range(0.6, 1.2)   # (a gap)
+						continue
+					var at := a
+					a += ART_SEAT * (rng.randf_range(0.68, 0.8) if rng.randf() < 0.45 else rng.randf_range(0.82, 1.08))
+					var b := _art_seat(row) + rng.randf_range(-2.0, 1.0)
+					var p := r.position + (Vector2(at, b) if horizontal else Vector2(b, at))
+					var who := rng.randi() % pals.size()
+					if n_mine > 0 and (rng.randf() < 0.33 or n_mine == pals.size()):
+						who = rng.randi() % n_mine
+					elif pals.size() > n_mine:
+						who = n_mine + rng.randi() % (pals.size() - n_mine)
+					var flag := rng.randi_range(0, FLAGS.size() - 1) if rng.randf() < 0.18 else -1
+					dots.append([p.round(), who, -10.0, 1, -10.0, Vector2.ZERO, 20.0, rng.randf() * TAU, rng.randf() * 3.0, flag, _hued(who, 0)])
+		for tier in (0 if art and style == "stand" else TIERS):
 			var n := int((long - 36.0) / SEAT)
 			for k in n:
 				if rng.randf() < 0.12:
@@ -433,7 +488,7 @@ class Crowd extends Node2D:
 				var a := 26.0 + k * SEAT + (SEAT / 2.0 if tier % 2 else 0.0)
 				if a > long - 18.0:
 					continue
-				var b := _tier_at(tier) + 10.0
+				var b := _art_seat(tier) if art and style == "stand" else _tier_at(tier) + 10.0
 				var p := r.position + (Vector2(a, b) if horizontal else Vector2(b, a))
 				var who := rng.randi() % pals.size()
 				if n_mine > 0 and (rng.randf() < 0.33 or n_mine == pals.size()):
@@ -500,7 +555,13 @@ class Crowd extends Node2D:
 			var dist: float = absf((d[0].x - from.x) if along_x else (d[0].y - from.y))
 			d[2] = t + dist / 520.0 + randf() * 0.06
 			d[3] = hops
-			d[6] = 20.0
+			d[6] = 28.0                                   # (was 20: barely above their own idle hops)
+	## Everyone at once, a few hops (the race starts: the user, 2026-10-28, the start's crowd all excited, no wave)
+	func cheer_all(hops := 3) -> void:
+		for d in dots:
+			d[2] = t + randf() * 0.08
+			d[3] = hops
+			d[6] = 28.0
 	## A crash near the stand: the pals near it scream and scatter (the farther ones just hop)
 	func scream(at: Vector2) -> void:
 		if not rect.grow(320.0).has_point(at):
@@ -537,6 +598,82 @@ class Crowd extends Node2D:
 		queue_redraw()
 	## Where a tier starts across the stand (px from its top / left): tier 0 next to the track,
 	## the awning at the far side
+	## The designer's stand: where a pal on a bench sits, from the stand's edge (world px), for its view
+	func _art_rows() -> Array:
+		return ART_SEATS_BACK if _view() == "back" else ART_SEATS
+	## The stand's art px in world px (bigger than the course's)
+	static func art_k() -> float:
+		return RcTiles.ART_PX * ART_SCALE
+	## Where a pal sits on a bench, from the stand's edge across it (world px): its bottom on the
+	## bench's top (front / behind), or on the bench turned on its side (the sides)
+	func _art_seat(bench: int) -> float:
+		var k := art_k()
+		var top: float = _art_rows()[bench]
+		match _view():
+			"side_r":                                # (turned: its back to the right)
+				return (ART_DEPTH - top - 5.0) * k
+			"side_l":
+				return (top + 5.0) * k
+			_:
+				return (top + 4.0) * k - 20.0
+	## Which of the designer's views: "front" (above the track, seats facing you), "back" (below it:
+	## seen from behind, an effect on the front), "side_r" / "side_l" (beside it, the front turned)
+	func _view() -> String:
+		if along_x:
+			return "front" if away.y < 0.0 else "back"
+		return "side_r" if away.x > 0.0 else "side_l"
+	## A pal from behind: its face (the eyes, mouth and shine in its middle rows) painted over with
+	## the body round it (the user, 2026-10-27: seen from behind, the pals turned away too)
+	func _back_of(tex: Texture2D) -> Texture2D:
+		if _backs.has(tex):
+			return _backs[tex]
+		var im := tex.get_image()
+		if im.is_compressed():
+			im.decompress()
+		im.convert(Image.FORMAT_RGBA8)
+		var w := im.get_width()
+		var h := im.get_height()
+		var lum := func(c: Color) -> float: return c.r * 0.3 + c.g * 0.59 + c.b * 0.11
+		var op := func(x: int, y: int) -> bool: return x >= 0 and y >= 0 and x < w and y < h and im.get_pixel(x, y).a > 0.0
+		var inner := func(x: int, y: int) -> bool:
+			for dy in range(-2, 3):
+				for dx in range(-2, 3):
+					if not op.call(x + dx, y + dy):
+						return false
+			return true
+		var face := {}
+		var y_from := int(h * 0.37)
+		var y_to := int(h * 0.8)
+		for y in h:
+			for x in w:
+				if not inner.call(x, y):
+					continue
+				var around: Array[float] = []
+				for dx in range(-3, 4):
+					if op.call(x + dx, y):
+						around.append(lum.call(im.get_pixel(x + dx, y)))
+				around.sort()
+				var med: float = around[around.size() / 2]
+				var l: float = lum.call(im.get_pixel(x, y))
+				if l < med - 0.16 or (y >= y_from and y <= y_to and absf(l - med) > 0.18):
+					face[Vector2i(x, y)] = true
+		var out := im.duplicate()
+		for q in face:
+			var near: Array = []
+			for d in range(1, 6):
+				for o in [Vector2i(d, 0), Vector2i(-d, 0), Vector2i(0, d), Vector2i(0, -d)]:
+					var r: Vector2i = q + o
+					if not face.has(r) and inner.call(r.x, r.y):
+						near.append(im.get_pixelv(r))
+				if near.size() >= 2:
+					break
+			if not near.is_empty():
+				var c := Color(0, 0, 0, 0)
+				for n in near:
+					c += n
+				out.set_pixelv(q, c / near.size())
+		_backs[tex] = ImageTexture.create_from_image(out)
+		return _backs[tex]
 	func _tier_at(tier: int) -> float:
 		var depth := rect.size.y if along_x else rect.size.x
 		var toward_neg := (away.y < 0.0) if along_x else (away.x < 0.0)   # the back is the top / left
@@ -564,17 +701,27 @@ class Crowd extends Node2D:
 				var k := clampf((d[4] - t) / 1.3, 0.0, 1.0)
 				p += (d[5] as Vector2) * sin(k * PI) + Vector2(4.0 if int(t * 30.0) % 2 == 0 else -4.0, 0) * k
 			p = p.snapped(Vector2(4, 4))
-			if int(d[9]) >= 0:
+			if int(d[9]) >= 0 and art:
+				# its flag, the designer's (drawn white: tinted), two waving frames
+				var fr := RcTiles.drawn("flag_%d" % (int(t * 4.0 + float(d[7])) % 2))
+				draw_texture_rect(fr, Rect2(p + Vector2(14, -48), fr.get_size() * RcTiles.ART_PX), false, FLAGS[d[9]])
+			elif int(d[9]) >= 0:
 				# its little flag on a stick, flapping
 				var flap := 4.0 if int(t * 4.0 + float(d[7])) % 2 == 0 else 0.0
 				draw_rect(Rect2(p + Vector2(16, -44), Vector2(4, 32)), OUTLINE)
 				draw_rect(Rect2(p + Vector2(20, -44 + flap * 0.5), Vector2(16 - flap, 12)), OUTLINE)
 				draw_rect(Rect2(p + Vector2(20, -40 + flap * 0.5), Vector2(12 - flap, 4)), FLAGS[d[9]])
-			draw_texture_rect(d[10], Rect2(p - Vector2(24, 28), Vector2(48, 48)), false, Color(1, 1, 1, 0.92))
+			var face: Texture2D = _back_of(d[10]) if art and style == "stand" and _view() == "back" else d[10]
+			draw_texture_rect(face, Rect2(p - Vector2(24, 28), Vector2(48, 48)), false, Color(1, 1, 1, 0.92))
 			if scared and int(d[1]) % 2 == 0:
 				draw_rect(Rect2(p + Vector2(-2, -46), Vector2(4, 10)), Color8(250, 246, 236))
 				draw_rect(Rect2(p + Vector2(-2, -32), Vector2(4, 4)), Color8(250, 246, 236))
+		if art and style == "stand":
+			_draw_stand_art("over")                 # (the awning over the top row; from behind the posts too)
 	func _draw_stand() -> void:
+		if art and style == "stand":
+			_draw_stand_art("under")
+			return
 		# the stand: outlined like the track (it's a toy too), five tiers stepping up away from the
 		# track (the back ones lighter: higher, nearer the light), lit lips; a pier: on posts
 		if style == "pier":
@@ -617,6 +764,52 @@ class Crowd extends Node2D:
 			draw_rect(tab, col)
 			a += 20.0
 			k += 1
+	## The designer's stand (one layer: "under" the pals or "over" them): its end, its middle repeated
+	## (the last one cut), its other end, in its view; over the awning, the roof flags waving
+	func _draw_stand_art(layer: String) -> void:
+		var v := _view()
+		var set_name := ("front" if v == "front" else "back") if along_x else v
+		var k := art_k()
+		var a := RcTiles.drawn("stand_%s_%s_end_a" % [set_name, layer])
+		var m := RcTiles.drawn("stand_%s_%s_mid" % [set_name, layer])
+		var b := RcTiles.drawn("stand_%s_%s_end_b" % [set_name, layer])
+		var axis := Vector2.RIGHT if along_x else Vector2.DOWN
+		var long := rect.size.x if along_x else rect.size.y
+		var end_a := (a.get_width() if along_x else a.get_height()) * k
+		var end_b := (b.get_width() if along_x else b.get_height()) * k
+		var mid_len := (m.get_width() if along_x else m.get_height()) * k
+		draw_texture_rect(a, Rect2(rect.position, a.get_size() * k), false)
+		var at := end_a
+		var ends: Array = ART_ROOF_ENDS.get(set_name, ART_ROOF_ENDS_FRONT)
+		var posts: Array[float] = [ends[0] * k]
+		while at < long - end_b - 0.5:
+			var piece := minf(mid_len, long - end_b - at)
+			var src := Rect2(Vector2.ZERO, Vector2(piece / k, m.get_height()) if along_x else Vector2(m.get_width(), piece / k))
+			draw_texture_rect_region(m, Rect2(rect.position + axis * at, src.size * k), src)
+			if piece >= ART_ROOF_FLAGS[1] * k:
+				posts.append(at + ART_ROOF_FLAGS[1] * k)
+			at += piece
+		draw_texture_rect(b, Rect2(rect.position + axis * (long - end_b), b.get_size() * k), false)
+		posts.append(long - ends[1] * k)
+		if layer != "over" or not ResourceLoader.exists(RcTiles.DIR + "stand_flag_0.png"):
+			return
+		# the roof flags: on the awning's back edge, each waving on its own beat
+		var depth := ART_DEPTH * k
+		for i in posts.size():
+			var fr := RcTiles.drawn("stand_flag_%d" % (int(t * 6.0 + i * 1.7) % 3))
+			var size := fr.get_size() * k
+			var along: float = posts[i]
+			var p: Vector2
+			match v:
+				"side_r":
+					p = rect.position + Vector2(depth - size.x * 0.5, along - size.y)
+				"side_l":
+					p = rect.position + Vector2(-size.x * 0.5, along - size.y)
+				"back":                              # (on the canopy, nearest to us)
+					p = rect.position + Vector2(along - size.x * 0.5, ART_CANOPY_BACK * k - size.y + 4.0)
+				_:
+					p = rect.position + Vector2(along - size.x * 0.5, -size.y + 6.0)
+			draw_texture_rect(fr, Rect2(p.round(), size), false, FLAGS[i % FLAGS.size()])
 	func _draw_cloud() -> void:
 		# a fluffy cloud for the pals to sit on: lumps along its edge, lit top left, its shade below
 		var lumps: Array = []
@@ -1201,7 +1394,8 @@ func _depth_3d() -> void:
 		behind.position = far
 		water_fx.position = far
 		if vehicle == "car":
-			crowd.position = far                  # (the stand stands on the floor)
+			for st in [crowd] + more_stands:
+				st.position = far                   # (the stand stands on the floor)
 	canopy.position = near
 	air_fx.position = near
 
@@ -1423,6 +1617,7 @@ func _begin(n: int) -> void:
 	_build_circuit()
 	_place_crowd()
 	_place_features()
+	_ramp_len = RAMP_LEN
 	if not _tiles.is_empty():
 		_snap_gaps()
 	_buoy_spots.clear()
@@ -1433,7 +1628,8 @@ func _begin(n: int) -> void:
 	air_fx.streaks.clear()
 	calibrate_tilt()                                 # (the 3D layers: the pose now is "level")
 	_depth_tilt = Vector2.ZERO
-	crowd.position = Vector2.ZERO
+	for st in [crowd] + more_stands:
+		st.position = Vector2.ZERO
 	sky_dock.visible = vehicle == "plane"
 	if vehicle == "plane":
 		var d0 := (centre[2] - centre[0]).normalized()
@@ -1461,6 +1657,7 @@ func _begin(n: int) -> void:
 	# the user 2026-10-18: after a storm cloud the next race's plane was invisible)
 	car.modulate = Color(1, 1, 1)
 	car.scale = Vector2.ONE
+	_wrecked = false
 	for nd in [car, antenna, antenna_tip, driver]:
 		if nd.get_parent() != front:
 			nd.reparent(front, false)
@@ -1571,6 +1768,10 @@ func _build_circuit() -> void:
 	if not _tiles.is_empty():
 		# (the start line on a whole straight square: the pieces draw it in its middle)
 		_start_square = RcTiles.nearest_straight(_tiles, centre[0], pad, cell)
+		if RcTiles.on(look) and vehicle == "car" and ResourceLoader.exists(RcTiles.DIR + "stand_front_under_mid.png"):
+			var fs := _front_start(pad)
+			if fs.x >= 0:
+				_start_square = fs
 		var k0 := RcTiles.nearest(centre, RcTiles.at(_start_square, pad, cell))
 		rolled = PackedVector2Array()
 		for i in count:
@@ -1743,11 +1944,111 @@ func _place_crowd() -> void:
 	var dir := (centre[4] - centre[0]).normalized()
 	var horizontal := absf(dir.x) > absf(dir.y)
 	var normal := Vector2(-dir.y, dir.x)
+	for st in more_stands:
+		st.visible = false
+		st.art = false
+	crowd.art = vehicle == "car" and RcTiles.on(look) and ResourceLoader.exists(RcTiles.DIR + "stand_front_under_mid.png")
+	if crowd.art:
+		_place_art_stands()
+		return
 	# the biggest stand that fits beside the finish line (tight circuits get a smaller one)
 	for long in [440.0, 340.0, 260.0, 200.0]:
 		if _try_crowd(dir, horizontal, normal, long):
 			return
 	crowd.visible = false
+
+## RC NEW ART: the designer's stands (the user, 2026-10-27): one seen from the front beside the start
+## line (the start is put where it fits, _front_start), and up to MORE_STANDS more seen from behind
+## (or the side) round the course, each as long as there's room (the whole picture's 4 bays at most),
+## close to the road
+const STAND_LONGS := [816.0, 656.0, 496.0]   # end + 4 / 3 / 2 middles, world px
+const STAND_GAP := 8.0                 # from the road's edge (a stand below it: past its side face too)
+func _stand_gap(away: Vector2) -> float:
+	return STAND_GAP + (RcTiles.FACE_ROWS * RcTiles.ART_PX if away.y > 0.5 else 0.0)
+
+func _place_art_stands() -> void:
+	var deep := Crowd.ART_DEPTH * Crowd.art_k()
+	var stands := [crowd] + more_stands
+	var chosen: Array[Rect2] = []
+	var put := func(r: Rect2, horizontal: bool, away: Vector2) -> void:
+		var st: Crowd = stands[chosen.size()]
+		st.art = true
+		st.setup(r, horizontal, course_seed * 13 + 1 + chosen.size() * 7, away, "stand", CROWD_HAZE[look])
+		st.visible = true
+		chosen.append(r)
+	# by the start line, seen from the front
+	var d0 := (centre[4] - centre[0]).normalized()
+	if absf(d0.y) < 0.05:
+		for long in STAND_LONGS:
+			var r := _stand_rect(centre[0], true, Vector2.UP, long, deep)
+			if _stand_fits(r, _stand_gap(Vector2.UP)):
+				put.call(r, true, Vector2.UP)
+				break
+	# more round the course: from behind first, then from the side, then the front
+	var spots: Array = []                            # [score, rect, horizontal, away]
+	for i in range(0, count, 6):
+		var d := (centre[(i + 6) % count] - centre[i]).normalized()
+		if absf(d.x) > 0.02 and absf(d.y) > 0.02:
+			continue                                 # (straights only)
+		var horizontal := absf(d.x) > absf(d.y)
+		var normal := Vector2(-d.y, d.x)
+		for long in STAND_LONGS:
+			for side in [1.0, -1.0]:
+				var away: Vector2 = normal * side
+				var score := (3.0 if away.y > 0.0 else 1.0) if horizontal else 2.0
+				spots.append([score + long / 1000.0, _stand_rect(centre[i], horizontal, away, long, deep), horizontal, away])
+	spots.sort_custom(func(x, y): return x[0] > y[0])
+	for sp in spots:
+		if chosen.size() >= stands.size():
+			break
+		var r: Rect2 = sp[1]
+		if chosen.any(func(q): return q.grow(140.0).intersects(r)) or not _stand_fits(r, _stand_gap(sp[3])):
+			continue
+		put.call(r, sp[2], sp[3])
+	crowd.visible = not chosen.is_empty()
+
+## A stand's place beside the road at a point, its back away from the road
+func _stand_rect(at: Vector2, horizontal: bool, away: Vector2, long: float, deep: float) -> Rect2:
+	var size := Vector2(long, deep) if horizontal else Vector2(deep, long)
+	return Rect2(at + away * (half_w + _stand_gap(away) + deep / 2.0) - size / 2.0, size)
+
+## RC NEW ART: the start on the straight square nearest the course's own start where a stand seen from
+## the front fits above the road (the user: an audience on the start line, seen from the front); the
+## course, its laps and par are the same, only where the line is moves. (-1, -1): none fits
+func _front_start(pad: float) -> Vector2i:
+	var deep := Crowd.ART_DEPTH * Crowd.art_k()
+	var best := Vector2i(-1, -1)
+	var best_d := INF
+	for g in _tiles:
+		if String(_tiles[g]) != "straight_h":
+			continue
+		var p := RcTiles.at(g, pad, cell)
+		var r := _stand_rect(p, true, Vector2.UP, STAND_LONGS[-1], deep)
+		if r.position.x < EDGE * PX + 8 or r.position.y < EDGE * PX + 8 or r.end.x > mat_size.x - EDGE * PX - 8:
+			continue
+		var clear := true
+		for j in count:                              # (no rails known yet: a tyre wall's width all round)
+			var q := centre[j]
+			if q.distance_to(q.clamp(r.position, r.end)) < half_w + STAND_GAP - 6.0 + (60.0 if (centre[(j + 2) % count] - q).normalized().dot((q - centre[(j - 2 + count) % count]).normalized()) < 0.99 else 0.0):
+				clear = false
+				break
+		if not clear:
+			continue
+		var d := p.distance_to(centre[0])
+		if d < best_d:
+			best_d = d
+			best = g
+	return best
+
+## Is a stand's place on the mat and clear of the track (its tyre walls too)?
+func _stand_fits(r: Rect2, gap: float) -> bool:
+	if r.position.x < EDGE * PX + 8 or r.position.y < EDGE * PX + 8 or r.end.x > mat_size.x - EDGE * PX - 8 or r.end.y > mat_size.y - EDGE * PX - 8:
+		return false
+	for j in count:
+		var p := centre[j]
+		if p.distance_to(p.clamp(r.position, r.end)) < half_w + gap - 6.0 + (60.0 if _rail_at(j) else 0.0):
+			return false
+	return true
 
 func _try_crowd(dir: Vector2, horizontal: bool, normal: Vector2, long: float) -> bool:
 	var size := Vector2(long, 136) if horizontal else Vector2(136, long)
@@ -1821,9 +2122,10 @@ func _snap_to_squares() -> void:
 				_rail_squares[g] = true
 
 ## RC NEW ART: each jump onto a whole straight square, its hole in the square's middle (as the gap
-## pieces draw it), the ramp right before it
+## pieces draw it, HOLE_AHEAD on), the long ramp right before it in the same square
 func _snap_gaps() -> void:
 	_gap_squares.clear()
+	_ramp_len = RcTiles.ramp_length()
 	var taken: Array = [_start_square]
 	for pq in _pad_squares:
 		taken.append(pq[0])
@@ -1831,13 +2133,15 @@ func _snap_gaps() -> void:
 		var mid: int = (gaps[gi][0] + gaps[gi][1]) / 2
 		var g := RcTiles.nearest_straight(_tiles, centre[mid], _tile_pad, cell, taken)
 		if g.x < 0:
+			gaps[gi] = []                                 # (no straight left: this jump goes)
 			continue
 		taken.append(g)
-		var p := RcTiles.at(g, _tile_pad, cell)
-		var i := RcTiles.nearest(centre, p)
+		var i := RcTiles.nearest(centre, RcTiles.at(g, _tile_pad, cell))
 		var dir := (centre[(i + 1) % count] - centre[i]).normalized()
+		var p := RcTiles.hole_at(g, _tile_pad, cell, dir)
 		gaps[gi] = [RcTiles.nearest(centre, p - dir * RcTiles.GAP_HOLE), RcTiles.nearest(centre, p + dir * RcTiles.GAP_HOLE)]
 		_gap_squares.append([g, dir])
+	gaps = gaps.filter(func(gp): return not gp.is_empty())
 
 ## A figure-8: two loops crossing once (a vertical stretch over a horizontal one), in squares:
 ## [loop A's width, height, loop B's width, height, notches]; notches put square bumps on the
@@ -2081,7 +2385,7 @@ func _in_gap(i: int) -> bool:
 
 ## On a jump's ramp (the last RAMP_LEN before a gap)?
 func _on_ramp(i: int) -> bool:
-	var ramp_n := int(RAMP_LEN / STEP)
+	var ramp_n := int(_ramp_len / STEP)
 	for g in gaps:
 		if i >= g[0] - ramp_n and i < g[0]:
 			return true
@@ -3414,6 +3718,11 @@ func _create_nodes() -> void:
 	# (the user, 2026-10-18: a stand south of the road had its pals hop up under the track)
 	crowd = Crowd.new()
 	world.add_child(crowd)
+	for i in MORE_STANDS:
+		var st := Crowd.new()
+		st.visible = false
+		world.add_child(st)
+		more_stands.append(st)
 	buoys = FloatingBuoys.new()
 	world.add_child(buoys)                          # (on the water, under the boat)
 	sky_dock = SkyDock.new()
@@ -3531,6 +3840,7 @@ func _create_nodes() -> void:
 	inner.size = gantry.size - Vector2(12, 12)
 	inner.position = gantry.position + Vector2(6, 6)
 	lights.add_child(inner)
+	_gantry_box = [gantry, inner]
 	for i in 3:
 		var lamp := Sprite2D.new()
 		lamp.texture = _lamp_texture()
@@ -3548,6 +3858,10 @@ func _create_nodes() -> void:
 	banner = _label(Vector2(0, PLAY_HEIGHT / 2 - 70), Vector2(PLAY_WIDTH, 140), 72, HORIZONTAL_ALIGNMENT_CENTER, Color(1, 0.97, 0.9))
 	banner.add_theme_color_override("font_outline_color", MAT_EDGE[2])
 	banner.add_theme_constant_override("outline_size", 16)
+	lettering = RcLettering.new()
+	lettering.position = Vector2(PLAY_WIDTH / 2.0, PLAY_HEIGHT / 2.0)
+	lettering.max_width = PLAY_WIDTH - 60.0       # (with its pop-in overshoot, still on the screen)
+	add_child(lettering)
 	banner.modulate.a = 0.0
 
 	motor = AudioStreamPlayer.new()
@@ -3579,7 +3893,11 @@ const LAMP_GREEN := Color(0.36, 1.0, 0.44)
 
 func _set_lamps(lit: int, green: bool) -> void:
 	for i in lamps.size():
-		lamps[i].modulate = LAMP_GREEN if green else (LAMP_RED if i < lit else LAMP_OFF)
+		if _art_lights:
+			lamps[i].texture = RcTiles.tex("start_lamp_green" if green else ("start_lamp_red" if i < lit else "start_lamp_off"))
+			lamps[i].modulate = Color.WHITE
+		else:
+			lamps[i].modulate = LAMP_GREEN if green else (LAMP_RED if i < lit else LAMP_OFF)
 
 func _label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
 	var l := Label.new()
@@ -3609,7 +3927,7 @@ func _place_car() -> void:
 		slices[i].scale = Vector2(PX, PX * (1.0 - 0.42 * absf(bank))) if vehicle == "plane" else Vector2(_slice_px, _slice_px)
 	shadow.position = car_pos.round() + Vector2(5, 8 + car_drop * 0.3)
 	shadow.rotation = heading
-	shadow.visible = state != State.FALL and vehicle != "plane"
+	shadow.visible = not _wrecked and vehicle != "plane"
 	var seat := -5.0
 	match vehicle:
 		"boat":
@@ -3650,7 +3968,7 @@ func _place_car() -> void:
 		headlight.visible = look == "night" and state != State.FALL
 	# the plane's shadow far below: where the point under it is on the ground (the ground nearer the
 	# middle of the view the farther down it is), a little off it (the sun), smaller
-	sky_shadow.visible = vehicle == "plane" and state != State.FALL
+	sky_shadow.visible = vehicle == "plane" and not _wrecked
 	if sky_shadow.visible:
 		var mid := VIEW.get_center()
 		var on_screen := world.position + car.position * ZOOM
@@ -3667,6 +3985,16 @@ func _place_car() -> void:
 ## RC NEW ART: the floor, the track and the branches from the designer's pieces (finer: their pixels
 ## RcTiles.ART_PX world px), the track's shadow a dark copy of it on the floor; otherwise the code's
 func _tile_art() -> void:
+	var grade := RcTiles.grade_material(DevLaunch.rc_grade) if not _tiles.is_empty() else null   # (the scenery, not the car)
+	for sp in [board, track, canopy]:
+		sp.material = grade
+	for st in [crowd] + more_stands:
+		st.material = RcTiles.grade_material(1) if not _tiles.is_empty() else null          # (the stands: SOFT)
+		st.queue_redraw()
+	if butterflies == null:
+		butterflies = RcButterflies.new()
+		world.add_child(butterflies)                 # (over everything on the mat, the branches too)
+	butterflies.start(null)                         # (started over the lawn once it's painted, below)
 	var k := RcTiles.ART_PX if not _tiles.is_empty() else float(PX)
 	for sp in [board, track, canopy]:
 		sp.scale = Vector2(k, k)
@@ -3685,19 +4013,48 @@ func _tile_art() -> void:
 		world.add_child(_tree_shade)
 		world.move_child(_tree_shade, track.get_index() + 1)     # (over the track, under the car)
 	_tree_shade.visible = not _tiles.is_empty()
-	for lamp in lamps:
-		lamp.texture = RcTiles.tex("start_lamp") if not _tiles.is_empty() else _lamp_texture()
-		lamp.scale = Vector2(k, k)
+	# the start lights: the designer's gantry and lamps (NOTES_ROUND_10) once drawn, on the screen at
+	# the playfield's scale (an art px = ART_PX x ZOOM screen px), else the drawn gantry
+	_art_lights = not _tiles.is_empty() and ResourceLoader.exists(RcTiles.DIR + "start_gantry.png")
+	var lpx := RcTiles.ART_PX * ZOOM
+	for r in _gantry_box:
+		r.visible = not _art_lights
+	if _art_lights and _gantry_art == null:
+		_gantry_art = Sprite2D.new()
+		_gantry_art.texture = RcTiles.tex("start_gantry")
+		_gantry_art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_gantry_art.scale = Vector2(lpx, lpx)
+		lights.add_child(_gantry_art)
+		lights.move_child(_gantry_art, 0)
+	if _gantry_art:
+		_gantry_art.visible = _art_lights
+	for i in lamps.size():
+		var lamp := lamps[i]
+		if _art_lights:
+			lamp.texture = RcTiles.tex("start_lamp_off")
+			lamp.scale = Vector2(lpx, lpx)
+			lamp.position = Vector2((RcTiles.LAMP_X[i] - 45) * lpx, 0)
+		else:
+			lamp.texture = RcTiles.tex("start_lamp") if not _tiles.is_empty() else _lamp_texture()
+			lamp.scale = Vector2(k, k)
+			lamp.position = Vector2((i - 1) * 80, 0)
+	if atmosphere == null:
+		atmosphere = RcAtmosphere.new()
+		add_child(atmosphere)
+	atmosphere.stop()
 	if _tiles.is_empty():
 		return
 	var art := RcTiles.paint(self)
 	board.texture = ImageTexture.create_from_image(art[0])
 	track.texture = ImageTexture.create_from_image(art[1])
+	butterflies.start(self, art[1])
 	canopy.texture = ImageTexture.create_from_image(art[2])
 	canopy.visible = true
 	_tile_shadow.texture = track.texture
 	_tile_shadow.position = RcTiles.SHADE
 	_tree_shade.texture = canopy.texture
+	if DevLaunch.rc_fx:
+		atmosphere.start(world, board, mat_size, RcTiles.ART_PX, level)
 	_tree_shade.scale = Vector2(k, k)
 	_tree_shade.position = RcTiles.TREE_SHADE * k
 
@@ -3811,7 +4168,8 @@ func _process(frame_delta: float) -> void:
 	# (one long frame, the app coming back from the background, never jumps the race on)
 	var delta := minf(frame_delta, 0.05)
 	_update_course_things(delta)
-	crowd.watch = car_pos
+	for st in _stands():
+		st.watch = car_pos
 	# (the buoys float the whole time, the countdown too; the bonk only while racing)
 	if vehicle == "boat":
 		if buoys.update(delta, car_pos, vel, rivals) > 0 and state == State.DRIVE and _buoy_cd <= 0.0:
@@ -3830,7 +4188,9 @@ func _process(frame_delta: float) -> void:
 			if countdown <= 0.6:
 				state = State.DRIVE
 				_set_lamps(COUNTDOWN, true)                    # all green: GO
-				crowd.cheer(car_pos)
+				for st in _stands():
+					st.cheer_all()
+					st.cheer_cd = CHEER_CD + 1.0         # (no wave from the car still sitting by them)
 				_show_banner("GO!", 0.5)
 				_sfx("res://sounds/fx/rc_go.wav", -8.0)
 				Input.vibrate_handheld(40)
@@ -3945,9 +4305,18 @@ func _drive(delta_real: float) -> void:
 	_cheer_cd = maxf(0.0, _cheer_cd - delta)
 	_buoy_cd = maxf(0.0, _buoy_cd - delta)
 	_grace_t = maxf(0.0, _grace_t - delta)
-	if crowd.visible and _cheer_cd <= 0.0 and crowd.rect.grow(170.0).has_point(car_pos):
-		_cheer_cd = 2.5
-		crowd.cheer(car_pos)                             # (the wave runs from where the car is)
+	for st in _stands():                                 # every stand by the car (two can face the same stretch), each its own wait
+		var across := 2.0 * half_w + _stand_gap(st.away) + CHEER_ACROSS   # (only on the road's side: never behind it)
+		var zone: Rect2 = st.rect.grow_individual(
+			CHEER_AHEAD if st.along_x else (across if st.away.x > 0.0 else 0.0),
+			CHEER_AHEAD if not st.along_x else (across if st.away.y > 0.0 else 0.0),
+			CHEER_AHEAD if st.along_x else (across if st.away.x < 0.0 else 0.0),
+			CHEER_AHEAD if not st.along_x else (across if st.away.y < 0.0 else 0.0))
+		st.cheer_cd = maxf(0.0, st.cheer_cd - delta)
+		if st.cheer_cd <= 0.0 and zone.has_point(car_pos):
+			st.cheer_cd = CHEER_CD
+			_cheer_cd = CHEER_CD
+			st.cheer(car_pos, 2)                         # (the wave runs from where the car is)
 	if boost_t > 0.3 and vehicle == "car":
 		trail.add(car_pos, heading, delta)                  # (more streaks while boosted)
 	var was_near := near
@@ -4270,9 +4639,10 @@ func _crash(kind: String) -> void:
 	var last := lose_life()
 	if qa_autopilot:
 		print("QA crash %d: %s at %.1f s" % [level, kind, race_time])
-	if crowd.visible:
-		crowd.scream(car_pos)
-		if crowd.rect.grow(320.0).has_point(car_pos):
+	for st in _stands():
+		st.scream(car_pos)
+	if _stands().any(func(st): return st.rect.grow(320.0).has_point(car_pos)):
+		if true:
 			_sfx("res://sounds/fx/crowd_gasp.wav", -8.0, randf_range(0.95, 1.1))
 	if kind == "ring":
 		_show_banner("missed!", 0.5)
@@ -4282,10 +4652,19 @@ func _crash(kind: String) -> void:
 			_out_of_lives()
 		return
 	state = State.FALL
-	for n in [car, antenna, antenna_tip, driver]:
-		n.reparent(behind, false)
+	_wrecked = true
 	var from := car_pos
 	var out := (car_pos - centre[near]).normalized()
+	# off the far side (an edge facing up the screen) it goes behind the raised track; off a near or
+	# side edge it stays in front and drops onto the floor below (the user: it went under the track's
+	# near edge, as if the border were see-through)
+	var far_side := out.y < -0.35
+	if far_side:
+		for n in [car, antenna, antenna_tip, driver]:
+			n.reparent(behind, false)
+	var drop := TRACK_SIDE * PX * 3.0
+	if not _tiles.is_empty() and not far_side:
+		drop = RcTiles.FACE_ROWS * RcTiles.ART_PX + 16.0   # (the new track's side face, then onto the floor)
 	motor.stop()
 	Input.vibrate_handheld(80)
 	var t := create_tween()
@@ -4295,7 +4674,7 @@ func _crash(kind: String) -> void:
 			_sfx("res://sounds/fx/rc_fall.wav", -12.0)
 			t.tween_method(func(f: float):
 				car_pos = from + out * TIP_OUT * (1.0 - pow(1.0 - minf(1.0, f * 2.5), 2.0))
-				car_drop = f * f * TRACK_SIDE * PX * 3.0
+				car_drop = f * f * drop
 				car.modulate = Color(1, 1, 1).lerp(Color(0.4, 0.38, 0.45), f)
 				car.scale = Vector2.ONE * (1.0 - 0.15 * f), 0.0, 1.0, 0.45)
 			t.tween_callback(func(): _sfx("res://sounds/fx/rc_land.wav", -10.0))
@@ -4333,6 +4712,7 @@ func _crash(kind: String) -> void:
 
 ## Back on the last checkpoint, pointing down the course, blinking
 func _respawn() -> void:
+	_wrecked = false
 	var i := int(fposmod(last_cp, count))
 	car_pos = centre[i]
 	heading = (centre[(i + 2) % count] - centre[i]).angle()
@@ -4394,7 +4774,8 @@ func _find_near() -> void:
 
 func _finish() -> void:
 	state = State.DONE
-	crowd.party = true
+	for st in _stands():
+		st.party = true
 	motor.stop()
 	var stars := _stars_now()
 	if qa_autopilot:
@@ -5283,6 +5664,9 @@ func on_forward_button_pressed() -> void:
 # ================================================================== FX
 
 func _show_banner(text: String, hold: float) -> void:
+	if lettering.say(text, hold):                    # (the racing font, letter by letter)
+		banner.modulate.a = 0.0
+		return
 	banner.text = text
 	var t := create_tween()
 	t.tween_property(banner, "modulate:a", 1.0, 0.1)
@@ -5300,3 +5684,4 @@ func _sfx(path: String, volume_db: float, pitch := 1.0) -> void:
 	add_child(sfx)
 	sfx.play()
 	sfx.finished.connect(sfx.queue_free)
+

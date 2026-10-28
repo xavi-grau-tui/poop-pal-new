@@ -1,7 +1,9 @@
-"""Apply the approved painted Garden finish to all 76 locked-size sprites.
+"""Apply the older painted Garden finish to its remaining decor and overlays.
 
 Road masks come from the geometry renderer. Painted imagegen sources live in
 docs/mockups/rcprix_garden/quality_sample, and are sampled with nearest-neighbour.
+The Round 9 road and tyre PNGs are owned by rcprix_round9_sample.py; this
+generator deliberately leaves those files alone.
 """
 
 from __future__ import annotations
@@ -17,7 +19,7 @@ from rcprix_templates import (CURB, FRAME, GROUND, OVERLAYS, ROAD,
 from rcprix_garden_full import (GOLD, PLUM, RED, WHITE, frame_piece, overlay,
                                 small_sprite)
 from rcprix_garden_quality_sample import painted_source, polish_road
-from rcprix_garden_round3 import seamless_a, variant_from_a, bush as round3_bush
+from rcprix_garden_round3 import seamless_a, variant_from_a
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "textures/minigames/rcprix/garden"
@@ -52,7 +54,13 @@ def tree_sprite(name,size):
 
 
 def bush_sprite(name,size):
-    return round3_bush(name,size)
+    # The tree-textured round-7 bush PNG is the source of truth. Rebuilds copy
+    # its pixels directly, without repainting or palette conversion.
+    master = ROOT / "docs/mockups/rcprix_garden/round7_tree_match_final" / f"{name}.png"
+    im = Image.open(master).convert("RGBA")
+    if im.size != size:
+        raise ValueError(f"{name}: master has size {im.size}, expected {size}")
+    return im
 
 
 def car_slices():
@@ -239,9 +247,13 @@ def generate():
     # Road positions, masks and join pixels come from the locked geometry code.
     for half,suffix in ((ROAD_HALF,""),(ROAD_HALF_WIDE,"_wide")):
         for name,_ in ROAD:
+            if name.startswith(("straight_", "corner_")):
+                continue  # Round 9's final-grid art is authoritative.
             polished=polish_road(name,asphalt,half)
             polished.save(OUT/f"{name}{suffix}.png")
         for name,_ in OVERLAYS:
+            if name.startswith("tyres_"):
+                continue  # Preserve both Round 9 tyre colourways.
             polished_overlay(name,half).save(OUT/f"{name}{suffix}.png")
     grass_a = seamless_a()
     for letter, pixels in (("a",grass_a),("b",variant_from_a(grass_a,"b")),

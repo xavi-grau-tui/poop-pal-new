@@ -33,13 +33,29 @@ OVERLAYS = [
     ("boost_e", "Boost pad → east"), ("boost_w", "Boost pad → west"), ("boost_n", "Boost pad → north"), ("boost_s", "Boost pad → south"),
     ("ramp_e", "Ramp → east"), ("ramp_w", "Ramp → west"), ("ramp_n", "Ramp → north"), ("ramp_s", "Ramp → south"),
     ("tyres_ne", "Tyre wall, corner N-E"), ("tyres_nw", "Tyre wall, corner N-W"), ("tyres_se", "Tyre wall, corner S-E"), ("tyres_sw", "Tyre wall, corner S-W"),
+    # the second colourway (red/white above, blue/yellow here), mixed by level in the game
+    ("tyres_ne_alt", "Tyre wall N-E, 2nd colours"), ("tyres_nw_alt", "Tyre wall N-W, 2nd colours"),
+    ("tyres_se_alt", "Tyre wall S-E, 2nd colours"), ("tyres_sw_alt", "Tyre wall S-W, 2nd colours"),
 ]
 GROUND = [("grass_a", "Grass A (seamless)"), ("grass_b", "Grass B (seamless)"), ("grass_c", "Grass C (seamless)")]
 SPRITES = [   # file, label, w, h
     *[(f"car_slice_{i}", f"Car slice {i + 1}", 44, 32) for i in range(6)],
     ("crate", "Crate", 20, 20), ("lamp_post", "Lamp post", 10, 18), ("start_lamp", "Start lamp", 32, 32),
+    ("start_gantry", "Start lights gantry", 90, 32),
+    # the spectator stand (NOTES_ROUND_13): built from the designer's front picture by
+    # tools/art/rcprix_stand_from_reference.py; a layer under the pals and one over them, each an end,
+    # a middle the game repeats and the other end; front, behind (an effect) and the sides (turned)
+    *[(f"stand_{v}_{layer}_{part}", f"Stand {v}, {layer}, {part}", w, 107)
+      for v in ("front", "back") for layer in ("under", "over") for part, w in (("end_a", 41), ("mid", 80), ("end_b", 47))],
+    *[(f"stand_{v}_{layer}_{part}", f"Stand {v}, {layer}, {part}", 107, w)
+      for v in ("side_r", "side_l") for layer in ("under", "over") for part, w in (("end_a", 41), ("mid", 80), ("end_b", 47))],
+    ("stand_flag_0", "Roof flag 1", 12, 24), ("stand_flag_1", "Roof flag 2", 12, 24), ("stand_flag_2", "Roof flag 3", 12, 24),
+    ("flag_0", "Flag, frame 1", 12, 20), ("flag_1", "Flag, frame 2", 12, 20),
+    # butterflies over the lawn (drawn white, the game tints them): wings open, half, closed
+    ("butterfly_0", "Butterfly, open", 12, 10), ("butterfly_1", "Butterfly, half", 12, 10), ("butterfly_2", "Butterfly, closed", 12, 10), ("start_lamp_off", "Lamp off", 22, 22), ("start_lamp_red", "Lamp red", 22, 22), ("start_lamp_green", "Lamp green", 22, 22),
     ("spring", "Spring", 24, 14), ("balloon", "Balloon", 18, 26), ("sparkle", "Sparkle", 18, 18), ("helmet", "Helmet", 16, 14),
-    ("bush_a", "Bush A", 60, 52), ("bush_b", "Bush B", 46, 40), ("bush_c", "Bush C", 54, 46), ("bush_d", "Bush D", 40, 34), ("flowers_a", "Flowers A", 16, 12), ("flowers_b", "Flowers B", 16, 12),
+    ("bush_a", "Bush A", 96, 82), ("bush_b", "Bush B", 172, 67), ("bush_c", "Bush C", 102, 77), ("bush_d", "Bush D", 106, 102),
+    ("bush_e", "Small bush E", 66, 57), ("bush_f", "Small bush F", 57, 48), ("bush_g", "Small bush G", 72, 54), ("flowers_a", "Flowers A", 16, 12), ("flowers_b", "Flowers B", 16, 12),
     ("frame_corner_tl", "Frame corner TL", FRAME, FRAME), ("frame_corner_tr", "Frame corner TR", FRAME, FRAME),
     ("frame_corner_bl", "Frame corner BL", FRAME, FRAME), ("frame_corner_br", "Frame corner BR", FRAME, FRAME),
     ("frame_top", "Frame top", SQ, FRAME), ("frame_bottom", "Frame bottom", SQ, FRAME),
@@ -63,7 +79,7 @@ def _font(size, bold=False):
 def road_guides(d, ox, oy, name, k):
     """The road's bands in one square: its edges, curbs and (on a south-facing edge) its side face"""
     half = ROAD_HALF_WIDE if name.endswith(WIDE) else ROAD_HALF
-    name = name.removesuffix(WIDE)
+    name = name.removesuffix(WIDE).removesuffix("_alt")
     c = SQ / 2
     P = lambda x, y: (ox + x * k, oy + y * k)
     if name in ("straight_h", "gap_h", "start_h") or name[:-2] in ("boost", "ramp") and name[-1] in "ew":

@@ -24,15 +24,50 @@ const SHADE_COL := Color(0.05, 0.04, 0.1, 0.3)
 const TREE_SHADE := Vector2(18, 26)
 const TREE_SHADE_COL := Color(0.04, 0.1, 0.06, 0.3)
 const DECOR_SHADE := Vector2i(3, 4)   # a bush's or flowers' own little shadow
-const BUSHES := ["bush_a", "bush_b", "bush_c", "bush_d"]   # (those drawn so far are used)
+const BUSHES := ["bush_a", "bush_b", "bush_c", "bush_d", "bush_e", "bush_f", "bush_g"]   # (made by tools/art/rcprix_bush_redraw.py)
 const BUSHES_PER_SQ := 0.6            # bushes per course square of lawn, all kinds together
 const SAME_BUSH_APART := 2.5 * SQ     # the same bush never nearer itself than this (the user: the same one twice on screen)
 ## TRIAL until the designer's redrawn bushes come (NOTES_ROUND_4): the current ones are doubled
 ## (Scale2x), their leaves then the trees' size; set false when the new ones are in
-const BUSH_X2 := true
+const BUSH_X2 := false
 const DECOR_SHADE_A := 0.28
-const GAP_HOLE := 60.0                # a jump's hole, world px each side of its square's middle (the gap pieces')
-const RAMP_SHIFT := 50                # the ramp drawn this many art px back from its piece's middle, right before the hole
+const GAP_HOLE := 60.0                # a jump's hole, world px each side of its middle
+const HOLE_AHEAD := 40                # the hole's middle this many art px past its square's middle, the way you drive:
+                                      # the long ramp then fits in the same square (the user: tight courses lost their jumps)
+const OUTLINE := Color8(0x28, 0x1E, 0x28)         # the pieces' one outline colour (BRIEF.md)
+const LAMP_X := [18, 45, 72]          # the start gantry's three sockets, px across its 90 (NOTES_ROUND_10)
+const FACE_ROWS := 13                 # the raised track's side face under a south edge, with its outline (SIDE 12 + 1)
+
+## Colour grades to compare (DevLaunch "COLOURS"): [name, lighten, saturation, green hue shift]
+## (the user 2026-10-27: are the colours too vivid? pastel mockups made the same way)
+const GRADES := [["SOFT", 0.15, 0.8, 0.0], ["PASTEL", 0.28, 0.62, 0.0], ["MINTY", 0.32, 0.55, 0.03]]
+const GRADE_SHADER := """
+shader_type canvas_item;
+uniform float lift;
+uniform float sat;
+uniform float hue_shift;
+vec3 hsv(vec3 c) {
+	vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+	vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+	float d = q.x - min(q.w, q.y);
+	return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + 1e-10)), d / (q.x + 1e-10), q.x);
+}
+vec3 rgb(vec3 c) {
+	vec3 p = abs(fract(c.xxx + vec3(1.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0);
+	return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+}
+void fragment() {
+	vec4 t = COLOR;                          // (already the texture times the modulate)
+	vec3 c = hsv(t.rgb);
+	if (c.z >= 0.18) {                       // (the outlines stay dark, so it stays crisp)
+		c.z += (1.0 - c.z) * lift;
+		c.y *= sat;
+		if (c.x > 0.17 && c.x < 0.45) { c.x += hue_shift; }
+	}
+	COLOR = vec4(rgb(vec3(fract(c.x), c.y, c.z)), t.a);
+}
+"""
 
 static var _cache := {}
 
@@ -58,6 +93,14 @@ static func img(name: String) -> Image:
 
 static func tex(name: String) -> Texture2D:
 	return load(DIR + name + ".png")
+
+## A piece as a texture made from its image (for _draw calls: the imported texture drew blank there)
+static func drawn(name: String) -> Texture2D:
+	var key := "drawn_" + name
+	if not _cache.has(key):
+		var im := img(name)
+		_cache[key] = ImageTexture.create_from_image(im) if im else null
+	return _cache[key]
 
 # ------------------------------------------------------------------ THE GRID
 
@@ -114,6 +157,22 @@ static func nearest_straight(tiles: Dictionary, p: Vector2, pad: float, cell: fl
 			best = g
 	return best
 
+## A colour grade (1.. = GRADES) as a material, or null for 0 (as drawn). The scenery takes
+## DevLaunch.rc_grade (normal colours by default), the stand and its audience SOFT (the user
+## 2026-10-27: "keep the normal colours and put the audience in soft colours"); the car never
+static func grade_material(n: int) -> ShaderMaterial:
+	if n <= 0 or n > GRADES.size():
+		return null
+	var g: Array = GRADES[n - 1]
+	var sh := Shader.new()
+	sh.code = GRADE_SHADER
+	var m := ShaderMaterial.new()
+	m.shader = sh
+	m.set_shader_parameter("lift", g[1])
+	m.set_shader_parameter("sat", g[2])
+	m.set_shader_parameter("hue_shift", g[3])
+	return m
+
 # ------------------------------------------------------------------ THE PICTURES
 
 ## The floor (lawn, decor, the frame), the raised track (road pieces, overlays)
@@ -129,22 +188,24 @@ static func paint(rc) -> Array:
 	rng.seed = 7919 * rc.course_seed + 5
 	# the raised track: the pieces, a jump's gap piece, then what lies on them
 	var track := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var walls := Image.create(w, h, false, Image.FORMAT_RGBA8)   # (the barriers alone: no tree over them)
 	var gap_at := {}
 	for gp in rc._gap_squares:
 		gap_at[gp[0]] = gp[1]
 	for g in tiles:
 		var name: String = tiles[g]
 		if gap_at.has(g):
-			name = "gap_h" if name == "straight_h" else "gap_v"
+			_stamp(track, gap_piece(name, suffix, gap_at[g]), org.call(g))
+			continue
 		_stamp(track, img(name + suffix), org.call(g))
-		if name.begins_with("corner") and rc._rail_squares.has(g):
-			_stamp(track, img("tyres_" + name.substr(7) + suffix), org.call(g))
+	for g in rc._rail_squares:                         # (the barriers after every road piece: a straight's side face never over a run-on)
+		_tyres_on([track, walls], String(tiles[g]).substr(7), suffix, rc.level, g, tiles, org.call(g))
 	_stamp(track, img(("start_h" if tiles.get(rc._start_square, "") == "straight_h" else "start_v") + suffix), org.call(rc._start_square))
 	for pd in rc._pad_squares:
 		_stamp(track, img("boost_" + _compass(pd[1]) + suffix), org.call(pd[0]))
 	for gp in rc._gap_squares:
 		var d: Vector2 = gp[1]
-		_stamp(track, img("ramp_" + _compass(d) + suffix), org.call(gp[0]) - Vector2i(d.round()) * RAMP_SHIFT)
+		_stamp(track, img("ramp_" + _compass(d) + suffix), org.call(gp[0]) - Vector2i(d.round()) * ramp_shift())
 	# the lawn: the three grasses mixed, on the pieces' grid
 	var floor_img := Image.create(w, h, false, Image.FORMAT_RGBA8)
 	var grass := [img("grass_a"), img("grass_b"), img("grass_c")]
@@ -155,7 +216,7 @@ static func paint(rc) -> Array:
 		for x in range(ox, w, SQ):
 			floor_img.blit_rect(grass[rng.randi() % 3], Rect2i(0, 0, SQ, SQ), Vector2i(x, y))
 	# decor on the lawn: off the track (and its tyre walls), the stand and the frame
-	var stand: Rect2 = Rect2(rc.crowd.rect.position / ART_PX, rc.crowd.rect.size / ART_PX).grow(6.0) if rc.crowd.visible else Rect2()
+	var stands: Array = rc._stands().map(func(st): return Rect2(st.rect.position / ART_PX, st.rect.size / ART_PX).grow(6.0))
 	var placed: Array[Rect2i] = []                      # (decor never on other decor: the user, flowers were over bushes)
 	var clear := func(r: Rect2i) -> bool:
 		for q in placed:
@@ -163,8 +224,9 @@ static func paint(rc) -> Array:
 				return false
 		if r.position.x < FRAME + 2 or r.position.y < FRAME + 2 or r.end.x > w - FRAME - 2 or r.end.y > h - FRAME - 2:
 			return false
-		if stand.intersects(Rect2(r)):
-			return false
+		for sr in stands:
+			if sr.intersects(Rect2(r)):
+				return false
 		for yy in range(r.position.y - 6, r.end.y + 6, 4):
 			for xx in range(r.position.x - 6, r.end.x + 6, 4):
 				if xx >= 0 and yy >= 0 and xx < w and yy < h and track.get_pixel(xx, yy).a > 0.0:
@@ -223,8 +285,19 @@ static func paint(rc) -> Array:
 			"tree_bottom": p.y = h - im.get_height()
 			"tree_left": p.x = 0
 			"tree_right": p.x = w - im.get_width()
-		_stamp(canopy, im, p)
+		if not _hides(im, p, walls):
+			_stamp(canopy, im, p)
 	return [floor_img, track, canopy]
+
+## Would the picture at p cover any of `under`'s pixels (sampled every 3 px)?
+static func _hides(im: Image, p: Vector2i, under: Image) -> bool:
+	for y in range(0, im.get_height(), 3):
+		for x in range(0, im.get_width(), 3):
+			var q := p + Vector2i(x, y)
+			if q.x >= 0 and q.y >= 0 and q.x < under.get_width() and q.y < under.get_height() \
+					and im.get_pixel(x, y).a > 0.0 and under.get_pixel(q.x, q.y).a > 0.0:
+				return true
+	return false
 
 ## A bush, doubled with Scale2x (a TRIAL, the user 2026-10-27: the designer's bushes, shrunk from big
 ## pictures, looked denser than the trees, as if farther away; doubled, their leaves match the trees')
@@ -252,6 +325,106 @@ static func _compass(d: Vector2) -> String:
 	if absf(d.x) > absf(d.y):
 		return "e" if d.x > 0.0 else "w"
 	return "s" if d.y > 0.0 else "n"
+
+## A corner's tyre wall: red/white, or on even levels the second colours (blue/yellow) once drawn
+## (the user 2026-10-27: both, mixed by level; 2026-10-28: the blocks on every curve, TYRES_ALT off)
+const TYRES_ALT := false
+static func _tyres(corner: String, suffix: String, level: int) -> Image:
+	var alt := "tyres_" + corner + "_alt" + suffix
+	if TYRES_ALT and level % 2 == 0 and ResourceLoader.exists(DIR + alt + ".png"):
+		return img(alt)
+	return img("tyres_" + corner + suffix)
+
+## A corner's barrier stamped at its square's top-left `at`: a file wider than the square (round 21) has a
+## margin round it with the wall's run-on past each end of the curve, kept only where the next square that way
+## is a straight (at a hairpin the next corner walls itself). RUN_ONS false (the user, 2026-10-28: they looked
+## detached): only the curve's own wall
+const RUN_ONS := false
+const RUN_STRIPS := { "n": Vector2i(0, -1), "s": Vector2i(0, 1), "w": Vector2i(-1, 0), "e": Vector2i(1, 0) }
+static func _tyres_on(dst: Array, corner: String, suffix: String, level: int, g: Vector2i, tiles: Dictionary, at: Vector2i) -> void:
+	var im := _tyres(corner, suffix, level)
+	if im == null:
+		return
+	var run := (im.get_width() - SQ) / 2
+	if run <= 0:
+		for d in dst:
+			_stamp(d, im, at)
+		return
+	var copied := false
+	for e in corner:
+		if RUN_ONS and String(tiles.get(g + RUN_STRIPS[e], "")).begins_with("straight"):
+			continue
+		if not copied:
+			im = im.duplicate()
+			copied = true
+		var strip: Rect2i = { "n": Rect2i(run, 0, SQ, run), "s": Rect2i(run, run + SQ, SQ, run),
+			"w": Rect2i(0, run, run, SQ), "e": Rect2i(run + SQ, run, run, SQ) }[e]
+		im.fill_rect(strip, Color(0, 0, 0, 0))
+	for d in dst:
+		_stamp(d, im, at - Vector2i(run, run))
+
+## The middle of a jump's hole (world px) in its square, driving `dir`
+static func hole_at(g: Vector2i, pad: float, cell: float, dir: Vector2) -> Vector2:
+	return at(g, pad, cell) + dir * float(HOLE_AHEAD) * ART_PX
+
+## The ramp's reach (ramp_e's drawing, px across its square): [its low end, its high end]. The game
+## draws it so the high end meets the hole (ramp_shift) and makes the ramp as long as drawn
+## (the user 2026-10-27: the designer's long ramp; the others are its turns and mirror)
+static func ramp_reach() -> Vector2i:
+	if not _cache.has("ramp_reach"):
+		var r := img("ramp_e").get_used_rect()
+		_cache["ramp_reach"] = Vector2i(r.position.x, r.end.x) if r.size.x > 0 else Vector2i(SQ / 2 - 20, SQ / 2 + 20)
+	return _cache["ramp_reach"]
+
+## How far back from its square the ramp is drawn, art px: its high end right at the hole's start
+static func ramp_shift() -> int:
+	return ramp_reach().y - (SQ / 2 + HOLE_AHEAD - int(GAP_HOLE / ART_PX))
+
+## The ramp's length, world px (where the car counts as on it)
+static func ramp_length() -> float:
+	return float(ramp_reach().y - ramp_reach().x) * ART_PX
+
+## A jump's square: its straight piece with the hole cut out (GAP_HOLE each side of HOLE_AHEAD past the middle), the
+## cut ends outlined and, where a road end faces down the screen, the raised side face under it.
+## (Built from the straight, so it always matches the road: the user, the designer's gap pieces
+## had corner curbs and an unfinished surface at the cut)
+static func gap_piece(straight: String, suffix: String, dir: Vector2) -> Image:
+	var ahead := HOLE_AHEAD * int(signf(dir.x + dir.y))  # (down / right: further along the piece)
+	var key := "gap_%s%s_%d" % [straight, suffix, ahead]
+	if _cache.has(key):
+		return _cache[key]
+	var im: Image = img(straight + suffix).duplicate()
+	var half := int(GAP_HOLE / ART_PX)
+	var a := SQ / 2 + ahead - half                       # the hole: [a, b)
+	var b := SQ / 2 + ahead + half
+	var vertical := straight == "straight_v"
+	var at := func(u: int, v: int) -> Vector2i:          # u along the road, v across it
+		return Vector2i(v, u) if vertical else Vector2i(u, v)
+	for u in range(a, b):
+		for v in SQ:
+			im.set_pixelv(at.call(u, v), Color(0, 0, 0, 0))
+	for v in SQ:                                         # the cut ends' outline
+		for u in [a - 1, b]:
+			if im.get_pixelv(at.call(u, v)).a > 0.0:
+				im.set_pixelv(at.call(u, v), OUTLINE)
+	if vertical:                                         # the upper end faces south: its side face, as the straight's
+		var across: Image = img("straight_h" + suffix)
+		var face: Array[Color] = []
+		for y in range(SQ - 1, -1, -1):                  # the straight's bottom: outline, then the face up to the road
+			var c := across.get_pixel(SQ / 2, y)
+			if c.a == 0.0:
+				if face.is_empty():
+					continue
+				break
+			face.push_front(c)
+			if face.size() > FACE_ROWS:
+				break
+		for x in SQ:
+			if im.get_pixel(x, a - 1).a > 0.0:
+				for i in face.size():
+					im.set_pixel(x, a + i, face[i])
+	_cache[key] = im
+	return im
 
 static func _stamp(dst: Image, src: Image, p: Vector2i) -> void:
 	if src:

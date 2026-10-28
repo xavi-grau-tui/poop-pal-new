@@ -38,6 +38,11 @@ static var new_shrine := false
 ## RC NEW ART: RC Prix's Garden built from the designer's square pieces (RcTiles), a trial: the
 ## original stays the default until it works as expected (the user, 2026-10-27); remembered
 static var rc_new_art := false
+## RC COLOURS: a colour grade over RC Prix's new-art playfield, to compare pastel looks (the user,
+## 2026-10-27: are the colours too vivid? then "keep the normal colours, the audience soft": the
+## stand is always SOFT); 0 as drawn (the default), then RcTiles.GRADES; remembered
+static var rc_grade := 0
+static var rc_fx := false                          # RC Prix Garden's air (RcAtmosphere), a trial
 
 func _ready() -> void:
 	var bg := ColorRect.new()
@@ -63,6 +68,8 @@ func _ready() -> void:
 	_start_over_button(1400)
 	_rain_toggle(font)
 	_rc_art_toggle(font)
+	_rc_grade_toggle(font)
+	_rc_fx_toggle(font)
 
 ## (RC Prix's Garden: the code's art or the designer's new pieces, a tap switches it)
 func _rc_art_toggle(font: Font) -> void:
@@ -76,6 +83,38 @@ func _rc_art_toggle(font: Font) -> void:
 	b.pressed.connect(func():
 		rc_new_art = not rc_new_art
 		b.text = "RC ART: NEW" if rc_new_art else "RC ART: OLD"
+		_save_choice(_last_choice()))
+	add_child(b)
+
+## (RC Prix's colours with the new art: as drawn or one of the grades, a tap cycles them)
+func _rc_grade_toggle(font: Font) -> void:
+	rc_grade = int(_prefs().get("rc_grade_scenery", 0)) % (RcTiles.GRADES.size() + 1)
+	var label := func() -> String:
+		return "COLOURS: " + ("NOW" if rc_grade == 0 else String(RcTiles.GRADES[rc_grade - 1][0]))
+	var b := Button.new()
+	b.text = label.call()
+	b.position = Vector2(390, 230)
+	b.size = Vector2(300, 70)
+	b.add_theme_font_override("font", font)
+	b.add_theme_font_size_override("font_size", 30)
+	b.pressed.connect(func():
+		rc_grade = (rc_grade + 1) % (RcTiles.GRADES.size() + 1)
+		b.text = label.call()
+		_save_choice(_last_choice()))
+	add_child(b)
+
+## (RC Prix Garden's air with the new art: clouds' shadows, sun, beams, morning mist; a tap switches it)
+func _rc_fx_toggle(font: Font) -> void:
+	rc_fx = _prefs().get("rc_fx", true)
+	var b := Button.new()
+	b.text = "FX: ON" if rc_fx else "FX: OFF"
+	b.position = Vector2(40, 310)
+	b.size = Vector2(300, 70)
+	b.add_theme_font_override("font", font)
+	b.add_theme_font_size_override("font_size", 30)
+	b.pressed.connect(func():
+		rc_fx = not rc_fx
+		b.text = "FX: ON" if rc_fx else "FX: OFF"
 		_save_choice(_last_choice()))
 	add_child(b)
 
@@ -266,4 +305,4 @@ func _prefs() -> Dictionary:
 func _save_choice(choice: String) -> void:
 	var f := FileAccess.open(PREFS, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({ "choice": choice, "rc_new_art": rc_new_art }))
+		f.store_string(JSON.stringify({ "choice": choice, "rc_new_art": rc_new_art, "rc_grade_scenery": rc_grade, "rc_fx": rc_fx }))

@@ -1,8 +1,13 @@
 # RC Prix: new art, world by world
 
 How RC Prix's graphics move from code-drawn art to designer art. The Garden was done first
-(October 2026); this is the process to repeat for the other five worlds and, adapted, for
-RC Prix 2177. The Garden's files are the worked example: `docs/mockups/rcprix_garden/`.
+(October 2026, rounds 1–22); this is the process to repeat for the other five worlds and, adapted,
+for RC Prix 2177. The Garden's files are the worked example: `docs/mockups/rcprix_garden/` (the
+brief, a `NOTES_ROUND_<n>.md` per round, guides, samples and backups of every delivery).
+
+**In one line:** the designer gives the look, we give the exact geometry. Whenever size, position
+or perspective must be exact, we build it as a guide or block-out in code and the designer paints
+over it. Expect rounds to fail whenever the designer has to invent the geometry.
 
 ## Why pieces
 
@@ -39,7 +44,12 @@ code.
 6. **The full set.** Everything in the brief, in both road widths.
 7. **Self-check.** The checker must report 0 problems, and the designer sends the test-course
    pictures from `rcprix_preview.py` with the files.
-8. **Into the game.** The game builds courses from the pieces (to do: not built yet).
+8. **Into the game behind a switch.** The new art shows only with the dev launcher's **RC ART**
+   switch on (`DevLaunch.rc_new_art`, QA arg `rc_new_art=1`) until the user approves it. Review every
+   round **in the game** (QA shots, the whole painted course, the phone), never only from the
+   designer's preview pictures.
+9. **Finish.** Make the new art the default, remove the switches (RC ART, COLOURS), remove the
+   pieces nothing uses any more, and do a last pass over all the world's levels.
 
 ## Rules that worked
 
@@ -75,6 +85,105 @@ code.
 - A seamless check that demands identical opposite edges draws a doubled line at every seam.
 - Bands on curves drawn as straight segments show as angular patches: they must follow the arc.
 
+## Working with the designer
+
+The designer works with an image generator (imagegen). Their pictures look great, but:
+- **The picture shown is often not the file delivered.** The delivered PNGs were script repaints,
+  pieces cut from other art, or flat redraws. Every brief ends with **"the PNGs you deliver must be the
+  pictures you show"**, and the test is a contact sheet made **from the delivered PNGs**. Always
+  compare the files in the game with what the user was shown.
+- **It can't hit an exact pixel grid, exact sizes or exact positions.** So for anything where those
+  matter (stands, barriers, anything along a curve):
+  1. we build the geometry in code: the layout, every piece's place, size, angle and visible faces;
+  2. we give the designer a **4× paint-over guide** with the real road under it, every piece as a
+     faded ghost, the boxes each piece must stay in, and **pink corner marks** to line the picture up
+     by (`rcprix_barrier_paint_guides.py`);
+  3. they paint the look over it (a 4×4 grid, the road removed, the marks kept);
+  4. we bring it down onto the game's grid and check every piece against the guide.
+- **"Make it like this reference" works; "design the layout" doesn't.** Name the approved sample
+  files in every message (for example `round18_samples/tyres_ne_option_a.png`), and say what to keep
+  exactly and what may change.
+- **A look sample first** (2–4 files, the hardest cases: a near and a far corner), then the full set.
+- **Each message must be paste-ready, short, and complete**, backed by a `NOTES_ROUND_<n>.md`. If a
+  round fails, say exactly what's wrong in measurable terms (sizes, counts, overlaps), not "make it
+  better".
+- **Back up each delivery before replacing it** (`round<n>_delivered_*/`), and never commit the
+  designer's uncommitted files without asking.
+
+## Perspective (the game's camera)
+
+The ground is seen straight from above, and anything tall is drawn **up the screen** by its height
+(the road's orange side face is the example). So:
+- **only faces that look down the screen show:** on a curve's near side (below the road) a barrier
+  shows its outer wall, on the far side its inner wall, where it runs up and down its ends;
+- **a tall thing's top is its footprint moved up** by its height, so on the near side it may cover
+  the foot of the raised road's side face (it stands in front of it);
+- **nearer things cover farther ones:** draw from the top of the screen down;
+- **every corner of the course needs its own drawing:** never mirror or rotate one view into another;
+- **a stand seen from behind shows the pals from behind,** with its roof between the camera and them.
+
+`rcprix_barrier_blockout.py` renders this from geometry: footprint, height, visible walls, light
+from the top left. Use it for any 3D prop.
+
+## What the game does in code (`scripts/rc_tiles.gd`, `rc_racer.gd`)
+
+- **Stamping order:** the road pieces, then **all barriers after every road piece** (a later piece
+  must never cut one), then overlays (start, boosts, ramps).
+- **Jumps:** the hole is cut from the straight in code (`gap_piece`), placed past the square's middle
+  so the long ramp fits in the same square (`HOLE_AHEAD`). The ramp art must match the gameplay reach
+  (the checker compares every ramp with `ramp_e`).
+- **Barriers:** one file per corner with a run-on margin (`_tyres_on`). The margin strip toward a
+  straight is kept; toward another corner it's dropped (that corner walls itself). The barrier covers
+  the whole curve **plus the stretch where the car bounces** (`_find_rails`: 9 centre points past the
+  curve). The run-on pieces looked detached in the game, so the user dropped them (`RUN_ONS := false`):
+  only the curve's own wall shows.
+- **Decor** never on the track, its barriers, a stand or other decor; **border trees never over a
+  barrier** (`_hides`).
+- **Start line** on a straight where a front-view stand fits (`_front_start`), plus up to two more
+  stands, scored back > side > front. Moving the start must never change the autopilot results:
+  check all levels with `FAST=1 ... until=done`.
+- **Textures drawn in `_draw`** must be ImageTextures (`RcTiles.drawn`); imported textures drew
+  blank there.
+- **Colour grade:** the scenery stays in normal colours, the stands always SOFT, the car unchanged
+  (`RcTiles.GRADES`, `grade_material`).
+
+## Element by element (what the Garden taught)
+
+- **Road and curbs:** see "Rules that worked". The Round 9 road is the standard.
+- **Bushes:** drawn individually at the trees' pixel density, never cut from a tree; a small set too.
+- **Stands:** the user picks a front design and a back design from pictures; we convert them on
+  5 px blocks; the designer repaints on the final grid. Two layers (`under` and `over`) with the pals
+  drawn between them. 1× size, as close to the road as possible, as long as fits. Side views are the
+  front turned.
+- **Corner barriers:** two styles mixed by level (toy blocks red/white, tyres blue/yellow). It took
+  rounds 17–22 because the layout was left to the designer. Rules: the whole curve plus the bounce
+  stretch, hugging the road's real edge at every angle (not one radius per corner: the side face
+  only exists where the edge faces down), straight bricks along the curve, perspective as above,
+  nothing ever cut. Round 22 worked first time: our layout, the designer's paint, converted and
+  checked by script (every file 100% on the layout).
+- **Start lights:** gantry and lamp sprites, swapped by the game.
+- **Boost pads:** one per direction (`boost_n/s/e/w`), all redrawn together.
+- **Race messages:** a pixel racing font, one PNG per character (`textures/minigames/rcprix/font`),
+  animated letter by letter in code (`RcLettering`), not banners.
+- **Butterflies:** sprite frames; the game keeps them over the lawn, off the track.
+
+## Tools
+
+| Tool | What it does |
+|---|---|
+| `tools/art/rcprix_templates.py` | file list, sizes, templates |
+| `tools/art/check_rcprix_art.py` | every file present, sizes, joins, ramps, tree match |
+| `tools/art/rcprix_preview.py` | test courses from the pieces |
+| `tools/art/rcprix_barrier_blockout.py` | 3D barrier block-outs in perspective (`--game` writes them in) |
+| `tools/art/rcprix_barrier_paint_guides.py` | the 4× paint-over guides |
+| `tools/art/rcprix_barrier_from_paint.py` | the designer's 4× paintings onto the game grid, checked against the layout (`--game` writes only the ones that fit) |
+| `tools/art/rcprix_stand_from_reference.py` | stand pieces from approved pictures; side views |
+| `tools/art/rcprix_bush_redraw.py` | bushes from the designer's sketches |
+| `tools/qa/shoot.sh` | QA shots (`rc_new_art=1`, `levels=`, `HEADLESS=1` for errors, `FAST=1 until=done` for autopilot results) |
+
+To see a whole course at once, dump the painted mat: a temporary `RC_DUMP` save in `_tile_art`
+(remove it afterwards). It's the quickest way to check barriers, decor and stands on every level.
+
 ## The other worlds
 
 The structure stays; the pieces change with the world's toy (`rc_racer.gd`: `LEVELS`, `WORLDS`):
@@ -100,9 +209,12 @@ steps: export its current art, check how its courses are built (grid or free), d
 pieces, then templates, a pilot and a look sample. The rules (no soft edges, joins, one outline,
 light from the top left, separate layers for the tilt) still apply.
 
-## Still open
+For the other worlds and 2177, start each kit by listing its 3D props (barriers, buoys, rings,
+stands) and plan their geometry in code from the first round, with paint-over guides.
 
-- The game side: building courses from the pieces (step 8).
-- The spectator stand, drawn in code with the pals in its seats: its art in a later round.
-- Effects drawn in code (skid marks, dust, sparkles, the banner): redraw at the new detail in code,
-  or as art.
+## Still open (Garden)
+
+- Finish (step 9): make the new art the default, remove the switches, remove unused pieces (the
+  designer's `gap_*` files, `start_lamp`, the car slices from the brief).
+- Effects drawn in code (skid marks, dust, FINISH): undecided.
+- Maybe move the start gantry off the front stand's back rows.
