@@ -185,6 +185,9 @@ shader_type canvas_item;
 uniform sampler2D noise_tex : filter_linear, repeat_disable;
 uniform vec2 art_size;
 uniform vec2 noise_size;
+uniform float desaturate = 0.3;
+uniform float flatten = 0.35;
+uniform float haze = 0.52;
 float noise_at(vec2 b) { return texture(noise_tex, (b * 0.5 + 0.5) / noise_size).r * 2.0 - 1.0; }
 void fragment() {
 	vec2 p = floor(UV * art_size) + 0.5;
@@ -192,7 +195,11 @@ void fragment() {
 	vec4 c = texture(TEXTURE, UV);
 	c.rgb = min(vec3(1.0), c.rgb * vec3(1.03, 1.03, 1.04) + vec3(0.01, 0.01, 0.02));   // noon (_lit)
 	if (noise_at(b - vec2(17.5, 27.5)) > 0.28) c.rgb *= 0.88;                         // a cloud's shadow
-	c.rgb = mix(c.rgb, vec3(200.0, 224.0, 244.0) / 255.0, 0.42);                      // the haze
+	// far away (the user: paler, like the original): the paintings' contrast and colour softened, then the haze
+	float l = dot(c.rgb, vec3(0.3, 0.59, 0.11));
+	c.rgb = mix(c.rgb, vec3(l), desaturate);
+	c.rgb = mix(c.rgb, vec3(0.80, 0.86, 0.72), flatten);
+	c.rgb = mix(c.rgb, vec3(200.0, 224.0, 244.0) / 255.0, haze);
 	float n = noise_at(b);
 	ivec2 q = ivec2(p) % 2;
 	float d = q.y == 0 ? (q.x == 0 ? 0.125 : 0.625) : (q.x == 0 ? 0.875 : 0.375);
