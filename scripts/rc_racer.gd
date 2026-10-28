@@ -390,6 +390,7 @@ class Crowd extends Node2D:
 	var dots: Array = []                 # [position, its pal (pals index), when it hops (s), how many hops, scared until (s), its scatter, the hop's height, its own beat, its next idle hop (s), its flag (-1: none)]
 	var cheer_cd := 0.0                   # till the car can set off its next wave (s)
 	var pier := false                     # RC ART's Lagoon: the stand on a wooden pier, its posts in the water
+	var sky := false                      # RC ART's Sky: the stand sitting in a cloud (RcSky), its canopy light blue
 	var _legs: Array[Vector2] = []        # ...the stand's own legs' feet (world px), found as it's drawn (the last frame's:
 	var _legs_next: Array[Vector2] = []   # a back view's legs are in its top layer, drawn after the pier)
 	static var _leg_cache := {}           # a stand piece -> its legs: [x, foot y] in its own px
@@ -722,10 +723,14 @@ class Crowd extends Node2D:
 				draw_rect(Rect2(p + Vector2(-2, -32), Vector2(4, 4)), Color8(250, 246, 236))
 		if art and style == "stand":
 			_draw_stand_art("over")                 # (the awning over the top row; from behind the posts too)
+			if sky:
+				_draw_sky_cloud("over")            # (the puffs in front of its feet: it sits in the cloud)
 			_legs = _legs_next.duplicate()           # (the legs found this frame: the pier uses them from the next)
 	func _draw_stand() -> void:
 		if art and style == "stand":
 			_legs_next.clear()
+			if sky:
+				_draw_sky_cloud("under")
 			_draw_stand_art("under")
 			if pier:
 				_draw_pier()
@@ -776,7 +781,41 @@ class Crowd extends Node2D:
 	## (the last one cut), its other end, in its view; over the awning, the roof flags waving
 	## A stand piece (the Lagoon's: its canopy recoloured, RcLagoon.stand_tex)
 	func _stand_tex(name: String) -> Texture2D:
-		return RcLagoon.stand_tex(name) if pier else RcTiles.drawn(name)
+		return RcLagoon.stand_tex(name) if pier else (RcSky.stand_tex(name) if sky else RcTiles.drawn(name))
+	## RC ART's Sky: the designer's cloud under the stand (one layer, "under" it or "over" its feet), cut where
+	## the stand's pieces meet like the stand itself: its end, its middle repeated (the last one cut), its other
+	## end; it reaches CLOUD_MARGIN art px past the stand all round
+	func _draw_sky_cloud(layer: String) -> void:
+		var v := _view()
+		var tx := RcSky.tex("stand_cloud_%s_%s" % [v, layer])
+		if tx == null:
+			return
+		var set_name := ("front" if v == "front" else "back") if along_x else v
+		var k := art_k()
+		var a := _stand_tex("stand_%s_under_end_a" % set_name)
+		var m := _stand_tex("stand_%s_under_mid" % set_name)
+		var b := _stand_tex("stand_%s_under_end_b" % set_name)
+		var len_of := func(t: Texture2D) -> float: return float(t.get_width() if along_x else t.get_height())
+		var mg := float(RcSky.CLOUD_MARGIN)
+		var ea: float = len_of.call(a)
+		var mid: float = len_of.call(m)
+		var eb: float = len_of.call(b)
+		var total := float(tx.get_width() if along_x else tx.get_height())
+		var across := float(tx.get_height() if along_x else tx.get_width())
+		var long := rect.size.x if along_x else rect.size.y
+		var origin := rect.position - Vector2(mg, mg) * k
+		var axis := Vector2.RIGHT if along_x else Vector2.DOWN
+		# one stretch of the cloud: from `src` art px along it, `n` art px long, drawn `at` world px along
+		var part := func(src: float, n: float, at: float) -> void:
+			var sr := Rect2(src, 0, n, across) if along_x else Rect2(0, src, across, n)
+			draw_texture_rect_region(tx, Rect2(origin + axis * at, sr.size * k), sr)
+		part.call(0.0, mg + ea, 0.0)
+		var at := ea * k
+		while at < long - eb * k - 0.5:
+			var piece := minf(mid * k, long - eb * k - at)
+			part.call(mg + ea, piece / k, mg * k + at)
+			at += piece
+		part.call(total - eb - mg, eb + mg, mg * k + long - eb * k)
 	## A stand piece's legs, its separate short runs on its lowest row (the stand's own posts), drawn at `at`
 	## scaled by k, only those within its px [from, to) along x
 	func _add_legs(name: String, at: Vector2, k: float, from: float, to: float) -> void:
@@ -1049,7 +1088,8 @@ class Ring extends Node2D:
 	var t := 0.0
 	var _shown := -1
 	var _pop: Tween
-	var _tex := {}                         # its look -> [texture, top left (px)]
+	var _tex := {}                         # its look -> [texture, top left (px), scale]
+	var art := false                      # RC ART's Sky: the designer's ring (RcSky.ring_half)
 	const OUT := Color8(40, 30, 40)
 	const TUBE := 14.0                    # the tube's half thickness (px)
 	const LOOKS := {
@@ -1125,14 +1165,14 @@ class Ring extends Node2D:
 					var shade := 2 if lit > 0.55 else (1 if lit > 0.1 else 0)
 					col = pal[band][shade]
 				img.set_pixel(cx, cy, col)
-		return [ImageTexture.create_from_image(img), Vector2(-ext, -ext)]
+		return [ImageTexture.create_from_image(img), Vector2(-ext, -ext), 4.0]
 	func _draw() -> void:
 		var look := "gold" if state == 1 else ("grey" if state == 3 else "candy")
 		if not _tex.has(look):
-			_tex[look] = _paint(look)
+			_tex[look] = RcSky.ring_half(r, look, n, d, upper) if art else _paint(look)
 		var tx: Array = _tex[look]
 		var tex: Texture2D = tx[0]
-		draw_texture_rect(tex, Rect2(tx[1], tex.get_size() * 4.0), false)
+		draw_texture_rect(tex, Rect2(tx[1], tex.get_size() * float(tx[2])), false)
 		if state != 1:
 			return
 		# the next one: sparkles running round it
@@ -1648,7 +1688,11 @@ class SkyDock extends Node2D:
 	var lights: Array = []                # the landing lights (mat px)
 	var fans: Array = []                  # the rotors: [its corner (mat px), the way its arm goes]
 	var t := 0.0
-	func build(c0: Vector2, dir: Vector2, back: float, ahead: float, half: float) -> void:
+	var art := false                      # RC ART's Sky: the designer's deck, line, lights and rotor pieces (RcSky)
+	var _deck := ""                       # ...its deck: pad_east (a course going sideways) / pad_north
+	var _line_at := Vector2.ZERO          # ...the start line's middle (mat px)
+	var _deck_at := Vector2.ZERO          # ...the deck picture's top left (mat px)
+	func build(c0: Vector2, dir: Vector2, back: float, ahead: float, half: float, with_art := false) -> void:
 		var side := Vector2(-dir.y, dir.x)
 		var corners := [c0 - dir * back - side * half, c0 - dir * back + side * half, c0 + dir * ahead - side * half, c0 + dir * ahead + side * half]
 		var lo: Vector2 = corners[0]
@@ -1656,6 +1700,12 @@ class SkyDock extends Node2D:
 		for q in corners:
 			lo = lo.min(q)
 			hi = hi.max(q)
+		art = with_art
+		if art:
+			# the designer's deck: its picture reaches PAD_MARGIN art px past the deck all round (the rotors)
+			_deck = "pad_east" if absf(dir.x) > absf(dir.y) else "pad_north"
+			_deck_at = (lo - Vector2.ONE * RcSky.PAD_MARGIN * RcSky.ART_PX).round()
+			_line_at = c0
 		hi += Vector2(0, 28)
 		lo = (lo / 4.0).floor() * 4.0
 		var w := int((hi.x - lo.x) / 4.0) + 2
@@ -1722,6 +1772,9 @@ class SkyDock extends Node2D:
 		t += delta
 		queue_redraw()
 	func _draw() -> void:
+		if art:
+			_draw_art()
+			return
 		if tex:
 			draw_texture_rect(tex, Rect2(top_left, tex.get_size() * 4.0), false)
 		# a drone's rotors at its four corners (the user, 2026-10-18): an arm out from the corner,
@@ -1761,6 +1814,38 @@ class SkyDock extends Node2D:
 			var lp: Vector2 = (lights[k] as Vector2).snapped(Vector2(4, 4))
 			draw_rect(Rect2(lp - Vector2(4, 4), Vector2(8, 8)), Color8(40, 30, 40))
 			draw_rect(Rect2(lp - Vector2(2, 2), Vector2(4, 4)), Color8(255, 236, 120) if on else Color8(150, 120, 60))
+
+	## RC ART's Sky: the rotors' arms (under the deck: its corner covers their inner end), the deck, the start
+	## line, the landing lights blinking along its rim, then each rotor: its blur, its blades spinning (the
+	## designer's 4 frames), the guard ring round them, the motor
+	func _draw_art() -> void:
+		var px := RcSky.ART_PX
+		var put := func(name: String, centre: Vector2, fx := false, fy := false) -> void:
+			var tx := RcSky.tex(name, fx, fy)
+			if tx:
+				var size := tx.get_size() * px
+				draw_texture_rect(tx, Rect2((centre - size * 0.5).round(), size), false)
+		for fp in fans:
+			var out_dir: Vector2 = fp[1]
+			var arm := RcSky.tex("rotor_arm", out_dir.x > 0.0, out_dir.y > 0.0)   # (painted for the top left corner)
+			if arm:
+				var size := arm.get_size() * px
+				var corner: Vector2 = fp[0]
+				draw_texture_rect(arm, Rect2((corner - size * 0.5 + out_dir.sign() * size * 0.5).round(), size), false)
+		var deck := RcSky.tex(_deck)
+		if deck:
+			draw_texture_rect(deck, Rect2(_deck_at, deck.get_size() * px), false)
+		put.call("pad_line_v" if _deck == "pad_east" else "pad_line_h", _line_at)
+		for k in lights.size():
+			var on := int(t * 4.0 - float(k / 2) * 0.5) % 4 == 0
+			put.call("light_on" if on else "light_off", lights[k])
+		for fp in fans:
+			var corner: Vector2 = fp[0]
+			var hub: Vector2 = corner + (fp[1] as Vector2) * 30.0
+			put.call("rotor_blur", hub)
+			put.call("rotor_blades_%d" % (int(t * 24.0 + corner.x * 0.01) % 4), hub)
+			put.call("rotor_ring", hub)
+			put.call("rotor_hub", hub)
 
 ## The wind across the course in a gust: short white streaks blowing over it (on the 4 px grid)
 class GustFx extends Node2D:
@@ -1872,7 +1957,7 @@ func _begin(n: int) -> void:
 	sky_dock.visible = vehicle == "plane"
 	if vehicle == "plane":
 		var d0 := (centre[2] - centre[0]).normalized()
-		sky_dock.build(centre[0], d0, 20.0 * STEP, 6.0 * STEP, half_w * 0.72)
+		sky_dock.build(centre[0], d0, 20.0 * STEP, 6.0 * STEP, half_w * 0.72, RcSky.on(look))
 	water_fx.visible = vehicle == "boat"
 	water_fx.fine_fish = RcLagoon.on(look)
 	water_fx.art_currents = RcLagoon.current_frames() if RcLagoon.on(look) else {}
@@ -2021,6 +2106,13 @@ func _build_circuit() -> void:
 		centre = rolled
 	bridge_range = _find_bridge() if extras.has("eight") and vehicle == "car" else Vector2i(-1, -1)
 	_find_rails(str(extras.get("rails", "")) if vehicle == "car" else "")
+	if vehicle == "plane" and RcSky.on(look) and ResourceLoader.exists(RcTiles.DIR + "stand_front_under_mid.png"):
+		var k1 := _sky_front_start()
+		if k1 > 0:
+			rolled = PackedVector2Array()
+			for i in count:
+				rolled.append(centre[(k1 + i) % count])
+			centre = rolled
 	_place_pads(spec[6])
 	if not _tiles.is_empty():
 		_snap_to_squares()
@@ -2189,7 +2281,7 @@ func _place_crowd() -> void:
 	for st in more_stands:
 		st.visible = false
 		st.art = false
-	crowd.art = (vehicle == "car" and RcTiles.on(look) or vehicle == "boat" and RcLagoon.on(look)) and ResourceLoader.exists(RcTiles.DIR + "stand_front_under_mid.png")
+	crowd.art = (vehicle == "car" and RcTiles.on(look) or vehicle == "boat" and RcLagoon.on(look) or vehicle == "plane" and RcSky.on(look)) and ResourceLoader.exists(RcTiles.DIR + "stand_front_under_mid.png")
 	if crowd.art:
 		_place_art_stands()
 		return
@@ -2206,9 +2298,13 @@ func _place_crowd() -> void:
 const STAND_LONGS := [816.0, 656.0, 496.0]   # end + 4 / 3 / 2 middles, world px
 const SUNSET_STAND := Color(1.0, 0.92, 0.86)   # RC ART's Lagoon: the Garden's stand in the sunset's light (the user: "slightly changed")
 const STAND_GAP := 8.0                 # from the road's edge (a stand below it: past its side face too)
+const SKY_STAND_GAP := 60.0            # RC ART's Sky: from the course's edge (a ring reaches 22 past it, the cloud 44 more)
+const SKY_START_NEAR := 700.0          # ...a stand this near the start counts as at the start line
 func _stand_gap(away: Vector2) -> float:
 	if vehicle == "boat":
 		return SHORE_PAINT                           # (RC ART's Lagoon: its front on the sand bank, on a pier past it)
+	if vehicle == "plane":
+		return SKY_STAND_GAP                         # (RC ART's Sky: clear of the rings' ends, its cloud too)
 	return STAND_GAP + (RcTiles.FACE_ROWS * RcTiles.ART_PX if away.y > 0.5 else 0.0)
 
 func _place_art_stands() -> void:
@@ -2220,6 +2316,7 @@ func _place_art_stands() -> void:
 		st.art = true
 		st.setup(r, horizontal, course_seed * 13 + 1 + chosen.size() * 7, away, "stand", CROWD_HAZE[look])
 		st.pier = vehicle == "boat"
+		st.sky = vehicle == "plane"
 		st.modulate = SUNSET_STAND if vehicle == "boat" else Color.WHITE
 		st.visible = true
 		chosen.append(r)
@@ -2243,6 +2340,10 @@ func _place_art_stands() -> void:
 			for side in [1.0, -1.0]:
 				var away: Vector2 = normal * side
 				var score := (3.0 if away.y > 0.0 else 1.0) if horizontal else 2.0
+				if vehicle == "plane":
+					# (the Sky: seen from the front first, then the side, behind last; at the start line
+					# before anywhere else, the user 2026-10-28: two from the front and one from behind there)
+					score = ((1.0 if away.y > 0.0 else 3.0) if horizontal else 2.0) + (2.0 if centre[i].distance_to(centre[0]) < SKY_START_NEAR else 0.0)
 				spots.append([score + long / 1000.0, _stand_rect(centre[i], horizontal, away, long, deep), horizontal, away])
 	spots.sort_custom(func(x, y): return x[0] > y[0])
 	for sp in spots:
@@ -2253,6 +2354,26 @@ func _place_art_stands() -> void:
 			continue
 		put.call(r, sp[2], sp[3])
 	crowd.visible = not chosen.is_empty()
+
+## RC ART's Sky: the start moved along the course to a straight going across the screen where a stand seen
+## from the front fits above it (the user, 2026-10-28: the audience at the start line, from the front), the
+## pad's deck on the straight too; the course, its laps and par stay the same. -1: none fits
+func _sky_front_start() -> int:
+	var deep := Crowd.ART_DEPTH * Crowd.art_k()
+	var best := -1
+	var best_score := -INF
+	for i in count:
+		var d := (centre[(i + 1) % count] - centre[i]).normalized()
+		if absf(d.y) > 0.02 or not _straight(i, 20) or not _straight(posmod(i - 14, count), 10):
+			continue                                 # (the deck reaches 20 points back, 6 ahead)
+		for long in STAND_LONGS:
+			if _stand_fits(_stand_rect(centre[i], true, Vector2.UP, long, deep), SKY_STAND_GAP):
+				var score: float = long - mini(i, count - i) * 2.0   # (the biggest stand, near the old start)
+				if score > best_score:
+					best_score = score
+					best = i
+				break
+	return best
 
 ## A stand's place beside the road at a point, its back away from the road
 func _stand_rect(at: Vector2, horizontal: bool, away: Vector2, long: float, deep: float) -> Rect2:
@@ -4406,7 +4527,7 @@ func _tile_art() -> void:
 	_tree_shade.visible = not _tiles.is_empty()
 	# the start lights: the designer's gantry and lamps (NOTES_ROUND_10) once drawn, on the screen at
 	# the playfield's scale (an art px = ART_PX x ZOOM screen px), else the drawn gantry
-	_art_lights = (not _tiles.is_empty() or RcLagoon.on(look)) and ResourceLoader.exists(RcTiles.DIR + "start_gantry.png")   # (the Lagoon: the Garden's gantry too, the user)
+	_art_lights = (not _tiles.is_empty() or RcLagoon.on(look) or RcSky.on(look)) and ResourceLoader.exists(RcTiles.DIR + "start_gantry.png")   # (the Lagoon: the Garden's gantry too, the user)
 	var lpx := RcTiles.ART_PX * ZOOM
 	for r in _gantry_box:
 		r.visible = not _art_lights
@@ -5282,6 +5403,7 @@ func _spawn_course_things() -> void:
 			ring.n = rg["n"]
 			ring.r = rg["r"]
 			ring.upper = upper
+			ring.art = RcSky.on(look)
 			ring.d = (centre[(i + 1) % count] - centre[i]).normalized()
 			(ring_front if upper else ring_back).add_child(ring)
 			rg["front" if upper else "back"] = ring

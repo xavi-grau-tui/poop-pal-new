@@ -20,6 +20,12 @@ matched with its Garden counterpart, behind the dev launcher's RC ART switch (FX
 - [ ] the stand's cloud: 4 views × under / over, cut at the stand's pieces; the Garden stand with a light
       blue canopy (recoloured as the Lagoon's `stand_tex`)
 
+## Stands (the user, 2026-10-28)
+
+- [ ] more stands seen from the front: in the Sky prefer the front view; at the start line two from the
+      front and one from behind
+- [ ] later, the same for the Lagoon (many of its stands are seen from behind)
+
 ## Later rounds
 
 - [ ] the ground: field squares, hedges / tree lines, river, decor (farms, villages, windmills); the game
