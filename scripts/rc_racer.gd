@@ -930,9 +930,10 @@ class Crowd extends Node2D:
 class Trail extends Node2D:
 	var marks: Array = []             # [position, age, kind]
 	var fine := false                 # RC ART's Lagoon: the wake's foam on the 2 px grid, warm, breaking up as it fades
-	const FINE_FOAM := [[Vector2i(0, 0)], [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)],
-		[Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1)],
-		[Vector2i(-2, 0), Vector2i(2, 1), Vector2i(0, -2), Vector2i(1, 2), Vector2i(-1, -1)]]   # (a dot, a clump, a blob, specks)
+	const FINE_FOAM := [[Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)],
+		[Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1)],
+		[Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(2, 0), Vector2i(-2, 1), Vector2i(1, 2), Vector2i(-1, -2), Vector2i(2, -1)],
+		[Vector2i(-2, 0), Vector2i(2, 1), Vector2i(0, -2), Vector2i(1, 2), Vector2i(-1, -1), Vector2i(3, -1), Vector2i(-3, 2)]]   # (a clump, a blob, a bigger blob, specks: the user, "more noticeable")
 	var puff_t := 0.0
 	const LIFE := 0.28
 	func add(p: Vector2, heading: float, delta: float) -> void:
@@ -982,7 +983,7 @@ class Trail extends Node2D:
 			var a := TAU * k / 10.0
 			marks.append([p, 0.0, 5, Vector2.from_angle(a) * randf_range(160.0, 260.0)])
 	func _life(kind: int) -> float:
-		return [LIFE, 0.45, 0.35, 1.5, 0.6, 0.5][kind]
+		return [LIFE, 0.45, 0.35, 2.0 if fine else 1.5, 0.6, 0.5][kind]
 	func _process(delta: float) -> void:
 		for m in marks:
 			m[1] += delta
@@ -996,12 +997,12 @@ class Trail extends Node2D:
 		for m in marks:
 			var p: Vector2 = (m[0] as Vector2).snapped(Vector2(4, 4))
 			if m[2] == 3 and fine:
-				var ff: float = m[1] / 1.5
+				var ff: float = m[1] / _life(3)
 				var shape: Array = FINE_FOAM[0 if ff < 0.1 else (1 if ff < 0.3 else (2 if ff < 0.6 else 3))]
 				var fp: Vector2 = (m[0] as Vector2).snapped(Vector2(2, 2))
 				for cell in shape:
-					draw_rect(Rect2(fp + Vector2(cell) * 2.0 + Vector2(2, 2), Vector2(2, 2)), Color(0.45, 0.2, 0.3, 0.16 * (1.0 - ff)))
-					draw_rect(Rect2(fp + Vector2(cell) * 2.0, Vector2(2, 2)), Color(1.0, 0.965, 0.92, 0.9 * (1.0 - ff)))
+					draw_rect(Rect2(fp + Vector2(cell) * 2.0 + Vector2(2, 2), Vector2(2, 2)), Color(0.45, 0.2, 0.3, 0.24 * (1.0 - ff)))
+					draw_rect(Rect2(fp + Vector2(cell) * 2.0, Vector2(2, 2)), Color(1.0, 0.975, 0.94, 1.0 - ff * ff))
 				continue
 			if m[2] == 3:
 				# (foam: a little shadow under it so it stands out on light water, growing as it spreads)
