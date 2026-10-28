@@ -8,7 +8,8 @@ class_name RcSky
 
 const DIR := "res://textures/minigames/rcprix/sky/"
 const ART_PX := 2.0
-const RINGS := [124, 112, 100, 88]     # the painted sizes (ring_r, world px): a level's rings drawn at the nearest
+const RINGS := [86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124]   # the sizes
+                                       # on the grid (ring_r, world px; tools/art/rcprix_sky_from_sources.py): the nearest drawn
 const PAD_MARGIN := 33                 # the pad's picture reaches this far past its deck, art px (the guides: the rotors)
 const CLOUD_MARGIN := 22               # the stand's cloud reaches this far past its pieces, art px (the guides)
 const CANOPY_HUE := 0.56               # the stand's canopy, light blue (the user, 2026-10-28)
@@ -66,6 +67,11 @@ static func ring_half(r: float, look: String, n: Vector2, d: Vector2, upper: boo
 			if (q.dot(d) <= 0.0) != upper:
 				im.set_pixel(x, y, Color(0, 0, 0, 0))
 	return [ImageTexture.create_from_image(im), -half * ART_PX, ART_PX]
+
+## The cloud under a stand `long` art px long, whole (round 2: one per stand length; null: the round 1 cloud,
+## cut and repeated like the stand)
+static func stand_cloud(view: String, layer: String, long: int) -> Texture2D:
+	return tex("stand_cloud_%s_%s_%d" % [view, layer, long])
 
 ## A stand piece with its canopy light blue (the Garden's greens turned, as the Lagoon turned them warm)
 static func stand_tex(name: String) -> Texture2D:

@@ -787,6 +787,11 @@ class Crowd extends Node2D:
 	## end; it reaches CLOUD_MARGIN art px past the stand all round
 	func _draw_sky_cloud(layer: String) -> void:
 		var v := _view()
+		var k0 := art_k()
+		var whole := RcSky.stand_cloud(v, layer, roundi((rect.size.x if along_x else rect.size.y) / k0))
+		if whole:                                    # (round 2: the whole cloud for this length)
+			draw_texture_rect(whole, Rect2(rect.position - Vector2.ONE * RcSky.CLOUD_MARGIN * k0, whole.get_size() * k0), false)
+			return
 		var tx := RcSky.tex("stand_cloud_%s_%s" % [v, layer])
 		if tx == null:
 			return
@@ -5404,6 +5409,7 @@ func _spawn_course_things() -> void:
 			ring.r = rg["r"]
 			ring.upper = upper
 			ring.art = RcSky.on(look)
+			ring.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST   # (crisp: smoothed, the cut between its halves showed a dark hairline)
 			ring.d = (centre[(i + 1) % count] - centre[i]).normalized()
 			(ring_front if upper else ring_back).add_child(ring)
 			rg["front" if upper else "back"] = ring
