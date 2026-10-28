@@ -1518,10 +1518,13 @@ class WaterFx extends Node2D:
 			if not art_currents.is_empty():          # (RC ART's Lagoon: the designer's foam arrows, 4 frames a direction)
 				var key := ("e" if dv.x > 0.0 else "w") if absf(dv.x) > absf(dv.y) else ("s" if dv.y > 0.0 else "n")
 				var frames: Array = art_currents.get(key, [])
-				if frames.size() == 4:
-					var fr: Texture2D = frames[int(t * 8.0) % 4]
-					var sz := fr.get_size() * RcLagoon.ART_PX
-					draw_texture_rect(fr, Rect2((c0 - sz / 2.0).snapped(Vector2(2, 2)), sz), false)
+				if frames.size() == 4:                 # (three lanes across the current, each a little out of step: one
+					var side_v := Vector2(-dv.y, dv.x)   # line down the middle was too narrow, the user)
+					for lane in [-1, 0, 1]:
+						var fr: Texture2D = frames[(int(t * 8.0) + lane + 1) % 4]
+						var sz := fr.get_size() * RcLagoon.ART_PX
+						var at := c0 + side_v * float(lane) * cur_w * 0.6 - dv * float(absi(lane)) * 10.0
+						draw_texture_rect(fr, Rect2((at - sz / 2.0).snapped(Vector2(2, 2)), sz), false)
 				continue
 			var side := Vector2(-dv.y, dv.x)
 			var shift := fposmod(t * 140.0, 32.0)
