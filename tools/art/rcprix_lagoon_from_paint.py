@@ -1,16 +1,18 @@
 """RC Prix Lagoon, round 1b: the designer's 4x paintings into the game. Run from the repo root:
 
-    <python with Pillow + numpy> tools/art/rcprix_lagoon_from_paint.py [--game]
+    <python with Pillow + numpy> tools/art/rcprix_lagoon_from_paint.py [round1c] [--game]
 
-Each docs/mockups/rcprix_lagoon/round1b_paint/<name>_4x.png (painted on a 4x4 grid, NOTES_ROUND_1B.md)
+Each docs/mockups/rcprix_lagoon/<round>_paint/<name>_4x.png (painted on a 4x4 grid, NOTES_ROUND_1B.md)
 comes down to the game's grid: one pixel per 4x4 block, its most common opaque colour, opaque where most
 of the block is. Then each is checked:
   - size: a multiple of 4; the squares (water, channel, shallows, sand) exactly 190x190
   - hard pixels (by construction) and how many colours
-  - detail: how often a pixel differs from its neighbour (the Garden's grass: 19%)
+  - detail: how often a pixel differs from its neighbour, in a range per material (round 1c: the
+    round-1b squares at the Garden grass's 19% read as static; sand has ripples and patches, not speckle)
+  - speckle: lone pixels unlike all four neighbours (single-pixel noise reads as static at phone size)
   - blocks painted as one colour (mixed 4x4 blocks mean soft brushes or a misaligned grid)
   - squares: seamless (the edges match when tiled) and the outer 3 px ring the same in A, B and C
-Results go to docs/mockups/rcprix_lagoon/round1b_converted/; with --game the files that pass are written
+Results go to docs/mockups/rcprix_lagoon/<round>_converted/; with --game the files that pass are written
 into textures/minigames/rcprix/lagoon/."""
 import sys
 from pathlib import Path
@@ -19,14 +21,17 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
-PAINT = ROOT / "docs/mockups/rcprix_lagoon/round1b_paint"
-OUT = ROOT / "docs/mockups/rcprix_lagoon/round1b_converted"
+ROUND = next((a for a in sys.argv[1:] if not a.startswith("--")), "round1c")   # which round's paintings (default: 1c)
+PAINT = ROOT / f"docs/mockups/rcprix_lagoon/{ROUND}_paint"
+OUT = ROOT / f"docs/mockups/rcprix_lagoon/{ROUND}_converted"
 GAME = ROOT / "textures/minigames/rcprix/lagoon"
 K = 4
 SQ = 190
 SQUARES = ("water", "channel", "shallows", "sand")
-DETAIL_MIN = 0.08          # a square with less than this much detail is too flat (Garden grass: 0.19)
+DETAIL = {"sand": (0.05, 0.16)}   # a square's detail range per material (the water is drawn by the game since round 1c)
+SPECKLE_MAX = 0.03         # at most this share of lone pixels in a square
 MIXED_MAX = 0.25           # at most this share of blocks may mix colours
+COLOURS_MAX = {"island": 14, "palm": 10, "rock": 8}   # a sprite's colours at most (the Garden's bush_a: 6); others 6
 
 
 def down(path):
@@ -55,6 +60,16 @@ def detail(a):
     return ch.sum() / max(1, (op[:, 1:] & op[:, :-1]).sum())
 
 
+def speckle(a):
+    """Share of pixels unlike all four of their neighbours"""
+    b = a[..., :3].astype(int)
+    c = b[1:-1, 1:-1]
+    lone = np.ones(c.shape[:2], bool)
+    for n in (b[:-2, 1:-1], b[2:, 1:-1], b[1:-1, :-2], b[1:-1, 2:]):
+        lone &= np.abs(c - n).sum(-1) > 0
+    return lone.mean()
+
+
 def seam(a):
     """Share of edge pixels whose wrap-around neighbour differs a lot (0: tiles cleanly)"""
     b = a[..., :3].astype(int)
@@ -79,8 +94,11 @@ def main():
             elif (a[..., 3] < 255).any():
                 problems.append("transparent pixels in a square")
             else:
-                if detail(a) < DETAIL_MIN:
-                    problems.append(f"too flat ({100 * detail(a):.0f}% detail, want {100 * DETAIL_MIN:.0f}%+)")
+                lo, hi = DETAIL.get(kind, (0.0, 1.0))
+                if not lo <= detail(a) <= hi:
+                    problems.append(f"{100 * detail(a):.0f}% detail, want {100 * lo:.0f}-{100 * hi:.0f}%")
+                if speckle(a) > SPECKLE_MAX:
+                    problems.append(f"{100 * speckle(a):.0f}% lone pixels (speckle), want under {100 * SPECKLE_MAX:.0f}%")
                 if seam(a) > 0.1:
                     problems.append(f"doesn't tile ({100 * seam(a):.0f}% of the edge jumps)")
                 ring = np.concatenate([a[:3].reshape(-1, 4), a[-3:].reshape(-1, 4), a[:, :3].reshape(-1, 4), a[:, -3:].reshape(-1, 4)])
@@ -90,6 +108,9 @@ def main():
         if mixed > MIXED_MAX:
             problems.append(f"{100 * mixed:.0f}% of 4x4 blocks mix colours (soft brush or off the grid)")
         colours = len(np.unique(a[a[..., 3] > 0][:, :3], axis=0))
+        cap = COLOURS_MAX.get(kind.split("_")[0], 6 if kind not in SQUARES else 12)
+        if colours > cap:
+            problems.append(f"{colours} colours, want {cap} or fewer (flat pixel-art colours, like the Garden's)")
         ok = not problems
         bad += not ok
         print(f"{'ok ' if ok else 'BAD'} {name}: {a.shape[1]}x{a.shape[0]}, {colours} colours, {100 * detail(a):.0f}% detail"

@@ -13,6 +13,7 @@ const DrinkWaterfallSpawner = preload("res://scripts/drink_waterfall_spawner.gd"
 @export var target_menu: Node
 
 var pending_deactivation_button: TextureButton = null
+var _down_state := false                 # its toggle when the finger went down (a slide-off release: _finish_slide_off)
 
 ## Darker when untoggled, brighter when toggled (swaps the two textures set in the scene)
 const DARK_WHEN_UNTOGGLED := true
@@ -72,6 +73,7 @@ func _gui_input(event):
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
+			_down_state = button_pressed
 			if click_sound:
 				click_sound.stop()
 				click_sound.play()
@@ -97,6 +99,10 @@ func _gui_input(event):
 
 			if menu_manager and target_menu:
 				menu_manager.request_menu_second_half(target_menu)
+			# (the user, 2026-10-28: pressed, slid off, lifted: the screen went back to the shrine but the button
+			# stayed lit, as a release off the button doesn't toggle it; the press already acted, so finish it)
+			if not Rect2(Vector2.ZERO, size).has_point(event.position):
+				call_deferred("_finish_slide_off")
 
 			if pending_deactivation_button:
 				pending_deactivation_button.deactivate_with_clack()
@@ -133,6 +139,12 @@ func _toggled(button_pressed):
 	if pending_deactivation_button:
 		pending_deactivation_button.deactivate_with_clack()
 		pending_deactivation_button = null
+
+## A press released off the button: its toggle catches up with what the press started (lit when its menu
+## opened, dark when it went back to the pet)
+func _finish_slide_off() -> void:
+	if button_pressed == _down_state:
+		button_pressed = not _down_state
 
 func _is_food_button(b: Node) -> bool:
 	return b.target_menu != null and b.target_menu.has_method("populate_foods")

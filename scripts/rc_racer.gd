@@ -389,6 +389,10 @@ class Crowd extends Node2D:
 	var along_x := true                  # the stand runs left-right (else up-down)
 	var dots: Array = []                 # [position, its pal (pals index), when it hops (s), how many hops, scared until (s), its scatter, the hop's height, its own beat, its next idle hop (s), its flag (-1: none)]
 	var cheer_cd := 0.0                   # till the car can set off its next wave (s)
+	var pier := false                     # RC ART's Lagoon: the stand on a wooden pier, its posts in the water
+	var _legs: Array[Vector2] = []        # ...the stand's own legs' feet (world px), found as it's drawn (the last frame's:
+	var _legs_next: Array[Vector2] = []   # a back view's legs are in its top layer, drawn after the pier)
+	static var _leg_cache := {}           # a stand piece -> its legs: [x, foot y] in its own px
 	var watch := Vector2.ZERO             # where the toy is (mat px): they lean its way, hop more when it's near
 	var pals: Array[Texture2D] = []
 	var t := 0.0
@@ -718,9 +722,13 @@ class Crowd extends Node2D:
 				draw_rect(Rect2(p + Vector2(-2, -32), Vector2(4, 4)), Color8(250, 246, 236))
 		if art and style == "stand":
 			_draw_stand_art("over")                 # (the awning over the top row; from behind the posts too)
+			_legs = _legs_next.duplicate()           # (the legs found this frame: the pier uses them from the next)
 	func _draw_stand() -> void:
 		if art and style == "stand":
+			_legs_next.clear()
 			_draw_stand_art("under")
+			if pier:
+				_draw_pier()
 			return
 		# the stand: outlined like the track (it's a toy too), five tiers stepping up away from the
 		# track (the back ones lighter: higher, nearer the light), lit lips; a pier: on posts
@@ -766,19 +774,96 @@ class Crowd extends Node2D:
 			k += 1
 	## The designer's stand (one layer: "under" the pals or "over" them): its end, its middle repeated
 	## (the last one cut), its other end, in its view; over the awning, the roof flags waving
+	## A stand piece (the Lagoon's: its canopy recoloured, RcLagoon.stand_tex)
+	func _stand_tex(name: String) -> Texture2D:
+		return RcLagoon.stand_tex(name) if pier else RcTiles.drawn(name)
+	## A stand piece's legs, its separate short runs on its lowest row (the stand's own posts), drawn at `at`
+	## scaled by k, only those within its px [from, to) along x
+	func _add_legs(name: String, at: Vector2, k: float, from: float, to: float) -> void:
+		if not pier:
+			return
+		if not _leg_cache.has(name):
+			var found: Array = []
+			var im := RcTiles.img(name)
+			if im:
+				var bottom := -1
+				for y in range(im.get_height() - 1, -1, -1):
+					for x in im.get_width():
+						if im.get_pixel(x, y).a > 0.5:
+							bottom = y
+							break
+					if bottom >= 0:
+						break
+				var run := 0
+				for x in im.get_width() + 1:
+					var solid := x < im.get_width() and bottom >= 0 and im.get_pixel(x, bottom).a > 0.5
+					if solid:
+						run += 1
+					elif run > 0:
+						if run <= 14:                     # (a leg: a short run, 9-10 px on the Garden stand; a long one is its base)
+							found.append(Vector2(x - run / 2.0, bottom + 1))
+						run = 0
+			_leg_cache[name] = found
+		for l in _leg_cache[name]:
+			if l.x >= from and l.x < to:
+				_legs_next.append(at + l * k)
+	## The pier under the stand (RC ART's Lagoon): wooden posts along its lower edge, down into the water, a
+	## ring of foam round each (drawn before the stand: it covers their tops)
+	func _draw_pier() -> void:
+		var post := RcLagoon.pier_tex("pier_post")
+		if post:                                     # (the designer's post and foam, round 2)
+			var s := RcLagoon.ART_PX
+			# the stand's own legs: a ring of foam where each touches the water (the user)
+			for i in _legs.size():
+				var foot: Vector2 = _legs[i]
+				var lf := RcLagoon.pier_tex("pier_foam_%d" % (int(t * 2.5 + i + 1) % 2))
+				if lf:
+					draw_texture_rect(lf, Rect2(Vector2(roundf(foot.x / 2.0) * 2.0 - lf.get_width() * s / 2.0, foot.y - lf.get_height() * s / 2.0), lf.get_size() * s), false)
+			# the pier's own posts along its lower edge, never on a leg (the user: they mustn't coincide)
+			var py := rect.end.y - 6.0
+			var px0 := rect.position.x + 14.0
+			var px1 := rect.end.x - 14.0
+			var pn := maxi(2, int((px1 - px0) / 64.0) + 1)
+			for i in pn:
+				var x := roundf(lerpf(px0, px1, float(i) / float(pn - 1)) / 2.0) * 2.0
+				if _legs.any(func(l): return absf(l.x - x) < 26.0):
+					continue
+				var foam := RcLagoon.pier_tex("pier_foam_%d" % (int(t * 2.5 + i) % 2))
+				draw_texture_rect(post, Rect2(Vector2(x - post.get_width() * s / 2.0, py), post.get_size() * s), false)
+				if foam:
+					draw_texture_rect(foam, Rect2(Vector2(x - foam.get_width() * s / 2.0, py + post.get_height() * s - foam.get_height() * s), foam.get_size() * s), false)
+			return
+		var wood := Color8(138, 90, 60)
+		var lit := Color8(176, 122, 82)
+		var foam := Color8(252, 226, 202)
+		var y := rect.end.y - 6.0
+		var x0 := rect.position.x + 14.0
+		var x1 := rect.end.x - 14.0
+		var n := maxi(2, int((x1 - x0) / 64.0) + 1)
+		for i in n:
+			var x := roundf(lerpf(x0, x1, float(i) / float(n - 1)) / 2.0) * 2.0
+			var bob := 2.0 if sin(t * 1.6 + i) > 0.6 else 0.0
+			draw_rect(Rect2(x - 12, y + 26 + bob, 24, 2), foam)
+			draw_rect(Rect2(x - 8, y + 28 + bob, 16, 2), Color(foam, 0.6))
+			draw_rect(Rect2(x - 6, y, 12, 30), OUTLINE)
+			draw_rect(Rect2(x - 4, y, 8, 28), wood)
+			draw_rect(Rect2(x - 4, y, 2, 28), lit)
 	func _draw_stand_art(layer: String) -> void:
 		var v := _view()
 		var set_name := ("front" if v == "front" else "back") if along_x else v
 		var k := art_k()
-		var a := RcTiles.drawn("stand_%s_%s_end_a" % [set_name, layer])
-		var m := RcTiles.drawn("stand_%s_%s_mid" % [set_name, layer])
-		var b := RcTiles.drawn("stand_%s_%s_end_b" % [set_name, layer])
+		var a := _stand_tex("stand_%s_%s_end_a" % [set_name, layer])
+		var m := _stand_tex("stand_%s_%s_mid" % [set_name, layer])
+		var b := _stand_tex("stand_%s_%s_end_b" % [set_name, layer])
 		var axis := Vector2.RIGHT if along_x else Vector2.DOWN
 		var long := rect.size.x if along_x else rect.size.y
 		var end_a := (a.get_width() if along_x else a.get_height()) * k
 		var end_b := (b.get_width() if along_x else b.get_height()) * k
 		var mid_len := (m.get_width() if along_x else m.get_height()) * k
 		draw_texture_rect(a, Rect2(rect.position, a.get_size() * k), false)
+		var legs_here := (layer == "over") == (set_name == "back")   # (the legs: a back view's in its top layer, others' below)
+		if legs_here and along_x:
+			_add_legs("stand_%s_%s_end_a" % [set_name, layer], rect.position, k, 0.0, INF)
 		var at := end_a
 		var ends: Array = ART_ROOF_ENDS.get(set_name, ART_ROOF_ENDS_FRONT)
 		var posts: Array[float] = [ends[0] * k]
@@ -786,10 +871,14 @@ class Crowd extends Node2D:
 			var piece := minf(mid_len, long - end_b - at)
 			var src := Rect2(Vector2.ZERO, Vector2(piece / k, m.get_height()) if along_x else Vector2(m.get_width(), piece / k))
 			draw_texture_rect_region(m, Rect2(rect.position + axis * at, src.size * k), src)
+			if legs_here and along_x:
+				_add_legs("stand_%s_%s_mid" % [set_name, layer], rect.position + axis * at, k, 0.0, piece / k)
 			if piece >= ART_ROOF_FLAGS[1] * k:
 				posts.append(at + ART_ROOF_FLAGS[1] * k)
 			at += piece
 		draw_texture_rect(b, Rect2(rect.position + axis * (long - end_b), b.get_size() * k), false)
+		if legs_here:                                # (a side view: only its bottom piece stands on the water)
+			_add_legs("stand_%s_%s_end_b" % [set_name, layer], rect.position + axis * (long - end_b), k, 0.0, INF)
 		posts.append(long - ends[1] * k)
 		if layer != "over" or not ResourceLoader.exists(RcTiles.DIR + "stand_flag_0.png"):
 			return
@@ -1112,6 +1201,104 @@ class RingPointer extends Node2D:
 ## you're about to leave the course): each a stack of slices standing up out of the water. A hull
 ## touching one carries it along at its edge (it leans away, bobs, a soft bonk); once the boat has
 ## gone it swings back to its place on a spring, wobbling, a ring of ripples round it while it moves
+## RC ART's Lagoon: the start pontoon's flags, the stands' own waving flags (the user, 2026-10-28: the drawn
+## ones were "too static and square"), one at each end of the pontoon
+class FinishFlags extends Node2D:
+	var spots: Array[Vector2] = []
+	var t := 0.0
+	func _process(delta: float) -> void:
+		t += delta
+		queue_redraw()
+	func _draw() -> void:
+		var k := RcLagoon.ART_PX * 1.5                # (a little bigger than on the stands: they mark the finish)
+		for i in spots.size():
+			var fr := RcTiles.drawn("stand_flag_%d" % (int(t * 6.0 + i * 1.7) % 3))
+			if fr:                                       # (tinted like the stands' flags: red one end, yellow the other)
+				draw_texture_rect(fr, Rect2(spots[i] - Vector2(fr.get_width() * k * 0.5, fr.get_height() * k), fr.get_size() * k), false, Crowd.FLAGS[i % 2])
+
+## RC ART's Lagoon: crabs on the banks (the user, 2026-10-28: "crabs that move when passing", the designer's
+## crab_idle_0..1 and crab_walk_0..3): they wave their claws on the sand; the boat near, they scuttle sideways
+## into the shallows and are gone with a little splash; a while later one comes back elsewhere, away from the boat
+class BeachCrabs extends Node2D:
+	const NEAR := 240.0                   # the boat this close: they run (world px)
+	const RUN := 90.0                     # their scuttle (world px/s)
+	const BACK := Vector2(7.0, 13.0)      # gone this long before one comes back (s)
+	var rc: Node
+	var spots: Array = []                 # where crabs may sit: [where (world px), toward the water (unit)]
+	var crabs: Array = []                 # [where, toward the water, state (0 sitting, 1 running, 2 gone), its clock, its own beat]
+	var splashes: Array = []              # [where, age]
+	var idle: Array[Texture2D] = []
+	var walk: Array[Texture2D] = []
+	var t := 0.0
+	func setup(race: Node, at: Array, n: int) -> void:
+		rc = race
+		spots = at
+		crabs.clear()
+		splashes.clear()
+		idle.clear()
+		walk.clear()
+		for i in 2:
+			var im := RcLagoon._decor_tex("crab_idle_%d" % i)
+			if im:
+				idle.append(ImageTexture.create_from_image(im))
+		for i in 4:
+			var im := RcLagoon._decor_tex("crab_walk_%d" % i)
+			if im:
+				walk.append(ImageTexture.create_from_image(im))
+		var order := range(spots.size())
+		order.shuffle()
+		for i in mini(n, order.size()):
+			var sp: Array = spots[order[i]]
+			crabs.append([sp[0], sp[1], 0, 0.0, randf() * 10.0])
+		visible = idle.size() == 2 and walk.size() == 4 and not crabs.is_empty()
+	func _process(delta: float) -> void:
+		if not visible:
+			return
+		t += delta
+		var boat: Vector2 = rc.car_pos
+		for c in crabs:
+			c[3] += delta
+			match int(c[2]):
+				0:
+					if (c[0] as Vector2).distance_to(boat) < NEAR:
+						c[2] = 1
+						c[3] = 0.0
+				1:
+					c[0] += (c[1] as Vector2) * RUN * delta
+					if c[3] > 0.55:                  # (into the shallows: gone)
+						splashes.append([c[0], 0.0])
+						c[2] = 2
+						c[3] = -randf_range(BACK.x, BACK.y)
+				2:
+					if c[3] > 0.0:                   # (back, at a spot away from the boat)
+						for tries in 8:
+							var sp: Array = spots[randi() % spots.size()]
+							if (sp[0] as Vector2).distance_to(boat) > NEAR * 2.5:
+								c[0] = sp[0]
+								c[1] = sp[1]
+								c[2] = 0
+								c[3] = 0.0
+								break
+		for sp in splashes:
+			sp[1] += delta
+		splashes = splashes.filter(func(sp): return sp[1] < 0.5)
+		queue_redraw()
+	func _draw() -> void:
+		var k := RcLagoon.ART_PX
+		for c in crabs:
+			if int(c[2]) == 2:
+				continue
+			var fr: Texture2D = walk[int(t * 12.0 + float(c[4])) % 4] if int(c[2]) == 1 else idle[int(t * 2.0 + float(c[4])) % 2]
+			var p: Vector2 = ((c[0] as Vector2) - fr.get_size() * k * 0.5).snapped(Vector2(2, 2))
+			draw_texture_rect(fr, Rect2(p, fr.get_size() * k), false)
+		for sp in splashes:                          # (a ring of foam opening out and fading)
+			var f: float = sp[1] / 0.5
+			var r := 6.0 + 14.0 * f
+			var col := Color(1.0, 0.96, 0.92, 0.8 * (1.0 - f))
+			for a in 10:
+				var q := ((sp[0] as Vector2) + Vector2.from_angle(a * TAU / 10.0) * Vector2(r, r * 0.6)).snapped(Vector2(2, 2))
+				draw_rect(Rect2(q, Vector2(2, 2)), col)
+
 class FloatingBuoys extends Node2D:
 	const REACH := 36.0                   # a hull this close carries a buoy (mat px)
 	const SPRING := 22.0                  # its pull back to its place, per s^2
@@ -1125,6 +1312,7 @@ class FloatingBuoys extends Node2D:
 	var touched: Array[bool] = []
 	var red: Array[bool] = []
 	var slices := {}
+	var slice_px := 4.0                    # world px per slice px (the designer's: 2)
 	var t := 0.0
 	func setup(spots: Array) -> void:
 		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -1142,6 +1330,11 @@ class FloatingBuoys extends Node2D:
 			touched.append(false)
 			red.append(bool(sp[1]))
 		slices = { true: PalPrixArt.buoy_slices(true), false: PalPrixArt.buoy_slices(false) }
+		slice_px = 4.0
+		var art := RcLagoon.buoy_slices(get_parent().get_parent().look) if get_parent() and get_parent().get_parent() else {}
+		if not art.is_empty():                      # (RC ART's Lagoon: the designer's, at twice the detail; the same behaviour)
+			slices = art
+			slice_px = RcLagoon.ART_PX
 		visible = not rest.is_empty()
 		queue_redraw()
 	## Moves them; returns how many the boat has just bumped into (for the bonk)
@@ -1206,7 +1399,7 @@ class FloatingBuoys extends Node2D:
 				var tx: Texture2D = sl[k]
 				var f := float(k) / float(sl.size() - 1)
 				var at := p + Vector2(0, bob * f - k * UP) + (lean[i] + rock) * f
-				draw_texture_rect(tx, Rect2(at.round() - Vector2(14, 14), tx.get_size() * 4.0), false)
+				draw_texture_rect(tx, Rect2(at.round() - Vector2(14, 14), tx.get_size() * slice_px), false)
 
 ## The water moving (the user, 2026-10-18): glints drifting on it, short light strokes on the
 ## 4 px grid that come and go across the view (never on the sand or the islands); and the
@@ -1219,6 +1412,20 @@ class WaterFx extends Node2D:
 	var fish: Array = []                  # fish shadows: [position, heading, speed, how seen (0-1), fleeing]
 	const FISH_NEAR := 150.0              # the boat this close: they dart away and fade (mat px)
 	const FISH_BODY := [[1, 0], [0, 0], [-1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [-2, -1], [-2, 1]]
+	var fine_fish := false                # RC ART's Lagoon: a real fish silhouette on the art's 2 px grid
+	## A fish shadow on the 2 px grid: an oval body, side fins, a forked tail that wags (the same size as the old)
+	func _fine_fish(at: Vector2, fwd: Vector2, sd: Vector2, wag: float, shade: Color) -> void:
+		var c := at.snapped(Vector2(2, 2))
+		for gy in range(-22, 23, 2):
+			for gx in range(-22, 23, 2):
+				var o := Vector2(gx, gy)
+				var u := o.dot(fwd)                      # along the fish (its head forward)
+				var v := o.dot(sd) - (wag * 2.0 - 1.0) * clampf(-u - 6.0, 0.0, 12.0) * 0.25   # (the tail swings)
+				var inside := (u / 11.0) * (u / 11.0) + (v / 5.5) * (v / 5.5) <= 1.0              # the body
+				inside = inside or (u < -9.0 and u > -19.0 and absf(v) < (-u - 9.0) * 0.75 and absf(v) > (-u - 15.0) * 0.9)   # the forked tail
+				inside = inside or (absf(u + 1.0) < 2.5 and absf(v) < 8.0 and absf(v) > 4.5)        # the side fins
+				if inside:
+					draw_rect(Rect2(c + o, Vector2(2, 2)), shade)
 	var cur_len := 64.0
 	var cur_w := 60.0
 	var t := 0.0
@@ -1274,6 +1481,9 @@ class WaterFx extends Node2D:
 			var sd := Vector2(-fwd.y, fwd.x)
 			var shade := Color(0.1, 0.05, 0.14, 0.5 * float(f[3]))
 			var wag := 1.0 if int(t * 6.0 + float(f[2])) % 2 == 0 else 0.0
+			if fine_fish:                            # (RC ART's Lagoon: the same fish on the 2 px grid, the user: "smaller pixels")
+				_fine_fish(f[0], fwd, sd, wag, Color(shade, minf(0.85, shade.a * 1.35)))   # (a bit darker: the user)
+				continue
 			for cell in FISH_BODY:
 				var off: Vector2 = fwd * float(cell[0]) * 7.0 + sd * float(cell[1]) * (6.0 + (wag * 3.0 if cell[0] <= -2 else 0.0))
 				draw_rect(Rect2(((f[0] as Vector2) + off).snapped(Vector2(4, 4)) - Vector2(4, 4), Vector2(8, 8)), shade)
@@ -1635,6 +1845,7 @@ func _begin(n: int) -> void:
 		var d0 := (centre[2] - centre[0]).normalized()
 		sky_dock.build(centre[0], d0, 20.0 * STEP, 6.0 * STEP, half_w * 0.72)
 	water_fx.visible = vehicle == "boat"
+	water_fx.fine_fish = RcLagoon.on(look)
 	water_fx.setup(self, slicks.filter(func(sl): return sl[1] == "whirl").map(func(sl): return sl[0]), Color8(255, 236, 214) if look == "lagoon" else Color8(236, 255, 252), pads if vehicle == "boat" else [], PAD_LEN, half_w - 34.0)
 	canopy.visible = look == "garden" and not _trees.is_empty()
 	if canopy.visible:
@@ -1947,7 +2158,7 @@ func _place_crowd() -> void:
 	for st in more_stands:
 		st.visible = false
 		st.art = false
-	crowd.art = vehicle == "car" and RcTiles.on(look) and ResourceLoader.exists(RcTiles.DIR + "stand_front_under_mid.png")
+	crowd.art = (vehicle == "car" and RcTiles.on(look) or vehicle == "boat" and RcLagoon.on(look)) and ResourceLoader.exists(RcTiles.DIR + "stand_front_under_mid.png")
 	if crowd.art:
 		_place_art_stands()
 		return
@@ -1962,8 +2173,11 @@ func _place_crowd() -> void:
 ## (or the side) round the course, each as long as there's room (the whole picture's 4 bays at most),
 ## close to the road
 const STAND_LONGS := [816.0, 656.0, 496.0]   # end + 4 / 3 / 2 middles, world px
+const SUNSET_STAND := Color(1.0, 0.92, 0.86)   # RC ART's Lagoon: the Garden's stand in the sunset's light (the user: "slightly changed")
 const STAND_GAP := 8.0                 # from the road's edge (a stand below it: past its side face too)
 func _stand_gap(away: Vector2) -> float:
+	if vehicle == "boat":
+		return SHORE_PAINT                           # (RC ART's Lagoon: its front on the sand bank, on a pier past it)
 	return STAND_GAP + (RcTiles.FACE_ROWS * RcTiles.ART_PX if away.y > 0.5 else 0.0)
 
 func _place_art_stands() -> void:
@@ -1974,6 +2188,8 @@ func _place_art_stands() -> void:
 		var st: Crowd = stands[chosen.size()]
 		st.art = true
 		st.setup(r, horizontal, course_seed * 13 + 1 + chosen.size() * 7, away, "stand", CROWD_HAZE[look])
+		st.pier = vehicle == "boat"
+		st.modulate = SUNSET_STAND if vehicle == "boat" else Color.WHITE
 		st.visible = true
 		chosen.append(r)
 	# by the start line, seen from the front
@@ -2776,13 +2992,14 @@ func _paint_water(w: int, h: int) -> Image:
 		# (clear of the channel, its shallows and its bank: never land where the boat may go)
 		var apart := true
 		# (never under the stand: the pier with the crowd sat on an island, the user 2026-10-18)
-		if crowd.visible and Rect2(crowd.rect.position / PX, crowd.rect.size / PX).grow(30.0 * sc * 1.4 + 6.0).has_point(p):
-			apart = false
+		for st in _stands():
+			if Rect2(st.rect.position / PX, st.rect.size / PX).grow(30.0 * sc * 1.4 + 6.0).has_point(p):
+				apart = false
 		for other in _sandbars:
 			if Vector2(((other[0] as Vector2) - p).x / 1.9, ((other[0] as Vector2) - p).y).length() < 22.0 * (sc + float(other[1])):
 				apart = false                            # (never two islands in one another)
 		var sc_i := _sea_cell(Vector2i(p))
-		if sc_i >= 0 and (_sea[sc_i] < 24.0 or _clear[sc_i] < 36.0 * sc * PX):
+		if sc_i >= 0 and (_sea[sc_i] < 10.0 or _clear[sc_i] < 36.0 * sc * PX):   # (_sea tops out at 1.5 cells: _sea_fields)
 			apart = false                                # (RC ART: only in water wide enough, never on the sand)
 		if apart and dist[int(p.y) * w + int(p.x)] > hw + SHORE_PAINT / PX + 16.0 + 40.0 * sc:
 			_sandbars.append([p, sc])
@@ -2850,6 +3067,7 @@ func _paint_water(w: int, h: int) -> Image:
 	data.resize(w * h * 4)
 	_keep = PackedByteArray()
 	_keep.resize(w * h)
+	var lagoon_isles := RcLagoon.on(look) and RcLagoon.has_islands()
 	var k := 0
 	for y in h:
 		for x in w:
@@ -2861,7 +3079,7 @@ func _paint_water(w: int, h: int) -> Image:
 				col = _frame_px(x, y, w, h, e)
 				_keep[i] = 1
 			else:
-				if _island[i] != 0:
+				if _island[i] != 0 and not lagoon_isles:
 					_keep[i] = 1
 				col = _water_px(x, y, d, hw)
 				if d <= hw + 2.0 and _in_gap(idx[i]):
@@ -2874,8 +3092,9 @@ func _paint_water(w: int, h: int) -> Image:
 			data[k + 2] = col.b8
 			data[k + 3] = 255
 			k += 4
-	for pf in _palms:
-		_paint_palm(data, w, h, pf)
+	if not lagoon_isles:                             # (RC ART with the designer's islands: they and their palms are RcLagoon.decor's)
+		for pf in _palms:
+			_paint_palm(data, w, h, pf)
 	if look == "lagoon":
 		_lagoon_bank_decor(data, w, h, rng)
 	# then the channel's own things, each over its own patch: a current's foam arrows down the
@@ -2938,7 +3157,7 @@ func _paint_water(w: int, h: int) -> Image:
 			_buoy_spots.append([(at.round() + Vector2(0.5, 0.5)) * PX, nb % 2 == 0])
 			nb += 1
 	for i3 in count:
-		if _on_ramp(i3) or i3 <= 2 or i3 >= count - 2:
+		if _on_ramp(i3) or ((i3 <= 2 or i3 >= count - 2) and not RcLagoon.on(look)):   # (RC ART: its own start, RcLagoon)
 			var c4 := centre[i3] / PX
 			var n4 := _normal(i3)
 			for o in range(-int(hw) + 5, int(hw) - 4):
@@ -2969,6 +3188,8 @@ func _paint_water(w: int, h: int) -> Image:
 const SEA_CELL := 2                    # board px per cell
 const SEA_R := 72.0                    # water narrower than about twice this becomes sand (world px)
 const POND_MIN := 2.0                  # closed-in water smaller than this many course squares becomes sand too
+const SAND_ROUND := 90.0               # the sand's corners poking into the water rounded this much (world px: the user,
+                                       # the inside of 90-degree turns was "too squarey")
 func _sea_fields(w: int, h: int, hw: float) -> void:
 	_sea_w = (w + SEA_CELL - 1) / SEA_CELL
 	_sea_h = (h + SEA_CELL - 1) / SEA_CELL
@@ -3020,9 +3241,21 @@ func _sea_fields(w: int, h: int, hw: float) -> void:
 		if not open and part.size() < small:
 			for i in part:
 				_sea[i] = -SEA_R
-	# only edges by the water left draw a beach: away from it the sand goes on down (no traces of a filled pond)
+	# the sand's corners rounded: the water "closed" (grown out, then back), so where the sand pokes into it
+	# at a square corner the water takes the corner off; the bank by the channel is kept (RcLagoon's bank_min)
 	var water := PackedByteArray()
 	water.resize(n)
+	for i in n:
+		water[i] = 1 if _sea[i] > 0.0 else 0
+	var to_wet := _chamfer(water, _sea_w, _sea_h)
+	var grown := PackedByteArray()
+	grown.resize(n)
+	for i in n:
+		grown[i] = 0 if to_wet[i] * cell <= SAND_ROUND else 1             # (1: land after growing the water)
+	var to_dry := _chamfer(grown, _sea_w, _sea_h)
+	for i in n:
+		_sea[i] = maxf(_sea[i], minf(to_dry[i] * cell - SAND_ROUND, 1.5 * cell))
+	# only edges by the water left draw a beach: away from it the sand goes on down (no traces of a filled pond)
 	for i in n:
 		water[i] = 1 if _sea[i] > 0.0 else 0
 	var to_water := _chamfer(water, _sea_w, _sea_h)
@@ -3209,6 +3442,8 @@ var _island := PackedByteArray()       # the boat's worlds: the islands, per boa
 var _palms: Array[Vector2i] = []       # ...their palm trees' feet (board px)
 var _keep := PackedByteArray()         # ...and RC ART's Lagoon: 1 where the old board's pixel stays (islands, palms, sandbars, frame: RcLagoon)
 var _lagoon_decor: Sprite2D           # RC ART's Lagoon: starfish, shells, pebbles, seagrass (RcLagoon.decor)
+var _finish_flags: FinishFlags         # RC ART's Lagoon: the start pontoon's waving flags
+var _crabs: BeachCrabs                 # RC ART's Lagoon: crabs on the banks, scuttling off as the boat comes
 var _clear := PackedFloat32Array()     # ...and per coarse cell, how far from the course's banks (world px: _sea_fields)
 var _sea := PackedFloat32Array()       # ...and how far inside the water kept open (world px, <= 0: sand)
 var _sea_w := 0
@@ -4139,7 +4374,7 @@ func _tile_art() -> void:
 	_tree_shade.visible = not _tiles.is_empty()
 	# the start lights: the designer's gantry and lamps (NOTES_ROUND_10) once drawn, on the screen at
 	# the playfield's scale (an art px = ART_PX x ZOOM screen px), else the drawn gantry
-	_art_lights = not _tiles.is_empty() and ResourceLoader.exists(RcTiles.DIR + "start_gantry.png")
+	_art_lights = (not _tiles.is_empty() or RcLagoon.on(look)) and ResourceLoader.exists(RcTiles.DIR + "start_gantry.png")   # (the Lagoon: the Garden's gantry too, the user)
 	var lpx := RcTiles.ART_PX * ZOOM
 	for r in _gantry_box:
 		r.visible = not _art_lights
@@ -4177,6 +4412,41 @@ func _tile_art() -> void:
 		_lagoon_decor.scale = Vector2.ONE * RcLagoon.ART_PX / PX
 	if _lagoon_decor:
 		_lagoon_decor.visible = RcLagoon.on(look)
+	if _finish_flags == null:
+		_finish_flags = FinishFlags.new()
+		_finish_flags.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		world.add_child(_finish_flags)
+		world.move_child(_finish_flags, track.get_index() + 1)   # (over the water, under the boat)
+	_finish_flags.visible = RcLagoon.on(look) and ResourceLoader.exists(RcTiles.DIR + "stand_flag_0.png")
+	_finish_flags.spots.clear()
+	if _finish_flags.visible:
+		var d0 := (centre[2] - centre[0]).normalized()
+		var n0 := Vector2(-d0.y, d0.x)
+		for sd in [-1.0, 1.0]:
+			_finish_flags.spots.append((centre[0] + n0 * sd * (half_w + 16.0)).round())
+	if _crabs == null:
+		_crabs = BeachCrabs.new()
+		_crabs.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		world.add_child(_crabs)
+		world.move_child(_crabs, track.get_index() + 1)   # (on the sand, under the boat)
+	var crab_spots: Array = []
+	if RcLagoon.on(look):
+		var on_sand := half_w + SHORE_PAINT + RcLagoon.BANK_W * 0.5
+		for s0 in range(0, count, 6):
+			for sd in [-1.0, 1.0]:
+				var nn: Vector2 = _normal(s0) * sd
+				var p: Vector2 = centre[s0] + nn * on_sand
+				var b := Vector2i(p / PX)
+				if b.x < EDGE or b.y < EDGE or b.x >= _bw - EDGE or b.y >= _bh - EDGE:
+					continue
+				if absf(_dist[b.y * _bw + b.x] * PX - on_sand) > 12.0 or _keep[b.y * _bw + b.x] != 0:
+					continue                         # (another stretch of the course nearer, or an island, a sandbar)
+				if _stands().any(func(st): return st.rect.grow(20.0).has_point(p)):
+					continue
+				crab_spots.append([p, -nn])
+	_crabs.setup(self, crab_spots, 5 if RcLagoon.on(look) else 0)   # (the user: half of 10)
+	if RcLagoon.on(look) and DevLaunch.rc_fx:
+		atmosphere.start(world, board, mat_size, RcLagoon.ART_PX, level, "lagoon")
 	if _tiles.is_empty():
 		return
 	var art := RcTiles.paint(self)

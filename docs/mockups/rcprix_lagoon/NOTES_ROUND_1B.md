@@ -1,5 +1,13 @@
 # RC Prix · Lagoon, round 1b: style first, then paint at 4×
 
+## Selected direction
+
+Option 3 is approved: the looping channel around a long sand island, with turquoise shallows and
+two palm islands. The exact reference is `reference/lagoon_style.png`. Treat it as the palette and
+composition target; use the Garden references for the final pixel density. The channel width and
+shore bands remain game-drawn, so texture squares must not contain channel edges or buoys. Rocks,
+palm clusters and other beach props are separate sprites rather than part of the texture squares.
+
 Thank you for the first sample (`round1_sample_preview.png`). The sizes, hard pixels and palette
 direction are right, but **the user's verdict is that it's not there yet**, and the numbers agree.
 This round changes how we work, so it gets to the Garden's level.
