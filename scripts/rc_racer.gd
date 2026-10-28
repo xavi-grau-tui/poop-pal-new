@@ -3713,6 +3713,7 @@ func _paint_sky(w: int, h: int) -> Image:
 	var view := VIEW.size / ZOOM
 	var gw := int((PARALLAX * mat_size.x + (1.0 - PARALLAX) * view.x) / PX) + 4
 	var gh := int((PARALLAX * mat_size.y + (1.0 - PARALLAX) * view.y) / PX) + 4
+	_sky_ground = Vector2i(gw, gh)
 	_bw = gw
 	_bh = gh
 	_sandbars.clear()
@@ -3883,6 +3884,7 @@ func _night_floor(x: int, y: int) -> Color:
 	return Color8(60, 92, 70).lerp(Color8(78, 112, 84), clampf(v, 0.0, 1.0))
 
 var _sandbars: Array = []              # the Lagoon's sandbars (board px)
+var _sky_ground := Vector2i.ZERO       # the plane's ground image, board px (_paint_sky)
 var _lamps: Array = []                 # Grand Prix: the lamp posts (board px) round the track
 var _lamp_light := PackedFloat32Array() # ...and their light on every board px (0 dark .. 1 right under one)
 
@@ -4572,6 +4574,11 @@ func _tile_art() -> void:
 		_lagoon_decor.scale = Vector2.ONE * RcLagoon.ART_PX / PX
 	if _lagoon_decor:
 		_lagoon_decor.visible = RcLagoon.on(look)
+	if RcSky.on(look) and RcSky.has_ground() and _sky_ground != Vector2i.ZERO:
+		# (RC ART's Sky: the ground far below from the designer's fields, twice as fine; its haze and clouds in a shader)
+		board.texture = ImageTexture.create_from_image(RcSky.ground(_sky_ground))
+		board.scale = Vector2.ONE * RcSky.ART_PX
+		board.material = RcSky.ground_material(_cloud_noise, _sky_ground)
 	if _finish_flags == null:
 		_finish_flags = FinishFlags.new()
 		_finish_flags.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

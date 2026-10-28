@@ -103,11 +103,37 @@ def cloud(view):
     print("  stand clouds", view)
 
 
+## The ground's fields (ground_sources/field_<kind>_source.png): rows painted horizontal, turned here to the grid's
+## long edges (rc_racer _sky_floor: v = y * 0.9 - x * 0.24 -> lines atan(0.24 / 0.9) = 14.9 degrees down to the
+## right) while still big, then cut to a square that covers any one field (a field's box is about 125 x 105 art px)
+FIELD_SRC = ROOT / "docs/mockups/rcprix_sky/ground_sources"
+FIELD_SQUARE = 165                     # a painting's square in game px (its ~31 rows about 5 px apart)
+FIELD_PATCH = 132                      # the square cut from it once turned (fits inside: 165 / (cos + sin))
+FIELD_ANGLE = float(np.degrees(np.arctan2(0.24, 0.9)))
+
+
+def fields():
+    for p in sorted(FIELD_SRC.glob("field_*_source.png")):
+        kind = p.name[len("field_"):-len("_source.png")]
+        im = Image.open(p).convert("RGBA")
+        k = im.width / FIELD_SQUARE                       # source px per game px
+        turned = im.rotate(-FIELD_ANGLE, resample=Image.BICUBIC, expand=False)
+        c = turned.width / 2.0
+        half = FIELD_PATCH * k / 2.0
+        patch = turned.crop((round(c - half), round(c - half), round(c + half), round(c + half)))
+        save(f"field_{kind}", pixelate(patch, (FIELD_PATCH, FIELD_PATCH), 12))
+    print("  fields")
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    if "--fields" in sys.argv:
+        fields()
+        return
     rings()
     for view in ("front", "back", "side_l", "side_r"):
         cloud(view)
+    fields()
     print("written to", OUT.relative_to(ROOT))
 
 
