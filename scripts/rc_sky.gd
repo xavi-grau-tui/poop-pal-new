@@ -58,9 +58,14 @@ static func ring_half(r: float, look: String, n: Vector2, d: Vector2, upper: boo
 			size = s
 	var name := "ring_%d" % size if look == "candy" else "ring_%s_%d" % [look, size]
 	var im := img(name).duplicate()
-	if absf(n.y) > absf(n.x):
+	var sideways := absf(n.y) > absf(n.x)
+	if sideways:
 		im.rotate_90(CLOCKWISE)                       # (then mirrored: over the diagonal)
 		im.flip_x()
+	# (the thick near side over the plane as it flies in, the user: as painted for a course going up or to the
+	# left, turned round for one going down or to the right)
+	if (sideways and d.x > 0.0) or (not sideways and d.y > 0.0):
+		im.rotate_180()
 	var half := Vector2(im.get_width(), im.get_height()) * 0.5
 	for y in im.get_height():
 		for x in im.get_width():

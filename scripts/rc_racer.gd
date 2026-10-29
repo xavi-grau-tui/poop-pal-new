@@ -1911,6 +1911,13 @@ class SkyClouds extends Node2D:
 	var k := 2.0                          # world px per art px (1 on the board)
 	var tint := Color(1, 1, 1, 0.3)
 	var pale := 0.0                       # (eased towards the haze: far away)
+	var shadow: Sprite2D                  # the plane's shadow where it falls on these clouds (only on them: clipped)
+	func _init() -> void:
+		clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
+		shadow = Sprite2D.new()
+		shadow.modulate = Color(0.12, 0.1, 0.24, 0.32)
+		shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(shadow)
 	func setup(names: Array, a: Rect2, n: int, wind: Vector2, seed_n: int, scale_k: float, col: Color) -> void:
 		area = a
 		k = scale_k
@@ -4613,6 +4620,19 @@ func _place_car() -> void:
 		sky_shadow.texture = slices[1].texture
 		var sk := 2.0 if RcSky.on(look) else 3.0      # (RC ART: half the plane, it's far below; the user)
 		sky_shadow.scale = Vector2(sk, sk * (1.0 - 0.42 * absf(bank)))
+		# (RC ART's Sky: on a drifting cloud the shadow falls nearer the plane, bigger, only on the cloud: the user)
+		for i in 2:
+			var layer: SkyClouds = [_clouds_low, _clouds_high][i] if _clouds_low else null
+			if layer == null or not layer.visible:
+				continue
+			var f: float = CLOUD_DEPTH[i]
+			var near := (1.0 - f) / (1.0 - PARALLAX)          # (how far below the plane, the ground 1)
+			var on_c := mid + (on_screen - mid) * f + Vector2(34, 58) * near
+			layer.shadow.position = ((on_c - world.position) / ZOOM - layer.position).round()
+			layer.shadow.rotation = heading
+			layer.shadow.texture = slices[1].texture
+			var kc: float = lerpf(3.4, sk, near)
+			layer.shadow.scale = Vector2(kc, kc * (1.0 - 0.42 * absf(bank)))
 	# (in the air: the car up, its shadow left behind on the road)
 	if car_drop < 0.0:
 		shadow.position = car_pos.round() + Vector2(5, 8)
