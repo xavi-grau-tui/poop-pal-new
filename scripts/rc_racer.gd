@@ -1891,12 +1891,12 @@ func _sky_clouds_start() -> void:
 	var view := VIEW.size / ZOOM
 	for i in 2:
 		var f: float = CLOUD_DEPTH[i]
-		var a := Rect2(Vector2.ZERO, f * mat_size + (1.0 - f) * view).grow(160.0)
+		var a := Rect2(Vector2.ZERO, f * mat_size + (1.0 - f) * view)
 		var n := int(a.get_area() / (CLOUD_EVERY[i] * CLOUD_EVERY[i])) + 2
 		var layer: SkyClouds = [_clouds_low, _clouds_high][i]
 		layer.setup(RcSky.CLOUDS_LOW if i == 0 else RcSky.CLOUDS_HIGH, a, n, CLOUD_WIND * (1.0 + 0.4 * i), course_seed * 17 + i, RcSky.ART_PX, Color(1, 1, 1, CLOUD_ALPHA[i]))
 		layer.visible = true
-	var ga := Rect2(Vector2.ZERO, Vector2(_sky_ground * 2)).grow(80.0)
+	var ga := Rect2(Vector2.ZERO, Vector2(_sky_ground * 2))
 	_cloud_shadows.setup(RcSky.CLOUDS_LOW, ga, int(ga.get_area() / (360.0 * 360.0)) + 2, CLOUD_WIND / RcSky.ART_PX, course_seed * 17 + 5, 1.0, CLOUD_SHADOW)
 	_cloud_shadows.visible = true
 
@@ -1938,10 +1938,16 @@ class SkyClouds extends Node2D:
 			c[1] = p
 		queue_redraw()
 	func _draw() -> void:
+		# (each cut to the area: past it is the dark frame round the course, the user)
 		for c in clouds:
 			var tx: Texture2D = c[0]
 			var size := tx.get_size() * k
-			draw_texture_rect(tx, Rect2(((c[1] as Vector2) - size * 0.5).round(), size), false, tint)
+			var r := Rect2(((c[1] as Vector2) - size * 0.5).round(), size)
+			var cut := r.intersection(area)
+			if cut.size.x <= 0.0 or cut.size.y <= 0.0:
+				continue
+			var src := Rect2((cut.position - r.position) / k, cut.size / k)
+			draw_texture_rect_region(tx, cut, src, tint)
 
 ## RC ART's Sky: a windmill's sails far below, turning slowly round their hub
 class MillSails extends Sprite2D:
