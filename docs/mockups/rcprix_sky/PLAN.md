@@ -35,3 +35,11 @@ matched with its Garden counterpart, behind the dev launcher's RC ART switch (FX
 - [ ] hot-air balloons (levels 25–27), keep shape and colours
 - [ ] game side: wind streaks, contrail, ring stars and guide sparkles on the 2 px grid; the rotors spun from
       the designer's frames; the old `_draw_cloud` stand kept behind the RC ART switch
+
+## Next session (the user, 2026-10-29)
+
+- [ ] stands seen from behind: the cloud behind them over their whole area, not just a bank along one edge
+      (tools/art/rcprix_sky_from_sources.py --stand-drift: fill the back view's whole footprint with drifting clouds)
+- [ ] the start: the designer's redesigned cloud runway (front view like the Garden circuit, left to right, the pad's
+      size, no rotors) and its 4-frame orange windsock; replaces the concept C trial
+- [ ] the iOS build failed at code signing (CodeSign nonzero exit): fix before the next install
