@@ -95,6 +95,9 @@ def cloud(view):
                 ox, oy, pw, ph = ux, uy, w, h
             a = pixelate(im.crop(box), (pw, ph), 7)
             canvas = np.zeros((canvas_h, canvas_w, 4), np.uint8)
+            # (nudged inside the canvas, never cut: a puff past its edge showed a straight line, the user)
+            ox = min(max(ox, 0), canvas_w - pw)
+            oy = min(max(oy, 0), canvas_h - ph)
             x0, y0 = int(round(ox)), int(round(oy))
             x1, y1 = min(canvas_w, x0 + pw), min(canvas_h, y0 + ph)
             x0c, y0c = max(0, x0), max(0, y0)
