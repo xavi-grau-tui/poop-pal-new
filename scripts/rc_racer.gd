@@ -1702,6 +1702,7 @@ class SkyDock extends Node2D:
 	var _deck := ""                       # ...its deck: pad_east (a course going sideways) / pad_north
 	var _line_at := Vector2.ZERO          # ...the start line's middle (mat px)
 	var _deck_at := Vector2.ZERO          # ...the deck picture's top left (mat px)
+	var _plat := ""                       # ...the cloud runway (the user picked it): the way the race starts, e / w / n / s
 	func build(c0: Vector2, dir: Vector2, back: float, ahead: float, half: float, with_art := false) -> void:
 		var side := Vector2(-dir.y, dir.x)
 		var corners := [c0 - dir * back - side * half, c0 - dir * back + side * half, c0 + dir * ahead - side * half, c0 + dir * ahead + side * half]
@@ -1714,6 +1715,7 @@ class SkyDock extends Node2D:
 		if art:
 			# the designer's deck: its picture reaches PAD_MARGIN art px past the deck all round (the rotors)
 			_deck = "pad_east" if absf(dir.x) > absf(dir.y) else "pad_north"
+			_plat = ("e" if dir.x > 0.0 else "w") if absf(dir.x) > absf(dir.y) else ("s" if dir.y > 0.0 else "n")
 			_deck_at = (lo - Vector2.ONE * RcSky.PAD_MARGIN * RcSky.ART_PX).round()
 			_line_at = c0
 		hi += Vector2(0, 28)
@@ -1830,6 +1832,19 @@ class SkyDock extends Node2D:
 	## designer's 4 frames), the guard ring round them, the motor
 	func _draw_art() -> void:
 		var px := RcSky.ART_PX
+		var plat := RcSky.tex("platform_" + _plat)
+		if plat:
+			# the cloud runway, its checkered line on the start line; an orange windsock on its far corner, swaying
+			var ps := plat.get_size() * px
+			draw_texture_rect(plat, Rect2((_line_at - ps * 0.5).round(), ps), false)
+			var sock := RcSky.tex("windsock")
+			if sock:
+				var foot := (_line_at + Vector2(ps.x * 0.34, -ps.y * 0.28)).round()
+				var ss := sock.get_size() * px
+				draw_set_transform(foot, sin(t * 2.2) * 0.06, Vector2.ONE)
+				draw_texture_rect(sock, Rect2(Vector2(-ss.x * 0.15, -ss.y), ss), false)
+				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			return
 		var put := func(name: String, centre: Vector2, fx := false, fy := false) -> void:
 			var tx := RcSky.tex(name, fx, fy)
 			if tx:

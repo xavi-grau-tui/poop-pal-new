@@ -273,8 +273,56 @@ def stand_clouds_from_drift():
     print("  stand clouds from the drifting clouds")
 
 
+## The start platform (the user picked concept C, the cloud runway, with an orange windsock): for each way the
+## race starts (the painting runs down: the plane starts at its bunting and flies over the checkered line), turned
+## and cut so the line's middle is the picture's middle (SkyDock draws it there); its width across the course
+## PLATFORM_ACROSS game px (clear of the stand above the start). The windsock taken off concept A's pole, orange
+PLATFORM_SRC = SKY / "platform_concepts/platform_C_cloud_runway.png"
+PLATFORM_LINE = (663, 801)             # the checkered line's middle on the painting (source px)
+PLATFORM_ACROSS = 168
+SOCK_BOX = (960, 105, 1200, 352)       # concept A's windsock and its pole
+SOCK_H = 22                            # game px
+
+
+def platform():
+    import colorsys
+    im = Image.open(PLATFORM_SRC).convert("RGBA")
+    box = opaque_box(im)
+    k = (box[2] - box[0]) / PLATFORM_ACROSS               # source px per game px
+    W, H = im.size
+    lx, ly = PLATFORM_LINE
+    for name, rot in (("s", 0), ("e", 90), ("n", 180), ("w", 270)):
+        r = im.rotate(rot, expand=True)
+        # (the line's middle, turned with it: rotate() turns counter-clockwise)
+        px, py = {0: (lx, ly), 90: (ly, W - 1 - lx), 180: (W - 1 - lx, H - 1 - ly), 270: (H - 1 - ly, lx)}[rot]
+        b = opaque_box(r)
+        rx = max(px - b[0], b[2] - px)
+        ry = max(py - b[1], b[3] - py)
+        cut = r.crop((round(px - rx), round(py - ry), round(px + rx), round(py + ry)))
+        save(f"platform_{name}", pixelate(cut, (round(cut.width / k / 2) * 2, round(cut.height / k / 2) * 2), 14))
+    sock = Image.open(SKY / "platform_concepts/platform_A_grassy_islet.png").convert("RGBA").crop(SOCK_BOX)
+    a = np.array(sock).astype(float)
+    for y in range(a.shape[0]):
+        for x in range(a.shape[1]):
+            r_, g_, b_, al = a[y, x] / 255.0
+            if al <= 0.5:
+                continue
+            h, sat, v = colorsys.rgb_to_hsv(r_, g_, b_)
+            if g_ > r_ and g_ > b_ or (v > 0.95 and sat < 0.08):
+                a[y, x, 3] = 0                            # (A's grass, its white ground)
+            elif sat > 0.45 and (h < 0.05 or h > 0.95):
+                a[y, x, :3] = np.array(colorsys.hsv_to_rgb(0.075, sat, min(1.0, v * 1.05))) * 255   # (red to orange)
+    sock = Image.fromarray(a.astype(np.uint8))
+    sock = sock.crop(opaque_box(sock))
+    save("windsock", pixelate(sock, (round(sock.width * SOCK_H / sock.height), SOCK_H), 10))
+    print("  platform, windsock")
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    if "--platform" in sys.argv:
+        platform()
+        return
     if "--stand-drift" in sys.argv:
         stand_clouds_from_drift()
         return
