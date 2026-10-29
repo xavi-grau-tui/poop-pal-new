@@ -1857,6 +1857,76 @@ class SkyDock extends Node2D:
 			put.call("rotor_ring", hub)
 			put.call("rotor_hub", hub)
 
+## RC ART's Sky: the drifting clouds' layers made (once) and filled for this course: each over the area its depth
+## shows (as the ground's image: its share of the mat plus the rest of the view), about one cloud per square of
+## CLOUD_EVERY world px; their shadows on the board, a little off them (the sun)
+const CLOUD_EVERY := [720.0, 900.0]
+func _sky_clouds_start() -> void:
+	if _clouds_low == null:
+		_clouds_low = SkyClouds.new()
+		_clouds_high = SkyClouds.new()
+		_cloud_shadows = SkyClouds.new()
+		world.add_child(_clouds_low)
+		world.move_child(_clouds_low, sky_shadow.get_index() + 1)    # (over the plane's shadow, under the course)
+		world.add_child(_clouds_high)
+		world.move_child(_clouds_high, _clouds_low.get_index() + 1)
+	if _cloud_shadows.get_parent() != board:
+		board.add_child(_cloud_shadows)                 # (on the ground: it moves with it)
+	var view := VIEW.size / ZOOM
+	for i in 2:
+		var f: float = CLOUD_DEPTH[i]
+		var a := Rect2(Vector2.ZERO, f * mat_size + (1.0 - f) * view).grow(160.0)
+		var n := int(a.get_area() / (CLOUD_EVERY[i] * CLOUD_EVERY[i])) + 2
+		var layer: SkyClouds = [_clouds_low, _clouds_high][i]
+		layer.setup(RcSky.CLOUDS_LOW if i == 0 else RcSky.CLOUDS_HIGH, a, n, CLOUD_WIND * (1.0 + 0.4 * i), course_seed * 17 + i, RcSky.ART_PX, Color(1, 1, 1, CLOUD_ALPHA[i]))
+		layer.visible = true
+	var ga := Rect2(Vector2.ZERO, Vector2(_sky_ground * 2)).grow(80.0)
+	_cloud_shadows.setup(RcSky.CLOUDS_LOW, ga, int(ga.get_area() / (360.0 * 360.0)) + 2, CLOUD_WIND / RcSky.ART_PX, course_seed * 17 + 5, 1.0, CLOUD_SHADOW)
+	_cloud_shadows.visible = true
+
+## RC ART's Sky: the designer's clouds drifting with the wind, nearly see-through (the user: "subtly displayed"),
+## over an area wrapping round (a layer's own coordinates: its depth is its parallax, rc_racer _follow); or, as
+## `shadow`, their shadows on the ground (the board's coordinates, one art px a unit)
+class SkyClouds extends Node2D:
+	var clouds: Array = []                # [texture, position, its drift (px/s)]
+	var area := Rect2()
+	var k := 2.0                          # world px per art px (1 on the board)
+	var tint := Color(1, 1, 1, 0.3)
+	func setup(names: Array, a: Rect2, n: int, wind: Vector2, seed_n: int, scale_k: float, col: Color) -> void:
+		area = a
+		k = scale_k
+		tint = col
+		clouds.clear()
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed_n
+		for i in n:
+			var tx := RcSky.tex(names[rng.randi() % names.size()])
+			if tx == null:
+				continue
+			clouds.append([tx, Vector2(rng.randf_range(a.position.x, a.end.x), rng.randf_range(a.position.y, a.end.y)), wind * rng.randf_range(0.8, 1.2)])
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		queue_redraw()
+	func _process(delta: float) -> void:
+		if not visible or clouds.is_empty():
+			return
+		for c in clouds:
+			var tx: Texture2D = c[0]
+			var size := tx.get_size() * k
+			c[1] += (c[2] as Vector2) * delta
+			# (wrapping round: out past one side, back in past the other)
+			var p: Vector2 = c[1]
+			if p.x - size.x * 0.5 > area.end.x:
+				p.x = area.position.x - size.x * 0.5
+			if p.y - size.y * 0.5 > area.end.y:
+				p.y = area.position.y - size.y * 0.5
+			c[1] = p
+		queue_redraw()
+	func _draw() -> void:
+		for c in clouds:
+			var tx: Texture2D = c[0]
+			var size := tx.get_size() * k
+			draw_texture_rect(tx, Rect2(((c[1] as Vector2) - size * 0.5).round(), size), false, tint)
+
 ## RC ART's Sky: a windmill's sails far below, turning slowly round their hub
 class MillSails extends Sprite2D:
 	func _process(delta: float) -> void:
@@ -3758,10 +3828,11 @@ func _paint_sky(w: int, h: int) -> Image:
 				top[kk + 1] = arrow.g8
 				top[kk + 2] = arrow.b8
 				top[kk + 3] = arrow.a8
-	# a few clouds at the plane's height, off the course (it flies past them: they show its speed)
+	# a few clouds at the plane's height, off the course (it flies past them: they show its speed; RC ART's
+	# Sky: the designer's drifting clouds instead, SkyClouds)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 313 * course_seed + 1
-	for c2 in int(w * h / 30000) + 3:
+	for c2 in (0 if RcSky.on(look) and RcSky.has_clouds() else int(w * h / 30000) + 3):
 		var p := Vector2i(rng.randi_range(EDGE, w - EDGE - 40), rng.randi_range(EDGE, h - EDGE - 30))
 		if _dist[p.y * w + p.x] < half_w / PX * 1.6:
 			continue
@@ -3894,6 +3965,13 @@ func _night_floor(x: int, y: int) -> Color:
 var _sandbars: Array = []              # the Lagoon's sandbars (board px)
 var _sky_ground := Vector2i.ZERO       # the plane's ground image, board px (_paint_sky)
 var _mill_sails: Array = []            # RC ART's Sky: the windmills' sails turning on the ground (RcSky.mills)
+var _clouds_low: SkyClouds             # ...the designer's clouds drifting between the plane and the ground, the big ones lower,
+var _clouds_high: SkyClouds            # the small ones higher (nearer: faster past, a little less see-through)
+var _cloud_shadows: SkyClouds          # ...and their shadows on the fields (on the board)
+const CLOUD_DEPTH := [0.72, 0.86]      # their parallax (the ground's is PARALLAX)
+const CLOUD_ALPHA := [0.5, 0.6]        # (the user: nearly transparent, then "less transparent")
+const CLOUD_SHADOW := Color(0.18, 0.24, 0.36, 0.14)
+const CLOUD_WIND := Vector2(14, 5)     # world px/s
 var _lamps: Array = []                 # Grand Prix: the lamp posts (board px) round the track
 var _lamp_light := PackedFloat32Array() # ...and their light on every board px (0 dark .. 1 right under one)
 
@@ -4588,11 +4666,16 @@ func _tile_art() -> void:
 		if is_instance_valid(sail):
 			sail.queue_free()
 	_mill_sails.clear()
+	for layer in [_clouds_low, _clouds_high, _cloud_shadows]:
+		if layer:
+			layer.visible = false
 	if RcSky.on(look) and RcSky.has_ground() and _sky_ground != Vector2i.ZERO:
 		# (RC ART's Sky: the ground far below from the designer's fields, twice as fine; its haze and clouds in a shader)
 		board.texture = ImageTexture.create_from_image(RcSky.ground(_sky_ground))
 		board.scale = Vector2.ONE * RcSky.ART_PX
 		board.material = RcSky.ground_material(_cloud_noise, _sky_ground)
+		if RcSky.has_clouds():
+			_sky_clouds_start()
 		for hub in RcSky.mills:
 			var sail := MillSails.new()
 			sail.texture = RcSky.sails()
@@ -4722,6 +4805,9 @@ func _follow(amount: float) -> void:
 	world.position = world.position.lerp(pos, amount).round()
 	if vehicle == "plane":
 		board.position = ((world.position - VIEW.position) * (PARALLAX - 1.0)).round() / ZOOM
+		if _clouds_low and _clouds_low.visible:
+			_clouds_low.position = ((world.position - VIEW.position) * (CLOUD_DEPTH[0] - 1.0)).round() / ZOOM
+			_clouds_high.position = ((world.position - VIEW.position) * (CLOUD_DEPTH[1] - 1.0)).round() / ZOOM
 	_depth_3d()
 
 func _refresh_hud() -> void:
@@ -5455,7 +5541,8 @@ func _spawn_course_things() -> void:
 				spr = _px_sprite(PalPrixArt.log_texture(), ob["pos"])
 				spr.rotation = ((ob["b"] as Vector2) - (ob["a"] as Vector2)).angle()
 			"balloon":
-				spr = _px_sprite(PalPrixArt.balloon(int(ob["k"])), (ob["pos"] as Vector2) + Vector2(0, -20))
+				var art_b := RcSky.balloon(int(ob["k"])) if RcSky.on(look) else null   # (RC ART: the designer's, blue and pink)
+				spr = _px_sprite(art_b, (ob["pos"] as Vector2) + Vector2(0, -20), RcSky.ART_PX) if art_b else _px_sprite(PalPrixArt.balloon(int(ob["k"])), (ob["pos"] as Vector2) + Vector2(0, -20))
 			_:
 				spr = _px_sprite(PalPrixArt.cloud(16, int(ob["k"]), true), ob["pos"])
 		front.add_child(spr)

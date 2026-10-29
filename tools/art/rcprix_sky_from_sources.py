@@ -178,8 +178,31 @@ def ground_pieces():
     print("  hedges, river, decor")
 
 
+## The drifting clouds (cloud_sources/, shown nearly see-through by the game) and the hot-air balloons
+## (balloon_sources/, blue and pink only: the user), at their game sizes
+SKY = ROOT / "docs/mockups/rcprix_sky"
+CLOUDS = {"large_a": 160, "large_b": 160, "medium_a": 100, "medium_b": 100, "small_a": 50, "small_b": 50}
+BALLOONS = {"blue": "blue_white", "pink": "pink_white"}
+BALLOON_W = 38                         # game px: today's (19 board px at 4 world px)
+
+
+def sky_things():
+    for name, w in CLOUDS.items():
+        im = Image.open(SKY / f"cloud_sources/cloud_{name}_source.png").convert("RGBA")
+        im = im.crop(opaque_box(im))
+        save(f"cloud_{name}", pixelate(im, (w, round(im.height * w / im.width)), 8))
+    for name, src in BALLOONS.items():
+        im = Image.open(SKY / f"balloon_sources/balloon_{src}_source.png").convert("RGBA")
+        im = im.crop(opaque_box(im))
+        save(f"balloon_{name}", pixelate(im, (BALLOON_W, round(im.height * BALLOON_W / im.width)), 16))
+    print("  clouds, balloons")
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    if "--things" in sys.argv:
+        sky_things()
+        return
     if "--fields" in sys.argv:
         fields()
         ground_pieces()

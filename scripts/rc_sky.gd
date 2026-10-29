@@ -260,13 +260,14 @@ uniform vec2 noise_size;
 uniform float desaturate = 0.3;
 uniform float flatten = 0.35;
 uniform float haze = 0.52;
+uniform bool painted_clouds = false;    // (the designer's drifting clouds and their shadows instead: SkyClouds)
 float noise_at(vec2 b) { return texture(noise_tex, (b * 0.5 + 0.5) / noise_size).r * 2.0 - 1.0; }
 void fragment() {
 	vec2 p = floor(UV * art_size) + 0.5;
 	vec2 b = p * 0.5;                       // board px
 	vec4 c = texture(TEXTURE, UV);
 	c.rgb = min(vec3(1.0), c.rgb * vec3(1.03, 1.03, 1.04) + vec3(0.01, 0.01, 0.02));   // noon (_lit)
-	if (noise_at(b - vec2(17.5, 27.5)) > 0.28) c.rgb *= 0.88;                         // a cloud's shadow
+	if (!painted_clouds && noise_at(b - vec2(17.5, 27.5)) > 0.28) c.rgb *= 0.88;      // a cloud's shadow
 	// far away (the user: paler, like the original): the paintings' contrast and colour softened, then the haze
 	float l = dot(c.rgb, vec3(0.3, 0.59, 0.11));
 	c.rgb = mix(c.rgb, vec3(l), desaturate);
@@ -275,7 +276,7 @@ void fragment() {
 	float n = noise_at(b);
 	ivec2 q = ivec2(p) % 2;
 	float d = q.y == 0 ? (q.x == 0 ? 0.125 : 0.625) : (q.x == 0 ? 0.875 : 0.375);
-	if (n > 0.28 || (n > 0.22 && d < 0.5)) c.rgb = mix(c.rgb, vec3(250.0, 252.0, 255.0) / 255.0, 0.6);   // a cloud
+	if (!painted_clouds && (n > 0.28 || (n > 0.22 && d < 0.5))) c.rgb = mix(c.rgb, vec3(250.0, 252.0, 255.0) / 255.0, 0.6);   // a cloud
 	COLOR = c;
 }
 """
@@ -295,4 +296,16 @@ static func ground_material(noise: FastNoiseLite, size: Vector2i) -> ShaderMater
 	m.set_shader_parameter("noise_tex", ImageTexture.create_from_image(im))
 	m.set_shader_parameter("art_size", Vector2(size * 2))
 	m.set_shader_parameter("noise_size", Vector2(nw, nh))
+	m.set_shader_parameter("painted_clouds", false)   # (the original far clouds stay under the painted ones: the user)
 	return m
+
+## ---- The drifting clouds (the designer's, round 4): nearly see-through, in two layers between the plane and the
+## ground (each at its own depth: rc_racer SkyClouds), their shadows drifting over the fields
+const CLOUDS_LOW := ["cloud_large_a", "cloud_large_b", "cloud_medium_a", "cloud_medium_b"]
+const CLOUDS_HIGH := ["cloud_medium_a", "cloud_medium_b", "cloud_small_a", "cloud_small_b"]
+
+static func has_clouds() -> bool:
+	return ResourceLoader.exists(DIR + "cloud_large_a.png")
+
+static func balloon(k: int) -> Texture2D:
+	return tex("balloon_blue" if k % 2 == 0 else "balloon_pink")
