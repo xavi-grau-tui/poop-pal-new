@@ -125,15 +125,67 @@ def fields():
     print("  fields")
 
 
+## The ground's other pieces: hedges cut to a field edge's length and turned to each edge (a: the long edges, along
+## (0.9, 0.24), b: the short ones, along (-0.32, 0.86); RcSky.ground strings them centred on each edge), the river
+## strip (the game repeats it along its winding path), the decor at its size in game px (1.4x the brief's: specks
+## next to a 100 px field otherwise), the bridge turned upright to cross the river (which runs left to right)
+EDGE_A = 92.0 * float(np.hypot(0.9, 0.24)) / (0.86 * 0.9 + 0.32 * 0.24)     # 100.7 art px
+EDGE_B = 76.0 * float(np.hypot(0.32, 0.86)) / (0.86 * 0.9 + 0.32 * 0.24)    # 82.0
+ANGLE_B = float(np.degrees(np.arctan2(0.86, 0.32)))                          # 69.6 (up to the right)
+HEDGES = {"hedge_low": 4, "hedge_tree_line": 6}                             # their thickness, art px
+RIVER_H = 22                                                                 # the river strip, banks and all
+DECOR = {"farmhouse_barn": 17, "village": 45, "church": 14, "windmill_tower": 11, "windmill_sails": 22,
+         "pond": 22, "haystacks": 14, "copse": 34, "stone_bridge": 32}       # width, game px (the bridge: its length,
+                                                                             # across the river's 22)
+
+
+def strip(name, thick, length):
+    """A horizontal strip painting scaled to `thick` art px and repeated (every other copy mirrored) to `length`"""
+    im = Image.open(FIELD_SRC / f"{name}_source.png").convert("RGBA")
+    im = im.crop(opaque_box(im))
+    k = im.height / thick                                 # source px per art px
+    if length is None:
+        length = 2 * im.width / k
+    n = int(np.ceil(length * k / im.width)) + 1
+    long = Image.new("RGBA", (im.width * n, im.height), (0, 0, 0, 0))
+    for i in range(n):
+        long.paste(im.transpose(Image.FLIP_LEFT_RIGHT) if i % 2 else im, (i * im.width, 0))
+    return long.crop((0, 0, round(length * k), im.height)), k
+
+
+def ground_pieces():
+    for name, thick in HEDGES.items():
+        for tag, length, angle in (("a", EDGE_A + 2, -FIELD_ANGLE), ("b", EDGE_B + 2, ANGLE_B)):
+            im, k = strip(name, thick, length)
+            turned = im.rotate(angle, resample=Image.BICUBIC, expand=True)
+            save(f"{name}_{tag}", pixelate(turned, (max(1, round(turned.width / k)), max(1, round(turned.height / k))), 8))
+    im, k = strip("river", RIVER_H, None)                # (exactly two copies, the second mirrored: it wraps round)
+    save("river", pixelate(im, (round(im.width / k), RIVER_H), 10))
+    for name, w in DECOR.items():
+        im = Image.open(FIELD_SRC / f"{name}_source.png").convert("RGBA")
+        if name == "windmill_sails":
+            im = im.crop((0, 0, im.width, im.height))      # (the hub stays in the middle: it turns round it)
+        else:
+            im = im.crop(opaque_box(im))
+        h = max(1, round(im.height * w / im.width))
+        a = pixelate(im, (w, h), 10)
+        if name == "stone_bridge":
+            a = np.rot90(a).copy()                       # (upright, after: its length across the river)
+        save(f"decor_{name}", a)
+    print("  hedges, river, decor")
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     if "--fields" in sys.argv:
         fields()
+        ground_pieces()
         return
     rings()
     for view in ("front", "back", "side_l", "side_r"):
         cloud(view)
     fields()
+    ground_pieces()
     print("written to", OUT.relative_to(ROOT))
 
 

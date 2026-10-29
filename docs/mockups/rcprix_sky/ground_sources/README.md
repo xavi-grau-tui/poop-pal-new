@@ -21,4 +21,23 @@ The paintings use full colour and top-left light. Wheat, young crop, ploughed ea
 
 Made with the built-in ImageGen tool. The shared prompt requested a perfectly straight-down, full-bleed square field painting, rich clustered pixel-art colour, calm even texture, no field edge, hedge, river, road, building, cloud shadow or diagonal rows. Each field prompt supplied its specific crop and palette. The rowed crops then used an edit prompt asking for approximately 30–32 thinner horizontal rows while preserving their material and lighting. Concept A and the first wheat painting were style references; their angled map layout was explicitly excluded.
 
-Hedges, decor and river follow after the field conversion review, as ordered in the brief.
+## Hedges, landmarks and river · second delivery group
+
+These are **transparent high-resolution ImageGen paintings**. Keep the hedge and river strips horizontal in source space. The game-side conversion sets their final pixel size, cuts the strips, turns them to the diagonal grid, and applies the same haze used for the accepted fields.
+
+| File | Content | Target game size or use |
+| --- | --- | --- |
+| `hedge_low_source.png` | Low leafy hedge | Horizontal strip, about 3 px thick |
+| `hedge_tree_line_source.png` | Row of small round trees | Horizontal strip, crowns about 4–6 px |
+| `farmhouse_barn_source.png` | Farmhouse, barn and yard | 12 × 9 px |
+| `village_source.png` | Cluster of roofs around a small square | 32 × 24 px |
+| `church_source.png` | Cross-shaped roof and tower | 10 × 12 px |
+| `windmill_tower_source.png` | Tower and central spindle | 8 × 8 px |
+| `windmill_sails_source.png` | Detached four-arm sails; rotate around the central hub | 16 × 16 px |
+| `stone_bridge_source.png` | Horizontal stone bridge | 20 × 10 px |
+| `pond_source.png` | Small irregular pond with grassy edge | 16 × 10 px |
+| `haystacks_source.png` | Three golden hay bales | 10 × 6 px |
+| `copse_source.png` | Small group of round trees | 24 × 18 px |
+| `river_source.png` | Straight blue river with sandy and grassy banks | Horizontal strip, about 4:1 |
+
+The new images were generated individually with the built-in ImageGen tool, using the accepted field paintings as style references. Their shared prompt specified a straight-down view, clustered pixel-art colour, full saturation, top-left lighting and a plain transparent background. The river prompt specified a continuous left-to-right strip with banks on both sides. All are **source paintings**, not pixel-locked game sprites. For the moving windmill, align the sails' hub with the tower's spindle after conversion.

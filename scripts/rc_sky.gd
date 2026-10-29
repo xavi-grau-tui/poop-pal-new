@@ -106,7 +106,16 @@ const RIVER_BANK := Color8(206, 216, 176)
 static func has_ground() -> bool:
 	return ResourceLoader.exists(DIR + "field_wheat.png")
 
-## The ground image, art px, for a board of `size` board px (rc_racer's PX = 2 art px)
+## The ground image, art px, for a board of `size` board px (rc_racer's PX = 2 art px): the fields, then the
+## hedges on every field's edges, the river and its bridges, the decor in some fields (mills: windmills, their sails
+## turning on their own sprites, RcSky.sails)
+static var mills: Array[Vector2] = []  # the windmills' hubs in the last ground made, art px
+const HEDGE_TREES := 0.3               # of the edges, a tree line (the rest a low hedge)
+const DECOR := [["farmhouse_barn", 0.16], ["copse", 0.12], ["haystacks", 0.08], ["pond", 0.06], ["windmill_tower", 0.04],
+	["village", 0.04], ["church", 0.03]]   # each field's chance of one
+const BRIDGE_EVERY := 520              # art px along the river
+const RIVER_CLEAR := 40.0              # decor this far from the river's middle at least, art px
+
 static func ground(size: Vector2i) -> Image:
 	var w := size.x * 2
 	var h := size.y * 2
@@ -118,65 +127,128 @@ static func ground(size: Vector2i) -> Image:
 		if p:
 			patches.append(p)
 	var uv := func(x: float, y: float) -> Vector2: return Vector2(x * 0.86 + y * 0.32, y * 0.9 - x * 0.24)
+	var xy := func(u: float, v: float) -> Vector2: return Vector2((0.9 * u - 0.32 * v) / DET, (0.24 * u + 0.86 * v) / DET)
 	var lo := Vector2(INF, INF)
 	var hi := Vector2(-INF, -INF)
 	for c in [Vector2(0, 0), Vector2(w, 0), Vector2(0, h), Vector2(w, h)]:
 		var q: Vector2 = uv.call(c.x, c.y)
 		lo = lo.min(q)
 		hi = hi.max(q)
+	var cells: Array = []                             # [u0, v0, hash]
 	for fy in range(int(floorf(lo.y / 76.0)), int(floorf(hi.y / 76.0)) + 1):
 		for fx in range(int(floorf(lo.x / 92.0)), int(floorf(hi.x / 92.0)) + 1):
 			var hsh := ((fx * 73856093) ^ (fy * 19349663)) & 0xffff
-			var patch: Image = patches[hsh % patches.size()]
-			var u0 := 92.0 * fx
-			var v0 := 76.0 * fy
-			# its box (its four corners back in x, y), and where in the square it's cut from (a little shift each)
-			var bl := Vector2(INF, INF)
-			var bh := Vector2(-INF, -INF)
-			for cu in [u0, u0 + 92.0]:
-				for cv in [v0, v0 + 76.0]:
-					var p := Vector2((0.9 * cu - 0.32 * cv) / DET, (0.24 * cu + 0.86 * cv) / DET)
-					bl = bl.min(p)
-					bh = bh.max(p)
-			var box := Rect2i(Vector2i(bl.floor()), Vector2i((bh - bl.floor()).ceil()))
-			var off := Vector2i((hsh / 8) % maxi(1, FIELD_PATCH - box.size.x + 1), (hsh / 64) % maxi(1, FIELD_PATCH - box.size.y + 1))
-			for y in range(maxi(0, box.position.y), mini(h, box.end.y + 1)):
-				var yc := y + 0.5
-				# the row's span inside the field: u in [u0, u0 + 92), v in [v0, v0 + 76) (pixel centres)
-				var a := maxf((u0 - 0.32 * yc) / 0.86, (0.9 * yc - v0 - 76.0) / 0.24)
-				var b := minf((u0 + 92.0 - 0.32 * yc) / 0.86, (0.9 * yc - v0) / 0.24)
-				var xs := maxi(0, int(ceilf(a - 0.5)))
-				var xe := mini(w - 1, int(ceilf(b - 0.5)) - 1)
-				if xs > xe:
-					continue
-				var sx := clampi(xs - box.position.x + off.x, 0, FIELD_PATCH - 1)
-				var sy := clampi(y - box.position.y + off.y, 0, FIELD_PATCH - 1)
-				out.blit_rect(patch, Rect2i(sx, sy, mini(xe - xs + 1, FIELD_PATCH - sx), 1), Vector2i(xs, y))
-			_hedge(out, Vector2((0.9 * u0 - 0.32 * v0) / DET, (0.24 * u0 + 0.86 * v0) / DET), Vector2(0.9 * 92.0, 0.24 * 92.0) / DET, hsh)
-			_hedge(out, Vector2((0.9 * u0 - 0.32 * v0) / DET, (0.24 * u0 + 0.86 * v0) / DET), Vector2(-0.32 * 76.0, 0.86 * 76.0) / DET, hsh / 3)
-	_river(out, size.y)
+			cells.append([92.0 * fx, 76.0 * fy, hsh])
+	# the fields
+	for cell in cells:
+		var u0: float = cell[0]
+		var v0: float = cell[1]
+		var hsh: int = cell[2]
+		var patch: Image = patches[hsh % patches.size()]
+		# its box (its four corners back in x, y), and where in the square it's cut from (a little shift each)
+		var bl := Vector2(INF, INF)
+		var bh := Vector2(-INF, -INF)
+		for cu in [u0, u0 + 92.0]:
+			for cv in [v0, v0 + 76.0]:
+				var p: Vector2 = xy.call(cu, cv)
+				bl = bl.min(p)
+				bh = bh.max(p)
+		var box := Rect2i(Vector2i(bl.floor()), Vector2i((bh - bl.floor()).ceil()))
+		var off := Vector2i((hsh / 8) % maxi(1, FIELD_PATCH - box.size.x + 1), (hsh / 64) % maxi(1, FIELD_PATCH - box.size.y + 1))
+		for y in range(maxi(0, box.position.y), mini(h, box.end.y + 1)):
+			var yc := y + 0.5
+			# the row's span inside the field: u in [u0, u0 + 92), v in [v0, v0 + 76) (pixel centres)
+			var a := maxf((u0 - 0.32 * yc) / 0.86, (0.9 * yc - v0 - 76.0) / 0.24)
+			var b := minf((u0 + 92.0 - 0.32 * yc) / 0.86, (0.9 * yc - v0) / 0.24)
+			var xs := maxi(0, int(ceilf(a - 0.5)))
+			var xe := mini(w - 1, int(ceilf(b - 0.5)) - 1)
+			if xs > xe:
+				continue
+			var sx := clampi(xs - box.position.x + off.x, 0, FIELD_PATCH - 1)
+			var sy := clampi(y - box.position.y + off.y, 0, FIELD_PATCH - 1)
+			out.blit_rect(patch, Rect2i(sx, sy, mini(xe - xs + 1, FIELD_PATCH - sx), 1), Vector2i(xs, y))
+	# the hedges: on each field's top edge (along u) and left edge (along v), centred on it
+	var hedges := [[img("hedge_low_a"), img("hedge_low_b")], [img("hedge_tree_line_a"), img("hedge_tree_line_b")]]
+	for cell in cells:
+		var u0: float = cell[0]
+		var v0: float = cell[1]
+		var hsh: int = cell[2]
+		for e in 2:
+			var trees := ((hsh >> (3 + e * 4)) % 10) < int(HEDGE_TREES * 10.0)
+			var hd: Image = hedges[1 if trees else 0][e]
+			if hd == null:
+				continue
+			var mid: Vector2 = xy.call(u0 + 46.0, v0) if e == 0 else xy.call(u0, v0 + 38.0)
+			_put(out, hd, mid)
+	# the river and its bridges
+	var river := img("river")
+	var river_y := func(x: float) -> float: return 2.0 * (size.y * 0.6 - 60.0 * sin(x * 0.5 * 0.012))
+	if river:
+		var rh := river.get_height()
+		for x in w:
+			var top := int(river_y.call(x)) - rh / 2
+			var col := x % river.get_width()
+			for r in rh:
+				var c := river.get_pixel(col, r)
+				if c.a > 0.5 and top + r >= 0 and top + r < h:
+					out.set_pixel(x, top + r, c)
+		var bridge := img("decor_stone_bridge")
+		if bridge:
+			var bx := BRIDGE_EVERY / 2
+			while bx < w:
+				_put(out, bridge, Vector2(bx, river_y.call(bx)))
+				bx += BRIDGE_EVERY
+	# the decor: in some fields, near their middle (never on the river)
+	mills.clear()
+	var total := 0.0
+	for d in DECOR:
+		total += float(d[1])
+	for cell in cells:
+		var hsh: int = cell[2]
+		var roll := float((hsh * 2654435761) % 1000) / 1000.0
+		if roll >= total:
+			continue
+		var acc := 0.0
+		var kind := ""
+		for d in DECOR:
+			acc += float(d[1])
+			if roll < acc:
+				kind = d[0]
+				break
+		var at: Vector2 = xy.call(float(cell[0]) + 46.0 + float((hsh >> 4) % 21 - 10), float(cell[1]) + 38.0 + float((hsh >> 9) % 17 - 8))
+		if absf(at.y - river_y.call(at.x)) < RIVER_CLEAR:
+			continue
+		var im := img("decor_" + kind)
+		if im:
+			_put(out, im, at)
+			if kind == "windmill_tower":
+				mills.append(at)
 	return out
 
-## A field's edge from `a` along `along`: a hedge 2 art px thick, a darker tree on it now and then
-static func _hedge(out: Image, a: Vector2, along: Vector2, seed_n: int) -> void:
-	var n := int(along.length() * 2.0)
-	var side := Vector2(-along.y, along.x).normalized()
-	for i in n:
-		var p := a + along * (float(i) / n)
-		for q in [p, p + side]:
-			var x := int(q.x)
-			var y := int(q.y)
-			if x >= 0 and y >= 0 and x < out.get_width() and y < out.get_height():
-				out.set_pixel(x, y, HEDGE_TREE if (i / 2 + seed_n) % 9 < 2 else HEDGE)
+## A piece blended in centred on `at` (art px)
+static func _put(out: Image, im: Image, at: Vector2) -> void:
+	out.blend_rect(im, Rect2i(Vector2i.ZERO, im.get_size()), Vector2i((at - Vector2(im.get_size()) * 0.5).round()))
 
-## Today's pale river winding across (_sky_floor's: its middle bh * 0.6 - 60 sin(x * 0.012) board px), 16 art px wide
-static func _river(out: Image, bh: int) -> void:
-	for x in out.get_width():
-		var yc := int(2.0 * (bh * 0.6 - 60.0 * sin(x * 0.5 * 0.012)))
-		for dy in range(-9, 10):
-			var y := yc + dy
-			if y >= 0 and y < out.get_height():
-				out.set_pixel(x, y, RIVER_BANK if absi(dy) > 7 else RIVER)
+## The windmills' sails, made as pale as the ground round them (GROUND_SHADER's softening and haze, baked:
+## they turn on their own sprite, not through the shader)
+static func sails() -> Texture2D:
+	if not _texs.has("sails_hazed"):
+		var im := img("decor_windmill_sails")
+		if im == null:
+			_texs["sails_hazed"] = null
+			return null
+		im = im.duplicate()
+		for y in im.get_height():
+			for x in im.get_width():
+				var c := im.get_pixel(x, y)
+				if c.a <= 0.0:
+					continue
+				var v := Vector3(minf(1.0, c.r * 1.03 + 0.01), minf(1.0, c.g * 1.03 + 0.01), minf(1.0, c.b * 1.04 + 0.02))
+				var l := v.dot(Vector3(0.3, 0.59, 0.11))
+				v = v.lerp(Vector3(l, l, l), 0.3).lerp(Vector3(0.8, 0.86, 0.72), 0.35).lerp(Vector3(200, 224, 244) / 255.0, 0.52)
+				im.set_pixel(x, y, Color(v.x, v.y, v.z, c.a))
+		_texs["sails_hazed"] = ImageTexture.create_from_image(im)
+	return _texs["sails_hazed"]
 
 ## The haze over it (it's a long way down), the clouds' shadows, the see-through clouds between it and the plane:
 ## _sky_floor's, on the art grid; noise_tex holds rc_racer's _cloud_noise at 2 board px a texel

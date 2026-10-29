@@ -1857,6 +1857,11 @@ class SkyDock extends Node2D:
 			put.call("rotor_ring", hub)
 			put.call("rotor_hub", hub)
 
+## RC ART's Sky: a windmill's sails far below, turning slowly round their hub
+class MillSails extends Sprite2D:
+	func _process(delta: float) -> void:
+		rotation += delta * 0.9
+
 ## The wind across the course in a gust: short white streaks blowing over it (on the 4 px grid)
 class GustFx extends Node2D:
 	var zones: Array = []                 # [points (the course there), the way it blows]
@@ -3888,6 +3893,7 @@ func _night_floor(x: int, y: int) -> Color:
 
 var _sandbars: Array = []              # the Lagoon's sandbars (board px)
 var _sky_ground := Vector2i.ZERO       # the plane's ground image, board px (_paint_sky)
+var _mill_sails: Array = []            # RC ART's Sky: the windmills' sails turning on the ground (RcSky.mills)
 var _lamps: Array = []                 # Grand Prix: the lamp posts (board px) round the track
 var _lamp_light := PackedFloat32Array() # ...and their light on every board px (0 dark .. 1 right under one)
 
@@ -4578,11 +4584,22 @@ func _tile_art() -> void:
 		_lagoon_decor.scale = Vector2.ONE * RcLagoon.ART_PX / PX
 	if _lagoon_decor:
 		_lagoon_decor.visible = RcLagoon.on(look)
+	for sail in _mill_sails:
+		if is_instance_valid(sail):
+			sail.queue_free()
+	_mill_sails.clear()
 	if RcSky.on(look) and RcSky.has_ground() and _sky_ground != Vector2i.ZERO:
 		# (RC ART's Sky: the ground far below from the designer's fields, twice as fine; its haze and clouds in a shader)
 		board.texture = ImageTexture.create_from_image(RcSky.ground(_sky_ground))
 		board.scale = Vector2.ONE * RcSky.ART_PX
 		board.material = RcSky.ground_material(_cloud_noise, _sky_ground)
+		for hub in RcSky.mills:
+			var sail := MillSails.new()
+			sail.texture = RcSky.sails()
+			sail.position = hub
+			sail.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			board.add_child(sail)                    # (on the ground: it moves with it; freed with the next ground)
+			_mill_sails.append(sail)
 	if _finish_flags == null:
 		_finish_flags = FinishFlags.new()
 		_finish_flags.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
