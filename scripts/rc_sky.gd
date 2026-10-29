@@ -330,5 +330,26 @@ const CLOUDS_HIGH := ["cloud_medium_a", "cloud_medium_b", "cloud_small_a", "clou
 static func has_clouds() -> bool:
 	return ResourceLoader.exists(DIR + "cloud_large_a.png")
 
+## A drifting cloud made paler (far away): its colours eased towards the sky's haze by `amount` (0: as painted)
+static func paled(name: String, amount: float) -> Texture2D:
+	if amount <= 0.0:
+		return tex(name)
+	var key := "%s_pale_%.2f" % [name, amount]
+	if not _texs.has(key):
+		var im := img(name)
+		if im == null:
+			_texs[key] = null
+			return null
+		im = im.duplicate()
+		var haze := Color8(226, 236, 248)
+		for y in im.get_height():
+			for x in im.get_width():
+				var c := im.get_pixel(x, y)
+				if c.a > 0.0:
+					var p := c.lerp(haze, amount)
+					im.set_pixel(x, y, Color(p.r, p.g, p.b, c.a))
+		_texs[key] = ImageTexture.create_from_image(im)
+	return _texs[key]
+
 static func balloon(k: int) -> Texture2D:
 	return tex("balloon_blue" if k % 2 == 0 else "balloon_pink")

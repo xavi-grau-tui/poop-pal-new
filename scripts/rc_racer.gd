@@ -1895,6 +1895,7 @@ func _sky_clouds_start() -> void:
 		var a := Rect2(Vector2.ZERO, f * mat_size + (1.0 - f) * view)
 		var n := int(a.get_area() / (CLOUD_EVERY[i] * CLOUD_EVERY[i])) + 2
 		var layer: SkyClouds = [_clouds_low, _clouds_high][i]
+		layer.pale = CLOUD_PALE
 		layer.setup(RcSky.CLOUDS_LOW if i == 0 else RcSky.CLOUDS_HIGH, a, n, CLOUD_WIND * (1.0 + 0.4 * i), course_seed * 17 + i, RcSky.ART_PX * CLOUD_SIZE[i], Color(1, 1, 1, CLOUD_ALPHA[i]))
 		layer.visible = true
 	var ga := Rect2(Vector2.ZERO, Vector2(_sky_ground * 2))
@@ -1909,6 +1910,7 @@ class SkyClouds extends Node2D:
 	var area := Rect2()
 	var k := 2.0                          # world px per art px (1 on the board)
 	var tint := Color(1, 1, 1, 0.3)
+	var pale := 0.0                       # (eased towards the haze: far away)
 	func setup(names: Array, a: Rect2, n: int, wind: Vector2, seed_n: int, scale_k: float, col: Color) -> void:
 		area = a
 		k = scale_k
@@ -1917,7 +1919,7 @@ class SkyClouds extends Node2D:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = seed_n
 		for i in n:
-			var tx := RcSky.tex(names[rng.randi() % names.size()])
+			var tx := RcSky.paled(names[rng.randi() % names.size()], pale)
 			if tx == null:
 				continue
 			clouds.append([tx, Vector2(rng.randf_range(a.position.x, a.end.x), rng.randf_range(a.position.y, a.end.y)), wind * rng.randf_range(0.8, 1.2)])
@@ -3992,6 +3994,7 @@ var _clouds_low: SkyClouds             # ...the designer's clouds drifting betwe
 var _clouds_high: SkyClouds            # the small ones higher (nearer: faster past, a little less see-through)
 var _cloud_shadows: SkyClouds          # ...and their shadows on the fields (on the board)
 const CLOUD_DEPTH := [0.72, 0.86]      # their parallax (the ground's is PARALLAX)
+const CLOUD_PALE := 0.0               # the drifting clouds eased towards the haze (0: as painted)
 const CLOUD_SIZE := [1.0, 1.1]        # (the nearer row 10% bigger, the user)
 const CLOUD_ALPHA := [0.75, 0.75]      # (the user: nearly transparent, then "less transparent", then 75%; 65% tried, 75% kept)
 const CLOUD_SHADOW := Color(0.45, 0.52, 0.62, 0.1)   # (paler: merging with the hazy ground, the user)
