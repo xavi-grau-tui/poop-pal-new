@@ -333,6 +333,7 @@ def platform():
 RUNWAY_SRC = SKY / "platform_sources"
 RUNWAY_LINE = (1029, 575)              # the checkered line's middle on the deck's painting (source px)
 PLATFORM_W = 104
+PLATFORM_H = 100                       # (the former pad's size, the user: 94 deep on top plus its front face)
 SOCK_FRAMES_H = 24                     # game px, the pole and all
 
 
@@ -341,26 +342,26 @@ def runway():
     rnd = random.Random(7)
     im = Image.open(RUNWAY_SRC / "runway_deck_source.png").convert("RGBA")
     box = opaque_box(im)
-    k = (box[2] - box[0]) / PLATFORM_W
-    deck = pixelate(im.crop(box), (PLATFORM_W, round((box[3] - box[1]) / k)), 14)
+    deck = pixelate(im.crop(box), (PLATFORM_W, PLATFORM_H), 14)
     dh, dw = deck.shape[:2]
-    lx = (RUNWAY_LINE[0] - box[0]) / k                    # the line in deck px
-    ly = (RUNWAY_LINE[1] - box[1]) / k
-    mx, mt, mb = 40, 22, 34                               # the clouds' room round the deck
+    lx = (RUNWAY_LINE[0] - box[0]) * PLATFORM_W / (box[2] - box[0])   # the line in deck px
+    ly = (RUNWAY_LINE[1] - box[1]) * PLATFORM_H / (box[3] - box[1])
+    mx, mt, mb = 56, 26, 46                               # the clouds' room round the deck
     cw, ch = dw + 2 * mx, dh + mt + mb
     canvas = np.zeros((ch, cw, 4), np.uint8)
     # behind and under it: big ones along it, lower than its middle (it sits on them), one at each end
-    for i in range(5):
-        x = mx + dw * (i + 0.5) / 5 + rnd.uniform(-8, 8)
-        paste(canvas, drift_cloud(rnd.choice(DRIFT), rnd.randint(70, 96)), x, mt + dh * 0.75 + rnd.uniform(-4, 10))
-    for x in (mx - 4, mx + dw + 4):
-        paste(canvas, drift_cloud(rnd.choice(DRIFT_SMALL), rnd.randint(50, 64)), x, mt + dh * 0.45)
+    # (at the stands' clouds' scale, the user)
+    for i in range(3):
+        x = mx + dw * (i + 0.5) / 3 + rnd.uniform(-8, 8)
+        paste(canvas, drift_cloud(rnd.choice(DRIFT), rnd.randint(90, 130)), x, mt + dh * 0.75 + rnd.uniform(-4, 10))
+    for x in (mx - 6, mx + dw + 6):
+        paste(canvas, drift_cloud(rnd.choice(DRIFT), rnd.randint(90, 110)), x, mt + dh * 0.5)
     dm = deck[..., 3] > 0
     canvas[mt:mt + dh, mx:mx + dw][dm] = deck[dm]
     # a few puffs over its front edge
-    for i in range(4):
-        x = mx + dw * (i + 0.5) / 4 + rnd.uniform(-10, 10)
-        paste(canvas, drift_cloud(rnd.choice(DRIFT_SMALL), rnd.randint(28, 40)), x, mt + dh + rnd.uniform(2, 8))
+    for i in range(3):
+        x = mx + dw * (i + 0.5) / 3 + rnd.uniform(-10, 10)
+        paste(canvas, drift_cloud(rnd.choice(DRIFT_SMALL), rnd.randint(36, 56)), x, mt + dh + rnd.uniform(4, 12))
     # cut so the line's middle is the middle
     px, py = mx + lx, mt + ly
     rx = int(np.ceil(max(px, cw - px)))

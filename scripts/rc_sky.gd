@@ -11,7 +11,7 @@ const ART_PX := 2.0
 const RINGS := [86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124]   # the sizes
                                        # on the grid (ring_r, world px; tools/art/rcprix_sky_from_sources.py): the nearest drawn
 const PAD_MARGIN := 33                 # the pad's picture reaches this far past its deck, art px (the guides: the rotors)
-const SOCK_FOOT := Vector2(-68, -20)   # the windsock's pole foot from the start line, art px (on the runway near its back corner behind the plane, the user)
+const SOCK_FOOT := Vector2(-68, -38)   # the windsock's pole foot from the start line, art px (on the runway near its back corner behind the plane, the user)
 const CLOUD_MARGIN := 22               # the stand's cloud reaches this far past its pieces, art px (the guides)
 const CANOPY_HUE := 0.56               # the stand's canopy, light blue (the user, 2026-10-28)
 static var _imgs := {}

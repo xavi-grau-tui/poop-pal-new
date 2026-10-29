@@ -1840,7 +1840,7 @@ class SkyDock extends Node2D:
 			# the orange windsock on the deck's back corner the plane starts from, flapping (the designer's 4 frames;
 			# mirrored with the deck for a race going left)
 			var left := _plat == "w"
-			var sock := RcSky.tex("windsock_%d" % (int(t * 6.0) % 4), left)
+			var sock := RcSky.tex("windsock_%d" % (int(t * 14.0) % 4), left)   # (fast: slow it looked like a bad gif, the user)
 			if sock:
 				var ss := sock.get_size() * px
 				var foot := _line_at + RcSky.SOCK_FOOT * px * Vector2(-1.0 if left else 1.0, 1.0)
