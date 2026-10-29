@@ -3994,7 +3994,7 @@ var _clouds_low: SkyClouds             # ...the designer's clouds drifting betwe
 var _clouds_high: SkyClouds            # the small ones higher (nearer: faster past, a little less see-through)
 var _cloud_shadows: SkyClouds          # ...and their shadows on the fields (on the board)
 const CLOUD_DEPTH := [0.72, 0.86]      # their parallax (the ground's is PARALLAX)
-const CLOUD_PALE := 0.35              # the drifting clouds eased towards the haze (0: as painted)
+const CLOUD_PALE := 0.5               # the drifting clouds eased towards the haze (0: as painted)
 const CLOUD_SIZE := [1.0, 1.1]        # (the nearer row 10% bigger, the user)
 const CLOUD_ALPHA := [0.85, 0.85]      # (the user: nearly transparent, then "less transparent", then 75%; paler, then 85%)
 const CLOUD_SHADOW := Color(0.45, 0.52, 0.62, 0.1)   # (paler: merging with the hazy ground, the user)
