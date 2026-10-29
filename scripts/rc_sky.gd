@@ -192,12 +192,34 @@ static func ground(size: Vector2i) -> Image:
 				var c := river.get_pixel(col, r)
 				if c.a > 0.5 and top + r >= 0 and top + r < h:
 					out.set_pixel(x, top + r, c)
+		# (a bridge where a field's short edge crosses the river: it carries the hedge's line over the water, the
+		# user: one leading nowhere made no sense; seen from the side, up to the right like those edges)
 		var bridge := img("decor_stone_bridge")
 		if bridge:
-			var bx := BRIDGE_EVERY / 2
-			while bx < w:
-				_put(out, bridge, Vector2(bx, river_y.call(bx)))
-				bx += BRIDGE_EVERY
+			var last := -INF
+			var crossings: Array[Vector2] = []
+			for cell in cells:
+				var a0: Vector2 = xy.call(float(cell[0]), float(cell[1]))
+				var a1: Vector2 = xy.call(float(cell[0]), float(cell[1]) + 76.0)
+				var f0: float = a0.y - river_y.call(a0.x)
+				var f1: float = a1.y - river_y.call(a1.x)
+				if signf(f0) == signf(f1):
+					continue
+				var lo_t := 0.0
+				var hi_t := 1.0
+				for _i in 12:
+					var mt := (lo_t + hi_t) * 0.5
+					var q := a0.lerp(a1, mt)
+					if signf(q.y - river_y.call(q.x)) == signf(f0):
+						lo_t = mt
+					else:
+						hi_t = mt
+				crossings.append(a0.lerp(a1, lo_t))
+			crossings.sort_custom(func(p, q): return p.x < q.x)
+			for c in crossings:
+				if c.x - last >= BRIDGE_EVERY and c.x > 0.0 and c.x < w:
+					_put(out, bridge, c)
+					last = c.x
 	# the decor: in some fields, near their middle (never on the river)
 	mills.clear()
 	var total := 0.0

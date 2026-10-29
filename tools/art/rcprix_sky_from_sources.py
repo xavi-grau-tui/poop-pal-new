@@ -137,9 +137,10 @@ EDGE_B = 76.0 * float(np.hypot(0.32, 0.86)) / (0.86 * 0.9 + 0.32 * 0.24)    # 82
 ANGLE_B = float(np.degrees(np.arctan2(0.86, 0.32)))                          # 69.6 (up to the right)
 HEDGES = {"hedge_low": 4, "hedge_tree_line": 6}                             # their thickness, art px
 RIVER_H = 22                                                                 # the river strip, banks and all
-DECOR = {"farmhouse_barn": 17, "village": 45, "church": 14, "windmill_tower": 11, "windmill_sails": 22,
-         "pond": 22, "haystacks": 14, "copse": 34, "stone_bridge": 32}       # width, game px (the bridge: its length,
-                                                                             # across the river's 22)
+DECOR = {"farmhouse_barn": 17, "village": 45, "church": 14, "windmill_tower": 24, "windmill_sails": 28,
+         "pond": 22, "haystacks": 14, "copse": 34, "stone_bridge": 20}       # width, game px (the bridge: seen from the
+                                                                             # side, running up to the right at 70 degrees)
+MILL_HUB = (558, 608)                  # the sails' spindle on the tower's painting (source px)
 
 
 def strip(name, thick, length):
@@ -166,15 +167,21 @@ def ground_pieces():
     save("river", pixelate(im, (round(im.width / k), RIVER_H), 10))
     for name, w in DECOR.items():
         im = Image.open(FIELD_SRC / f"{name}_source.png").convert("RGBA")
+        box = opaque_box(im)
         if name == "windmill_sails":
-            im = im.crop((0, 0, im.width, im.height))      # (the hub stays in the middle: it turns round it)
-        else:
-            im = im.crop(opaque_box(im))
+            # (cut square round its hub: it turns round its middle)
+            hub = (630, 629)
+            r = max(hub[0] - box[0], box[2] - hub[0], hub[1] - box[1], box[3] - hub[1])
+            box = (hub[0] - r, hub[1] - r, hub[0] + r, hub[1] + r)
+        elif name == "windmill_tower":
+            # (cut so the sails' spindle is its middle: RcSky.ground puts the sails on the tower's middle)
+            hx, hy = MILL_HUB
+            rx = max(hx - box[0], box[2] - hx)
+            ry = max(hy - box[1], box[3] - hy)
+            box = (hx - rx, hy - ry, hx + rx, hy + ry)
+        im = im.crop(box)
         h = max(1, round(im.height * w / im.width))
-        a = pixelate(im, (w, h), 10)
-        if name == "stone_bridge":
-            a = np.rot90(a).copy()                       # (upright, after: its length across the river)
-        save(f"decor_{name}", a)
+        save(f"decor_{name}", pixelate(im, (w, h), 10))
     print("  hedges, river, decor")
 
 

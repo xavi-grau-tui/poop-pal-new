@@ -32,12 +32,16 @@ These are **transparent high-resolution ImageGen paintings**. Keep the hedge and
 | `farmhouse_barn_source.png` | Farmhouse, barn and yard | 12 × 9 px |
 | `village_source.png` | Cluster of roofs around a small square | 32 × 24 px |
 | `church_source.png` | Cross-shaped roof and tower | 10 × 12 px |
-| `windmill_tower_source.png` | Tower and central spindle | 8 × 8 px |
-| `windmill_sails_source.png` | Detached four-arm sails; rotate around the central hub | 16 × 16 px |
-| `stone_bridge_source.png` | Horizontal stone bridge | 20 × 10 px |
+| `windmill_tower_source.png` | Standing stone tower, cap and front spindle, 3/4 view from south | 12 × 18 px |
+| `windmill_sails_source.png` | Upright detached four-arm sails; rotate around the central hub | 22 × 22 px |
+| `stone_bridge_source.png` | Raised stone bridge with deck and two arches, steep diagonal up to right | 14 × 34 px |
 | `pond_source.png` | Small irregular pond with grassy edge | 16 × 10 px |
 | `haystacks_source.png` | Three golden hay bales | 10 × 6 px |
 | `copse_source.png` | Small group of round trees | 24 × 18 px |
 | `river_source.png` | Straight blue river with sandy and grassy banks | Horizontal strip, about 4:1 |
 
-The new images were generated individually with the built-in ImageGen tool, using the accepted field paintings as style references. Their shared prompt specified a straight-down view, clustered pixel-art colour, full saturation, top-left lighting and a plain transparent background. The river prompt specified a continuous left-to-right strip with banks on both sides. All are **source paintings**, not pixel-locked game sprites. For the moving windmill, align the sails' hub with the tower's spindle after conversion.
+The new images were generated individually with the built-in ImageGen tool, using the accepted field paintings as style references. Their shared prompt specified clustered pixel-art colour, full saturation, top-left lighting and a plain transparent background. The river prompt specified a continuous left-to-right strip with banks on both sides. All are **source paintings**, not pixel-locked game sprites.
+
+### Revised landmarks
+
+The windmill tower, detached sails and bridge were repainted with ImageGen after the ground was reviewed in game. The windmill is now viewed from the south at a slight elevation, with its spindle on the front below the cap; place the sail hub there and rotate the sail sprite around its own centre. The bridge runs from lower left toward upper right, about 70° above horizontal, so its deck crosses the separately drawn horizontal river while the arches show on its lower-right face. These three files **replace the earlier source paintings**; the target game sizes are in the table above. The bridge's tall image contains transparent margins and should be fitted by its painted bounds, preserving its steep angle.
