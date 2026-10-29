@@ -3969,8 +3969,8 @@ var _clouds_low: SkyClouds             # ...the designer's clouds drifting betwe
 var _clouds_high: SkyClouds            # the small ones higher (nearer: faster past, a little less see-through)
 var _cloud_shadows: SkyClouds          # ...and their shadows on the fields (on the board)
 const CLOUD_DEPTH := [0.72, 0.86]      # their parallax (the ground's is PARALLAX)
-const CLOUD_ALPHA := [0.5, 0.6]        # (the user: nearly transparent, then "less transparent")
-const CLOUD_SHADOW := Color(0.18, 0.24, 0.36, 0.14)
+const CLOUD_ALPHA := [0.75, 0.75]      # (the user: nearly transparent, then "less transparent", then 75%)
+const CLOUD_SHADOW := Color(0.45, 0.52, 0.62, 0.1)   # (paler: merging with the hazy ground, the user)
 const CLOUD_WIND := Vector2(14, 5)     # world px/s
 var _lamps: Array = []                 # Grand Prix: the lamp posts (board px) round the track
 var _lamp_light := PackedFloat32Array() # ...and their light on every board px (0 dark .. 1 right under one)
