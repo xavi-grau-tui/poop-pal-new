@@ -248,14 +248,22 @@ def stand_clouds_from_drift():
                 cols = np.where(guide.any(0))[0]
                 if len(cols) == 0:
                     continue
+                if view == "back" and layer == "under":
+                    guide = np.zeros_like(guide)          # (seen from behind: clouds behind its whole area, the user)
+                    guide[12:gh - 4, 6:gw - 6] = True
+                    cols = np.where(guide.any(0))[0]
                 spots = []
                 x = cols[0] + (30 if layer == "under" else 20)
                 while x < cols[-1]:
                     rows = np.where(guide[:, min(gw - 1, int(x))])[0]
                     if len(rows):
                         top, bot = rows[0], rows[-1]
-                        y = rnd.uniform(top + (bot - top) * 0.35, top + (bot - top) * 0.7)
-                        spots.append((x, y))
+                        if view == "back" and layer == "under":
+                            for y in np.arange(top + 30, bot - 10, 44):      # (rows of them, filling it)
+                                spots.append((x + rnd.uniform(-8, 8), y + rnd.uniform(-6, 6)))
+                        else:
+                            y = rnd.uniform(top + (bot - top) * 0.35, top + (bot - top) * 0.7)
+                            spots.append((x, y))
                     x += rnd.uniform(48, 70) if layer == "under" else rnd.uniform(70, 110)
                 spots.sort(key=lambda p: p[1])           # (the higher ones behind)
                 for (x, y) in spots:
@@ -318,8 +326,65 @@ def platform():
     print("  platform, windsock")
 
 
+## The start runway (round 5: the designer's deck, no cloud, sat here on the drifting clouds like the stands): the
+## deck PLATFORM_W game px long, big clouds behind and under it, small puffs over its front edge, cut so the checkered
+## line's middle is the picture's middle (SkyDock draws it on the start line); "e" as painted (the plane flying right),
+## "w" mirrored (flying left: the user, one way or the other). The windsock's 4 frames on one shared canvas (the pole fixed)
+RUNWAY_SRC = SKY / "platform_sources"
+RUNWAY_LINE = (1029, 575)              # the checkered line's middle on the deck's painting (source px)
+PLATFORM_W = 104
+SOCK_FRAMES_H = 24                     # game px, the pole and all
+
+
+def runway():
+    import random
+    rnd = random.Random(7)
+    im = Image.open(RUNWAY_SRC / "runway_deck_source.png").convert("RGBA")
+    box = opaque_box(im)
+    k = (box[2] - box[0]) / PLATFORM_W
+    deck = pixelate(im.crop(box), (PLATFORM_W, round((box[3] - box[1]) / k)), 14)
+    dh, dw = deck.shape[:2]
+    lx = (RUNWAY_LINE[0] - box[0]) / k                    # the line in deck px
+    ly = (RUNWAY_LINE[1] - box[1]) / k
+    mx, mt, mb = 40, 22, 34                               # the clouds' room round the deck
+    cw, ch = dw + 2 * mx, dh + mt + mb
+    canvas = np.zeros((ch, cw, 4), np.uint8)
+    # behind and under it: big ones along it, lower than its middle (it sits on them), one at each end
+    for i in range(5):
+        x = mx + dw * (i + 0.5) / 5 + rnd.uniform(-8, 8)
+        paste(canvas, drift_cloud(rnd.choice(DRIFT), rnd.randint(70, 96)), x, mt + dh * 0.75 + rnd.uniform(-4, 10))
+    for x in (mx - 4, mx + dw + 4):
+        paste(canvas, drift_cloud(rnd.choice(DRIFT_SMALL), rnd.randint(50, 64)), x, mt + dh * 0.45)
+    dm = deck[..., 3] > 0
+    canvas[mt:mt + dh, mx:mx + dw][dm] = deck[dm]
+    # a few puffs over its front edge
+    for i in range(4):
+        x = mx + dw * (i + 0.5) / 4 + rnd.uniform(-10, 10)
+        paste(canvas, drift_cloud(rnd.choice(DRIFT_SMALL), rnd.randint(28, 40)), x, mt + dh + rnd.uniform(2, 8))
+    # cut so the line's middle is the middle
+    px, py = mx + lx, mt + ly
+    rx = int(np.ceil(max(px, cw - px)))
+    ry = int(np.ceil(max(py, ch - py)))
+    out = np.zeros((2 * ry, 2 * rx, 4), np.uint8)
+    ox, oy = int(round(rx - px)), int(round(ry - py))
+    out[oy:oy + ch, ox:ox + cw] = canvas
+    save("platform_e", out)
+    save("platform_w", out[:, ::-1].copy())
+    # the windsock: one box round all four frames, the same for each (the pole stays put)
+    frames = [Image.open(RUNWAY_SRC / f"windsock_{i}_source.png").convert("RGBA") for i in range(4)]
+    boxes = [opaque_box(f) for f in frames]
+    u = (min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes))
+    kh = (u[3] - u[1]) / SOCK_FRAMES_H
+    for i, f in enumerate(frames):
+        save(f"windsock_{i}", pixelate(f.crop(u), (round((u[2] - u[0]) / kh), SOCK_FRAMES_H), 10))
+    print("  runway, windsock")
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    if "--runway" in sys.argv:
+        runway()
+        return
     if "--platform" in sys.argv:
         platform()
         return

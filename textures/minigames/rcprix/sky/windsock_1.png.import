@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://qe5duy08w7un"
-path="res://.godot/imported/windsock.png-87596ad6c87b1675815d1d012fffae56.ctex"
+uid="uid://bla8443fnmx6w"
+path="res://.godot/imported/windsock_1.png-4d39c0ae19f89cf5e096f25687def270.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/minigames/rcprix/sky/windsock.png"
-dest_files=["res://.godot/imported/windsock.png-87596ad6c87b1675815d1d012fffae56.ctex"]
+source_file="res://textures/minigames/rcprix/sky/windsock_1.png"
+dest_files=["res://.godot/imported/windsock_1.png-4d39c0ae19f89cf5e096f25687def270.ctex"]
 
 [params]
 

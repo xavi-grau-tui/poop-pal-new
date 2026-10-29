@@ -1837,13 +1837,14 @@ class SkyDock extends Node2D:
 			# the cloud runway, its checkered line on the start line; an orange windsock on its far corner, swaying
 			var ps := plat.get_size() * px
 			draw_texture_rect(plat, Rect2((_line_at - ps * 0.5).round(), ps), false)
-			var sock := RcSky.tex("windsock")
+			# the orange windsock on the deck's back corner the plane starts from, flapping (the designer's 4 frames;
+			# mirrored with the deck for a race going left)
+			var left := _plat == "w"
+			var sock := RcSky.tex("windsock_%d" % (int(t * 6.0) % 4), left)
 			if sock:
-				var foot := (_line_at + Vector2(ps.x * 0.34, -ps.y * 0.28)).round()
 				var ss := sock.get_size() * px
-				draw_set_transform(foot, sin(t * 2.2) * 0.06, Vector2.ONE)
-				draw_texture_rect(sock, Rect2(Vector2(-ss.x * 0.15, -ss.y), ss), false)
-				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+				var foot := _line_at + RcSky.SOCK_FOOT * px * Vector2(-1.0 if left else 1.0, 1.0)
+				draw_texture_rect(sock, Rect2((foot - Vector2(ss.x - 3.0 * px if left else 3.0 * px, ss.y)).round(), ss), false)
 			return
 		var put := func(name: String, centre: Vector2, fx := false, fy := false) -> void:
 			var tx := RcSky.tex(name, fx, fy)
