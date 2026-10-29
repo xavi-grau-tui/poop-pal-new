@@ -198,8 +198,79 @@ def sky_things():
     print("  clouds, balloons")
 
 
+## The stands' clouds made from the drifting clouds' paintings (the user: those are nicer): for each view and length,
+## big drifting clouds overlapped where the bank goes (where round 2's painted bank was: its picture is the guide,
+## stand_cloud_<view>_under_<long>), back ones first; then a few small ones over the stand's feet (where round 2's
+## foreground puffs were)
+DRIFT = ["large_a", "large_b", "medium_a", "medium_b"]
+DRIFT_SMALL = ["small_a", "small_b", "medium_a", "medium_b"]
+_drift_cache = {}
+
+
+def drift_cloud(name, w):
+    key = (name, w)
+    if key not in _drift_cache:
+        im = Image.open(SKY / f"cloud_sources/cloud_{name}_source.png").convert("RGBA")
+        im = im.crop(opaque_box(im))
+        _drift_cache[key] = pixelate(im, (w, round(im.height * w / im.width)), 8)
+    return _drift_cache[key]
+
+
+def paste(canvas, a, cx, cy):
+    """`a` blended on `canvas` centred on (cx, cy), moved inside it (never cut)"""
+    ch, cw = canvas.shape[:2]
+    h, w = a.shape[:2]
+    x0 = int(round(min(max(cx - w / 2, 0), cw - w)))
+    y0 = int(round(min(max(cy - h / 2, 0), ch - h)))
+    m = a[..., 3] > 0
+    canvas[y0:y0 + h, x0:x0 + w][m] = a[m]
+
+
+def stand_clouds_from_drift():
+    import random
+    for view in ("front", "back", "side_l", "side_r"):
+        along_x = view in ("front", "back")
+        for long in LONGS:
+            rnd = random.Random(hash((view, long)) & 0xffff)
+            for layer in ("under", "over"):
+                guide = np.array(Image.open(OUT / f"stand_cloud_{view}_{layer}_{long}.png").convert("RGBA"))[..., 3] > 0
+                if not along_x:
+                    guide = guide.T                       # (worked on as if along x, turned back at the end)
+                gh, gw = guide.shape
+                canvas = np.zeros((gh, gw, 4), np.uint8)
+                cols = np.where(guide.any(0))[0]
+                if len(cols) == 0:
+                    continue
+                spots = []
+                x = cols[0] + (30 if layer == "under" else 20)
+                while x < cols[-1]:
+                    rows = np.where(guide[:, min(gw - 1, int(x))])[0]
+                    if len(rows):
+                        top, bot = rows[0], rows[-1]
+                        y = rnd.uniform(top + (bot - top) * 0.35, top + (bot - top) * 0.7)
+                        spots.append((x, y))
+                    x += rnd.uniform(48, 70) if layer == "under" else rnd.uniform(70, 110)
+                spots.sort(key=lambda p: p[1])           # (the higher ones behind)
+                for (x, y) in spots:
+                    if layer == "under":
+                        name, w = rnd.choice(DRIFT), rnd.randint(90, 130)
+                    else:
+                        name, w = rnd.choice(DRIFT_SMALL), rnd.randint(36, 56)
+                    a = drift_cloud(name, w)
+                    if rnd.random() < 0.5:
+                        a = a[:, ::-1].copy()
+                    paste(canvas, a, x, y)
+                if not along_x:
+                    canvas = canvas.transpose(1, 0, 2).copy()
+                save(f"stand_cloud_{view}_{layer}_{long}", canvas)
+    print("  stand clouds from the drifting clouds")
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    if "--stand-drift" in sys.argv:
+        stand_clouds_from_drift()
+        return
     if "--things" in sys.argv:
         sky_things()
         return
