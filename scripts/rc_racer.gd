@@ -1840,11 +1840,12 @@ class SkyDock extends Node2D:
 			# the orange windsock on the deck's back corner the plane starts from, flapping (the designer's 4 frames;
 			# mirrored with the deck for a race going left)
 			var left := _plat == "w"
-			var sock := RcSky.tex("windsock_%d" % (int(t * 14.0) % 4), left)   # (fast: slow it looked like a bad gif, the user)
+			# (blown the other way from the painting's, the user: away from where the plane flies)
+			var sock := RcSky.tex("windsock_%d" % (int(t * 14.0) % 4), not left)   # (fast: slow it looked like a bad gif, the user)
 			if sock:
 				var ss := sock.get_size() * px
 				var foot := _line_at + RcSky.SOCK_FOOT * px * Vector2(-1.0 if left else 1.0, 1.0)
-				draw_texture_rect(sock, Rect2((foot - Vector2(ss.x - 3.0 * px if left else 3.0 * px, ss.y)).round(), ss), false)
+				draw_texture_rect(sock, Rect2((foot - Vector2(3.0 * px if left else ss.x - 3.0 * px, ss.y)).round(), ss), false)
 			return
 		var put := func(name: String, centre: Vector2, fx := false, fy := false) -> void:
 			var tx := RcSky.tex(name, fx, fy)
@@ -1894,7 +1895,7 @@ func _sky_clouds_start() -> void:
 		var a := Rect2(Vector2.ZERO, f * mat_size + (1.0 - f) * view)
 		var n := int(a.get_area() / (CLOUD_EVERY[i] * CLOUD_EVERY[i])) + 2
 		var layer: SkyClouds = [_clouds_low, _clouds_high][i]
-		layer.setup(RcSky.CLOUDS_LOW if i == 0 else RcSky.CLOUDS_HIGH, a, n, CLOUD_WIND * (1.0 + 0.4 * i), course_seed * 17 + i, RcSky.ART_PX, Color(1, 1, 1, CLOUD_ALPHA[i]))
+		layer.setup(RcSky.CLOUDS_LOW if i == 0 else RcSky.CLOUDS_HIGH, a, n, CLOUD_WIND * (1.0 + 0.4 * i), course_seed * 17 + i, RcSky.ART_PX * CLOUD_SIZE[i], Color(1, 1, 1, CLOUD_ALPHA[i]))
 		layer.visible = true
 	var ga := Rect2(Vector2.ZERO, Vector2(_sky_ground * 2))
 	_cloud_shadows.setup(RcSky.CLOUDS_LOW, ga, int(ga.get_area() / (360.0 * 360.0)) + 2, CLOUD_WIND / RcSky.ART_PX, course_seed * 17 + 5, 1.0, CLOUD_SHADOW)
@@ -3991,6 +3992,7 @@ var _clouds_low: SkyClouds             # ...the designer's clouds drifting betwe
 var _clouds_high: SkyClouds            # the small ones higher (nearer: faster past, a little less see-through)
 var _cloud_shadows: SkyClouds          # ...and their shadows on the fields (on the board)
 const CLOUD_DEPTH := [0.72, 0.86]      # their parallax (the ground's is PARALLAX)
+const CLOUD_SIZE := [1.0, 1.1]        # (the nearer row 10% bigger, the user)
 const CLOUD_ALPHA := [0.75, 0.75]      # (the user: nearly transparent, then "less transparent", then 75%)
 const CLOUD_SHADOW := Color(0.45, 0.52, 0.62, 0.1)   # (paler: merging with the hazy ground, the user)
 const CLOUD_WIND := Vector2(14, 5)     # world px/s

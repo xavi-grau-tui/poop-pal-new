@@ -234,50 +234,34 @@ def paste(canvas, a, cx, cy):
 
 
 def stand_clouds_from_drift():
+    """(the user, 2026-10-29: past the stand a little on every edge; along its south edge, the screen's bottom, a row
+    of puffs over the stand's foot for depth, like the runway's)"""
     import random
+    m = MARGIN
     for view in ("front", "back", "side_l", "side_r"):
         along_x = view in ("front", "back")
         for long in LONGS:
             rnd = random.Random(hash((view, long)) & 0xffff)
-            for layer in ("under", "over"):
-                guide = np.array(Image.open(OUT / f"stand_cloud_{view}_{layer}_{long}.png").convert("RGBA"))[..., 3] > 0
-                if not along_x:
-                    guide = guide.T                       # (worked on as if along x, turned back at the end)
-                gh, gw = guide.shape
-                canvas = np.zeros((gh, gw, 4), np.uint8)
-                cols = np.where(guide.any(0))[0]
-                if len(cols) == 0:
-                    continue
-                if view == "back" and layer == "under":
-                    guide = np.zeros_like(guide)          # (seen from behind: clouds behind its whole area, the user)
-                    guide[12:gh - 4, 6:gw - 6] = True
-                    cols = np.where(guide.any(0))[0]
-                spots = []
-                x = cols[0] + (30 if layer == "under" else 20)
-                while x < cols[-1]:
-                    rows = np.where(guide[:, min(gw - 1, int(x))])[0]
-                    if len(rows):
-                        top, bot = rows[0], rows[-1]
-                        if view == "back" and layer == "under":
-                            for y in np.arange(top + 30, bot - 10, 44):      # (rows of them, filling it)
-                                spots.append((x + rnd.uniform(-8, 8), y + rnd.uniform(-6, 6)))
-                        else:
-                            y = rnd.uniform(top + (bot - top) * 0.35, top + (bot - top) * 0.7)
-                            spots.append((x, y))
-                    x += rnd.uniform(48, 70) if layer == "under" else rnd.uniform(70, 110)
-                spots.sort(key=lambda p: p[1])           # (the higher ones behind)
-                for (x, y) in spots:
-                    if layer == "under":
-                        name, w = rnd.choice(DRIFT), rnd.randint(90, 130)
-                    else:
-                        name, w = rnd.choice(DRIFT_SMALL), rnd.randint(36, 56)
-                    a = drift_cloud(name, w)
-                    if rnd.random() < 0.5:
-                        a = a[:, ::-1].copy()
-                    paste(canvas, a, x, y)
-                if not along_x:
-                    canvas = canvas.transpose(1, 0, 2).copy()
-                save(f"stand_cloud_{view}_{layer}_{long}", canvas)
+            W, H = (long + 2 * m, DEEP + 2 * m) if along_x else (DEEP + 2 * m, long + 2 * m)
+            # under: big ones over the whole canvas (the stand and the margin round it), the higher ones behind
+            under = np.zeros((H, W, 4), np.uint8)
+            spots = []
+            for y in np.arange(26, H - 18, 40):
+                for x in np.arange(30, W - 20, 58):
+                    spots.append((x + rnd.uniform(-10, 10), y + rnd.uniform(-6, 6)))
+            spots.sort(key=lambda p: p[1])
+            for (x, y) in spots:
+                a = drift_cloud(rnd.choice(DRIFT), rnd.randint(90, 130))
+                paste(under, a[:, ::-1].copy() if rnd.random() < 0.5 else a, x, y)
+            save(f"stand_cloud_{view}_under_{long}", under)
+            # over: a row of puffs along the south edge, their tops over the stand's foot
+            over = np.zeros((H, W, 4), np.uint8)
+            x = m + rnd.uniform(0, 14)
+            while x < W - m:
+                a = drift_cloud(rnd.choice(DRIFT_SMALL), rnd.randint(44, 64))
+                paste(over, a[:, ::-1].copy() if rnd.random() < 0.5 else a, x, H - m - 4 + rnd.uniform(-3, 3))
+                x += rnd.uniform(38, 52)
+            save(f"stand_cloud_{view}_over_{long}", over)
     print("  stand clouds from the drifting clouds")
 
 
@@ -332,8 +316,8 @@ def platform():
 ## "w" mirrored (flying left: the user, one way or the other). The windsock's 4 frames on one shared canvas (the pole fixed)
 RUNWAY_SRC = SKY / "platform_sources"
 RUNWAY_LINE = (1029, 575)              # the checkered line's middle on the deck's painting (source px)
-PLATFORM_W = 104
-PLATFORM_H = 100                       # (the former pad's size, the user: 94 deep on top plus its front face)
+PLATFORM_W = 114                       # (10% over the former pad: the user)
+PLATFORM_H = 110                       # (the former pad's size and 10%, the user: 94 deep on top plus its front face)
 SOCK_FRAMES_H = 24                     # game px, the pole and all
 
 
