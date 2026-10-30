@@ -75,9 +75,11 @@ light, playful and visually intuitive: icons over text, learn by doing. Asia fir
 ## Open questions & pending (one list; keep it updated, details in the sections below)
 
 - **Yokai migration** (branch `yokai-migration`, docs/yokai_migration.md): the shrine, feeding,
-  drinks and the boost aura are built. Next: shrine decor (hanging, pairs on the slab, colours) and
-  backgrounds (sky colour, cloud types and seasonal elements). No merge to main until those work in
-  the shrine. The gut is kept, not deleted.
+  drinks and the boost aura are built. 2026-10-30: the hokora's progression is BUILT in code and
+  data (docs/progression.md 4b, 5b, 7b: Home Decor's four slots and the sky's two, every piece's
+  source, the 3-6-9 secrets rhythm, the Shop's HOME stall, the dev launcher's HOME switch) and the
+  designer has the art list (docs/kami_collection_art.md, P1 first). The decisions to confirm on
+  the phone are in progression.md section 8 (TO REVIEW). The gut is kept, not deleted (HOME: GUT).
   Later (definitely): late-game homes (cyber shrine, capsule apartment, moon shrine, golden
   temple...). Focus now: no new components; finish the plan and polish the look (the menu slides,
   the device).

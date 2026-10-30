@@ -6,6 +6,14 @@ and when a player gets what. Everything else is built on it, bit by bit. Once co
 "Progression v2", "round 2" and "Progression framework" in ideas_roadmap.md where they differ
 (those keep their reasoning).
 
+**2026-10-30, the hokora (yokai migration).** The spirit now lives in a hokora, not a gut. Sections
+1, 4, 5, 5b, 6, 7 and 8 are rewritten for it: the home's four decor slots and the sky's two, where
+every piece comes from (each game a festival stall with its own prizes), the 3-6-9 rhythm that gives
+every drink somewhere to go, the Shop's HOME stall, and what's built now. BUILT on
+`yokai-migration` (code and data, the art still to come: docs/kami_collection_art.md is the list for
+the designer). The gut's own catalogue is kept untouched as the classic (the dev launcher's HOME:
+GUT). What changed from earlier decisions is flagged in section 8 (TO REVIEW).
+
 Every number here comes from the pacing model, `tools/design/pacing.py` (v3): a fixed player
 model, no dice, the real evolution tree. Its player numbers (minutes per try, fail rates, stars on
 a first clear) are ASSUMED until measured on the phone. Rerun it after any change:
@@ -13,19 +21,23 @@ a first clear) are ASSUMED until measured on the phone. Rerun it after any chang
 
 ## 1. The game in one picture
 
-Four things, one job each. Nothing else to learn.
+Four things, one job each, and the home that shows them. Nothing else to learn.
 
 | Thing  | Job                          | Comes from                          | Goes to                                     |
 |--------|------------------------------|-------------------------------------|---------------------------------------------|
 | Stars  | skill (1-3 per level)        | playing a level well                | coins (each new star = 1) · gift tracks     |
-| Coins  | choice                       | new stars (+2 a day)                | games · food packs · special foods · drink levels · stickers and cases |
-| Pals   | the long goal (time + choice)| meals: what you feed decides who    | the Pal Pedia (120 today, more to come)     |
+| Coins  | choice                       | new stars (+2 a day), small secrets | games · food packs · special foods · drink levels · the HOME stall · stickers and cases |
+| Spirits| the long goal (time + choice)| offerings: what you feed decides who| the Tomopedia (120 today, more to come)     |
 | Boosts | the bridge pet -> games      | drinks (one every 15 min)           | an assist in a game · the key to its secrets|
+| Home   | the reward you SEE every visit | gift tracks, secrets, Tomopedia milestones, Lucky Pinch, the stall | the hokora (lanterns, hanging, shelf, colours) and its sky (colours, drift) |
 
-Two clocks on the LCD: the MEAL clock paces the pals, the DRINK clock paces the boosts. Skill pays
-for what the pal needs; time and choice decide who the pal becomes; the pal's drinks open the
-games' secrets, which hold the special foods the rarest pals need. Cosmetics are gifts (gift
-tracks, Pal Pedia milestones, Lucky Pinch, secrets), never the point of a coin.
+Two clocks on the LCD: the MEAL clock paces the spirits, the DRINK clock paces the boosts. Skill
+pays for what the spirit needs; time and choice decide who it becomes; its drinks open the games'
+secrets, which hold the special foods the rarest spirits need and the hokora's best pieces. The
+home is where all of it shows: a player opens the app and sees how far they've come (the lanterns
+from Splash Hoops, the shimenawa from Paper Sumo, the moss roof from the Mountain spirits). Its
+pieces are mostly gifts (gift tracks, Tomopedia milestones, Lucky Pinch, secrets); the Shop's HOME
+stall sells only a few plain ones.
 
 What is NOT in the game, and why:
 - Points / score: they mean nothing across games and nobody plans around them. Each game shows its
@@ -305,10 +317,44 @@ The gate shows the drink type and level it needs: worlds 1-2 = level 1, 3-4 = le
 level 3. Prizes: special foods (table above), stickers, accessories, backgrounds, gut decor,
 cases (see 5b). 25 secrets + Tilt Maze's 12 = 37.
 
+### 4b. Why drink? The 3-6-9 rhythm (2026-10-30, BUILT; TO REVIEW on the phone)
+The problem (the user): one secret per world is too rare for a drink every 15 minutes to matter;
+most drinks wait unused. The answer: every world has the same three beats, so there is always a
+gate near you that wants the drink you have, and the home shows what the drinks bought.
+
+| Level | What it holds                                             | Needs       | Its prize                       |
+|-------|-----------------------------------------------------------|-------------|---------------------------------|
+| 3     | a SMALL secret: a pickup on the course (a golden hoop, a gift off the road) | a drink (the world's gate level) | coins (5-10) or a sticker for the case |
+| 6     | the world's SECRET (as before)                            | a drink     | a piece for the hokora, a special food, a dress-up |
+| 9     | the FINALE (as before)                                    | skill       | a case, a legendary food, a sticker |
+
+- Small secrets are in the games whose secret is a pickup you can ignore: Splash Hoops, RC Prix
+  and RC Prix 2177 (6 each, worlds 1-6). Tilt Maze already has 3 vaults a world. Paper Sumo's and
+  Top Spin's secrets are part of the match (a mystery challenger, the golden top), so they keep one
+  a world: adding them to level 3 would change those matches (to design, if wanted).
+- Secrets now: Splash Hoops 11, RC Prix 11, RC Prix 2177 11, Tilt Maze 18 (15 gated), Paper Sumo 5,
+  Top Spin 5 = 61 (43 before), 58 of them behind a drink.
+- The world-1 small secrets want FIZZY, the 2nd game's drink: in the first minutes a player sees a
+  golden hoop in Splash Hoops 1-3 they can't reach yet ("only fizzy jets reach it!"), a reason to buy
+  Tilt Maze and to come back with a fizzy drink.
+- A taken secret's spot stays empty (as now); the level menu already marks a level's gate.
+
+What a boost means stays one word everywhere (Splash a second chance, Fizz power, Focus time, Sturdy
+weight, Lucky finding) and it still stays until it fires. To make choosing a drink a decision you
+can SEE (NEXT, not built): the drink menu's cards show how many open gates each drink has ("3
+gates"); the Games menu's card shows a little gate badge when your boost opens something in that
+game; the level menu lights the levels your boost opens. Each is a few lines on top of
+`BaseMinigame.secrets()` and `gate_open()`.
+
+Still to do from section 4's table (each game decides): the boosts with no use yet in a game
+(Splash Hoops' Focus and Sturdy, Paper Sumo's Fizz and Lucky, Top Spin's Lucky) get an assist, so a
+drink is never useless in any game.
+
 ## 5. Coins: in and out
 In: each new star = 1 coin (972) · the pal's daily request +2 (a day you play) · Lucky Pinch coin
 capsules once its items are won · a spare special food (one that can't make a new pal any more)
-turns into its price. A regular earns ~1270 in four months, most of it in the first month.
+turns into its price · the small secrets (5-10 coins, 2026-10-30). A regular earns ~1285 in four
+months, most of it in the first month.
 
 | Out            | What                                                     | Coins       |
 |----------------|----------------------------------------------------------|-------------|
@@ -316,35 +362,130 @@ turns into its price. A regular earns ~1270 in four months, most of it in the fi
 | Food packs     | 2 Sho x 10 · 3 Chu x 15 · 4 Dai x 20 (as built)          | 145         |
 | Drink levels   | per type: level 2 = 10, level 3 = 20                     | 100-150     |
 | Special foods  | tech / cosmic 15 (several come free) · legendary 40 (if not won) | ~60-260 |
+| HOME stall     | (the hokora) 12 plain pieces: lanterns 20, a noren / fairy lights 25, candles 15, stone lanterns / bonsai 30, skies 20, wood colours 40 | 305 |
 | Device         | pal stickers (~5 each) and plain cases (~40); themed ones are only won | open |
+
+Prices are unchanged (games, packs, drink levels, specials): the model (`pacing.py`, 2026-10-30)
+still passes every check, and the dates of the games, the packs and the Tomopedia don't move. The
+HOME stall is a late sink, cheap enough to buy a lantern on a whim: a regular now ends four months
+with ~155 coins spare instead of ~330 (casual ~40, keen ~225); the most coins saved in the first
+month stays ~100.
 
 What a regular buys, in order (model): Tilt Maze 3 min · Pal Prix 17 min · Paper Sumo 44 min ·
 Top Spin day 2 · the first Battery day 3 · the first food pack day 3 · drink levels days 4-10 ·
 Tummy Tunes day ~16 · the last packs day ~19 · then stickers and cases. Coins never pile up in the
 first month (at most ~100, saving for the last game).
 
-## 5b. Collectables and the Shop (DECIDED direction 2026-10-16; the catalogue is built in the games)
-One rule: what your PAL wears or lives in (dress, gut decor, backgrounds) is only ever WON; the
-DEVICE's own extras (stickers, cases) can be won or bought. Coins stay for things that change what
-you can do; a gift always comes from somewhere (a game, a secret, a milestone).
+## 5b. The collection in the hokora (2026-10-30, BUILT in code and data; the art to come)
+The data lives in `scripts/hokora_catalog.gd` (every piece, its source, its art's file) and
+`scripts/collection.gd` (what you own and use); the art list for the designer is
+docs/kami_collection_art.md. Before 2026-10-30 this section described the gut's catalogue: that one
+is kept as it was (collection.gd's DECOR / BACKGROUNDS / REWARDS) and comes back with HOME: GUT.
 
-| Kind                         | Won from                                                     | In the Shop |
-|------------------------------|--------------------------------------------------------------|-------------|
-| Accessories (dress)          | each game's gift track (30 stars) · Pal Pedia milestones · Lucky Pinch · secrets (e.g. Tilt Maze's world accessories: snorkel, headlamp, hard hat, space helmet) | never |
-| Gut decor (colour + add-on)  | gift tracks (15 and 60 stars) · Lucky Pinch · secrets        | never       |
-| Backgrounds (sky + scene)    | gift tracks (5 and 100 stars) · Pal Pedia milestones · secrets | never     |
-| Stickers                     | secrets (themed, rare) · Lucky Pinch · Tilt Maze's vaults (your own pals') | a sticker of every pal you've found, ~5 each (grows with the Pal Pedia) |
-| Cases                        | simple to fancy (the user, 2026-10-17): the first one plain and early (Taro: Splash Hoops 1-5, or with your first sticker) · Melon Soda (100 stars in all) · each game's own fancy case in its masters' world (6-9) | a print each (sakura, lemon, sky, cocoa), 40 |
-| Foods                        | special foods in secrets and finales                         | food packs · special foods (the daily shelf) · drink levels |
+### The rule
+- What your SPIRIT wears (dress-ups) is only ever won: each one a memory of where it came from.
+- Its HOME's themed pieces are won too (a game's festival prizes, a secret's, a Tomopedia
+  milestone's, a realm's colour, Lucky Pinch). CHANGED (was: never sold): the Shop's HOME stall
+  sells 12 plain pieces (white or indigo lanterns, a noren, fairy lights, candles, stone lanterns, a
+  bonsai, three skies, two wood colours), so coins have a use after the last game and a player who
+  plays less can still make the hokora theirs. A real shrine has its stall too (the juyosho).
+- The DEVICE's extras (stickers, cases) can be won or bought, as before.
+- Each game is a festival stall at the shrine (the yokai plan's framing), so its gifts are
+  that stall's prizes: goldfish from the water game, glass beads from the marble maze, racing
+  pennants and ema for the races, origami and the yokozuna's rope from the paper ring, pinwheels
+  and koma from the tops.
 
-- Counts: 36 gift-track items (6 games x 6: one more step, 150 stars, for the 6th world) · Pal
-  Pedia milestones every 10 pals (12+, more as pals are added) · Lucky Pinch's exclusives · the
-  secrets' prizes (37 secrets: 7 special foods, the rest cosmetics, so a secret is never "just
-  another sticker").
-- Shop sections and when they open: FOOD & DRINKS from the start · STICKERS once the first sticker
-  is won · CASES once the first case arrives (the gift).
-- Late-game coins go into pal stickers and plain cases: that's the sink after the last game and
-  pack, matching the surplus the model shows from week 3.
+### The slots: Home Decor (four) and Backgrounds (two)
+| Slot      | Where                                   | Default          | Off = | Art (each new piece)              |
+|-----------|-----------------------------------------|------------------|-------|-----------------------------------|
+| Lanterns  | the pair under the eaves, swinging with the tilt, a candle glow (stronger at night) | Red Lanterns | the red ones | one lantern (108 x 176), the left one is the same |
+| Hanging   | across the front beam, over the front   | nothing          | nothing | a 925 x 925 overlay on the front, 2 frames of a sway |
+| Shelf     | a pair on the stone slab, either side of the offering stand, at the ornaments' depth | nothing | nothing | a 925 x 924 overlay on the slab, both pieces in place |
+| Colours   | the wood and the roof (the stone base and the moss kept) | Weathered Cedar | cedar | none: a shader recolours by material |
+| Sky       | the sky's colour at dawn / day / dusk / night (the real clock moves it, as before) | Shrine Pink | pink | none: 3 colours |
+| Clouds    | what drifts across the sky: the cloud layers, or particles over them | Clouds | clouds | layers (as the gut's) or tiny sprites |
+
+In the menu the hokora's Home Decor and Backgrounds lists come in sections, like the Tomopedia's
+families: FORWARD = the next slot, tap = the next piece (on through the slot's pages), hold = put it
+on; picking the one in use takes it off. A piece with no art yet says "Art soon" and shows nothing
+in the hokora (a lantern shows the red one recoloured; colours, skies and particle drifts need no
+art). The time of day is never an item: every sky has its own night.
+
+### Every piece and where it comes from (83, plus "Nothing" in Hanging and Shelf; * = needs its art)
+Lanterns (12): Red (default) · Goldfish* (Splash Hoops 5 stars) · White*, Indigo* (stall 20) ·
+Festival* (Top Spin 3-6) · Jellyfish* (Splash Hoops 6-6) · Moon Rabbit* (Paper Sumo 4-6, the Moon
+Base) · Hozuki* (30 spirits) · Fox-fire* (70 spirits) · Daruma* (Lucky Pinch) · Neon* (RC Prix 2177
+5 stars) · Gold* (100 spirits). Until drawn: the red lantern recoloured, each with its own glow.
+
+Hanging (15): Wind Chimes (Splash Hoops 15) · Glass Beads (Tilt Maze 15) · Racing Pennants (RC
+Prix 15) · Shimenawa (Paper Sumo 15: the yokozuna's rope) · Pinwheels (Top Spin 15) · Shell Chimes
+(Splash Hoops 2-6) · Teru-teru Bozu (Splash Hoops 5-6, the Storm) · Glow Spores (Tilt Maze 3-8, the
+moss garden) · Cog Garland (Tilt Maze 5-6, the Factory) · Carp Streamers (RC Prix 5-6, the Reef) ·
+Thousand Cranes (40 spirits) · LED Strip (RC Prix 2177 15) · Festival Flags (Lucky Pinch) · Noren
+Curtain, Fairy Lights (stall 25). All need art.
+
+Shelf (15): Goldfish Bowls (Splash Hoops 60) · Puzzle Boxes (Tilt Maze 60) · Ema Plaques (RC Prix
+60: wishes for the race) · Origami Cranes (Paper Sumo 60) · Koma Tops (Top Spin 60) · Kappa Statues
+(Tilt Maze 4-6, the kappa's canal) · Sakaki Vases (20 spirits) · Fox Statues (50 spirits) · Komainu
+(80 spirits) · Moon-viewing Set (110 spirits) · Maneki-neko (Lucky Pinch) · Neon Lucky Cats (RC Prix
+2177 60) · Candles 15, Stone Lanterns 30, Bonsai 30 (stall). All need art.
+
+Colours (10): Weathered Cedar (default) · a realm's colour when 10 of its spirits are found: Moss
+(Mountain) · Vermilion (Fox) · Black Lacquer (Fire) · Copper Roof (River) · Moon White (Moon) ·
+Sakura Wood (Lucky Pinch) · White-washed, Indigo (stall 40) · Gold Leaf (all 120 spirits: the
+endgame hokora). No art: `shaders/hokora_colour.gdshader` moves each material's hue, saturation
+and value (the presets in hokora_catalog.gd; the designer may suggest better ones).
+
+Sky (14): Shrine Pink (default) · Lagoon (Splash Hoops 100) · Mint (Tilt Maze 100) · Peach (RC Prix
+100) · Teal (Paper Sumo 100) · Summer Blue (Top Spin 100) · Golden Hour (RC Prix 6-6, the Grand
+Prix's sunset) · Aurora (RC Prix 2177 4-6, the Ice Fjord) · Neon Dusk (RC Prix 2177 100) · Red Moon
+(90 spirits) · Lilac (Lucky Pinch) · Amber, Silver, Sakura (stall 20). No art: day / dusk / night
+colours.
+
+Clouds (17): Clouds (default) · Marbles (Tilt Maze 5) · Balloons (RC Prix 5) · Paper Cranes (Paper
+Sumo 5) · Spinning Tops (Top Spin 5) · Bubbles (Lucky Pinch) · Starfield (Tilt Maze 6-6): the gut's
+layers, shared · the four SEASONS, all from Paper Sumo's places: Cherry Petals (2-6, the spring koi
+pond), Maple Leaves (3-6, the autumn stream), Fireflies (5-6, the summer forest, glowing at night),
+Snow (6-6, the winter shrine festival); owning all four brings Seasons, which follows the real
+calendar (the southern half of the world the other way round) · Sky Goldfish (Splash Hoops 3-6) ·
+Sky Lanterns (Splash Hoops 4-6, the Night Lights) · Fireworks (RC Prix 4-6, the Night Race: night
+only) · Spirit Wisps (60 spirits) · Cloud Dragon* (Top Spin 6-6, the Dragon Festival). The particles
+are drawn by `scripts/sky_drift.gd` until the designer's sprites replace them; the dragon needs its
+drawing.
+
+### Where the gifts come from, by source
+| Source | What |
+|--------|------|
+| Each game's gift track (its stars: 5 · 15 · 30 · 60 · 100 · 150) | a drift or the first lanterns · a hanging piece · a dress-up · a shelf pair · a sky · the gold sticker. RC Prix 2177's: neon lanterns, LED strip, neon cats, Neon Dusk (its dress-up and sticker wait for art) |
+| A world's secret (6th level) | the hokora's best themed pieces, the four seasons, special foods, dress-ups (section 4b) |
+| A world's small secret (3rd level) | coins, a sticker for the case |
+| Finales (9th, first clear) | cases, legendary foods; Paper Sumo also gives the wind-up key (1-9), the koi (2-9), the topknot (3-9) and the kabuto (5-8), Top Spin the dragon sticker (6-8) |
+| The Tomopedia | every 10 spirits a grand piece (20 Sakaki Vases ... 120 Gold Leaf); 10 spirits of a realm: its colour |
+| Lucky Pinch | 8 exclusives: Scarf, Headphones, Bubbles, Lilac, Daruma Lanterns, Festival Flags, Maneki-neko, Sakura Wood |
+| The Shop | the HOME stall (12 plain pieces), pal stickers, plain cases |
+
+A piece that replaced a gut piece as a prize brings the gut's twin with it (hokora_catalog.gd
+GUT_TWIN), and both reward lists are given whichever home you play in, so the gut stays complete.
+
+### Dress-ups, cases, stickers (unchanged in code; planned additions wait for their art)
+- Dress-ups (14 now, all kept: the games' hats are their stalls' prizes). Planned for the spirits,
+  once the spirit designs are final (every dress-up is fitted to every spirit by script): a
+  kitsune mask worn on the side, a paper charm (ofuda) on the forehead, a straw hat (sugegasa), a
+  flower hairpin (kanzashi), a bell collar (suzu), oni horns, a cyber visor (RC Prix 2177 30
+  stars), a taiko headband (Tomo Tunes). Sources in docs/kami_collection_art.md.
+- Cases (11 now). Planned: Torii (vermilion lacquer, 250 stars in all), Matsuri (indigo with
+  lanterns, 500 stars), Gold Leaf (every star), Turbo (RC Prix 2177 6-9, replacing its 60 coins),
+  Washi and Seigaiha prints (the Shop, 40), Taiko (Tomo Tunes 6-9), and the realistic Classic skin
+  (the user's idea: the smooth console back + front buttons).
+- Stickers (18 themed + 30 pal stickers). Planned: a SHRINE page in the sticker book (a 7th tab):
+  omamori, ema, daruma, maneki-neko, torii, kitsune mask, furin, ramune, konpeito, taiyaki,
+  koinobori, hanabi, for the small secrets once they exist (they give coins and pal stickers until
+  then), plus RC Prix 2177's gold rocket.
+
+### Shop sections and when they open
+FOOD & DRINKS from the start · HOME once the first home piece is yours (Splash Hoops' 5 stars: the
+goldfish lanterns, ~minute 3) · STICKERS once the first sticker is won · CASES once the first case
+arrives (the gift). In the gut the HOME section doesn't exist.
 
 ## 5c. Rankings (later, if the game takes off)
 Points are gone, but rankings are still possible and fairer without them: per-level BEST TIMES
@@ -393,6 +534,23 @@ secret (a fizzy fence) · 17 buy Pal Prix (+ Caffeinated) · 20-36 Pal Prix's gi
 42 Tilt Maze world 2 · 44 buy Paper Sumo (+ Milky) · 46 flush, the second Sho; Lucky Pinch ·
 50 its Chu · 60 its Dai. 24 new things in the first hour, never more than 5 min apart.
 
+### The hokora over time (regular player, from the model's dates; 2026-10-30)
+- Minute 0-1: an empty hokora with a wisp wandering in its room (the waiting sign); the first
+  offering, the first spirit. A golden hoop in Splash Hoops 1-3 that only a fizzy pal reaches.
+- Minute ~3: the first piece, big and on the main screen: Goldfish Lanterns (Splash Hoops' 5
+  stars). The HOME stall opens. Tilt Maze's 5 stars: Marbles drift in the sky.
+- Minutes 6-20: Wind Chimes, Glass Beads (the 15-star gifts), RC Prix's Balloons; the first drink
+  (~15 min) opens the first small secret (coins) or Tilt Maze's fence.
+- Hour 1-2: the 30-star dress-ups; Paper Sumo's Paper Cranes and its Shimenawa.
+- Days 2-3: the 60-star shelf pairs (Goldfish Bowls, Puzzle Boxes, Ema), the Sakaki Vases (20
+  spirits), the first realm colour (Moss: 10 Mountain spirits, the starting foods' realm), the
+  world-2 secrets (Shell Chimes, Cherry Petals).
+- Week 1: the 100-star skies, Hozuki Lanterns (30 spirits), the other realm colours as the food
+  packs open the realms, the first seasons.
+- Weeks 2-4: the late secrets (Jellyfish Lanterns, Fireworks, Teru-teru Bozu, Snow, the Cloud
+  Dragon), Fox Statues, Spirit Wisps, Fox-fire Lanterns, Komainu, Red Moon; the 150-star gold
+  stickers; at 120 spirits the Gold Leaf hokora. Coins left over go to the stall.
+
 ### A session (a 10-15 min visit, after the first week)
 Open: the pal is hungry (the face, the notification) -> feed: pick the path through the known
 pals to a sparkle -> a NEW pal (30 min to the next meal) -> drink: the type of a gate you've seen
@@ -427,6 +585,30 @@ The user asked for the first five games as complete as possible, then to decide 
    becomes ALL UNLOCKED (a random pal, every game, level, item, sticker and case, the whole Shop).
 Then measure on the phone and replace the model's ASSUMED numbers.
 
+### 7b. The hokora's progression (branch `yokai-migration`, 2026-10-30: BUILT, the art to come)
+1. The dev launcher's HOME switch (HOKORA / FIRST HOKORA / GUT) for FULL BOOT, ALL UNLOCKED and
+   BOOT + PROGRESSION; the hokora is the default and the only home in release builds. ALL UNLOCKED
+   in a shrine: Picklet on the pet screen (the old SHRINE start, now gone); in the gut: a random pal
+   and the Games menu, as before. QA: `tools/qa/shoot.sh ... home=gut|first|hokora` (default hokora).
+2. The catalogue (`scripts/hokora_catalog.gd`): the 83 pieces, their sources, the gut twins; the
+   Collection home-aware (each home its decor and backgrounds, both reward lists given, realm
+   milestones, Seasons).
+3. The hokora wears them (`scripts/shrine.gd` _apply_decor): lanterns (art or a recolour, their
+   glow), the beam's hanging overlay, the shelf overlay at the ornaments' depth, the wood and roof
+   colour (`shaders/hokora_colour.gdshader`, the stone base kept), the sky sets on the real clock
+   (darker night skies darken their clouds), the drifting particles (`scripts/sky_drift.gd`, two
+   layers in the 3D tilt like the rain).
+4. The menus: Home Decor and Backgrounds in sections (slots) with two rows of dots, "Art soon"
+   cards, previews for pieces not drawn yet; the Shop's HOME stall.
+5. The games' prizes: the 3-6-9 rhythm (section 4b), every secret's hokora prize (5b).
+6. Fixes found on the way: the collection cards' pictures sat half a square up and left of their
+   frames (the food icons are now placed by their corner), the two-line button legend was too
+   tight; the boot's black screen now covers the hokora's lanterns, bell and rain, which light up
+   with it; the waiting sign before the first offering is the wandering wisp in every shrine start
+   (the EAT sign only in the gut).
+NEXT: the designer's art (docs/kami_collection_art.md, P1 first); the drink-gate hints (4b);
+the missing boost assists; measure on the phone; the planned dress-ups, cases and stickers.
+
 ## 8. Decisions
 DECIDED (user, 2026-10-16): the order (Pal Prix 3rd, Paper Sumo 4th) · 6 worlds per game, world 6
 the masters' world · the toy instrument per world for Tummy Tunes · Paper Sumo's rivals are paper
@@ -443,3 +625,16 @@ simple, then fancier ones · the specials page once a special food is yours.
 OPEN: Pal Prix 2177's worlds (built with the two lists combined: each step of the build-up in one
 of the places; the user to confirm) · Tummy Tunes' 6th world (Toy Trumpet or The Tummy) · Pal Prix's places (see the roadmap: more
 places per toy, boats and planes in every world, a toy that changes mid-race).
+TO REVIEW (built 2026-10-30 for the hokora, the user to confirm or change on the phone):
+- The four Home Decor slots (Lanterns, Hanging, Shelf, Colours) and the two sky slots (Sky,
+  Clouds); the bell rope stays the hokora's own (it rings for Lucky Pinch).
+- Each game a festival stall: its gift track = drift, hanging, dress-up, shelf, sky, gold sticker.
+- The Tomopedia pays the grand pieces (every 10 spirits) and a realm's colour at 10 of its spirits;
+  Gold Leaf at 120.
+- CHANGED: the Shop's HOME stall sells 12 plain pieces (it was "what the pal lives in is never
+  sold"); dress-ups stay never sold.
+- The 3-6-9 rhythm: small secrets on every world's 3rd level in Splash Hoops, RC Prix and RC Prix
+  2177 (coins, stickers); Paper Sumo's four secrets are the four seasons; Paper Sumo's and Top
+  Spin's stickers moved to first-clear prizes.
+- The hokora colour presets and the sky sets' colours (tune by eye on the phone).
+- Prices unchanged; the model still passes (section 5).

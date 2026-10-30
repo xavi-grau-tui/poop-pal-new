@@ -120,7 +120,16 @@ Rules, levels and the suite look stay. Only dressing changes:
 - Tummy Tunes: a new name (a taiko game?).
 Framing: the device's games are the shrine's festival stalls (ennichi).
 
-## Shrine decor and backgrounds (DECIDED with the user 2026-10-20; TO BUILD before the merge)
+## Shrine decor and backgrounds (DECIDED with the user 2026-10-20; BUILT 2026-10-30, the art to come)
+
+BUILT 2026-10-30 (code and data): four Home Decor slots (Lanterns, Hanging, Shelf, Colours) and two
+Backgrounds slots (Sky: day / dusk / night colours on the real clock; Clouds: the cloud layers or
+drifting particles, the four seasons and a Seasons item that follows the calendar), every piece's
+source (each game a festival stall), the Shop's HOME stall, and the dev launcher's HOME switch
+(HOKORA / FIRST HOKORA / GUT). The whole design: docs/progression.md sections 4b, 5b and 7b; the
+designer's list: docs/kami_collection_art.md; the data: scripts/hokora_catalog.gd. The merge gate
+(decor and backgrounds working in the shrine) is met in code; the hanging and shelf pieces show
+once their art is in. The plan below is the original brief (2026-10-20).
 
 The gut's two collection menus become two shrine menus. Same system as now (slots that combine,
 unlocked by the games' stars, the secrets, Lucky Pinch), new content.
