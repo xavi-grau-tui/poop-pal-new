@@ -1895,7 +1895,7 @@ func _sky_clouds_start() -> void:
 		var a := Rect2(Vector2.ZERO, f * mat_size + (1.0 - f) * view)
 		var n := int(a.get_area() / (CLOUD_EVERY[i] * CLOUD_EVERY[i])) + 2
 		var layer: SkyClouds = [_clouds_low, _clouds_high][i]
-		layer.pale = CLOUD_PALE
+		layer.pale = CLOUD_PALE[i]
 		layer.setup(RcSky.CLOUDS_LOW if i == 0 else RcSky.CLOUDS_HIGH, a, n, CLOUD_WIND * (1.0 + 0.4 * i), course_seed * 17 + i, RcSky.ART_PX * CLOUD_SIZE[i], Color(1, 1, 1, CLOUD_ALPHA[i]))
 		layer.visible = true
 	var ga := Rect2(Vector2.ZERO, Vector2(_sky_ground * 2))
@@ -4001,9 +4001,9 @@ var _clouds_low: SkyClouds             # ...the designer's clouds drifting betwe
 var _clouds_high: SkyClouds            # the small ones higher (nearer: faster past, a little less see-through)
 var _cloud_shadows: SkyClouds          # ...and their shadows on the fields (on the board)
 const CLOUD_DEPTH := [0.72, 0.86]      # their parallax (the ground's is PARALLAX)
-const CLOUD_PALE := 0.5               # the drifting clouds eased towards the haze (0: as painted)
+const CLOUD_PALE := [0.6, 0.4]        # the drifting clouds eased towards the haze (0: as painted): the lower row paler, further away
 const CLOUD_SIZE := [1.0, 1.1]        # (the nearer row 10% bigger, the user)
-const CLOUD_ALPHA := [0.85, 0.85]      # (the user: nearly transparent, then "less transparent", then 75%; paler, then 85%)
+const CLOUD_ALPHA := [1.0, 1.0]        # (the user: solid, as real clouds; the haze makes the far ones paler, not see-through)
 const CLOUD_SHADOW := Color(0.45, 0.52, 0.62, 0.1)   # (paler: merging with the hazy ground, the user)
 const CLOUD_WIND := Vector2(14, 5)     # world px/s
 var _lamps: Array = []                 # Grand Prix: the lamp posts (board px) round the track

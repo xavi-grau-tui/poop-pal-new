@@ -179,6 +179,10 @@ from the top left. Use it for any 3D prop.
 | `tools/art/rcprix_barrier_from_paint.py` | the designer's 4× paintings onto the game grid, checked against the layout (`--game` writes only the ones that fit) |
 | `tools/art/rcprix_stand_from_reference.py` | stand pieces from approved pictures; side views |
 | `tools/art/rcprix_bush_redraw.py` | bushes from the designer's sketches |
+| `tools/art/rcprix_lagoon_from_paint.py` | the Lagoon's 4× paintings onto the game grid, with the checks |
+| `tools/art/rcprix_pixelate.py` | any high-res painting onto the game grid (area scale, 50% alpha cut, small palette, lone pixels dropped) |
+| `tools/art/rcprix_sky_from_sources.py` | the Sky's art from the designer's paintings (flags in `docs/mockups/rcprix_sky/PLAN.md`) |
+| `tools/art/rcprix_sky_round1_guides.py`, `rcprix_sky_ground_guides.py` | the Sky's guides (rings, pad, stand clouds; the ground's grid on one phone screen) |
 | `tools/qa/shoot.sh` | QA shots (`rc_new_art=1`, `levels=`, `HEADLESS=1` for errors, `FAST=1 until=done` for autopilot results) |
 
 To see a whole course at once, dump the painted mat: a temporary `RC_DUMP` save in `_tile_art`
@@ -235,6 +239,29 @@ Garden, and better in the end. For the Sky, Night, Reef and Grand Prix:
 - **Life without clutter:** fish shadows (finer pixels, darker), crabs that scuttle off as the boat passes (5
   per course, not 10), a finer wake. The user prefers rich but calm.
 
+## What the Sky taught (October 2026)
+
+The Sky (`docs/mockups/rcprix_sky/PLAN.md`) is done apart from polish. For Night, Reef and Grand Prix:
+
+- **The designer paints, we pixelate.** Their ImageGen paintings (high-res, transparent, no glow, light from the top
+  left) are good; their pixel art and scripted shapes are not (the first rings and clouds were rejected). So they
+  paint big and `tools/art/rcprix_pixelate.py` puts it on the grid, for every size the game needs, each scaled
+  from the painting itself (never a resized sprite). Ask for one painting per thing, not per size.
+- **Turn on the big painting, not on the pixels.** The fields are painted straight and turned to the grid's angle
+  before pixelating (no jagged edges); the rings are transposed and flipped as pixels only because they're symmetric.
+- **One good painting, many uses.** The drifting clouds became the stands' clouds and the runway's clouds too; the
+  user preferred that to purpose-painted banks.
+- **Far away = paler, never see-through.** The ground: the paintings softened, desaturated and hazed by a shader.
+  The drifting clouds ended solid and paled towards the haze, the lower layer more (the user, after trying 65–85%
+  transparency). Shadows too are pale.
+- **Keep what the user loves in the original** (the diagonal grid, the wind streaks, the noise cloud shading) and
+  fill it with the new art rather than replacing it.
+- **Readable props beat clever ones:** the drone pad read as military; a cloud runway seen from the side, the
+  stands seen from the front (the start moved to a straight where a front stand fits).
+- **Timing with sound:** effects tied to an event fire on the sound's own frame (the gold ring on the chime).
+- **Check gameplay after each visual change:** the autopilot (`FAST=1 HEADLESS=1 ... until=done`) must give the
+  same stars and time.
+
 ## RC Prix 2177
 
 A separate game with its own code (`scripts/pal_prix_2.gd`, `pal_prix_2_art.gd`,
@@ -247,9 +274,16 @@ light from the top left, separate layers for the tilt) still apply.
 For the other worlds and 2177, start each kit by listing its 3D props (barriers, buoys, rings,
 stands) and plan their geometry in code from the first round, with paint-over guides.
 
-## Still open (Garden)
+## Still open
 
-- Finish (step 9): make the new art the default, remove the switches, remove unused pieces (the
-  designer's `gap_*` files, `start_lamp`, the car slices from the brief).
-- Effects drawn in code (skid marks, dust, FINISH): undecided.
-- Maybe move the start gantry off the front stand's back rows.
+State (2026-10-30): Garden, Lagoon and Sky done behind RC ART; Night Race, Reef and Grand Prix not started
+(next: Night Race, the Garden's kit in night colours plus a crossover, bridges, lamps).
+
+- Finish (step 9), once every world is done: make the new art the default, remove the switches, remove unused
+  pieces (the designer's `gap_*` files, `start_lamp`, the car slices from the brief; the Sky's drone pad and
+  concept C runway; the Lagoon's dropped decor: the untracked `bucket`, `sandcastle`, `driftwood`, `grass_tuft`,
+  `crab_*` PNGs from `rcprix_lagoon_round2_crab_decor.py` are not used by the game).
+- Lagoon: more stands seen from the front (as the Sky); designer sand B/C, splash and ripple.
+- Sky: wind streaks, contrail and sparkles on the 2 px grid.
+- Garden: effects drawn in code (skid marks, dust, FINISH): undecided.
+- Garden: maybe move the start gantry off the front stand's back rows.
