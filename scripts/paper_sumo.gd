@@ -108,13 +108,17 @@ const FAMILIES := [
 		"mass": 1.25, "lean": 0.22, "rhythm": 0.62, "tempo": 0.18, "far": 0.3, "pull": 0.3, "horn": 0.25, "par": 13.0, "champ": { "lean": 0.24 } },
 ]
 ## Secrets: a mystery challenger after the match on a world's 6th level: [the drink it wants (a
-## heavy one: a sturdy pal; a quick one: a focused pal), its prize]. Finales: a level's prize on
-## its first win (the big robot's Microchip, the beetle king's Golden Seed, the Sumo case)
+## heavy one: a sturdy pal; a quick one: a focused pal), its prize]: the hokora's four seasons come
+## from Paper Sumo's places (the spring pond, the autumn stream, the summer forest, the winter
+## festival), the moon lantern from the Moon Base. Finales: a level's prize on its first win (the
+## frogs' wind-up key, the koi, the topknot, the big robot's Microchip, the beetle, the beetle king's
+## Golden Seed, the Sumo case)
 const SECRETS := {
-	15: ["milky", "sticker:koi"], 24: ["caffeinated", "decor:maple_leaves"], 33: ["milky", "sticker:wind_up_key"],
-	42: ["caffeinated", "sticker:kabuto"], 51: ["milky", "acc:sumo_topknot"],
+	15: ["milky", "bg:petals"], 24: ["caffeinated", "bg:maple"], 33: ["milky", "decor:lantern_moon"],
+	42: ["caffeinated", "bg:fireflies"], 51: ["milky", "bg:snow"],
 }
-const FINALES := { 36: "food:Microchip", 45: "food:Golden Seed", 54: "case:sumo" }
+const FINALES := { 9: "sticker:wind_up_key", 18: "sticker:koi", 27: "acc:sumo_topknot", 36: "food:Microchip",
+	44: "sticker:kabuto", 45: "food:Golden Seed", 54: "case:sumo" }
 
 class Wrestler:
 	var x := 0.0

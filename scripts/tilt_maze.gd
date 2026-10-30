@@ -123,9 +123,9 @@ const SEED_TRIES := 24
 const VAULTS := {
 	3: ["fizzy", "sticker:pal"], 6: ["skill", "sticker:pal"], 8: ["fizzy", "sticker:pal"],
 	12: ["fizzy", "sticker:pal"], 15: ["skill", "sticker:pal"], 17: ["milky", "acc:snorkel"],
-	21: ["fizzy", "sticker:pal"], 24: ["skill", "sticker:pal"], 26: ["watery", "decor:glow_spores"],
-	30: ["fizzy", "food:Microchip"], 33: ["caffeinated", "bg:sewer_pipes"], 35: ["milky", "acc:headlamp"],
-	39: ["fizzy", "food:Battery"], 42: ["caffeinated", "decor:cog_garland"], 44: ["milky", "acc:hard_hat"],
+	21: ["fizzy", "sticker:pal"], 24: ["skill", "sticker:pal"], 26: ["watery", "decor:hang_glow"],
+	30: ["fizzy", "food:Microchip"], 33: ["caffeinated", "decor:shelf_kappa"], 35: ["milky", "acc:headlamp"],
+	39: ["fizzy", "food:Battery"], 42: ["caffeinated", "decor:hang_cogs"], 44: ["milky", "acc:hard_hat"],
 	48: ["fruity", "food:Moon Rock"], 51: ["watery", "bg:starfield"], 53: ["fruity", "food:Alien Goo"],
 }
 ## The finale of the masters' world (6-9): the game's own case

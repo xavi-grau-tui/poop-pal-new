@@ -6,18 +6,20 @@ class_name DevLaunch
 ## so the unboxing and the boot run untouched).
 ##
 ##   FULL BOOT          the real start: unboxing, logo, welcome, as in the final game
-##   ALL UNLOCKED       no unboxing or boot; a random pal, the Games menu opens by itself and
-##                      EVERYTHING is open: every game and level, every pal in the Pal Pedia, every
-##                      food and drink level, special foods in the pantry, every dress-up item, gut
-##                      decor, background, sticker and case (to put on: flip the device), the whole
-##                      Shop to look through and 999 coins (no meal / drink wait either)
-##   SHRINE             ALL UNLOCKED pet screen in the spirit shrine: the chosen forest hokora frame
-##                      and all the shrine art (the first hokora model stays in the code, unused here;
-##                      tools/qa shrine=1 still shows it)
+##   ALL UNLOCKED       no unboxing or boot; EVERYTHING is open: every game and level, every pal in
+##                      the Pal Pedia, every food and drink level, special foods in the pantry, every
+##                      dress-up item, home decor, background, sticker and case (to put on: flip the
+##                      device), the whole Shop to look through and 999 coins (no meal / drink wait
+##                      either). In a shrine home: Picklet on the pet screen (the user: always the sour
+##                      baby, to feed and evolve it every time); in the gut: a random pal, the Games menu
 ##   BOOT + PROGRESSION the real game as a player gets it, from the very start, KEPT between
 ##                      launches (its own save, user://progress/, see SaveSlot): every testing switch
 ##                      off, only the six launch games, the unboxing only the first time, the meal
 ##                      and drink clocks running in real time. START OVER (two taps) wipes that save.
+##   HOME               where the spirit lives, for all three (the user, 2026-10-30): the forest HOKORA
+##                      (the chosen one, and the only one in release builds), the FIRST HOKORA model
+##                      (kept in the code) or the GUT (the original idea, kept out of affection: its
+##                      own decor and backgrounds come back with it). A tap cycles it.
 ## The last choice is remembered and shown highlighted. The testing starts never touch the
 ## progression save.
 
@@ -31,10 +33,20 @@ static var skip_boot := false
 static var all_open := false
 ## (kept for the cases' code: on in ALL UNLOCKED)
 static var case_demo := false
-## SHRINE / NEW SHRINE: show the pet screen with one of the shrine art sets
-static var shrine := false
-## NEW SHRINE: use the separate pale forest-frame art and its fit-to-screen scale
-static var new_shrine := false
+## HOME: "hokora" (the forest hokora: the game's home), "first" (the first hokora model) or "gut"
+## (the original gut). Release builds never see the launcher: they keep the default, the hokora.
+const HOMES := ["hokora", "first", "gut"]
+const HOME_LABELS := { "hokora": "HOME: HOKORA", "first": "HOME: FIRST HOKORA", "gut": "HOME: GUT" }
+static var home := "hokora"
+## The spirit in a shrine (either hokora) instead of the gut (set from `home`: set_home)
+static var shrine := true
+## The forest hokora: its separate pale forest-frame art and its fit-to-screen scale
+static var new_shrine := true
+
+static func set_home(h: String) -> void:
+	home = h if h in HOMES else "hokora"
+	shrine = home != "gut"
+	new_shrine = home == "hokora"
 ## RC NEW ART: RC Prix's Garden built from the designer's square pieces (RcTiles), a trial: the
 ## original stays the default until it works as expected (the user, 2026-10-27); remembered
 static var rc_new_art := false
@@ -57,23 +69,57 @@ func _ready() -> void:
 	var title := Label.new()
 	title.text = "DEV LAUNCH"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.position = Vector2(0, 310)
+	title.position = Vector2(0, 120)              # (above the RC Prix toggles, not behind them)
 	title.size = Vector2(1080, 80)
 	title.add_theme_font_override("font", font)
 	title.add_theme_font_size_override("font_size", 52)
 	title.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
 	add_child(title)
 	var last := _last_choice()
+	set_home(str(_prefs().get("home", "hokora")))
 	_button("FULL BOOT", "unboxing + boot", 420, last == "full", _full)
-	_button("ALL UNLOCKED", "every game, level, item, sticker and case; a random pal", 660, last in ["games", "case", "rich"], _games)
-	_button("SHRINE", "the forest hokora and all the new shrine art", 900, last in ["shrine", "new_shrine"], _new_shrine)
-	_button("BOOT + PROGRESSION", _progress_summary(), 1140, last == "progress", _progress)
+	_button("ALL UNLOCKED", "", 660, last in ["games", "case", "rich", "shrine", "new_shrine"], _games)
+	_unlocked_sub = (get_child(get_child_count() - 1) as Button).get_child(1) as Label
+	_refresh_unlocked_sub()
+	_button("BOOT + PROGRESSION", _progress_summary(), 900, last == "progress", _progress)
+	_home_toggle(font, 1150)
 	_start_over_button(1400)
 	_rain_toggle(font)
 	_rc_art_toggle(font)
 	_rc_grade_toggle(font)
 	_rc_fx_toggle(font)
 	_rc_rings_toggle(font)
+
+## (HOME: the hokora, the first hokora or the gut, for every start; a tap cycles it)
+var _unlocked_sub: Label
+func _home_toggle(font: Font, y: float) -> void:
+	var b := Button.new()
+	b.text = HOME_LABELS[home]
+	b.position = Vector2(240, y)
+	b.size = Vector2(600, 110)
+	b.add_theme_font_override("font", font)
+	b.add_theme_font_size_override("font_size", 40)
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0.2, 0.3, 0.24) if shrine else Color(0.36, 0.2, 0.24)
+	box.set_corner_radius_all(20)
+	box.set_border_width_all(5)
+	box.border_color = Color(0.55, 0.75, 0.6) if shrine else Color(0.85, 0.5, 0.55)
+	for state in ["normal", "hover", "pressed", "focus"]:
+		b.add_theme_stylebox_override(state, box)
+	for c in ["font_color", "font_pressed_color", "font_hover_color", "font_focus_color"]:
+		b.add_theme_color_override(c, Color.WHITE)
+	b.pressed.connect(func():
+		set_home(HOMES[(HOMES.find(home) + 1) % HOMES.size()])
+		b.text = HOME_LABELS[home]
+		box.bg_color = Color(0.2, 0.3, 0.24) if shrine else Color(0.36, 0.2, 0.24)
+		box.border_color = Color(0.55, 0.75, 0.6) if shrine else Color(0.85, 0.5, 0.55)
+		_refresh_unlocked_sub()
+		_save_choice(_last_choice()))
+	add_child(b)
+
+func _refresh_unlocked_sub() -> void:
+	if _unlocked_sub:
+		_unlocked_sub.text = "all open · Picklet, pet screen" if shrine else "all open · a random pal, games"
 
 ## (RC Prix's Garden: the code's art or the designer's new pieces, a tap switches it)
 func _rc_art_toggle(font: Font) -> void:
@@ -184,8 +230,6 @@ func _button(text: String, sub: String, y: float, highlighted: bool, action: Cal
 
 func _full() -> void:
 	_save_choice("full")
-	shrine = false
-	new_shrine = false
 	skip_boot = false
 	all_open = false
 	case_demo = false
@@ -193,8 +237,6 @@ func _full() -> void:
 
 func _progress() -> void:
 	_save_choice("progress")
-	shrine = false
-	new_shrine = false
 	skip_boot = false
 	all_open = false
 	case_demo = false
@@ -252,10 +294,8 @@ func _start_over_button(y: float) -> void:
 		get_tree().reload_current_scene())
 	add_child(b)
 
-func _games(choice := "games") -> void:
-	_save_choice(choice)
-	shrine = choice in ["shrine", "new_shrine"]
-	new_shrine = choice == "new_shrine"
+func _games() -> void:
+	_save_choice("games")
 	skip_boot = true
 	all_open = true
 	case_demo = true
@@ -266,9 +306,6 @@ func _games(choice := "games") -> void:
 		PetState.meals = []
 		PetState.save_data()
 	get_tree().change_scene_to_file(MAIN_SCENE)
-
-func _new_shrine() -> void:
-	_games("new_shrine")
 
 ## ALL UNLOCKED: every game, every pal found, every food and drink level, the special foods,
 ## every collectable of every kind, 999 coins, and a random pal (the testing save only)
@@ -286,6 +323,13 @@ static func unlock_everything() -> void:
 	Shop.save_data()
 	for cat in ["backgrounds", "accessories", "decor", "cases"]:
 		Collection.owned[cat] = Collection.order(cat).filter(func(id): return not String(id).begins_with("mystery"))
+	# (both homes' decor and skies: switching HOME keeps everything open)
+	for id in Collection.DECOR_ORDER + Collection.Hokora.order("decor"):
+		if not String(id).begins_with("mystery") and id not in Collection.owned["decor"]:
+			Collection.owned["decor"].append(id)
+	for id in Collection.BACKGROUND_ORDER + Collection.Hokora.order("backgrounds"):
+		if not String(id).begins_with("mystery") and id not in Collection.owned["backgrounds"]:
+			Collection.owned["backgrounds"].append(id)
 	Collection.owned["stickers"] = Collection.order("stickers").duplicate()
 	Collection.save_data()
 	PetState.discovered = PetState.FORMS.keys()
@@ -312,7 +356,7 @@ static func open_games(tree: SceneTree) -> void:
 	btn.menu_manager.request_menu_second_half(btn.target_menu)
 
 func _last_choice() -> String:
-	return _prefs().get("choice", "new_shrine")
+	return _prefs().get("choice", "games")
 
 func _prefs() -> Dictionary:
 	var f := FileAccess.open(PREFS, FileAccess.READ)
@@ -324,4 +368,4 @@ func _prefs() -> Dictionary:
 func _save_choice(choice: String) -> void:
 	var f := FileAccess.open(PREFS, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({ "choice": choice, "rc_new_art": rc_new_art, "rc_grade_scenery": rc_grade, "rc_fx": rc_fx, "rc_gold_pass": rc_gold_pass }))
+		f.store_string(JSON.stringify({ "choice": choice, "home": home, "rc_new_art": rc_new_art, "rc_grade_scenery": rc_grade, "rc_fx": rc_fx, "rc_gold_pass": rc_gold_pass }))

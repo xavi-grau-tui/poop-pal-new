@@ -1,11 +1,18 @@
 extends Node
 ## Autoload singleton — cosmetics and collectables the player owns.
-## Categories: backgrounds, accessories (worn by the pal), decor (hung on the gut), stickers (for
-## the device's back / its case) and cases (the device's shell).
+## Categories: backgrounds, accessories (worn by the pal), decor (the home's), stickers (for the
+## device's back / its case) and cases (the device's shell).
+## Two homes, two catalogues for decor and backgrounds (the dev launcher's HOME): in a shrine the
+## hokora's (scripts/hokora_catalog.gd: lanterns, hanging, shelf, colours; sky sets and drifts), in
+## the gut the gut's own below (gut decor and colours, its sky scenes), kept as it was. Both reward
+## lists are given whichever home you play in, so switching homes never loses anything.
 ## Not affected by PetState's fresh start: collectables are kept forever.
-## The rule (docs/progression.md 5b): what the PAL wears or lives in is only ever WON (gift tracks,
-## Pal Pedia milestones, Lucky Pinch, the games' secrets); the device's stickers and cases can be
-## won or bought (Shop: a sticker of every pal you've found, plain cases).
+## The rule (docs/progression.md 5b): what the spirit WEARS (dress-ups) is only ever WON (gift
+## tracks, Tomopedia milestones, Lucky Pinch, the games' secrets); its home's themed pieces too,
+## and the Shop's HOME section sells a few plain ones; the device's stickers and cases can be won
+## or bought (Shop: a sticker of every spirit you've found, plain cases).
+
+const Hokora := preload("res://scripts/hokora_catalog.gd")
 
 signal unlocked(category: String, id: String)
 signal background_changed(id: String)
@@ -281,7 +288,27 @@ var equipped_bg_color := DEFAULT_BG_COLOR   # sky colour in use (pink = the natu
 var equipped_accessory := "none"
 var equipped_decor := "none"          # the complement in use
 var equipped_gut_color := ""           # the gut colour in use ("" = the natural pink)
+## The hokora's slots: lantern, hanging, shelf, colour (Home Decor), sky, drift (Backgrounds)
+var home_equipped := Hokora.DEFAULTS.duplicate()
 var new_items := {}                     # "category/id" -> true: unlocked but not looked at yet
+
+## The spirit lives in a shrine (the hokora's catalogue), not the gut (DevLaunch.home)
+func in_shrine() -> bool:
+	return DevLaunch.shrine
+
+## A home slot's item (the hokora's; "" for a slot it doesn't have)
+func home_piece(slot: String) -> String:
+	return str(home_equipped.get(slot, Hokora.DEFAULTS.get(slot, "")))
+
+## Hokora pieces won or bought so far (the slots' defaults don't count)
+func home_pieces_won() -> int:
+	var n := 0
+	for cat in ["decor", "backgrounds"]:
+		var src := _catalog_of(cat, true)
+		for id in owned.get(cat, []):
+			if src.has(id) and not src[id].get("unlocked", false):
+				n += 1
+	return n
 
 func _ready() -> void:
 	for id in PetState.FORMS:
@@ -307,26 +334,36 @@ func _start() -> void:
 	equipped_accessory = "none"
 	equipped_decor = "none"
 	equipped_gut_color = ""
+	home_equipped = Hokora.DEFAULTS.duplicate()
 	new_items = {}
 	for cat in ["backgrounds", "accessories", "decor"]:
-		var cat_catalog := catalog(cat)
-		for id in cat_catalog:
-			if cat_catalog[id]["unlocked"] and id not in owned[cat]:
-				owned[cat].append(id)
+		for cat_catalog in [_catalog_of(cat, false), _catalog_of(cat, true)]:
+			for id in cat_catalog:
+				if cat_catalog[id].get("unlocked", false) and id not in owned[cat]:
+					owned[cat].append(id)
 	if SaveSlot.real():
 		load_data()
 		return
 	if not RESET_UNLOCKS_ON_LAUNCH:
 		load_data()
-	if RESET_BACKGROUND_ON_LAUNCH and (equipped_background != DEFAULT_BACKGROUND or equipped_bg_color != DEFAULT_BG_COLOR):
+	if RESET_BACKGROUND_ON_LAUNCH and (equipped_background != DEFAULT_BACKGROUND or equipped_bg_color != DEFAULT_BG_COLOR
+			or home_piece("sky") != Hokora.DEFAULTS["sky"] or home_piece("drift") != Hokora.DEFAULTS["drift"]):
 		equipped_background = DEFAULT_BACKGROUND
 		equipped_bg_color = DEFAULT_BG_COLOR
+		home_equipped["sky"] = Hokora.DEFAULTS["sky"]
+		home_equipped["drift"] = Hokora.DEFAULTS["drift"]
 		save_data()
-	if RESET_EQUIPPED_ON_LAUNCH and (equipped_accessory != "none" or equipped_decor != "none" or equipped_gut_color != ""):
-		equipped_accessory = "none"
-		equipped_decor = "none"
-		equipped_gut_color = ""
-		save_data()
+	if RESET_EQUIPPED_ON_LAUNCH:
+		var home_dressed := false
+		for slot in Hokora.DECOR_SECTIONS:
+			home_dressed = home_dressed or home_piece(slot) != Hokora.DEFAULTS[slot]
+		if equipped_accessory != "none" or equipped_decor != "none" or equipped_gut_color != "" or home_dressed:
+			equipped_accessory = "none"
+			equipped_decor = "none"
+			equipped_gut_color = ""
+			for slot in Hokora.DECOR_SECTIONS:
+				home_equipped[slot] = Hokora.DEFAULTS[slot]
+			save_data()
 
 func is_owned(category: String, id: String) -> bool:
 	return id in owned.get(category, [])
@@ -343,6 +380,16 @@ func unlock(category: String, id: String) -> void:
 	# a sticker needs somewhere to go: the first one brings the first case along, if none yet
 	if category == "stickers" and owned.get("cases", []).is_empty():
 		unlock("cases", FIRST_CASE)
+	# a hokora piece that replaced a gut piece as a prize brings the gut's along (the gut stays whole)
+	if Hokora.GUT_TWIN.has(id):
+		unlock(Hokora.GUT_TWIN[id][0], Hokora.GUT_TWIN[id][1])
+	# the four seasons' drifts together make the Seasons one (it follows the calendar)
+	if category == "backgrounds" and id in Hokora.SEASONS and Hokora.SEASONS.all(func(s): return is_owned("backgrounds", s)):
+		unlock("backgrounds", "seasons")
+
+## Every gift for playing: the gut's and the hokora's (both are given, whichever home)
+func rewards() -> Array:
+	return REWARDS + Hokora.REWARDS
 
 ## Called by every minigame as points come in (live, mid-round)
 func report_game_score(game: int, score: int) -> void:
@@ -356,7 +403,7 @@ func report_game_stars(game: int, stars: int) -> void:
 	var total := 0
 	for idx in GameData.games:
 		total += GameData.game_stars(idx)
-	for r in REWARDS:
+	for r in rewards():
 		if is_owned(r["category"], r["id"]):
 			continue
 		if r.get("game", -1) == game and r.has("stars") and stars >= r["stars"]:
@@ -364,25 +411,40 @@ func report_game_stars(game: int, stars: int) -> void:
 		elif r.has("total_stars") and total >= r["total_stars"]:
 			unlock(r["category"], r["id"])
 
-## A new pal was found: the Pal Pedia's milestones
+## A new pal was found: the Tomopedia's milestones (every 10 spirits; 10 of a realm: its colour)
 func _check_pedia() -> void:
 	var found := PetState.discovered.size()
-	for r in REWARDS:
-		if r.has("pedia") and found >= r["pedia"] and not is_owned(r["category"], r["id"]):
+	for r in rewards():
+		if is_owned(r["category"], r["id"]):
+			continue
+		if r.has("pedia") and found >= r["pedia"]:
+			unlock(r["category"], r["id"])
+		elif r.has("realm") and realm_found(r["realm"]) >= int(r["count"]):
 			unlock(r["category"], r["id"])
 
-## Where an item comes from, for its locked card ("Tilt Maze: 30 stars", "40 pals found"...)
-func source_text(category: String, id: String) -> String:
-	for r in REWARDS:
-		if r["category"] == category and r["id"] == id:
-			if r.has("pedia"):
-				return "%d spirits found" % r["pedia"]
-			if r.has("total_stars"):
-				return "%d stars in all" % r["total_stars"]
-			return "%s: %d stars" % [GAME_NAMES.get(r.get("game", -1), "A game"), r["stars"]]
-	return catalog(category).get(id, {}).get("unlock", "")
+## Spirits found of one realm (a food family: green = Mountain, greasy = Fox...)
+func realm_found(family: String) -> int:
+	return PetState.discovered.filter(func(f): return PetState.FORMS.get(f, {}).get("family", "") == family).size()
 
-const GAME_NAMES := { 0: "RC Prix", 1: "Tilt Maze", 2: "Splash Hoops", 6: "Tummy Tunes", 8: "Top Spin", 9: "Paper Sumo" }
+## Where an item comes from, for its locked card ("Tilt Maze: 30 stars", "40 spirits found"...)
+func source_text(category: String, id: String) -> String:
+	var lists := [Hokora.REWARDS, REWARDS] if in_shrine() else [REWARDS, Hokora.REWARDS]
+	for list in lists:
+		for r in list:
+			if r["category"] == category and r["id"] == id:
+				if r.has("pedia"):
+					return "%d spirits found" % r["pedia"]
+				if r.has("realm"):
+					return "%d %s spirits" % [r["count"], Hokora.REALM_NAMES.get(r["realm"], "")]
+				if r.has("total_stars"):
+					return "%d stars in all" % r["total_stars"]
+				return "%s: %d stars" % [GAME_NAMES.get(r.get("game", -1), "A game"), r["stars"]]
+	var item := find_item(category, id)
+	if item.has("price"):
+		return "Shop: %d coins" % item["price"]
+	return item.get("unlock", "")
+
+const GAME_NAMES := { 0: "RC Prix", 1: "Tilt Maze", 2: "Splash Hoops", 6: "Tummy Tunes", 8: "Top Spin", 9: "Paper Sumo", 11: "RC Prix 2177" }
 
 ## A prize from a game (a vault, a secret, a finale): "sticker:<id>", "food:<special food>",
 ## "acc:<id>", "bg:<id>", "decor:<id>", "case:<id>" or "coins:<n>". Gives it and says what it was:
@@ -431,7 +493,16 @@ func pal_sticker_prize() -> String:
 func item_name(category: String, id: String) -> String:
 	if category == "stickers" and id in PetState.FORMS:
 		return PetState.FORMS[id]["name"]
-	return catalog(category).get(id, {}).get("name", id)
+	return find_item(category, id).get("name", id)
+
+## An item's entry wherever it is (this home's catalogue first, then the other home's)
+func find_item(category: String, id: String) -> Dictionary:
+	var here := catalog(category)
+	if here.has(id):
+		return here[id]
+	if category in ["decor", "backgrounds"]:
+		return _catalog_of(category, not in_shrine()).get(id, {})
+	return {}
 
 ## A prize's picture (for the game's prize reveal and the vault's window)
 func prize_icon(prize: String) -> Texture2D:
@@ -455,7 +526,11 @@ func prize_icon(prize: String) -> Texture2D:
 		"case":
 			path = "res://textures/cases/icons/%s.png" % id
 		"bg", "decor":
-			path = catalog("backgrounds" if kind == "bg" else "decor").get(id, {}).get("icon", "")
+			if Hokora.DECOR.has(id) or Hokora.SKY.has(id):
+				var pic := Hokora.preview(id)          # (a hokora piece: its icon, or its stand-in)
+				if pic:
+					return pic
+			path = _catalog_of("backgrounds" if kind == "bg" else "decor", false).get(id, {}).get("icon", "")
 	if path != "" and ResourceLoader.exists(path):
 		return load(path)
 	return UiArt.question()
@@ -466,9 +541,12 @@ func report_game_levels(game: int, levels: int) -> void:
 		if r.get("game", -1) == game and r.has("levels") and levels >= r["levels"] and not is_owned(r["category"], r["id"]):
 			unlock(r["category"], r["id"])
 
+## Something unlocked and not looked at yet (in this home's catalogue: the other home's pieces won
+## alongside never light a NEW badge here)
 func has_new(category: String) -> bool:
+	var here := catalog(category) if category in ["decor", "backgrounds"] else {}
 	for k in new_items:
-		if k.begins_with(category + "/"):
+		if k.begins_with(category + "/") and (here.is_empty() or here.has(k.get_slice("/", 1))):
 			return true
 	return false
 
@@ -487,20 +565,28 @@ func mark_seen(category: String) -> void:
 	save_data()
 
 func catalog(category: String) -> Dictionary:
+	return _catalog_of(category, in_shrine())
+
+## A category's catalogue in the hokora (hokora true) or in the gut; only decor and backgrounds differ
+func _catalog_of(category: String, hokora: bool) -> Dictionary:
 	match category:
 		"accessories": return ACCESSORIES
-		"decor": return DECOR
+		"decor": return Hokora.DECOR if hokora else DECOR
 		"cases": return CASES
 		"stickers": return STICKERS
-	return BACKGROUNDS
+	return Hokora.SKY if hokora else BACKGROUNDS
 
 func order(category: String) -> Array:
 	match category:
 		"accessories": return ACCESSORY_ORDER
-		"decor": return DECOR_ORDER
+		"decor": return Hokora.order("decor") if in_shrine() else DECOR_ORDER
 		"cases": return CASE_ORDER
 		"stickers": return PAL_STICKERS + STICKER_ORDER
-	return BACKGROUND_ORDER
+	return Hokora.order("backgrounds") if in_shrine() else BACKGROUND_ORDER
+
+## The Lucky Pinch's exclusive prizes in this home
+func lucky_items() -> Array:
+	return Hokora.LUCKY_ITEMS if in_shrine() else LUCKY_ITEMS
 
 func equipped(category: String) -> String:
 	match category:
@@ -511,6 +597,8 @@ func equipped(category: String) -> String:
 
 ## Equip any owned item of a category. Returns false if it can't be used.
 func equip(category: String, id: String) -> bool:
+	if in_shrine() and category in ["decor", "backgrounds"]:
+		return _equip_home(category, id)
 	if category == "backgrounds":
 		return equip_background(id)
 	if category == "cases":
@@ -539,7 +627,24 @@ func equip(category: String, id: String) -> bool:
 	equipped_changed.emit(category, id)
 	return true
 
+## The hokora: an item goes in its slot (a lantern pair, the beam, the shelf, the colour; the sky or
+## the drift); picking the one already in use takes it off again (the slot's default comes back)
+func _equip_home(category: String, id: String) -> bool:
+	var item: Dictionary = catalog(category).get(id, {})
+	if item.is_empty() or not is_owned(category, id):
+		return false
+	var slot: String = item["kind"]
+	home_equipped[slot] = Hokora.DEFAULTS[slot] if home_piece(slot) == id else id
+	save_data()
+	if category == "backgrounds":
+		background_changed.emit(id)
+	equipped_changed.emit(category, id)
+	return true
+
 func is_in_use(category: String, id: String) -> bool:
+	if in_shrine() and category in ["decor", "backgrounds"]:
+		var item: Dictionary = catalog(category).get(id, {})
+		return not item.is_empty() and home_piece(item["kind"]) == id
 	if category == "backgrounds":
 		return equipped_background == id or equipped_bg_color == id
 	if category == "decor" and id != "none":
@@ -550,6 +655,15 @@ func is_in_use(category: String, id: String) -> bool:
 
 ## Short 'In use' text for a category's card
 func in_use_label(category: String) -> String:
+	if in_shrine() and category in ["decor", "backgrounds"]:
+		# the pieces you've picked (the slots' own defaults don't count)
+		var picked := []
+		for slot in (Hokora.DECOR_SECTIONS if category == "decor" else Hokora.SKY_SECTIONS):
+			if home_piece(slot) != Hokora.DEFAULTS[slot]:
+				picked.append(home_piece(slot))
+		if picked.size() == 1:
+			return item_name(category, picked[0])
+		return "%d items" % picked.size() if picked.size() > 1 else ("Plain" if category == "decor" else "Clouds")
 	if category == "backgrounds":
 		return "2 items" if equipped_bg_color != DEFAULT_BG_COLOR else BACKGROUNDS[equipped_background]["name"]
 	if category == "decor":
@@ -589,7 +703,7 @@ func save_data() -> void:
 	if file:
 		file.store_string(JSON.stringify({ "owned": owned, "equipped_background": equipped_background, "equipped_bg_color": equipped_bg_color,
 			"equipped_accessory": equipped_accessory, "equipped_decor": equipped_decor, "equipped_gut_color": equipped_gut_color, "new_items": new_items.keys(),
-			"equipped_case": equipped_case }))
+			"equipped_case": equipped_case, "home_equipped": home_equipped }))
 
 func load_data() -> void:
 	if not FileAccess.file_exists(SaveSlot.path(SAVE_FILE)):
@@ -626,3 +740,10 @@ func load_data() -> void:
 		var cs := str(parsed.get("equipped_case", ""))
 		if cs in CASES and is_owned("cases", cs):
 			equipped_case = cs
+		var he = parsed.get("home_equipped", {})
+		if he is Dictionary:
+			for slot in Hokora.DEFAULTS:
+				var pid := str(he.get(slot, Hokora.DEFAULTS[slot]))
+				var cat := "decor" if slot in Hokora.DECOR_SECTIONS else "backgrounds"
+				if is_owned(cat, pid) and _catalog_of(cat, true).get(pid, {}).get("kind", "") == slot:
+					home_equipped[slot] = pid

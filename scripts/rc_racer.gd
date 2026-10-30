@@ -194,8 +194,11 @@ const LEVELS := [
 ## legendary food is its 5-9 finale), the case (6-9). (The secrets went with their worlds when the
 ## worlds were reordered, 2026-10-18.)
 const SECRETS := {
-	15: ["milky", "food:Battery"], 24: ["milky", "food:Moon Rock"], 33: ["fizzy", "sticker:traffic_cone"],
-	42: ["fruity", "sticker:rubber_duck"], 51: ["fizzy", "sticker:gold_cup"],
+	# (the 3-6-9 rhythm: a small prize on a world's 3rd level, the world's secret on its 6th)
+	3: ["fizzy", "coins:5"], 12: ["milky", "sticker:pal"], 15: ["milky", "food:Battery"],
+	21: ["fizzy", "sticker:pal"], 24: ["milky", "food:Moon Rock"], 30: ["fizzy", "sticker:traffic_cone"],
+	33: ["fizzy", "bg:fireworks"], 39: ["fruity", "sticker:rubber_duck"], 42: ["fruity", "decor:hang_koinobori"],
+	48: ["fizzy", "sticker:gold_cup"], 51: ["fizzy", "bg:sky_golden"],
 }
 const FINALES := { 45: "food:Phoenix Pepper", 54: "case:prix" }
 const GAP_LEN := 120.0                # a jump's gap along the road (mat px)

@@ -12,7 +12,8 @@ extends Node
 ##   out=DIR       where the PNGs go (default user://qa)
 ##   boost=B:L     the pal has boost B (splash, fizz, focus, sturdy, lucky) at level L before each level
 ##   skill=N       the autopilot's skill, where a game has one (Paper Sumo: 1 or 2)
-##   shrine=1      the existing shrine art; new_shrine=1 the new forest frame; hour=H its sky's time
+##   home=H        the spirit's home: hokora (the default, the forest frame), first (the first hokora
+##                 model; also shrine=1) or gut; hour=H the shrine's sky at that time of day
 ##   unlock=all    start like ALL UNLOCKED (every item owned, a random pal)
 ##   case=ID       the device wears that case (with unlock=all)
 ##   menutest=N    drive the game's level menu: FORWARD N times, tap, hold; print what plays
@@ -51,12 +52,13 @@ func _ready() -> void:
 		Shop.foods[size] = FoodLibrary.FAMILIES.duplicate()
 	if args.has("unlock"):
 		DevLaunch.unlock_everything()
-	DevLaunch.new_shrine = args.has("new_shrine")
+	# (the spirit's home: home=hokora (the default), home=first (the first hokora), home=gut; the older
+	# shrine=1 / new_shrine=1 still mean the first hokora / the hokora)
+	DevLaunch.set_home(str(args.get("home", "first" if args.has("shrine") and not args.has("new_shrine") else "hokora")))
 	DevLaunch.rc_new_art = args.has("rc_new_art")             # (RC Prix's Garden from the designer's pieces)
 	DevLaunch.rc_grade = int(args.get("rc_grade", "0"))      # (its colour grade, 0 as drawn)
 	DevLaunch.rc_fx = args.get("rc_fx", "0") == "1"         # (its air: clouds' shadows, sun, beams, mist)
 	DevLaunch.rc_gold_pass = args.get("rc_gold_pass", "1") == "1"   # (the plane's rings gold once flown through)
-	DevLaunch.shrine = args.has("shrine") or DevLaunch.new_shrine
 	if args.has("hour"):
 		Shrine.qa_hour = float(args["hour"])            # (hour=H: the shrine's sky at a pretend time)                       # (ALL UNLOCKED: every item, a random pal)
 	if args.has("rain"):
@@ -169,7 +171,8 @@ func _run() -> void:
 	_quit()
 
 ## menu=food / drinks / special / games / gear / shop[:page] / dress / decor / backgrounds / pedia / cases:
-## opens it like a tap on its button, then a screenshot (shop:2 = its 3rd page)
+## opens it like a tap on its button, then a screenshot (shop:2 = its 3rd page; decor / backgrounds in
+## the hokora: section=N its slot, lanterns 0 .. colours 3)
 func _open_menu(which: String) -> void:
 	var mgr = get_tree().root.get_node_or_null("PoopPal/Main UI/MenuManager")
 	var name := which.get_slice(":", 0)
@@ -197,6 +200,7 @@ func _open_menu(which: String) -> void:
 				if name == "shop":
 					t.shop_items = Shop.shop_order()
 				t.page = page
+				t.section = int(args.get("section", "0"))      # (the hokora's lists: section=N, its slot)
 				t._open(v)
 			"games":
 				for i in page:

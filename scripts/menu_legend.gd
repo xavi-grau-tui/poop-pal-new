@@ -27,7 +27,8 @@ const DOT_STEP := 40.0
 const DOT_SIZE := 27.0
 const DOTS_PER_ROW := 5
 const ROW_OFFSET := 22.0                   # two rows: this far above / below the band's middle
-const LINE_GAP := 38.0
+const LINE_GAP := 44.0                     # (38 let "press: next" touch "hold: eat" under it)
+const TEXT_H := 40.0                       # a line's letters, top of "h" to the foot of "p" (measured)
 # The icon and its tag are pixel art on the forward sign's grid (its art pixel is 3x3 px). The
 # pixel font (an 8-pixel grid: 125 of its 1000 units per pixel) is at 28 (3.5 px per font pixel:
 # the middle between 24 and 32, as asked). The text sits so the middle of its lowercase letters
@@ -73,7 +74,7 @@ func set_lines(lines: Array) -> void:
 	var text_w := 0.0
 	for line in lines:
 		text_w = maxf(text_w, font.get_string_size("%s: %s" % [line[0], line[1]], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x)
-	var tag_size := Vector2(PAD_X + ICON_W + TEXT_GAP + text_w + PAD_X, (lines.size() - 1) * LINE_GAP + ICON_W + PAD_Y * 2.0)
+	var tag_size := Vector2(PAD_X + ICON_W + TEXT_GAP + text_w + PAD_X, (lines.size() - 1) * LINE_GAP + maxf(ICON_W, TEXT_H) + PAD_Y * 2.0)
 	var tag_pos := Vector2(BAND.position.x + dx + LEGEND_MARGIN, round(mid - tag_size.y / 2.0))
 	var tag := Sprite2D.new()
 	tag.texture = _tag_texture(int(ceil(tag_size.x / PIXEL)), int(ceil(tag_size.y / PIXEL)), tag_color)

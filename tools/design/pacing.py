@@ -83,7 +83,11 @@ SPECIAL_PRICE = {'tech': 15, 'cosmic': 15, 'legend': 40}
 # without that from a star total (so no game is ever required); + the pal rule (a Dai; its ULTRA)
 SPECIAL_ON_SALE = {'tech': 350, 'cosmic': 350, 'legend': 450}
 SPECIAL_STOCK = {'tech': 1, 'cosmic': 1, 'legend': 1}         # the Shop's special shelf: restocked every day
-COSMETICS = [8] * 20 + [40] * 4                   # the Shop's stickers and plain cases (after every game is bought)
+# the Shop's stickers and plain cases, and (the hokora, 2026-10-30) its HOME stall's plain pieces:
+# 2 lanterns, a noren, fairy lights, candles, stone lanterns, a bonsai, 3 skies, 2 wood colours
+# (scripts/hokora_catalog.gd "price"); bought after every game, cheapest first
+HOME_STALL = [20, 20, 25, 25, 15, 30, 30, 20, 20, 20, 40, 40]
+COSMETICS = sorted([8] * 20 + [40] * 4 + HOME_STALL)
 DRINK_PRICE = {2: 10, 3: 20}                      # a drink type's level 2 / level 3 (scripts/shop.gd)
 DRINK_TYPES = ['watery', 'fizzy', 'caffeinated', 'milky', 'fruity']   # one more with each game owned
 DAILY = 2                                         # the pal's daily request (from day 2, on a day you play)
@@ -110,6 +114,13 @@ GATE_TYPES = {
     4: ['fizzy', 'caffeinated', 'milky', 'fizzy', 'caffeinated'],             # Top Spin: a bell to ring / a perfect guard / a heavy top
     5: ['caffeinated', 'fruity', 'caffeinated', 'fruity', 'caffeinated'],     # Tummy Tunes: an encore song / a golden note
 }
+# the 3-6-9 rhythm (2026-10-30): a small secret on every world's 3rd level in the games whose secret
+# is a pickup (Splash Hoops' hoop / chest, Pal Prix's gifts): coins or a sticker
+SMALL_GATES = {
+    0: ['fizzy', 'fizzy', 'fizzy', 'fizzy', 'fizzy', 'fizzy'],
+    2: ['fizzy', 'milky', 'fizzy', 'fizzy', 'fruity', 'fizzy'],
+}
+SMALL_PRIZES = ['coins5', 'sticker', 'sticker', 'sticker', 'sticker', 'sticker']
 TILT_GATES = [('fizzy', 'fizzy'), ('fizzy', 'watery'), ('fizzy', 'milky'), ('caffeinated', 'milky'),
               ('fruity', 'caffeinated'), ('fruity', 'fizzy')]
 TILT_VAULT_LEVELS = [(3, 8), (12, 17), (21, 26), (30, 35), (39, 44), (48, 53)]   # (scripts/tilt_maze.gd VAULTS)
@@ -170,6 +181,9 @@ def secrets_list():
             w = k + 1                                   # worlds 2..6
             lvl = w * LEVELS + 6                        # the world's 6th level
             out.append((g, lvl, typ, GATE_LEVEL[w], finds.get((g, lvl), 'sticker')))
+    for g, types in SMALL_GATES.items():
+        for w, typ in enumerate(types):                 # worlds 1..6, their 3rd level
+            out.append((g, w * LEVELS + 3, typ, GATE_LEVEL[w], SMALL_PRIZES[w]))
     return out
 
 
@@ -448,7 +462,9 @@ class Player:
         self.clock += try_min(g, difficulty(g, lvl - 1))
         self.opened.add(s)
         self.boost = None
-        if prize != 'sticker':
+        if prize.startswith('coins'):
+            self.earn(int(prize[5:]))
+        elif prize != 'sticker':
             self.pantry[prize] = self.pantry.get(prize, 0) + 1
             self.met_specials.add(prize)
         self.new(f'opens a secret in {GAMES[g][0]} {lvl // LEVELS + 1}-{(lvl - 1) % LEVELS + 1} ({typ} {need}): {prize}')

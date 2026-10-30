@@ -36,11 +36,22 @@ const LISTS := {
 	View.DECOR: { "category": "decor" },
 	View.CASES: { "category": "cases" },
 }
-## The type tag on backgrounds / gut decor cards (like the food types): word + pastel colour
+## The type tag on backgrounds / home decor cards (like the food types): word + pastel colour
 const KIND_TAGS := {
 	"complement": ["Add-on", Color8(180, 208, 226)],
 	"color": ["Color", Color8(232, 182, 196)],
+	# the hokora's slots
+	"lantern": ["Lantern", Color8(240, 196, 168)],
+	"hanging": ["Hanging", Color8(180, 208, 226)],
+	"shelf": ["Shelf", Color8(206, 214, 178)],
+	"colour": ["Colour", Color8(232, 182, 196)],
+	"sky": ["Sky", Color8(198, 186, 226)],
+	"drift": ["Clouds", Color8(180, 208, 226)],
 }
+const Hokora := preload("res://scripts/hokora_catalog.gd")
+## In the hokora, Home Decor and Backgrounds come in sections (the slots), like the Pedia's families:
+## FORWARD = next section, tap = next item (on through the section's pages), hold = pick
+var section := 0
 const PEDIA_FAMILIES := ["green", "sweet", "greasy", "spicy", "sour"]
 const PEDIA_PAGES := 7                 # the Sho + 5 Chu, one per Chu (+ its 3 Dai), the specials
 const STAGE_WORD := { 1: "Sho", 2: "Chu", 3: "Dai", 4: "mutant", 5: "legend" }
@@ -162,6 +173,10 @@ func select_next() -> void:
 		page = (page + 1) % PEDIA_PAGES      # on through the family's pages
 		_open(View.PEDIA, 0)
 		return
+	if not _sections(view).is_empty() and selection == items.size() - 1 and _list_pages(view) > 1:
+		page = (page + 1) % _list_pages(view)    # on through the section's pages
+		_open(view, 0)
+		return
 	selection = (selection + 1) % items.size()
 	_refresh_selection()
 
@@ -175,7 +190,12 @@ func flip_page() -> void:
 			page = 0
 			_open(View.PEDIA)
 		View.BACKGROUNDS, View.ACCESSORIES, View.DECOR, View.CASES:
-			page = (page + 1) % _list_pages(view)
+			var secs := _sections(view)
+			if secs.is_empty():
+				page = (page + 1) % _list_pages(view)
+			else:
+				section = (section + 1) % secs.size()     # (the hokora: the next slot)
+				page = 0
 			_open(view)
 		View.SHOP:
 			page = (page + 1) % _shop_pages()
@@ -217,6 +237,7 @@ func confirm_selected(sel: Node) -> bool:
 	match action.get("type", ""):
 		"open":
 			page = 0              # (the card's own ConfirmSound already played)
+			section = 0
 			if action["view"] == View.SHOP:
 				shop_items = Shop.shop_order()     # (fixed while it's open: a bought card stays put)
 			if action["view"] == View.PEDIA and PetState.has_poop():
@@ -295,7 +316,7 @@ func _build_hub_cards(menu: Node) -> void:
 	var template := games.get_node("VBoxGame1/Game")
 	for info in HUB_CARDS:
 		var card := template.duplicate()
-		var logo_path: String = info["new_shrine_logo"] if DevLaunch.new_shrine else info["logo"]
+		var logo_path: String = info["new_shrine_logo"] if DevLaunch.shrine else info["logo"]   # (any shrine: HOME DECOR, not GUT DECOR)
 		card.get_node("TopFrame/Control/GameLogo").texture = load(logo_path)
 		card.get_node("TopFrame/Control/Background").texture = load(info["pattern"])
 		card.set_meta("action", { "type": "open", "view": info["view"] })
@@ -556,7 +577,7 @@ func _show_detail(id: String) -> void:
 func _build_list(v: int) -> void:
 	var cat: String = LISTS[v]["category"]
 	var cat_catalog := Collection.catalog(cat)
-	var ids := Collection.order(cat)
+	var ids := _list_ids(v)
 	page = clampi(page, 0, _list_pages(v) - 1)
 	for slot in LIST_PER_PAGE:
 		var i := page * LIST_PER_PAGE + slot
@@ -578,6 +599,8 @@ func _build_list(v: int) -> void:
 		elif Collection.is_in_use(cat, id):
 			st.text = "In use"
 			st.add_theme_color_override("font_color", IN_USE)
+		elif Collection.in_shrine() and cat in ["decor", "backgrounds"] and not Hokora.has_art(id):
+			st.text = "Art soon"                                # (a hokora piece still to be drawn)
 		# backgrounds / gut decor: the kind, on a tag like the food types
 		if owned and KIND_TAGS.has(item.get("kind", "")):
 			_card_tag(row, KIND_TAGS[item["kind"]])
@@ -596,7 +619,6 @@ func _food_card(slot: int, icon_tex: Texture2D) -> Control:
 	var food_menu := get_parent().get_node("FoodMenu/Menu")
 	var opt: Node2D = food_menu.get_node("VBoxFood/FoodOption%d" % (slot + 1))
 	var f_frame: Sprite2D = opt.get_node("Frame")
-	var f_icon: Sprite2D = opt.get_node("Icon")
 	var f_name: Label = opt.get_node("Name")
 	var f_ring: Control = opt.get_node("Doughnut")
 	# the two menus' backgrounds sit a few px apart: line the card up with this one's frame
@@ -616,18 +638,20 @@ func _food_card(slot: int, icon_tex: Texture2D) -> Control:
 	frame.position = f_frame.position + origin
 	frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	row.add_child(frame)
-	# the icon: in the frame's square, as big as a food icon (any picture, aspect kept)
-	var box := Vector2(32, 32) * f_icon.scale
+	# the icon: on the frame's square where the food menu centres its icons (its SQUARE_IN_FRAME and
+	# ICON_ROOM: the food icon's own position is its top-left corner now, not its middle)
+	var fm := get_parent().get_node("FoodMenu")
+	var room_size: Vector2 = fm.ICON_ROOM
+	var room := Rect2(f_frame.position + fm.SQUARE_IN_FRAME + origin - room_size / 2.0, room_size)
 	var icon := TextureRect.new()
-	icon.texture = icon_tex
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.stretch_mode = TextureRect.STRETCH_SCALE
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	icon.size = box
-	icon.position = f_icon.position + origin - box / 2.0
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
 	row.set_meta("icon_rect", icon)
+	row.set_meta("icon_room", room)
+	_fit_card_icon(row, icon_tex)
 	# the name: the food name's own label (font, size, colour)
 	var name_l: Label = f_name.duplicate()
 	name_l.z_index = 0
@@ -643,6 +667,27 @@ func _food_card(slot: int, icon_tex: Texture2D) -> Control:
 	# hold ring round the icon square, where the food menu has it
 	_add_doughnut(row, Rect2(f_ring.position + origin, f_ring.size))
 	return row
+
+## A card's picture crisp like the food icons: scaled by a whole number, the biggest that keeps the
+## drawing in the icon square, the drawing's own box centred on it
+var _card_used := {}
+func _fit_card_icon(row: Control, tex: Texture2D) -> void:
+	var icon: TextureRect = row.get_meta("icon_rect")
+	var room: Rect2 = row.get_meta("icon_room")
+	icon.texture = tex
+	if tex == null:
+		return
+	var key := tex.resource_path if tex.resource_path != "" else str(tex.get_instance_id())
+	if not _card_used.has(key):
+		var img := tex.get_image()
+		_card_used[key] = img.get_used_rect() if img else Rect2i(Vector2i.ZERO, Vector2i(tex.get_size()))
+	var used: Rect2i = _card_used[key]
+	if used.size.x <= 0 or used.size.y <= 0:
+		used = Rect2i(Vector2i.ZERO, Vector2i(tex.get_size()))
+	var fit := minf(room.size.x / used.size.x, room.size.y / used.size.y)
+	var px := floorf(fit) if fit >= 1.0 else fit       # (a big preview, a gut or a sky: shrunk to fit)
+	icon.size = tex.get_size() * px
+	icon.position = (room.get_center() - (Vector2(used.position) + Vector2(used.size) / 2.0) * px).round()
 
 ## The coloured type tag of a food card (foodtag.png at the same spot), with its word
 func _card_tag(row: Control, info: Array) -> void:
@@ -724,6 +769,12 @@ func _refresh_pager() -> void:
 		pages = _list_pages(view)
 	elif view == View.SHOP:
 		pages = _shop_pages()
+	if view in LISTS and not _sections(view).is_empty():
+		_section_dots(_sections(view).size(), section, pages, page)      # (the hokora's slots, then pages)
+		detail_legend.visible = false
+		page_label.visible = false
+		page_hint.visible = true
+		return
 	var many := view != View.DETAIL and view != View.HUB and pages > 1
 	var is_list := view in LISTS or view == View.SHOP
 	list_dots.visible = is_list and pages > 1
@@ -742,7 +793,7 @@ func _refresh_pager() -> void:
 ## unlocked (so a fresh page of '?' appears as a promise of more to unlock).
 func _list_pages(v: int) -> int:
 	var cat: String = LISTS[v]["category"]
-	var ids := Collection.order(cat)
+	var ids := _list_ids(v)
 	var total := maxi(1, ceili(ids.size() / float(LIST_PER_PAGE)))
 	# every page with something you own is shown (wherever it was won)...
 	var shown := 1
@@ -809,6 +860,9 @@ func _build_shop() -> void:
 				_card_tag(row, ["Sticker", Color8(240, 222, 196)])
 			"case":
 				_card_tag(row, ["Case", Color8(200, 222, 210)])
+			"home":
+				var piece_kind: String = Collection.find_item(it["category"], it["piece"]).get("kind", "")
+				_card_tag(row, KIND_TAGS.get(piece_kind, ["Home", Color8(220, 196, 150)]))
 			_:
 				_card_tag(row, UiArt.TYPE_TAGS.get(fam, [fam.capitalize(), Color8(220, 196, 150)]))
 		var tag: Sprite2D = row.get_child(row.get_child_count() - 2)
@@ -822,9 +876,9 @@ func _build_shop() -> void:
 			UiArt.place_tier_icons(row, tag, it["type"], int(it["level"]))
 		var state := Shop.state(it)
 		var st: Label = row.get_meta("status_label")
-		if state == "owned" and kind in ["sticker", "case", "drink"]:
+		if state == "owned" and kind in ["sticker", "case", "drink", "home"]:
 			# what it is, in the picture square (a sticker, a case's corner, the drink)
-			(row.get_meta("icon_rect") as TextureRect).texture = _shop_picture(it)
+			_fit_card_icon(row, _shop_picture(it))
 		elif state != "owned":
 			_price_box(row, Shop.price(it), state == "ok")
 		match state:
@@ -845,7 +899,7 @@ const SIZE_NAME := { "baby": "Sho", "kid": "Chu", "adult": "Dai" }
 
 ## The price in the card's picture square: a big coin and the number under it
 func _price_box(row: Control, price: int, affordable: bool) -> void:
-	var box: TextureRect = row.get_meta("icon_rect")
+	var box: Rect2 = row.get_meta("icon_room")
 	var coin := TextureRect.new()
 	coin.texture = UiArt.coin()
 	coin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -871,6 +925,8 @@ func _shop_picture(it: Dictionary) -> Texture2D:
 			return Collection.prize_icon("sticker:" + it["sticker"])
 		"case":
 			return Collection.prize_icon("case:" + it["case"])
+		"home":
+			return _item_preview(it["category"], it["piece"])
 	return null
 
 func _special_family(it: Dictionary) -> String:
@@ -936,8 +992,12 @@ func open_shop() -> void:
 
 ## The Pedia's dots, two rows in the band: the 5 families (FORWARD flips them), then the family's pages
 func _pedia_dots() -> void:
+	_section_dots(PEDIA_FAMILIES.size(), pedia_family, PEDIA_PAGES, page)
+
+## Two rows in the band: one dot per part (the Pedia's families, the hokora's slots: FORWARD flips
+## them), then a scroll mark per page of the part showing
+func _section_dots(n: int, current: int, n_pages: int, current_page: int) -> void:
 	var dots := list_dots.get_children()
-	var n := PEDIA_FAMILIES.size()
 	var parent_pos: Vector2 = list_dots.position
 	var right := FRAME_DX + MenuLegend.FORWARD_LEFT - MenuLegend.DOT_GAP
 	var top_y := MenuLegend.BAND.get_center().y - MenuLegend.ROW_OFFSET
@@ -945,7 +1005,7 @@ func _pedia_dots() -> void:
 	for i in dots.size():
 		dots[i].visible = i < n
 		if i < n:
-			dots[i].modulate = Color(1, 1, 1, 1) if i == pedia_family else Color(1, 1, 1, 0.3)
+			dots[i].modulate = Color(1, 1, 1, 1) if i == current else Color(1, 1, 1, 0.3)
 			var left := right - MenuLegend.DOT_SIZE - (n - 1 - i) * MenuLegend.DOT_STEP
 			dots[i].position = Vector2(left, top_y - MenuLegend.DOT_SIZE / 2.0) - parent_pos
 	if not pedia_marks:
@@ -957,16 +1017,35 @@ func _pedia_dots() -> void:
 	const STEP := 26.0
 	const PX := 3.0                      # scroll marks: 5 x 5 art pixels, x3 like the band's icons
 	var y := MenuLegend.BAND.get_center().y + MenuLegend.ROW_OFFSET
-	var x0 := right - 5 * PX - (PEDIA_PAGES - 1) * STEP
-	for p in PEDIA_PAGES:
+	var x0 := right - 5 * PX - (n_pages - 1) * STEP
+	for p in n_pages:
 		var m := Sprite2D.new()
-		m.texture = UiArt.scroll_mark(p == page)
+		m.texture = UiArt.scroll_mark(p == current_page)
 		m.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		m.centered = false
 		m.scale = Vector2(PX, PX)
 		m.position = Vector2(x0 + p * STEP, y - 5 * PX / 2.0)
 		pedia_marks.add_child(m)
 	pedia_marks.visible = true
+
+## The hokora's sections for a list view (its slots), or [] (one plain list: the gut, dress-up, cases)
+func _sections(v: int) -> Array:
+	if not Collection.in_shrine():
+		return []
+	match v:
+		View.DECOR:
+			return Hokora.DECOR_SECTIONS
+		View.BACKGROUNDS:
+			return Hokora.SKY_SECTIONS
+	return []
+
+## The ids a list view shows (in the hokora: the current section's)
+func _list_ids(v: int) -> Array:
+	var cat: String = LISTS[v]["category"]
+	var secs := _sections(v)
+	if secs.is_empty():
+		return Collection.order(cat)
+	return Hokora.section_ids(cat, secs[clampi(section, 0, secs.size() - 1)])
 
 ## Where a found pal comes from: its parent + the food (a Sho: how many of its Chu you've found)
 func _evolution_link(id: String) -> String:
@@ -1013,6 +1092,11 @@ func _food_words(foods: Array, size: String) -> String:
 
 func _apply_background() -> void:
 	var layers: Array = Collection.BACKGROUNDS[Collection.equipped_background]["layers"]
+	if Collection.in_shrine():
+		# the hokora: the drift's cloud layers (a particle drift keeps the plain clouds under it); its
+		# sky's colours are the shrine's to set, by the clock (Shrine._sky)
+		var drift: Dictionary = Hokora.SKY.get(Collection.home_piece("drift"), {})
+		layers = drift.get("layers", Hokora.SKY["clouds"]["layers"])
 	var far = get_node_or_null("../../PetBackground/CloudA")
 	var near = get_node_or_null("../../PetBackground/CloudB")
 	if far and layers.size() > 0:
@@ -1021,7 +1105,9 @@ func _apply_background() -> void:
 		near.texture = load(layers[1])
 	# sky colour: the same hue shift as the gut colours, on the pink sky behind the layers
 	var sky = get_node_or_null("../../PetBackground/PinkBackground")
-	if sky:
+	if sky and Collection.in_shrine():
+		sky.material = null
+	elif sky:
 		var hue: float = Collection.BACKGROUNDS.get(Collection.equipped_bg_color, {}).get("hue", 0.0)
 		if hue == 0.0:
 			sky.material = null
@@ -1169,6 +1255,11 @@ func _form_icon(id: String) -> Texture2D:
 	return atlas
 
 func _item_preview(cat: String, id: String) -> Texture2D:
+	if Collection.in_shrine() and cat in ["decor", "backgrounds"]:
+		var pic := Hokora.preview(id)                  # (its icon, or a stand-in until it's drawn)
+		if pic == null and Hokora.SKY.get(id, {}).has("layers"):
+			return _background_preview(Hokora.SKY[id]["layers"], 0.0, false)
+		return pic
 	match cat:
 		"backgrounds":
 			var bg: Dictionary = Collection.BACKGROUNDS[id]

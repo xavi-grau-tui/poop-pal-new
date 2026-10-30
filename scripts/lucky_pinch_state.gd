@@ -8,7 +8,7 @@ extends Node
 ##
 ## The machine keeps its pile: every capsule (where it lies, its colour, the prize inside)
 ## stays as it is between bonuses, also the ones knocked aside; won capsules are gone. Only
-## when it is empty does it get refilled. The prizes are Collection.LUCKY_ITEMS, items you
+## when it is empty does it get refilled. The prizes are Collection.lucky_items(), items you
 ## can only get here; once all are won it is refilled with coin capsules (+3 coins each).
 ##
 ## When it comes (the skeleton, docs/progression.md): after every CLAW_EVERY-th meal that brought
@@ -186,7 +186,7 @@ func end_visit() -> void:
 func refill() -> void:
 	pit.clear()
 	var contents: Array = []
-	for it in Collection.LUCKY_ITEMS:
+	for it in Collection.lucky_items():
 		if not Collection.is_owned(it[0], it[1]):
 			contents.append({ "category": it[0], "id": it[1] })
 	if contents.is_empty():

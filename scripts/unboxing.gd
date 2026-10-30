@@ -70,7 +70,7 @@ func _ready() -> void:
 	screen_off.texture = preload("res://textures/unboxing/screen_off.png")
 	screen_off.centered = false
 	screen_off.transform = to_front * Transform2D(0.0, SCREEN.position)
-	screen_off.z_index = 2           # over the boot's black screen, under the console frame
+	screen_off.z_index = 5           # over the boot's black screen (4), under the console frame
 	front.add_child(screen_off)
 
 	# [glass, print, tab scale, how much of the tab is stuck on the film (its px)]: the small

@@ -150,12 +150,16 @@ const LEVELS := [
 	["drift", null, "", 1.6, 65, true], ["orbit", null, "", 1.7, 65, true],
 	["wheel", null, "", 1.8, 70, true],
 ]
-## Secrets (a world's 6th level): the golden hoop high up (only fizzy jets throw a ball through
-## it) and the chest on the sand (a lucky pal opens it); finales: the device's first case, Taro
-## (1-5: plain, early, the user 2026-10-17), Kraken Brine (5-9), the game's own case (6-9)
+## Secrets: the golden hoop high up (only fizzy jets throw a ball through it) and the chest on the
+## sand (a lucky pal opens it). The 3-6-9 rhythm (docs/progression.md 4): a world's 3rd level a
+## small prize (coins, a sticker), its 6th the world's secret (a piece for the hokora); finales: the
+## device's first case, Taro (1-5: plain, early, the user 2026-10-17), Kraken Brine (5-9), the
+## game's own case (6-9)
 const SECRETS := {
-	15: ["fizzy", "sticker:starfish"], 24: ["fruity", "decor:seaweed"], 33: ["fizzy", "sticker:pufferfish"],
-	42: ["fruity", "sticker:seashell"], 51: ["fizzy", "sticker:anglerfish"],
+	3: ["fizzy", "coins:5"], 12: ["fizzy", "sticker:starfish"], 15: ["fizzy", "decor:hang_shells"],
+	21: ["fizzy", "sticker:pal"], 24: ["fruity", "bg:sky_fish"], 30: ["fizzy", "sticker:pufferfish"],
+	33: ["fizzy", "bg:sky_lanterns"], 39: ["fizzy", "sticker:seashell"], 42: ["fruity", "decor:hang_teru"],
+	48: ["fizzy", "sticker:anglerfish"], 51: ["fizzy", "decor:lantern_jellyfish"],
 }
 const FINALES := { 5: "case:taro", 45: "food:Kraken Brine", 54: "case:splash" }
 const HOOP_AT := Vector2(150, 236)      # the golden hoop (higher with the gate's level)

@@ -192,8 +192,12 @@ const LEVELS := [
 ## jumps to it), crates across the road with the gift behind (a sturdy craft rams through), a gift
 ## only a lucky craft sees. The cosmic foods in the space worlds (the user's note).
 const SECRETS := {
-	15: ["fizzy", "sticker:pal"], 24: ["milky", "coins:15"], 33: ["fruity", "sticker:pal"],
-	42: ["milky", "food:Moon Rock"], 51: ["fruity", "food:Stardust Sugar"],
+	# (the 3-6-9 rhythm: a small prize on a world's 3rd level; fruity or milky there, the fizzy gift
+	# needs a waterfall step to jump from)
+	3: ["fruity", "coins:5"], 12: ["fruity", "sticker:pal"], 15: ["fizzy", "sticker:pal"],
+	21: ["milky", "coins:10"], 24: ["milky", "coins:15"], 30: ["fruity", "sticker:pal"],
+	33: ["fruity", "bg:sky_aurora"], 39: ["milky", "coins:10"], 42: ["milky", "food:Moon Rock"],
+	48: ["fruity", "coins:10"], 51: ["fruity", "food:Stardust Sugar"],
 }
 const FINALES := { 45: "coins:30", 54: "coins:60" }
 ## The rivals' tiers (Pal Prix's): pace (x the form's speed), braking in the bends, wandering,

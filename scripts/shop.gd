@@ -15,11 +15,15 @@ extends Node
 ##                  one of each kind and restocks every day. A special that can't make a new pal any
 ##                  more turns into its price in coins (no prize is ever a dead one).
 ##                  drink levels: level 2 and 3 of a drink type you have, for good (10 / 20).
+##   HOME           (the hokora) a few plain pieces for the home and its sky: white and indigo
+##                  lanterns, a noren, fairy lights, candles, stone lanterns, a bonsai, plain skies,
+##                  two wood colours (HokoraCatalog's items with a "price"); every themed piece is
+##                  won. Opens once the first home piece is yours (Splash Hoops' 5 stars).
 ##   STICKERS       a sticker of every pal you've found (Sho and Chu: the sticker book's pages), 5
 ##                  each; the themed ones are only won. Opens once the first sticker is won.
 ##   CASES          plain cases, 40 each; the themed ones are only won. Opens once the first case
 ##                  arrives (a gift).
-## What your PAL wears or lives in (dress, gut decor, backgrounds) is never sold: gifts for playing.
+## What your spirit WEARS (dress-ups) is never sold: gifts for playing.
 
 signal changed
 
@@ -37,8 +41,9 @@ const STICKER_PRICE := 5
 const SPECIAL_STARS := { "tech": 350, "cosmic": 350, "legend": 450 }
 ## The special shelf: how many of each kind a day
 const DAILY_STOCK := { "tech": 1, "cosmic": 1, "legend": 1 }
-const SECTIONS := ["food", "stickers", "cases"]
-const SECTION_NAMES := { "food": "Food & Drinks", "stickers": "Stickers", "cases": "Cases" }
+const SECTIONS := ["food", "home", "stickers", "cases"]
+const SECTION_NAMES := { "food": "Food & Drinks", "home": "Home", "stickers": "Stickers", "cases": "Cases" }
+const Hokora := preload("res://scripts/hokora_catalog.gd")
 
 ## Food packs and special foods, in a fixed order (the Shop shows the packs your pal needs next first)
 const ITEMS := [
@@ -107,6 +112,11 @@ func all_items() -> Array:
 		for lvl in [2, 3]:
 			var dr := DrinkLibrary.drink_of(t, lvl)
 			out.append({ "id": "drink_%s_%d" % [t, lvl], "kind": "drink", "type": t, "level": lvl, "name": dr.get("name", t), "section": "food" })
+	for cat in ["decor", "backgrounds"]:
+		var src: Dictionary = Hokora.DECOR if cat == "decor" else Hokora.SKY
+		for id in Hokora.order(cat):
+			if src[id].has("price"):
+				out.append({ "id": "home_" + id, "kind": "home", "piece": id, "category": cat, "name": src[id]["name"], "section": "home" })
 	for id in Collection.PAL_STICKERS:
 		out.append({ "id": "sticker_" + id, "kind": "sticker", "sticker": id, "name": PetState.FORMS.get(id, {}).get("name", id), "section": "stickers" })
 	for id in Collection.CASES:
@@ -154,6 +164,8 @@ func price(it: Dictionary) -> int:
 			return STICKER_PRICE
 		"case":
 			return int(Collection.CASES.get(it["case"], {}).get("price", 0))
+		"home":
+			return int(Collection.find_item(it["category"], it["piece"]).get("price", 0))
 	return int(it.get("price", 0))
 
 ## "owned" (you have it for good), "ok" (you can buy it), "poor" (not enough coins), "out" (a
@@ -171,6 +183,9 @@ func state(it: Dictionary) -> String:
 				return "owned"
 		"case":
 			if Collection.is_owned("cases", it["case"]):
+				return "owned"
+		"home":
+			if Collection.is_owned(it["category"], it["piece"]):
 				return "owned"
 		"special":
 			if int(stock.get(special_kind(it["food"]), 0)) <= 0:
@@ -204,9 +219,12 @@ func _special(food_name: String) -> Dictionary:
 			return f
 	return {}
 
-## A section is open (STICKERS once a sticker is won, CASES once a case is yours)
+## A section is open (HOME once a home piece is yours, in a shrine; STICKERS once a sticker is won,
+## CASES once a case is yours)
 func section_open(section: String) -> bool:
 	match section:
+		"home":
+			return Collection.in_shrine() and Collection.home_pieces_won() > 0
 		"stickers":
 			return not Collection.owned.get("stickers", []).is_empty()
 		"cases":
@@ -248,6 +266,8 @@ func on_sale(it: Dictionary) -> bool:
 			return it["sticker"] in PetState.discovered and not Collection.is_owned("stickers", it["sticker"])
 		"case":
 			return not Collection.is_owned("cases", it["case"])
+		"home":
+			return not Collection.is_owned(it["category"], it["piece"])
 	return true
 
 ## A special food could still make a pal you haven't found (a tech one: any family's tech mutant;
@@ -327,6 +347,8 @@ func buy(id: String) -> bool:
 			Collection.unlock("stickers", it["sticker"])
 		"case":
 			Collection.unlock("cases", it["case"])
+		"home":
+			Collection.unlock(it["category"], it["piece"])
 	save_data()
 	changed.emit()
 	return true

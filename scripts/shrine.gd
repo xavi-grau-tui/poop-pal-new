@@ -9,8 +9,20 @@ class_name Shrine
 ## front's silhouette in side colours, stacked from its back to its front).
 ## Art: tools/art/shrine.py -> textures/pet/shrine/ (the gut's grid: 110 cells across 925 px).
 
+const Hokora := preload("res://scripts/hokora_catalog.gd")
+const SkyDrift := preload("res://scripts/sky_drift.gd")
+const COLOUR_SHADER := preload("res://shaders/hokora_colour.gdshader")
+## The stone base in the forest front's picture (UV), kept stone-coloured whatever the wood's colour
+const STONE_BOX := Vector4(0.2, 0.762, 0.805, 0.915)
+
 var side_count := 20
 var asset_dir := "res://textures/pet/shrine/"
+## Home Decor and Backgrounds (Collection.home_piece, _apply_decor): the beam's hanging piece (over
+## the front, its two frames swaying), the shelf pair on the slab, what drifts in the sky
+var hanging: Sprite2D
+var _hang_frames: Array[Texture2D] = []
+var shelf: Sprite2D
+var drift: Node2D
 const CELL := 925.0 / 110.0           # px per grid cell in the pictures
 ## Px per full tilt, against PetView (which itself comes 14 px towards you: TiltParallax.FRONT)
 const FRONT := 20.0                   # the front face, towards you
@@ -203,7 +215,7 @@ func _ready() -> void:
 				root_material.shader = load("res://shaders/shrine_root_plane.gdshader")
 				plane.material = root_material
 				var x_edge := 32.0 if side_index == 0 else 78.0
-				root_planes.append({"node": plane, "depth": float(spec[1]), "x": x_edge,
+				root_planes.append({"node": plane, "mat": root_material, "depth": float(spec[1]), "x": x_edge,
 					"top": 38.0, "bottom": 96.8, "span": float(spec[5]),
 					"side": side_index, "scale_y": float(spec[3])})
 				by_depth.append([spec[1], -1, plane])
@@ -263,9 +275,17 @@ func _ready() -> void:
 	tokkuri = _prop_sprite(load(asset_dir + "tokkuri.png"), PROP_PX)
 	tokkuri.z_index = 2
 	tokkuri.scale = Vector2.ONE * TOKKURI_PX * CELL * _gut_scale.x
+	# the Home Decor shelf pair: one picture on the slab's canvas with both pieces in place, stood on the
+	# slab beside the stand at the ornaments' depth (its picture: _apply_decor)
+	shelf = _layer(null, 1)
+	_depth_of[shelf] = ORN_F
+	near.append([ORN_F, 1.5, shelf])
 	near.sort_custom(func(a, b): return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
 	for e in near:
 		move_child(e[2], -1)
+	# the beam's hanging piece, on the front's own canvas, over it (under the lanterns and the bell)
+	hanging = _layer(null, 1)
+	hanging.scale = front.scale
 
 	for i in rope_count:
 		var segment := _layer(load(asset_dir + ("bead_red.png" if i % 2 == 0 else "bead_white.png")), 2)
@@ -322,6 +342,75 @@ func _ready() -> void:
 		var p := a + Vector2(0, _seg() * (i + 1))
 		_rp.append(p)
 		_rq.append(p)
+	drift = SkyDrift.new()
+	add_child(drift)
+	_apply_decor()
+	Collection.equipped_changed.connect(func(cat, _id):
+		if cat in ["decor", "backgrounds"]:
+			_apply_decor())
+
+## Home Decor and Backgrounds in the hokora (Collection.home_piece; HokoraCatalog): the lanterns'
+## picture (their own drawing, or the red one recoloured by the colour shader) and their glow, the
+## beam's hanging piece, the shelf pair, the wood and roof colour (the forest hokora only: the first
+## model's vermilion would read as its roof), what drifts in the sky. A piece not drawn yet shows
+## nothing (a hanging or shelf piece) until its PNG is in Hokora.ART_DIR.
+func _apply_decor() -> void:
+	var lid := Collection.home_piece("lantern")
+	var item: Dictionary = Hokora.DECOR.get(lid, {})
+	var own := Hokora.art(lid) if DevLaunch.new_shrine else ""
+	var base: Texture2D = load(own) if own != "" else load(asset_dir + "lantern.png")
+	var lmat: ShaderMaterial = null
+	if own == "" and item.has("tint"):
+		lmat = _colour_material({ "wood": item["tint"] }, false, false)
+	for l in [lantern, lantern_left]:
+		if l:
+			l.texture = base
+			l.material = lmat
+			if DevLaunch.new_shrine:
+				l.offset = Vector2(-base.get_width() * 0.5, -3.0)
+	for g in [lantern_glow, lantern_left_glow]:
+		if g:
+			g.self_modulate = Color.html(item.get("glow", "#ffc270"))
+	# the wood and the roof
+	var colour: Dictionary = Hokora.DECOR.get(Collection.home_piece("colour"), {})
+	var cmat: ShaderMaterial = _colour_material(colour) if DevLaunch.new_shrine and colour.has("wood") else null
+	var rmat: ShaderMaterial = _colour_material(colour, true, true) if cmat else null
+	for sp in [front] + sides:
+		sp.material = cmat
+	for plane_data in root_planes:
+		(plane_data["node"] as CanvasItem).material = rmat if rmat else plane_data["mat"]
+	# the beam's hanging piece (two frames) and the shelf pair: their drawings, when they exist
+	var hid := Collection.home_piece("hanging")
+	_hang_frames.clear()
+	for k in ["-1", "-2"]:
+		var p := Hokora.art(hid, k)
+		if p != "" and DevLaunch.new_shrine:
+			_hang_frames.append(load(p))
+	hanging.texture = _hang_frames[0] if not _hang_frames.is_empty() else null
+	var sp_path := Hokora.art(Collection.home_piece("shelf"))
+	shelf.texture = load(sp_path) if sp_path != "" and DevLaunch.new_shrine else null
+	drift.set_kind(Hokora.SKY.get(Collection.home_piece("drift"), {}).get("particles", ""), _south())
+
+## The colour shader with a colour item's sets (wood / roof / moss); roots: the root planes' version
+## (their faint edge pixels dropped, as their own shader did)
+func _colour_material(item: Dictionary, classify := true, roots := false) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = COLOUR_SHADER
+	m.set_shader_parameter("classify", classify)
+	m.set_shader_parameter("cut_alpha", roots)
+	if classify and not roots:
+		m.set_shader_parameter("stone_box", STONE_BOX)
+	for part in ["wood", "roof", "moss"]:
+		var t: Array = item.get(part, [0.0, 1.0, 1.0])
+		m.set_shader_parameter(part, Vector3(t[0], t[1], t[2]))
+	return m
+
+## Is the phone in the southern half of the world? (its seasons the other way round: Seasons)
+func _south() -> bool:
+	var local_dict := Time.get_datetime_dict_from_system()
+	var utc_dict := Time.get_datetime_dict_from_system(true)
+	var tz := (Time.get_unix_time_from_datetime_dict(local_dict) - Time.get_unix_time_from_datetime_dict(utc_dict)) / 3600.0
+	return _where(tz).x < 0.0
 
 func _layer(tex: Texture2D, z: int) -> Sprite2D:
 	var sp := Sprite2D.new()
@@ -340,6 +429,9 @@ func _process(delta: float) -> void:
 	_rope_step(minf(delta, 1.0 / 30.0))
 	_sky(t)
 	_rain_step(delta)
+	drift.step(delta, Rect2(_g(-6.0, -4.0), _g(116.0, 112.0) - _g(-6.0, -4.0)), t, _night)
+	if _hang_frames.size() > 1:                    # (the hanging piece sways: its two frames)
+		hanging.texture = _hang_frames[int(Time.get_ticks_msec() / 650) % _hang_frames.size()]
 	if stream.visible:
 		_aim_stream()
 	if t.is_equal_approx(tilt) and walls.get_meta("drawn", false):
@@ -348,6 +440,7 @@ func _process(delta: float) -> void:
 	if land:
 		(land.material as ShaderMaterial).set_shader_parameter("tilt", tilt)
 	front.position = (tilt * FRONT).round()
+	hanging.position = front.position
 	slab.position = (tilt * SLAB).round() + _platform_offset()
 	for j in slab_back.size():
 		var slab_back_depth := SLAB_BACK
@@ -1258,6 +1351,7 @@ func _lantern_glow() -> Sprite2D:
 ## and dusk warm, night blue)
 const SKY_PATH := [Vector2(110, -760), Vector2(110, -1110), Vector2(320, -1228), Vector2(523, -1236),
 		Vector2(726, -1228), Vector2(936, -1110), Vector2(936, -760)]
+const SKY_PICTURE := Color8(229, 165, 166)    # (textures/pet-background/background.png: one flat pink)
 var _sun_cache := {}
 
 func _sky(_t: Vector2) -> void:
@@ -1280,31 +1374,47 @@ func _sky(_t: Vector2) -> void:
 		moon.position = _on_path(since / 12.4) + hold
 		moon.texture = moons[int(roundf(ph * 8.0)) % 8]
 		moon.modulate.a = 0.8 if not sun.visible else 0.45     # (a day moon: paler)
-	# the sky's light
+	# the sky's light, and the sky's own colour along the same clock (the Backgrounds' sky set: its
+	# night, its dusk at dawn and dusk, its day; the default's are the sky picture's pink in that light)
 	var night := Color(0.58, 0.62, 0.86)
 	var warm := Color(1.0, 0.86, 0.76)
 	var tint := Color.WHITE
+	var sc := Hokora.sky_colours(Collection.home_piece("sky"))
+	var sky_col: Color = sc["day"]
 	if h < rise - 1.0 or h >= set_ + 1.0:
 		tint = night
+		sky_col = sc["night"]
 	elif h < rise:
 		tint = night.lerp(warm, h - (rise - 1.0))
+		sky_col = (sc["night"] as Color).lerp(sc["dusk"], h - (rise - 1.0))
 	elif h < rise + 1.5:
 		tint = warm.lerp(Color.WHITE, (h - rise) / 1.5)
+		sky_col = (sc["dusk"] as Color).lerp(sc["day"], (h - rise) / 1.5)
 	elif h >= set_ - 1.5 and h < set_:
 		tint = Color.WHITE.lerp(warm, (h - (set_ - 1.5)) / 1.5)
+		sky_col = (sc["day"] as Color).lerp(sc["dusk"], (h - (set_ - 1.5)) / 1.5)
 	elif h >= set_:
 		tint = warm.lerp(night, h - set_)
+		sky_col = (sc["dusk"] as Color).lerp(sc["night"], h - set_)
 	_night = clampf((1.0 - tint.r) / 0.42, 0.0, 1.0)
-	tint = tint * Color.WHITE.lerp(RAIN_SKY, _rain_k)                  # (greyer while it rains)
+	var wet := Color.WHITE.lerp(RAIN_SKY, _rain_k)                      # (greyer while it rains)
+	tint = tint * wet
 	if land:
 		land.modulate = tint
 		_cast_shadow(h, rise, set_, since, ph)
 	var bg := get_node_or_null("/root/PoopPal/Main UI/PetBackground")
 	if bg:
-		for n in ["PinkBackground", "CloudA", "CloudB"]:
+		# (a darker night sky than the default's darkens its clouds as much)
+		var dark := clampf((sc["night"] as Color).get_luminance() / Color.html(Hokora.SKY["sky_shrine"]["night"]).get_luminance(), 0.45, 1.15)
+		var clouds := tint * lerpf(1.0, dark, _night)
+		clouds.a = 1.0
+		for n in ["CloudA", "CloudB"]:
 			var l := bg.get_node_or_null(n) as CanvasItem
 			if l:
-				l.modulate = tint
+				l.modulate = clouds
+		var pink := bg.get_node_or_null("PinkBackground") as CanvasItem
+		if pink:                                        # (the picture is one flat pink: SKY_PICTURE)
+			pink.modulate = Color(sky_col.r / SKY_PICTURE.r, sky_col.g / SKY_PICTURE.g, sky_col.b / SKY_PICTURE.b) * wet
 
 ## A point along SKY_PATH, f 0 (rise, low on the left) .. 1 (set, low on the right), by length
 func _on_path(f: float) -> Vector2:
@@ -1411,6 +1521,9 @@ func _zoom(view: Node) -> void:
 		var breath: Tween = pal.get("breathing_tween")
 		if breath and breath.is_valid():
 			pal.call("_start_breathing")              # (its breathing was made with the old size)
+		var waiting = pal.get("mystery")
+		if waiting and (waiting as Sprite2D).visible:
+			pal.call("_show_mystery")                  # (the waiting wisp: round the room's new middle)
 
 ## The rolling clouds (PetBackground's CloudA / CloudB, their scroll shaders): the upper ones a bit
 ## lower, so they don't touch the screen's top, the lower ones a bit higher, off the floor (the user)

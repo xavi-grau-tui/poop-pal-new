@@ -28,7 +28,7 @@ var tween: Tween
 var done := false
 
 func _ready() -> void:
-	z_index = 1  # above pet view / mystery, below console frame & LCD
+	z_index = 4  # above pet view / mystery (the shrine's lanterns, bell and rain reach 3), below console frame & LCD
 	_music_off()
 	_set_lcd_visible(false)
 	_hide_boost(true)                   # (the boost badge would float over the logo)
@@ -68,7 +68,8 @@ func _build() -> void:
 	add_child(logo)
 	_setup_nose()
 
-	# the gut starts dark: it lights up slowly when the screen comes on
+	# the gut starts dark: it lights up slowly when the screen comes on (the shrine too, its lanterns
+	# and bell with it: _run darkens it again, it joins the pet view a frame after this)
 	for gut in _guts():
 		gut.modulate = GUT_DARK
 
@@ -102,6 +103,8 @@ func _on_boot_touch(event: InputEvent) -> void:
 		_held = null
 
 func _run() -> void:
+	for gut in _guts():
+		gut.modulate = GUT_DARK
 	tween = create_tween()
 	tween.tween_interval(start_delay)
 	# Developer logo
@@ -134,7 +137,7 @@ func _first_song() -> void:
 
 func _guts() -> Array:
 	var out := []
-	for path in ["../PetView/Intestine-back", "../PetView/Intestine-front"]:
+	for path in ["../PetView/Intestine-back", "../PetView/Intestine-front", "../PetView/Shrine"]:
 		var n := get_node_or_null(path)
 		if n:
 			out.append(n)

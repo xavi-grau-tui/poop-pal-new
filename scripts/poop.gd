@@ -602,14 +602,27 @@ func _show_mystery() -> void:
 		mystery_tween.kill()
 	mystery_tween = create_tween()
 	mystery_tween.tween_property(mystery, "modulate:a", 1.0, 0.4)
+	_mystery_idle()
+
+## The waiting sign's idle: the gut's EAT sign bobs; the shrine's wisp wanders round the empty room
+const WISP_PATH := [Vector2(-52, -14), Vector2(-14, -34), Vector2(40, -20), Vector2(58, 6), Vector2(14, 16), Vector2(-36, 8)]
+func _mystery_idle() -> void:
+	if mystery.has_meta("bob"):
+		(mystery.get_meta("bob") as Tween).kill()
+	var home := base_position + body_offset
 	var bob = create_tween().set_loops()
-	bob.tween_property(mystery, "position:y", base_position.y + body_offset.y - 18, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	bob.tween_property(mystery, "position:y", base_position.y + body_offset.y, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if mystery.texture is AnimatedTexture:
+		for p in WISP_PATH:
+			bob.tween_property(mystery, "position", home + p, 1.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	else:
+		bob.tween_property(mystery, "position:y", home.y - 18, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		bob.tween_property(mystery, "position:y", home.y, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	mystery.set_meta("bob", bob)
 
-## In the shrine the waiting sign is a wandering wisp, not the EAT sign (yokai migration)
+## In the shrine the waiting sign is a wandering wisp, not the EAT sign (yokai migration). (Told by
+## the home: on a fresh start the sign comes before the shrine has joined the pet view)
 func _mystery_look() -> void:
-	var shrine := get_parent().has_node("Shrine")
+	var shrine := DevLaunch.shrine or get_parent().has_node("Shrine")
 	if shrine and not (mystery.texture is AnimatedTexture):
 		mystery.texture = BoostAura.wisp_texture()
 		mystery.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -648,10 +661,7 @@ func wisp_home() -> void:
 	var t := create_tween()
 	t.tween_property(mystery, "position", home, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await t.finished
-	var bob = create_tween().set_loops()
-	bob.tween_property(mystery, "position:y", home.y - 18, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	bob.tween_property(mystery, "position:y", home.y, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	mystery.set_meta("bob", bob)
+	_mystery_idle()
 
 func _hide_mystery() -> void:
 	if not mystery or not mystery.visible:
