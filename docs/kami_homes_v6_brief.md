@@ -168,8 +168,17 @@ PLEASE REDO:
    top and the depth in the game.
 
 6. THE BELLS (section 8 of docs/kami_homes_v6_brief.md, added after your copy): a bell and two beads
-   per home, in its colours and materials, at the lanterns' definition, and a clear hook for it on
-   every home (the Capsule and the Arcade have none).
+   per home, matching that home's style, colours and materials (a chrome bell for Neon, a hot iron
+   one for Fire, pale stone for the Moon...), at the lanterns' definition.
+   - ITS PLACE CAN BE DIFFERENT IN EACH HOME: today every bell hangs at the same spot (far left, at
+     the lanterns' height), and on some homes it floats in the air. Choose for each home where a bell
+     rope would really hang: from an eave, a beam end, a bracket, a branch. On the Moon palace, for
+     example, the far-left spot is empty sky: hang it from the arch itself (one of its points or a
+     small bracket on it). The Capsule and the Arcade need a small hook or bracket added.
+   - Keep it left of the left lantern and away from the opening; leave room under it for the five
+     beads (about 48 x 68 each, hanging straight down) without touching the lantern.
+   - Mark the hook in each home's guide.png with the same orange dot as before (the bell's dot);
+     we read the position from there.
 
 7. MOON – it changed too much: the arch's inside, the pillars and the details are different now,
    and we loved the v5 one. Please go back to your v5 moon (docs/mockups/hokora_homes/v5/moon/)
