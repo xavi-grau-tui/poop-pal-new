@@ -39,6 +39,7 @@ var _home := ""
 var socket: Sprite2D
 var glass: Sprite2D                   # (a home's glass over its openings: the capsule's, the arcade's)
 var _rope_at := Vector2(11, 30)       # (NEW_ROPE_AT, or the home's)
+var _bell_pitch := 1.0                # the home's bell tone (HOMES "bell_pitch": iron deeper, brass brighter)
 var _lantern_at := Vector2(85, 30)    # (NEW_LANTERN_AT, or the home's)
 var _left_lantern_at := Vector2(25, 30)
 ## A home's own offering table (v5: table.png, its 3D from stacked copies of table_side.png, where the
@@ -426,6 +427,15 @@ func _apply_home() -> void:
 		tp.texture = load(dir + ("table.png" if k == parts.size() - 1 else "table_side.png")) if has_table else null
 		tp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_rope_at = h.get("bell", NEW_ROPE_AT)
+	# the bell and its beads: the home's own, in its colours and materials, or the forest's until drawn
+	# (the user, 2026-11-01: part of every shrine, not a slot)
+	var bell_dir := dir if _home != "" and ResourceLoader.exists(dir + "bell.png") else asset_dir
+	bell.texture = load(bell_dir + "bell.png")
+	bell.offset = Vector2(-bell.texture.get_width() * 0.5, -5.0)
+	var beads := ["bead_red.png", "bead_white.png"] if bell_dir == asset_dir else ["bead_1.png", "bead_2.png"]
+	for i in rope.size():
+		rope[i].texture = load(bell_dir + beads[i % 2])     # (they alternate down the chain)
+	_bell_pitch = h.get("bell_pitch", 1.0)
 	var hooks: Array = h.get("lanterns", [NEW_LEFT_LANTERN_AT, NEW_LANTERN_AT])
 	_left_lantern_at = hooks[0]
 	_lantern_at = hooks[1]
@@ -1302,6 +1312,11 @@ func ring(strength := 1.0) -> void:
 	if DevLaunch.new_shrine:
 		_bq -= Vector2(4.0 * strength, 0)
 		_lq_left -= Vector2(4.0 * strength, 0)
+
+## The send-off's call: the bell rung hard and heard (its home's tone), before the spirit rises
+func ring_bell() -> void:
+	ring(2.2)
+	_sfx("res://sounds/fx/suzu.wav", -6.0, _bell_pitch)
 
 ## Where the claw visits (PetView coordinates): the shrine's opening, under the beam, the pal inside
 func claw_window() -> Rect2:

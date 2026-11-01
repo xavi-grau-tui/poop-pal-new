@@ -17,6 +17,8 @@
                                  singing-bowl ring swelling and fading, little sparkles quickening
                                  with the blinks
     sounds/fx/spirit_ting.wav    the new form (the coin's place): a bright small bell, a long ring
+    sounds/fx/suzu.wav           the send-off's bell (Shrine.ring_bell, each home's pitch): the rope
+                                 shaken, a cluster of small pellet bells jingling three times, ringing out
     sounds/fx/rain_loop.wav      the shrine's rain (when it rains where you are): a soft hiss and
                                  drops pattering on the roof, 6 s that loop seamlessly
 
@@ -149,6 +151,28 @@ def ting():
     return x
 
 
+def suzu():
+    """2.4 s: a shrine bell rope shaken (suzu): three shakes, each a quick run of hits on a few small
+    pellet bells (uneven partials, a little pellet rattle), the last one left ringing out"""
+    n = int(SR * 2.4)
+    x = np.zeros(n)
+    bells = (1568.0, 1760.0, 2093.0, 1975.5)
+    for s_at, loud in ((0.0, 1.0), (0.32, 0.8), (0.64, 0.65)):
+        for k in range(7):
+            at = int((s_at + k * 0.022 + rng.uniform(0, 0.012)) * SR)
+            f = bells[rng.integers(len(bells))] * rng.uniform(0.99, 1.01)
+            m = n - at
+            t = np.arange(m) / SR
+            hit = np.zeros(m)
+            for mul, a, d in ((1.0, 1.0, 2.2), (2.76, 0.45, 5.0), (5.40, 0.2, 10.0)):
+                hit += a * np.sin(2 * np.pi * f * mul * t + rng.uniform(0, 6.28)) * np.exp(-t * d)
+            r = min(m, int(SR * 0.012))
+            hit[:r] += 0.5 * band(rng.standard_normal(r), 3000, 9000)[:r] * np.linspace(1, 0, r)
+            x[at:] += loud * rng.uniform(0.5, 1.0) * hit
+    x[:int(SR * 0.002)] *= np.linspace(0, 1, int(SR * 0.002))
+    return x
+
+
 def pour():
     """1.6 s: a trickle (bubbly band noise, its pitch rising as the cup fills) with a couple of
     small glugs, in and out softly"""
@@ -227,6 +251,7 @@ SOUNDS = {
     'spirit_rise.wav': (rise, 0.6),
     'spirit_shimmer.wav': (shimmer, 0.6),
     'spirit_ting.wav': (ting, 0.7),
+    'suzu.wav': (suzu, 0.75),
 }
 
 if __name__ == '__main__':

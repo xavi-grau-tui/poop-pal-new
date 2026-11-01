@@ -12,13 +12,16 @@ What we do ourselves, without the designer (the user and us, slight edits to the
 - room for the evolved spirits: the tallest (kushikatsu, kodama, komainu) reach ~115 px of the
   925 canvas above the baby; the pal may come down a little, and the openings are checked with the
   tallest one;
+- the bell rope's code: each home's bell.png / bead_1.png / bead_2.png when drawn (the forest's until
+  then), its own tone (HOMES "bell_pitch"), and the bell rung hard with its sound (sounds/fx/suzu.wav)
+  at every send-off (the user: the bell says bye; part of every shrine's mechanics, never a slot);
 - the hanging pieces redone at the lanterns' look (thicker outline, sized to clear the tallest
   spirit).
 
 The message, ready to send:
 
 ```
-HOMES v6 – small fixes on six homes + new tables for all
+HOMES v6 – small fixes on six homes + new tables and bells for all
 
 We put all eleven homes in the game with their lanterns, shelf objects and hanging pieces (see
 docs/mockups/hokora_homes/v6_brief/: v6_all_homes_in_game.png and one screen per home). They look
@@ -81,11 +84,35 @@ below moves them (then mark it in the new guide.png).
    - Files: tables/<home>_table_front.png (and <home>_tray_front.png / <home>_base_front.png for
      two-part tables), plus a preview of each reduced to 116 px wide, 8x.
 
+8. A BELL FOR EACH HOME (new, all eleven except the forest, which keeps its own)
+   The bell rope (the bell with its chain of beads, left of the left lantern) is part of every
+   shrine: the game rings it when a spirit is sent off. Each home gets its own, in the home's colours
+   and materials (the user), built like the forest's (textures/pet/shrine_new/bell.png and
+   bead_red.png / bead_white.png):
+   - bell.png: the bell alone, about 76 x 86, its hanging loop at the top middle;
+   - bead_1.png and bead_2.png: two beads, about 48 x 68 each, that alternate down the chain (the
+     game hangs five, 1-2-1-2-1, and swings them). Each must look right on its own and next to the
+     other, top and bottom meeting cleanly.
+   - Draw them at the lanterns' definition (the same pixel size as the lanterns, NOT the home's
+     220 grid): thick dark outline, 3-4 flat tones plus a highlight. A big ImageGen painting is fine,
+     we reduce it ourselves; check it reduced to those sizes.
+   - Ideas: Neon a chrome bell with LED beads; Fire a hot iron bell with charred wood beads;
+     Bathhouse a brass bell with wooden beads; Moon a pale stone bell with pearl beads; Golden a gold
+     bell with black lacquer beads; Ruined a cracked, rusty bell on frayed rope knots; Tree Hollow a
+     wooden bell with acorn beads; Food Stall a little brass bell with red and white paper beads;
+     Capsule a white plastic bell with pastel beads; Arcade a bell with token beads.
+   - Every home needs a clear place for it to hang, left of the left lantern (its hook at col 22,
+     row 60 of the 220 grid, as in your guide.png) with room for the chain under it: on the Capsule and the Arcade there is none
+     today, please add a small hook or bracket there.
+   Files: <home>/bell.png, bead_1.png, bead_2.png, plus bell_preview_8x.png (the bell and five beads
+   hanging, next to the home's lantern).
+
 WHAT TO DELIVER (docs/mockups/hokora_homes/v6/<home>/)
 - For the six homes: front.png, inside.png (and glass.png for Capsule and Arcade) at 220, guide.png
   if anything moved, icon.png, preview_8x.png, compare_8x.png (next to Neon, Fire, Bathhouse).
 - For all eleven: the table files above.
+- For the ten new homes: the bell files above.
 
-ORDER: the tables first (small and quick, they unblock the game), then Golden Temple, Capsule Pod,
+ORDER: the tables and the bells first (small and quick, they unblock the game), then Golden Temple, Capsule Pod,
 Arcade Cabinet, Food Stall, Ruined Night, Moon. Send each one as soon as it's done.
 ```
