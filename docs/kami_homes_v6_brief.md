@@ -194,7 +194,8 @@ ORDER: the tables (4, 5) and the bells first, then Food Stall, Moon, Capsule, Ar
 ## v6.2: feedback on the v6.1 delivery (2026-11-01)
 
 v6.1 (`docs/mockups/hokora_homes/v6_1/`) previewed in the game (`docs/mockups/hokora_homes/v6_1_feedback/`).
-Approved: Golden, Food Stall (round wheels), Moon (v5 back), all the tables, the bells' designs. Back:
+Approved and installed: Golden, Food Stall (round wheels), Moon (v5 back), all the tables, the bells
+(the Arcade's and Capsule's homes, and Ruined Night's, stay as they were in the game). Back:
 the Arcade (worse: it lost its controls and its arcade shape), the Capsule (its round opening became
 square; it should just be taller), the bells' beads (thin, gaps), the Moon bell (pale on pale).
 
@@ -235,5 +236,10 @@ PLEASE REDO:
 4. THE MOON BELL – pale stone on the pale arch: it disappears. Give it more contrast (a darker stone or
    silver with a dark outline, a deeper blue or lilac accent) so it reads against the arch.
 
-ORDER: 3 and 4 (small), then the Arcade, then the Capsule.
+5. RUINED NIGHT – we love your v6 building (the broken post above the roof), but its export cut a hard
+   rectangle into the opening: in the game a black bar shows down the left side of the room and under
+   the spirit (ruined_night_v5_v6_in_game.png). Please re-export it with the opening following the
+   building's own broken edges (as in v5), and the inside.png filling the whole opening.
+
+ORDER: 3, 4 and 5 (small), then the Arcade, then the Capsule.
 ```

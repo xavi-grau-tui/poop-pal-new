@@ -30,8 +30,9 @@ HOMES = ["neon_cyber", "moon", "golden", "ruined_night", "tree_hollow", "ramen_s
          "capsule_apartment", "arcade_cabinet", "bathhouse", "fire"]
 CANVAS = 925
 RIM = (54, 35, 45)
-V61_HOMES = ["golden", "ramen_stall", "moon", "capsule_apartment", "arcade_cabinet"]   # (v6.1 revised these;
-                                         # its other fronts are re-exports of the approved ones: kept as they were)                       # (the forest side_back's rim colour)
+V6_HOMES = []                                   # (v6's Ruined Night: a hard cut in its opening, back to the designer)
+V61_HOMES = ["golden", "ramen_stall", "moon"]   # (v6.1's approved fronts, 2026-11-01; its Capsule and Arcade
+                                         # go round again, its other fronts are re-exports of the approved ones)                       # (the forest side_back's rim colour)
 
 
 def rgba(path):
@@ -59,7 +60,7 @@ def mid_tone(img, mask):
 for home in HOMES:
     d = SRC + home + "/"
     v5 = SRC + next(v for v in ("v6_1/", "v6/", "v5_tech/", "v5/") if os.path.exists(SRC + v + home + "/front.png")
-                    and (v != "v6_1/" or home in V61_HOMES)) + home + "/"
+                    and (v != "v6_1/" or home in V61_HOMES) and (v != "v6/" or home in V6_HOMES)) + home + "/"
     for f in ("bell.png", "bead_1.png", "bead_2.png"):
         if os.path.exists(SRC + "v6_1/" + home + "/" + f):
             Image.open(SRC + "v6_1/" + home + "/" + f).convert("RGBA").save(OUT + home + "/" + f)

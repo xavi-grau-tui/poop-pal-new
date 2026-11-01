@@ -185,11 +185,11 @@ const DEFAULTS := { "home": "house_forest", "lantern": "lantern_red", "hanging":
 const HOMES_DIR := "res://textures/pet/homes/"
 const HOMES := {   # (v5, 220 art; hooks from each guide.png)
 	"house_neon_cyber": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#1a091f" },
-	"house_moon": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#40223b" },
-	"house_golden": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#0a0507" },
+	"house_moon": { "bell": Vector2(16, 42), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#40223b" },
+	"house_golden": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#0a0406" },
 	"house_ruined_night": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#150d1c" },
 	"house_tree_hollow": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#381020" },
-	"house_ramen_stall": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#290d0e" },
+	"house_ramen_stall": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#280a0d" },
 	"house_capsule_apartment": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#192234" },
 	"house_arcade_cabinet": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#14061d" },
 	"house_bathhouse": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#152445" },
