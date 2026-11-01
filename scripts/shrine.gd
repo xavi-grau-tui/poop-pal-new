@@ -699,27 +699,37 @@ func _wisp_takes(pal: Node) -> void:
 	await pal.wisp_swell()
 	await pal.wisp_home()
 
-## The send-off's end (main_button.gd): a ring of light where the spirit went out through the roof
-## The send-off's ring of light, out of the bell (the user, 2026-11-01: as before, from the bell)
-func sendoff_ring() -> void:
+## The send-off's ding (main_button.gd): one ring out of the bell, growing past everything (the user,
+## 2026-11-01); the bell swings at once and each lantern tilts away as the ring reaches it
+const WAVE_REACH := 1100.0            # px: off the screen's far side
+const WAVE_TIME := 1.1
+func sendoff_ring(strength := 1.4) -> void:
 	var r := Node2D.new()
 	r.z_index = 4                                  # (over the roof and the lanterns)
 	r.position = bell.position + Vector2(0, (bell.texture.get_height() * 0.5 - 5.0) * bell.scale.y)
 	add_child(r)
-	var rad := [6.0]
+	var rad := [0.0]
 	var a := [1.0]
 	r.draw.connect(func():
-		var n := 24
-		for i in n:
-			var ang := TAU * i / n
-			var p: Vector2 = Vector2(cos(ang), sin(ang) * 0.45) * float(rad[0])
-			r.draw_rect(Rect2(p.round() - Vector2(3, 3), Vector2(6, 6)), Color(1, 0.98, 0.9, a[0])))
+		r.draw_arc(Vector2.ZERO, rad[0], 0.0, TAU, 96, Color(1, 0.98, 0.9, 0.85 * a[0]), 6.0))
 	var t := create_tween()
 	t.tween_method(func(u: float):
-		rad[0] = lerpf(6.0, 120.0, u)
+		rad[0] = WAVE_REACH * u
 		a[0] = 1.0 - u
-		r.queue_redraw(), 0.0, 1.0, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		r.queue_redraw(), 0.0, 1.0, WAVE_TIME)
 	t.tween_callback(r.queue_free)
+	var rope_kick := NEW_ROPE_KICK if DevLaunch.new_shrine else ROPE_KICK
+	for i in range(1, rope_count):
+		_rq[i] -= Vector2(14.0 * strength * float(i) / rope_count * rope_kick / ROPE_KICK, 0)
+	if DevLaunch.new_shrine:
+		_bq -= Vector2(4.0 * strength, 0)
+	for l: Sprite2D in ([lantern_left, lantern] if lantern_left else [lantern]):
+		var when: float = WAVE_TIME * l.position.distance_to(r.position) / WAVE_REACH
+		get_tree().create_timer(when).timeout.connect(func():
+			if l == lantern:
+				_lq -= Vector2(4.0 * strength, 0)
+			else:
+				_lq_left -= Vector2(4.0 * strength, 0))
 
 func _set_bites() -> void:
 	if not offering.material:
