@@ -121,21 +121,21 @@ Arcade Cabinet, Food Stall, Ruined Night, Moon. Send each one as soon as it's do
 
 The v6 delivery (`docs/mockups/hokora_homes/v6/`) was put in the game as a preview
 (`docs/mockups/hokora_homes/v6_feedback/`: all eleven homes, and the six revised ones now vs v6).
-Accepted by the user: Food Stall, Ruined Night, Moon, and the one-piece tables (Neon, Moon, Capsule,
-Arcade coin box, Fire anvil, Bathhouse stool + bucket). Back to the designer: Capsule, Arcade, Golden,
-the two-part tables' trays, the tree stump, the bells.
+Accepted by the user: Food Stall, Ruined Night, and the one-piece tables (Neon, Moon, Capsule,
+Arcade coin box, Fire anvil, Bathhouse stool + bucket). Back to the designer: Moon (changed too much),
+Capsule, Arcade, Golden, the two-part tables' trays, the tree stump, the bells.
 
 The message, ready to send:
 
 ```
-HOMES v6.1 – thank you! Four things are approved, a few go round once more
+HOMES v6.1 – thank you! Some things are approved, a few go round once more
 
 We put everything in the game (docs/mockups/hokora_homes/v6_feedback/: v6_all_homes_in_game.png,
 and v6_before_after_in_game.png with today's version on the left and yours on the right).
 
 APPROVED, going into the game now:
 - Food Stall (the wheels and the shorter curtains fixed it), Ruined Night (the broken post above the
-  roof is great), Moon.
+  roof is great).
 - The one-piece tables: Neon, Moon, Capsule, Arcade coin box, Fire anvil, Bathhouse stool with its
   bucket. They look great at this size.
 
@@ -171,5 +171,10 @@ PLEASE REDO:
    per home, in its colours and materials, at the lanterns' definition, and a clear hook for it on
    every home (the Capsule and the Arcade have none).
 
-ORDER: the tables (4, 5) and the bells first, then Capsule, Arcade, Golden.
+7. MOON – it changed too much: the arch's inside, the pillars and the details are different now,
+   and we loved the v5 one. Please go back to your v5 moon (docs/mockups/hokora_homes/v5/moon/)
+   and change ONLY its width: slightly wider, using more of the template's width, everything else
+   exactly as it was (same pillars, same arch, same inside, same details).
+
+ORDER: the tables (4, 5) and the bells first, then Moon, Capsule, Arcade, Golden.
 ```
