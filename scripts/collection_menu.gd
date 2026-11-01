@@ -182,30 +182,69 @@ func select_next() -> void:
 	_refresh_selection()
 
 func flip_page() -> void:
+	_flip(1)
+
+## (a swipe right on the screen: scripts/menu_touch.gd)
+func flip_back() -> void:
+	_flip(-1)
+
+func _flip(step: int) -> void:
 	match view:
 		View.HUB:
-			hub_index = (hub_index + 1) % hub_cards.size()
+			hub_index = posmod(hub_index + step, hub_cards.size())
 			_open(View.HUB)
 		View.PEDIA:
-			pedia_family = (pedia_family + 1) % PEDIA_FAMILIES.size()
+			pedia_family = posmod(pedia_family + step, PEDIA_FAMILIES.size())
 			page = 0
 			_open(View.PEDIA)
 		View.BACKGROUNDS, View.ACCESSORIES, View.DECOR, View.CASES:
 			var secs := _sections(view)
 			if secs.is_empty():
-				page = (page + 1) % _list_pages(view)
+				page = posmod(page + step, _list_pages(view))
 			else:
-				section = (section + 1) % secs.size()     # (the hokora: the next slot)
+				section = posmod(section + step, secs.size())     # (the hokora: the next slot)
 				page = 0
 			_open(view)
 		View.SHOP:
-			page = (page + 1) % _shop_pages()
+			page = posmod(page + step, _shop_pages())
 			_open(View.SHOP)
 		View.DETAIL:
 			var order := PetState.pedia_order()
-			var next: String = order[(order.find(detail_id) + 1) % order.size()]
+			var next: String = order[posmod(order.find(detail_id) + step, order.size())]
 			_pedia_go_to(next)
 			_show_detail(next)
+
+## The card under the finger is selected (scripts/menu_touch.gd); the hub's card is the whole screen
+func select_at(pos: Vector2) -> bool:
+	if view == View.HUB:
+		return true
+	if view == View.DETAIL:
+		return false
+	for i in items.size():
+		if MenuTouch.touches(items[i], pos):
+			selection = i
+			_refresh_selection()
+			return true
+	return false
+
+## A tap on a pal card: back to the grid, as the orange button's tap
+func tap_at(_pos: Vector2) -> void:
+	if view == View.DETAIL:
+		select_next()
+
+## A drag up / down: the list's next / previous page (the Pal-Pedia: the family's pages)
+func scroll(dir: int) -> void:
+	var pages := 0
+	match view:
+		View.PEDIA:
+			pages = PEDIA_PAGES
+		View.BACKGROUNDS, View.ACCESSORIES, View.DECOR, View.CASES:
+			pages = _list_pages(view)
+		View.SHOP:
+			pages = _shop_pages()
+	if pages > 1:
+		page = posmod(page + dir, pages)
+		_open(view)
 
 func get_selected_option() -> Node:
 	if view == View.HUB:

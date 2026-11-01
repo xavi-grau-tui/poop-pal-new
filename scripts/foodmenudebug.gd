@@ -102,7 +102,38 @@ func reset_selection():
 		node.scale = Vector2.ONE
 
 func flip_page():
-	current_page = (current_page + 1) % _pages()
+	_go_page(current_page + 1)
+
+## (a swipe right on the screen: scripts/menu_touch.gd)
+func flip_back():
+	_go_page(current_page - 1)
+
+## The card under the finger is selected (scripts/menu_touch.gd)
+func select_at(pos: Vector2) -> bool:
+	if barrier_down:
+		return false
+	for i in active_options.size():
+		var frame = active_options[i].get_node_or_null("Frame")
+		if frame and MenuTouch.touches(frame, pos):
+			current_selection = page_offset[current_page] + i
+			update_selection()
+			return true
+	return false
+
+## A drag up / down moves the window one card (the selected one may scroll out of it)
+func scroll(dir: int) -> void:
+	if barrier_down:
+		return
+	var off: int = clampi(page_offset[current_page] + dir, 0, maxi(0, page_items[current_page].size() - VISIBLE))
+	if off == page_offset[current_page]:
+		return
+	page_offset[current_page] = off
+	_fill_window(current_page)
+	_update_scroll_marks()
+	update_selection()
+
+func _go_page(p: int) -> void:
+	current_page = posmod(p, _pages())
 	show_page(current_page)
 	if current_page == 1 and not drinks_populated:
 		populate_drinks()

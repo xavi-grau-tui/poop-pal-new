@@ -135,6 +135,17 @@ func flip_page() -> void:
 	current_page = (current_page + 1) % pages.size()
 	show_page(current_page)
 
+## (a swipe right on the screen: scripts/menu_touch.gd)
+func flip_back() -> void:
+	if LuckyPinch.pending:
+		return
+	current_page = posmod(current_page - 1, pages.size())
+	show_page(current_page)
+
+## The whole card is the choice: anywhere on the screen holds it (scripts/menu_touch.gd)
+func select_at(_pos: Vector2) -> bool:
+	return get_selected_option() != null
+
 func get_selected_page() -> int:
 	return LuckyPinch.GAME_INDEX if LuckyPinch.pending else order[current_page]
 

@@ -21,6 +21,7 @@ var _game_held         := false   # held in a game (its release goes to the game
 func _ready() -> void:
 	ConsoleLayout.apply.call_deferred(get_parent())      # (the bottom buttons' layout on trial)
 	ButtonTouchLook.attach_all.call_deferred(get_parent())   # (pressed look under every finger)
+	MenuTouch.attach.call_deferred(get_parent())             # (the open menu's cards under the finger)
 	toggle_mode = false
 	set_process(true)
 
@@ -48,32 +49,47 @@ func _gui_input(event: InputEvent) -> void:
 
 			if _confirming:
 				return
-			was_pressed       = true
-			_press_id        += 1
-			var my_press      := _press_id
-			hold_timer        = 0.0
-			filling           = false
-			selected_doughnut = _get_selected_doughnut()
-
-			if click_sound:
-				click_sound.stop()
-				click_sound.play()
-			Input.vibrate_handheld(15)
-
-			await get_tree().create_timer(0.3).timeout
-			if was_pressed and my_press == _press_id:
-				# Don't start filling for locked games, unless it can be bought (hold = buy it)
-				# (letting go still moves to the next card)
-				if _is_game_menu_active() and not _is_current_game_unlocked() and not _game_can_be_bought():
-					return
-				filling = true
-				if selected_doughnut:
-					selected_doughnut.visible = true
-					selected_doughnut.value   = 0
+			_begin_hold(true)
 
 		elif was_pressed or _game_held:
 			var mp = get_local_mouse_position()
 			_release(mp.x >= 0 and mp.y >= 0 and mp.x <= size.x and mp.y <= size.y)
+
+## A finger held on a card on the screen (scripts/menu_touch.gd): this button's hold, without its click
+func screen_hold() -> void:
+	if GameScreen.is_active or _confirming or was_pressed:
+		return
+	_begin_hold(false)
+
+## ...lifted or dragged before the hold ends: nothing (touching a card only picks it)
+func screen_release() -> void:
+	if was_pressed:
+		_reset_hold()
+
+func _begin_hold(click: bool) -> void:
+	was_pressed       = true
+	_press_id        += 1
+	var my_press      := _press_id
+	hold_timer        = 0.0
+	filling           = false
+	selected_doughnut = _get_selected_doughnut()
+
+	if click and click_sound:
+		click_sound.stop()
+		click_sound.play()
+	Input.vibrate_handheld(15)
+
+	await get_tree().create_timer(0.3).timeout
+	if was_pressed and my_press == _press_id:
+		# Don't start filling for locked games, unless it can be bought (hold = buy it)
+		# (letting go still moves to the next card)
+		if _is_game_menu_active() and not _is_current_game_unlocked() and not _game_can_be_bought():
+			return
+		filling = true
+		if selected_doughnut:
+			selected_doughnut.visible = true
+			selected_doughnut.value   = 0
+
 
 ## The finger lifts (or slides off: inside = true): in a game its release goes to the game; elsewhere a
 ## lift on the button is a tap (next option) unless the selection ring was filling
