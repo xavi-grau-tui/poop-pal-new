@@ -276,6 +276,65 @@ and each family's legendary food on its ULTRA Dai (5 legends).
 every legendary in the finales. A special that can't make a new pal any more (in the pantry or in
 a vault) turns into its price in coins, so no prize is ever a dead one.
 
+### The shrine blessing: a home's full set brings its special food (PROPOSED, the user, 2026-11-01)
+Wear a home with ALL its set at once (the home, its lantern, its hanging piece, its object on at
+least one shelf) and the hokora is blessed: the spirit glows and the bell rings, so players learn
+that sets matter. It gives the sets (still "Coming soon") a reason, and ties the hokora into the
+special foods (the economy pillar: one system).
+
+| Home          | Its special food | Why                         |
+|---------------|------------------|-----------------------------|
+| Neon Shrine   | Microchip        | tech                        |
+| Capsule Pod   | Battery          | tech                        |
+| Moon          | Moon Rock        | cosmic                      |
+| Ruined Night  | Alien Goo        | cosmic, the eerie one       |
+| Bathhouse     | Kraken Brine     | water                       |
+| Golden Temple | Phoenix Pepper   | its lantern has a phoenix   |
+| Tree Hollow   | Golden Seed      | a seed, a tree              |
+| Fire Shrine   | Dragon Oil       | fire                        |
+| Arcade        | Stardust Sugar   | the star song, music        |
+| Food Stall    | (none left: 10 homes, 9 specials) a food perk instead, e.g. an extra meal now and then or cheaper specials |
+
+**A second road, never the first.** The games stay where each special is found first (its story).
+The blessing gives:
+- **once:** that food as a gift, ONLY if it can still make a new pal (otherwise nothing but the
+  blessing itself: no coins, see below);
+- **while worn:** that food always on the Shop's daily special shelf, even before it's found in a
+  game (it skips the 350 / 450-star rule). Taking the set off ends it: choosing a home becomes a
+  choice, not just a look.
+
+**The model's check (pacing.py as it is, 2026-11-01; homes and sets aren't in it yet, so this is
+the specials' dates against the homes' proposed sources in docs/kami_future_hokoras.md):**
+
+| Special first met (day) | casual | regular | keen |
+|-------------------------|--------|---------|------|
+| Battery                 | 3      | 2       | 1    |
+| Moon Rock               | 14     | 5       | 1    |
+| Microchip               | 22     | 7       | 2    |
+| Alien Goo               | 93     | 9 (bought) | 4 (bought) |
+| Dragon Oil              | 48     | 10      | 5    |
+| Golden Seed             | 51     | 11      | 5    |
+| Phoenix Pepper          | 54     | 12      | 5    |
+| Kraken Brine            | 60     | 13      | 6    |
+| Stardust Sugar          | 64 (bought) | 21 | 4    |
+| *homes: 60 / 90 / 120 pals* | *22 / 35 / 64* | *13 / 21 / 28* | *9 / 16 / 23* |
+
+What it says:
+- **Regular and keen players meet every special before the homes arrive** (the Moon at 60 pals,
+  day 13; the Tree at 90, day 21). For them the blessing is the look and a steady shelf, it takes
+  nothing from the finales. Good.
+- **Casual players are where it helps:** their legends come on days 48-64 and Alien Goo on day 93;
+  the Tree Hollow at 90 pals (day 35) would bring the Golden Seed ~16 days earlier. A catch-up road
+  for the slow players, which is what the specials lacked.
+- **The gift must not turn into coins.** A spare special turns into its price today; nine gifts
+  would be up to 260 coins (4 x 15 + 5 x 40) for a regular player who already has them all, and
+  the model's target is under 110 coins ever saved up (it's 99 now). Hence "only if it can still
+  make a new pal".
+- **The sets' own sources** (their lantern, hanging and shelf pieces) are still undecided: they
+  must arrive WITH or after their home, never all at the start, or the blessing comes before the
+  games' finales and takes their weight. To add to the model with the sources (homes and sets as
+  timed prizes, the shelf rule, the gifts), then check again.
+
 ### Pal states (the answer to "states for the pals?")
 - Two visible states, nothing else: HUNGER (the pal's 3 faces: fed / hungry / very hungry, from
   the time since its last meal: 0-2 h, 2-8 h, 8 h+) and BOOSTED (the aura and badge of its drink).

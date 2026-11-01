@@ -50,6 +50,11 @@ pals too slow make the player quit before the late game.
   Today the games and the Tomopedia give most of it; the Shop's HOME stall sells 12 plain pieces.
 - **The homes and their sets** (`docs/kami_future_hokoras.md`, `docs/kami_ornaments_brief.md`):
   the biggest prizes; their sources decided together with the above.
+- **The shrine blessing (PROPOSED, the user, 2026-11-01):** a home worn with its whole set brings
+  its special food: a gift once (only if it can still make a new pal: no coins) and, while worn,
+  that food always on the daily special shelf. A second road for the specials, never the first: a
+  catch-up for casual players (legends on days 48-64 in the model). The details, the home-to-food
+  table and the model's check: `docs/progression.md`, "The shrine blessing".
 - **The pals' pace:** the wait after a new pal (3 / 10 / 30 min by size) against how many meals a
   branch needs, so the last pals don't drag (all 120: day ~28 regular, ~60 casual today).
 - **A reason to start over** once a spirit is grown: not a wipe (the collection, coins and homes
