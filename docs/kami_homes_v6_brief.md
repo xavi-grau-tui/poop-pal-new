@@ -190,3 +190,50 @@ PLEASE REDO:
 
 ORDER: the tables (4, 5) and the bells first, then Food Stall, Moon, Capsule, Arcade, Golden.
 ```
+
+## v6.2: feedback on the v6.1 delivery (2026-11-01)
+
+v6.1 (`docs/mockups/hokora_homes/v6_1/`) previewed in the game (`docs/mockups/hokora_homes/v6_1_feedback/`).
+Approved: Golden, Food Stall (round wheels), Moon (v5 back), all the tables, the bells' designs. Back:
+the Arcade (worse: it lost its controls and its arcade shape), the Capsule (its round opening became
+square; it should just be taller), the bells' beads (thin, gaps), the Moon bell (pale on pale).
+
+The message, ready to send:
+
+```
+HOMES v6.2 – nearly there!
+
+We put v6.1 in the game (docs/mockups/hokora_homes/v6_1_feedback/). Big thanks:
+
+APPROVED: Golden Temple (exactly the level we wanted), Food Stall (round wheels, perfect), Moon (v5
+back), all the tables (one piece, great), and the bells' designs (each one really matches its home).
+
+PLEASE REDO:
+
+1. ARCADE CABINET – this version went the wrong way (see arcade_v5_v6_v6_1_in_game.png: v5, v6, v6.1).
+   It lost the joystick and the buttons and the arcade shape, and became an ornate red and gold box.
+   Start again from your v6 (the middle one: the KamiTomo marquee, the cream control panel with the
+   joystick and the coloured buttons, the slanted sides) and change only:
+   - the control panel: a GAP in its middle, between the joystick (left) and the buttons (right), like
+     v5, where the offering table stands;
+   - a quality pass: cleaner outlines and shading, nicer small details (coin door, speaker grille,
+     trim), the same red / cream / gold, NO extra gold ornaments or patterns.
+   It must still read instantly as a friendly arcade machine.
+
+2. CAPSULE POD – not this direction: the round opening became square. Go back to the v5/v6 pod (the
+   round opening, the side windows, the shapes; capsule_v5_v6_1_in_game.png, left) and make the whole
+   pod TALLER, so the upper part (the handles and the roof band) has the height it needs and isn't
+   stretched sideways. Same width, same design, just taller proportions, using more of the template's
+   height (rows 4-16 up to the base on rows 192-200 of the 220 grid), with the opening and the
+   windows kept clear.
+
+3. THE BELLS' BEADS (bells_in_game.png) – the beads are small inside their 48 x 68 boxes, so the
+   chain has gaps and looks thin next to the forest's beads. Make each bead fill its box (about 40-46
+   wide and 60-66 tall) so the beads touch each other down the chain, chunky like the forest's red and
+   white beads, with the same thick dark outline.
+
+4. THE MOON BELL – pale stone on the pale arch: it disappears. Give it more contrast (a darker stone or
+   silver with a dark outline, a deeper blue or lilac accent) so it reads against the arch.
+
+ORDER: 3 and 4 (small), then the Arcade, then the Capsule.
+```
