@@ -702,24 +702,28 @@ func _wisp_takes(pal: Node) -> void:
 	await pal.wisp_home()
 
 ## The send-off's end (main_button.gd): a ring of light where the spirit went out through the roof
-func sendoff_ring() -> void:
+## A sound wave out of the bell (the user, 2026-11-01: right from the bell as it rings): a ring of
+## light pixels growing and fading from the bell's middle
+func sendoff_ring(reach := 90.0) -> void:
 	var r := Node2D.new()
-	r.z_index = 3
-	r.position = _g(55.5, 10.0) + front.position
+	r.z_index = 4                                  # (over the roof and the lanterns)
+	r.position = bell.position + Vector2(0, (bell.texture.get_height() * 0.5 - 5.0) * bell.scale.y)
 	add_child(r)
 	var rad := [6.0]
 	var a := [1.0]
 	r.draw.connect(func():
-		var n := 24
+		var n := 14
 		for i in n:
 			var ang := TAU * i / n
-			var p: Vector2 = Vector2(cos(ang), sin(ang) * 0.45) * float(rad[0])
-			r.draw_rect(Rect2(p.round() - Vector2(3, 3), Vector2(6, 6)), Color(1, 0.98, 0.9, a[0])))
+			var p: Vector2 = Vector2(cos(ang), sin(ang)) * float(rad[0])
+			r.draw_rect(Rect2(p.round() - Vector2(5, 5), Vector2(10, 10)), Color8(31, 10, 27, int(230 * a[0])))   # (the plum outline)
+			r.draw_rect(Rect2(p.round() - Vector2(3, 3), Vector2(6, 6)), Color(1, 0.93, 0.62, a[0])))
 	var t := create_tween()
 	t.tween_method(func(u: float):
-		rad[0] = lerpf(6.0, 120.0, u)
-		a[0] = 1.0 - u
-		r.queue_redraw(), 0.0, 1.0, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		rad[0] = lerpf(10.0, reach, u)
+		a[0] = 1.0 - u * u
+		r.position = bell.position + Vector2(0, (bell.texture.get_height() * 0.5 - 5.0) * bell.scale.y)
+		r.queue_redraw(), 0.0, 1.0, 0.75).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t.tween_callback(r.queue_free)
 
 func _set_bites() -> void:
@@ -1317,6 +1321,9 @@ func ring(strength := 1.0) -> void:
 func ring_bell() -> void:
 	ring(2.2)
 	_sfx("res://sounds/fx/suzu.wav", -6.0, _bell_pitch)
+	for k in 3:                                    # (a wave out of the bell with each of the sound's shakes)
+		sendoff_ring(90.0 - 20.0 * k)
+		await get_tree().create_timer(0.32 / _bell_pitch).timeout
 
 ## Where the claw visits (PetView coordinates): the shrine's opening, under the beam, the pal inside
 func claw_window() -> Rect2:

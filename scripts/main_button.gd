@@ -337,9 +337,8 @@ func _flush_poop() -> void:
 	# ...and out it comes: a little sparkle + cling at the end of the gut
 	var gut = get_node_or_null("../PetView/Intestine-front")
 	if shrine:
-		# ...gone through the roof: a ring of light up there, the bell still swaying
+		# ...gone through the roof, the bell still swaying (its waves came out of it at the start)
 		_play_sfx("res://sounds/fx/spirit_ting.wav", -10.0)
-		shrine.sendoff_ring()
 		shrine.ring(0.6)
 	elif gut and gut.has_method("play_flush_sparkle"):
 		_play_sfx("res://sounds/fx/flush_cling.wav", -12.0)
