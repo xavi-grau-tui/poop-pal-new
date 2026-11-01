@@ -13,8 +13,8 @@ What we do ourselves, without the designer (the user and us, slight edits to the
   925 canvas above the baby; the pal may come down a little, and the openings are checked with the
   tallest one;
 - the bell rope's code: each home's bell.png / bead_1.png / bead_2.png when drawn (the forest's until
-  then), its own tone (HOMES "bell_pitch"), and the bell rung hard with its sound (sounds/fx/suzu.wav)
-  at every send-off (the user: the bell says bye; part of every shrine's mechanics, never a slot);
+  then); at every send-off its ding and one ring of light come out of the bell, the bell and the
+  lanterns swaying (the user: the bell says bye; part of every shrine's mechanics, never a slot);
 - the hanging pieces redone at the lanterns' look (thicker outline, sized to clear the tallest
   spirit).
 

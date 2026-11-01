@@ -183,17 +183,17 @@ const DEFAULTS := { "home": "house_forest", "lantern": "lantern_red", "hanging":
 ## rope and the two lanterns hang (grid cells, as Shrine.NEW_ROPE_AT), the colour of the recess behind
 ## the inside. No colour presets yet (the Colours slot only recolours the forest hokora).
 const HOMES_DIR := "res://textures/pet/homes/"
-const HOMES := {   # (v5, 220 art; hooks from each guide.png; bell_pitch: its bell's tone, iron deeper, brass brighter)
-	"house_neon_cyber": { "bell": Vector2(11, 30), "bell_pitch": 1.12, "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#1a091f" },
-	"house_moon": { "bell": Vector2(11, 30), "bell_pitch": 1.06, "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#40223b" },
-	"house_golden": { "bell": Vector2(11, 30), "bell_pitch": 0.95, "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#0a0507" },
-	"house_ruined_night": { "bell": Vector2(11, 30), "bell_pitch": 0.86, "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#150d1c" },
-	"house_tree_hollow": { "bell": Vector2(11, 30), "bell_pitch": 0.92, "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#381020" },
-	"house_ramen_stall": { "bell": Vector2(11, 30), "bell_pitch": 1.0, "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#290d0e" },
-	"house_capsule_apartment": { "bell": Vector2(11, 30), "bell_pitch": 1.15, "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#192234" },
-	"house_arcade_cabinet": { "bell": Vector2(11, 30), "bell_pitch": 1.2, "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#14061d" },
-	"house_bathhouse": { "bell": Vector2(11, 30), "bell_pitch": 1.04, "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#152445" },
-	"house_fire": { "bell": Vector2(11, 30), "bell_pitch": 0.8, "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#341228" },
+const HOMES := {   # (v5, 220 art; hooks from each guide.png)
+	"house_neon_cyber": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#1a091f" },
+	"house_moon": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#40223b" },
+	"house_golden": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#0a0507" },
+	"house_ruined_night": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#150d1c" },
+	"house_tree_hollow": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#381020" },
+	"house_ramen_stall": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#290d0e" },
+	"house_capsule_apartment": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#192234" },
+	"house_arcade_cabinet": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#14061d" },
+	"house_bathhouse": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#152445" },
+	"house_fire": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#341228" },
 }
 
 ## A home's folder ("" = the forest hokora, textures/pet/shrine_new/)

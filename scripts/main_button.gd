@@ -315,10 +315,6 @@ func _flush_poop() -> void:
 		poop.say_bye()
 		await get_tree().create_timer(0.55).timeout
 	var shrine := get_node_or_null("../PetView/Shrine")
-	if shrine:
-		# the bell rings for the send-off (the user, 2026-11-01: the bell is what says bye), then the spirit rises
-		shrine.ring_bell()
-		await get_tree().create_timer(0.45).timeout
 	# (the shrine: a send-off, a soft rising chime instead of the drain's whoosh)
 	var flush_sfx := _play_sfx("res://sounds/fx/spirit_rise.wav" if shrine else "res://sounds/fx/sfx_sounds_falling8.mp3",
 			flush_sound_db + (4.0 if shrine else 0.0))
@@ -337,9 +333,10 @@ func _flush_poop() -> void:
 	# ...and out it comes: a little sparkle + cling at the end of the gut
 	var gut = get_node_or_null("../PetView/Intestine-front")
 	if shrine:
-		# ...gone through the roof, the bell still swaying (its waves came out of it at the start)
+		# ...gone: the bell's ding, a ring of light out of it, the bell and lanterns swaying
 		_play_sfx("res://sounds/fx/spirit_ting.wav", -10.0)
-		shrine.ring(0.6)
+		shrine.sendoff_ring()
+		shrine.ring(1.4)
 	elif gut and gut.has_method("play_flush_sparkle"):
 		_play_sfx("res://sounds/fx/flush_cling.wav", -12.0)
 		gut.play_flush_sparkle()

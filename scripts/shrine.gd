@@ -39,7 +39,6 @@ var _home := ""
 var socket: Sprite2D
 var glass: Sprite2D                   # (a home's glass over its openings: the capsule's, the arcade's)
 var _rope_at := Vector2(11, 30)       # (NEW_ROPE_AT, or the home's)
-var _bell_pitch := 1.0                # the home's bell tone (HOMES "bell_pitch": iron deeper, brass brighter)
 var _lantern_at := Vector2(85, 30)    # (NEW_LANTERN_AT, or the home's)
 var _left_lantern_at := Vector2(25, 30)
 ## A home's own offering table (v5: table.png, its 3D from stacked copies of table_side.png, where the
@@ -435,7 +434,6 @@ func _apply_home() -> void:
 	var beads := ["bead_red.png", "bead_white.png"] if bell_dir == asset_dir else ["bead_1.png", "bead_2.png"]
 	for i in rope.size():
 		rope[i].texture = load(bell_dir + beads[i % 2])     # (they alternate down the chain)
-	_bell_pitch = h.get("bell_pitch", 1.0)
 	var hooks: Array = h.get("lanterns", [NEW_LEFT_LANTERN_AT, NEW_LANTERN_AT])
 	_left_lantern_at = hooks[0]
 	_lantern_at = hooks[1]
@@ -702,9 +700,8 @@ func _wisp_takes(pal: Node) -> void:
 	await pal.wisp_home()
 
 ## The send-off's end (main_button.gd): a ring of light where the spirit went out through the roof
-## A sound wave out of the bell (the user, 2026-11-01: right from the bell as it rings): a ring of
-## light pixels growing and fading from the bell's middle
-func sendoff_ring(reach := 90.0) -> void:
+## The send-off's ring of light, out of the bell (the user, 2026-11-01: as before, from the bell)
+func sendoff_ring() -> void:
 	var r := Node2D.new()
 	r.z_index = 4                                  # (over the roof and the lanterns)
 	r.position = bell.position + Vector2(0, (bell.texture.get_height() * 0.5 - 5.0) * bell.scale.y)
@@ -712,18 +709,16 @@ func sendoff_ring(reach := 90.0) -> void:
 	var rad := [6.0]
 	var a := [1.0]
 	r.draw.connect(func():
-		var n := 14
+		var n := 24
 		for i in n:
 			var ang := TAU * i / n
-			var p: Vector2 = Vector2(cos(ang), sin(ang)) * float(rad[0])
-			r.draw_rect(Rect2(p.round() - Vector2(5, 5), Vector2(10, 10)), Color8(31, 10, 27, int(230 * a[0])))   # (the plum outline)
-			r.draw_rect(Rect2(p.round() - Vector2(3, 3), Vector2(6, 6)), Color(1, 0.93, 0.62, a[0])))
+			var p: Vector2 = Vector2(cos(ang), sin(ang) * 0.45) * float(rad[0])
+			r.draw_rect(Rect2(p.round() - Vector2(3, 3), Vector2(6, 6)), Color(1, 0.98, 0.9, a[0])))
 	var t := create_tween()
 	t.tween_method(func(u: float):
-		rad[0] = lerpf(10.0, reach, u)
-		a[0] = 1.0 - u * u
-		r.position = bell.position + Vector2(0, (bell.texture.get_height() * 0.5 - 5.0) * bell.scale.y)
-		r.queue_redraw(), 0.0, 1.0, 0.75).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		rad[0] = lerpf(6.0, 120.0, u)
+		a[0] = 1.0 - u
+		r.queue_redraw(), 0.0, 1.0, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t.tween_callback(r.queue_free)
 
 func _set_bites() -> void:
@@ -1316,14 +1311,6 @@ func ring(strength := 1.0) -> void:
 	if DevLaunch.new_shrine:
 		_bq -= Vector2(4.0 * strength, 0)
 		_lq_left -= Vector2(4.0 * strength, 0)
-
-## The send-off's call: the bell rung hard and heard (its home's tone), before the spirit rises
-func ring_bell() -> void:
-	ring(2.2)
-	_sfx("res://sounds/fx/suzu.wav", -6.0, _bell_pitch)
-	for k in 3:                                    # (a wave out of the bell with each of the sound's shakes)
-		sendoff_ring(90.0 - 20.0 * k)
-		await get_tree().create_timer(0.32 / _bell_pitch).timeout
 
 ## Where the claw visits (PetView coordinates): the shrine's opening, under the beam, the pal inside
 func claw_window() -> Rect2:
