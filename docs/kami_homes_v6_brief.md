@@ -116,3 +116,60 @@ WHAT TO DELIVER (docs/mockups/hokora_homes/v6/<home>/)
 ORDER: the tables and the bells first (small and quick, they unblock the game), then Golden Temple, Capsule Pod,
 Arcade Cabinet, Food Stall, Ruined Night, Moon. Send each one as soon as it's done.
 ```
+
+## v6.1: feedback on the v6 delivery (2026-11-01)
+
+The v6 delivery (`docs/mockups/hokora_homes/v6/`) was put in the game as a preview
+(`docs/mockups/hokora_homes/v6_feedback/`: all eleven homes, and the six revised ones now vs v6).
+Accepted by the user: Food Stall, Ruined Night, Moon, and the one-piece tables (Neon, Moon, Capsule,
+Arcade coin box, Fire anvil, Bathhouse stool + bucket). Back to the designer: Capsule, Arcade, Golden,
+the two-part tables' trays, the tree stump, the bells.
+
+The message, ready to send:
+
+```
+HOMES v6.1 – thank you! Four things are approved, a few go round once more
+
+We put everything in the game (docs/mockups/hokora_homes/v6_feedback/: v6_all_homes_in_game.png,
+and v6_before_after_in_game.png with today's version on the left and yours on the right).
+
+APPROVED, going into the game now:
+- Food Stall (the wheels and the shorter curtains fixed it), Ruined Night (the broken post above the
+  roof is great), Moon.
+- The one-piece tables: Neon, Moon, Capsule, Arcade coin box, Fire anvil, Bathhouse stool with its
+  bucket. They look great at this size.
+
+PLEASE REDO:
+
+1. CAPSULE POD – the upper part is still the problem: it looks stretched and blocky, nearly the same
+   as before. Keep the shape, the windows, the round opening and the colours, but redraw the whole
+   top (the two handles and the roof band) properly at the 220 definition: crisp panel lines, clean
+   curves, no stretched pixels, finished like the rest of the pod and like Neon.
+
+2. ARCADE CABINET – the marquee with the KamiTomo logo is perfect, keep it. But the cabinet still
+   looks like before, and it lost something important:
+   - bring back the GAP in the middle of the control panel, between the joystick and the buttons
+     (see arcade_v5_gap_between_controls.png: in v5 the panel had a recess in the middle). That's
+     where the offering table stands; today the panel is one continuous shelf and the table ends up
+     floating above it, inside the screen.
+   - then give the whole cabinet a real quality pass, to the level of Neon, Fire and Bathhouse:
+     cleaner outlines, better shaped sides and base, nicer details (speaker grille, coin door, trim).
+
+3. GOLDEN TEMPLE – still to do from v6: taller (finer roof tiers rising higher) and much more detailed
+   (ridge ornaments, brackets, carved panels, richer lacquer). Today it's almost the same as before.
+
+4. THE TABLES' TRAYS – the two-part tables (Golden, Food Stall, Ruined Night) have thin flat trays on
+   top that look strange and don't match the style. Please make each of them ONE solid piece, like
+   the approved ones: a table with real volume (a clear top band, legs or a body), front face only.
+   The forest keeps its own sanbo (no new forest table needed).
+
+5. TREE HOLLOW STUMP – it shows its top (the growth rings seen from above). Front face only, please:
+   the stump seen straight from the side (bark, roots, moss), its top just a flat edge. We add the
+   top and the depth in the game.
+
+6. THE BELLS (section 8 of docs/kami_homes_v6_brief.md, added after your copy): a bell and two beads
+   per home, in its colours and materials, at the lanterns' definition, and a clear hook for it on
+   every home (the Capsule and the Arcade have none).
+
+ORDER: the tables (4, 5) and the bells first, then Capsule, Arcade, Golden.
+```

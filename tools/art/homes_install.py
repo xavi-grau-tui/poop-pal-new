@@ -11,7 +11,9 @@ textures/pet/homes/<home>/ on the forest hokora's 925 x 925 canvas (nearest, the
                  mid colour (stacked copies make its 3D)
   icon.png       the designer's 96 x 96 menu icon
 
-v5 (docs/mockups/hokora_homes/v5/<home>/: front, inside, table, guide, icon) replaces v4 when it exists.
+v5 (docs/mockups/hokora_homes/v5/<home>/: front, inside, table, guide, icon) replaces v4 when it exists;
+v6 (docs/mockups/hokora_homes/v6/<home>/, the same files, 2026-11-01) replaces v5 when it exists. The v6
+tables (front faces) are placed by tools/art/tables_install.py, run after this.
 
 Prints each home's socket colour for HokoraCatalog.HOMES. Run: .venv/bin/python tools/art/homes_install.py
 """
@@ -52,7 +54,8 @@ def mid_tone(img, mask):
 
 for home in HOMES:
     d = SRC + home + "/"
-    v5 = SRC + ("v5_tech/" if os.path.exists(SRC + "v5_tech/" + home + "/front.png") else "v5/") + home + "/"
+    v5 = SRC + ("v6/" if os.path.exists(SRC + "v6/" + home + "/front.png") else
+                "v5_tech/" if os.path.exists(SRC + "v5_tech/" + home + "/front.png") else "v5/") + home + "/"
     os.makedirs(OUT + home, exist_ok=True)
     if os.path.exists(v5 + "front.png"):
         d = v5
@@ -79,7 +82,7 @@ for home in HOMES:
         all_mask = (front[..., 3] > 0) | in_mask
         whole = front.copy()
         whole[in_mask & ~(front[..., 3] > 0)] = inside[in_mask & ~(front[..., 3] > 0)]
-        table = rgba(d + "table.png")
+        table = rgba((d if os.path.exists(d + "table.png") else SRC + "v5/" + home + "/") + "table.png")
         t_mask = table[..., 3] > 0
         save(table, OUT + home + "/table.png")
         save(flat(t_mask, mid_tone(table, t_mask)), OUT + home + "/table_side.png")
