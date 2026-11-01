@@ -74,6 +74,19 @@ light, playful and visually intuitive: icons over text, learn by doing. Asia fir
 
 ## Open questions & pending (one list; keep it updated, details in the sections below)
 
+- **IMPORTANT TO REVISIT (the user, 2026-10-31):**
+  - **The economy and progression loop**, a pillar: docs/economy_pillar.md.
+  - **A touch screen on the device's main screen** (could be key to engagement; to test on the
+    phone with a touch on / off switch): the spirit, the bell, the lanterns, the hanging piece and
+    the shelf objects react to the finger; the buttons stay the controls for menus and games.
+    Details in "More toy moments" below.
+  - **The tilt view comes back by itself** (to revisit): hold a tilt still for X seconds (~3) and
+    the hokora glides back to the front view (~1 s, no snap), so the 3D is a window you look
+    through on purpose and the view always settles centred. The timer only counts while the phone
+    is held still. Today (tilt_parallax.gd): small tilts creep back slowly (SETTLE, ~10-15 s), big
+    ones (>35 degrees) re-centre after 1.2 s (POSE_HOLD). The bell and lanterns (real gravity) are
+    not affected.
+  - **The menu slides redrawn** in the hokora's style (brief ready: docs/kami_menu_frames_brief.md).
 - **Yokai migration** (branch `yokai-migration`, docs/yokai_migration.md): the shrine, feeding,
   drinks and the boost aura are built. 2026-10-30: the hokora's progression is BUILT in code and
   data (docs/progression.md 4b, 5b, 7b: Home Decor's four slots and the sky's two, every piece's
@@ -454,6 +467,10 @@ Big (L)
 3. Handcrafted toy minigames (real toys, done faithfully) with drink boosts that change how you play.
 4. Collectables: pals, gut decor, backgrounds, accessories.
 5. Calm, uncluttered pixel art: charming, never noisy.
+6. A fair, well-measured loop (2026-10-31, the user: a pillar): play -> stars -> coins -> the
+   catalogue; each game's drink is its power (the 3rd star, its secrets); all the stars pay for
+   everything; timed boosts and the meal clock pace it. Think it through as one system before
+   building: docs/economy_pillar.md.
 Lead the trailer and the store screenshots with the device experience (pillar 1).
 
 More toy moments (ideas, 2026-10-08; the user loves them, some were already on their mind)
@@ -467,6 +484,16 @@ More toy moments (ideas, 2026-10-08; the user loves them, some were already on t
 - Batteries running low after a while: open the small cover on the back and swap them.
 - Settings as physical controls: a volume wheel / contrast dial on the side instead of menus.
 - No screen protector (too much): the only film is the one peeled off when unboxing.
+- A touch screen on the pet view (the user, 2026-10-31: could be key, to TEST): the buttons stay
+  the controls for the games and the menus (tapping menu cards: maybe later, not forced); the
+  device's screen is a touch screen (like a DS's lower screen) and what's on it reacts to the finger. Already there: rubbing the
+  spirit tickles it (poop.gd _input); a button tap pokes it. To try: tap the spirit = a poke; tap
+  the bell = it rings (Shrine.ring); flick a lantern or the hanging piece = it swings; tap a shelf
+  object = its animation plays (the cat waves, the fish darts: pairs with the animated
+  ornaments); tap the sky = the fireflies scatter, a petal flurry; the food on the tray wobbles.
+  Every touch small and optional, never needed to play. Test on the phone with a dev switch
+  (touch on / off) and see if it raises engagement or just adds noise; check it against pillar 1
+  (a handheld toy: the buttons stay the main way in).
 
 ## Market
 - Competitor check (quick search, 2026-10-08): every piece exists somewhere, the combination doesn't.
@@ -1154,6 +1181,29 @@ Colour language everywhere: one colour per food type (food tag, badge, craving b
 - A hardcore late game for tryhards (La Campanella in Tummy Tunes, legendary foods).
 - Every game should feed the rest: it unlocks specific foods, drinks and items, and each drink boost
   does something different in it (discovered by playing; the boost symbol goes on the card once found).
+
+### POSSIBLES: two more games (2026-10-30, the user: "possibles", after the hokora art is in)
+Both are two-button decision games (not timing), so they don't overlap Tomo Tunes' rhythm or the
+action games. Each pays one of the new homes as its finale (`docs/kami_future_hokoras.md`).
+- **Kimodameshi** (spooky, the night courage test): the pal walks a haunted path with a candle.
+  LEFT = look (raise the candle), RIGHT = hide (cover its eyes). Some yokai want to be seen (a
+  lonely chochin-obake giggles and drops coins), others punish looking (a nopperabo turns round
+  faceless, the pal faints legs-up). Read the clues before each one appears: a shadow's shape, a
+  sound, blinking eyes. Fake-outs make it funny (a scary shadow is a cat; a cute umbrella is a
+  kasa-obake that licks you). Worlds: bamboo forest, graveyard, abandoned school, haunted onsen,
+  castle, the night parade of 100 yokai. Boosts: Fizz = a brighter candle (clues earlier), Focus =
+  a slower night, Sturdy = survives one scare, Lucky = more friendly yokai. Prizes: spooky decor
+  (onibi lanterns, a skull garland, ghost shelf objects); finale = the Ruined Night Shrine.
+- **Yatai Rush** (cooking, the yokai ramen stall): ingredients slide past on the counter; LEFT =
+  into the bowl, RIGHT = toss it (to a tanuki behind the stall who eats everything and gets
+  visibly fatter). Orders from real folklore: the kitsune wants fried tofu (aburaage), the kappa
+  cucumber and nothing hot, the oni the spiciest, the rokurokubi's neck stretches across the screen
+  while it waits. Wrong bowl = a silly reaction; right = a happy slurp; perfect bowls chain into
+  combos. Later: rush hour, two customers at once, the game's odd foods (a microchip topping for a
+  robot yokai, alien goo). Worlds: forest path, festival, rainy alley, train station, the moon, a
+  yokai banquet. Boosts: Focus = a slower counter, Fizz = serve two at once, Splash = a second
+  chance on a wrong bowl, Lucky = more tipping customers. Prizes: food decor (a noodle garland, a
+  takoyaki shelf object, a steam drift); finale = the Ramen Stall home.
 
 ## Progression & unlocks (design first, then wire it all at once)
 - Locked at the start:

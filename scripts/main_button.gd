@@ -16,6 +16,7 @@ var selected_doughnut  : TextureProgressBar = null
 var _flushing          := false
 var _confirming        := false   # a choice was just confirmed: ignore taps until the menu has closed
 var _press_id          := 0       # each press gets its own id, so a quick tap's timer can't hijack the next press
+var _game_held         := false   # held in a game (its release goes to the game)
 
 func _ready() -> void:
 	ConsoleLayout.apply.call_deferred(get_parent())      # (the bottom buttons' layout on trial)
@@ -25,10 +26,19 @@ func _ready() -> void:
 
 # ------------------------------------------------------------------ INPUT
 func _gui_input(event: InputEvent) -> void:
+	# the finger slides off while holding (the user, 2026-10-31): the button lets go right there, as if
+	# lifted on it (a tap's next option, the game's release); the lift that follows does nothing
+	if event is InputEventMouseMotion and (was_pressed or _game_held) and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) \
+			and not Rect2(Vector2.ZERO, size).has_point(event.position):
+		disabled = true                  # (drops the button's own press)
+		disabled = false
+		_release(true)
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			# Route to active minigame
 			if GameScreen.is_active:
+				_game_held = true
 				if click_sound:
 					click_sound.stop()
 					click_sound.play()
@@ -61,27 +71,33 @@ func _gui_input(event: InputEvent) -> void:
 					selected_doughnut.visible = true
 					selected_doughnut.value   = 0
 
-		elif was_pressed:
+		elif was_pressed or _game_held:
 			var mp = get_local_mouse_position()
-			if mp.x >= 0 and mp.y >= 0 and mp.x <= size.x and mp.y <= size.y:
-				if release_sound:
-					release_sound.stop()
-					release_sound.play()
-				Input.vibrate_handheld(15)
+			_release(mp.x >= 0 and mp.y >= 0 and mp.x <= size.x and mp.y <= size.y)
 
-				# in a menu, letting go before the selection ring shows is still a tap (next
-				# option); once the ring is filling, letting go early keeps the same option.
-				# On the pet screen a half-done flush hold just cancels.
-				if not filling or (_any_menu_toggled() and hold_timer < fill_start_delay):
-					_handle_main_button_press()
+## The finger lifts (or slides off: inside = true): in a game its release goes to the game; elsewhere a
+## lift on the button is a tap (next option) unless the selection ring was filling
+func _release(inside: bool) -> void:
+	if _game_held:
+		_game_held = false
+		if release_sound:
+			release_sound.stop()
+			release_sound.play()
+		_route_to_minigame("on_main_button_released")
+		return
+	if inside:
+		if release_sound:
+			release_sound.stop()
+			release_sound.play()
+		Input.vibrate_handheld(15)
 
-			_reset_hold()
+		# in a menu, letting go before the selection ring shows is still a tap (next
+		# option); once the ring is filling, letting go early keeps the same option.
+		# On the pet screen a half-done flush hold just cancels.
+		if not filling or (_any_menu_toggled() and hold_timer < fill_start_delay):
+			_handle_main_button_press()
 
-		elif GameScreen.is_active:
-			if release_sound:
-				release_sound.stop()
-				release_sound.play()
-			_route_to_minigame("on_main_button_released")
+	_reset_hold()
 
 # ------------------------------------------------------------------ MAIN ROTATE
 func _handle_main_button_press() -> void:

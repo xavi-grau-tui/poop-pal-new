@@ -290,6 +290,7 @@ var equipped_decor := "none"          # the complement in use
 var equipped_gut_color := ""           # the gut colour in use ("" = the natural pink)
 ## The hokora's slots: lantern, hanging, shelf, colour (Home Decor), sky, drift (Backgrounds)
 var home_equipped := Hokora.DEFAULTS.duplicate()
+var home_slot := ""                     # the menu's section in the hokora (a shelf item goes left or right)
 var new_items := {}                     # "category/id" -> true: unlocked but not looked at yet
 
 ## The spirit lives in a shrine (the hokora's catalogue), not the gut (DevLaunch.home)
@@ -633,7 +634,7 @@ func _equip_home(category: String, id: String) -> bool:
 	var item: Dictionary = catalog(category).get(id, {})
 	if item.is_empty() or not is_owned(category, id):
 		return false
-	var slot: String = item["kind"]
+	var slot := _slot_of(item)
 	home_equipped[slot] = Hokora.DEFAULTS[slot] if home_piece(slot) == id else id
 	save_data()
 	if category == "backgrounds":
@@ -641,10 +642,14 @@ func _equip_home(category: String, id: String) -> bool:
 	equipped_changed.emit(category, id)
 	return true
 
+## The slot an item goes in: its kind, but a shelf item goes on the side the menu shows
+func _slot_of(item: Dictionary) -> String:
+	return home_slot if Hokora.slot_kind(home_slot) == item["kind"] else item["kind"]
+
 func is_in_use(category: String, id: String) -> bool:
 	if in_shrine() and category in ["decor", "backgrounds"]:
 		var item: Dictionary = catalog(category).get(id, {})
-		return not item.is_empty() and home_piece(item["kind"]) == id
+		return not item.is_empty() and home_piece(_slot_of(item)) == id
 	if category == "backgrounds":
 		return equipped_background == id or equipped_bg_color == id
 	if category == "decor" and id != "none":
@@ -745,5 +750,5 @@ func load_data() -> void:
 			for slot in Hokora.DEFAULTS:
 				var pid := str(he.get(slot, Hokora.DEFAULTS[slot]))
 				var cat := "decor" if slot in Hokora.DECOR_SECTIONS else "backgrounds"
-				if is_owned(cat, pid) and _catalog_of(cat, true).get(pid, {}).get("kind", "") == slot:
+				if is_owned(cat, pid) and _catalog_of(cat, true).get(pid, {}).get("kind", "") == Hokora.slot_kind(slot):
 					home_equipped[slot] = pid

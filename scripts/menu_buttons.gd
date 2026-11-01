@@ -14,6 +14,7 @@ const DrinkWaterfallSpawner = preload("res://scripts/drink_waterfall_spawner.gd"
 
 var pending_deactivation_button: TextureButton = null
 var _down_state := false                 # its toggle when the finger went down (a slide-off release: _finish_slide_off)
+var _held := false                       # a finger is down on it (a slide off it lets go there: _slide_off)
 
 ## Darker when untoggled, brighter when toggled (swaps the two textures set in the scene)
 const DARK_WHEN_UNTOGGLED := true
@@ -71,8 +72,20 @@ func _gui_input(event):
 		accept_event()
 		return
 
+	# the finger slides off while holding (the user, 2026-10-31): the button lets go right there and
+	# what the press started carries on, as if lifted on it; the lift that follows does nothing
+	if event is InputEventMouseMotion and _held and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) \
+			and not Rect2(Vector2.ZERO, size).has_point(event.position):
+		_slide_off()
+		accept_event()
+		return
+
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if not event.pressed and not _held:
+			accept_event()                   # (already let go when the finger slid off)
+			return
 		if event.pressed:
+			_held = true
 			_down_state = button_pressed
 			if click_sound:
 				click_sound.stop()
@@ -92,6 +105,7 @@ func _gui_input(event):
 				else:
 					menu_manager.request_menu_first_half(target_menu)
 		else:
+			_held = false
 			if release_sound:
 				release_sound.stop()
 				release_sound.play()
@@ -139,6 +153,21 @@ func _toggled(button_pressed):
 	if pending_deactivation_button:
 		pending_deactivation_button.deactivate_with_clack()
 		pending_deactivation_button = null
+
+## The finger slid off while holding: let go here, as a lift on the button would (the release's sound and
+## its menu's second half, then the toggle the lift would have made); the button's own press is
+## dropped (disabled for a moment) so the real lift doesn't toggle it again
+func _slide_off() -> void:
+	_held = false
+	disabled = true
+	disabled = false
+	if release_sound:
+		release_sound.stop()
+		release_sound.play()
+	Input.vibrate_handheld(50)
+	if menu_manager and target_menu:
+		menu_manager.request_menu_second_half(target_menu)
+	button_pressed = not _down_state
 
 ## A press released off the button: its toggle catches up with what the press started (lit when its menu
 ## opened, dark when it went back to the pet)

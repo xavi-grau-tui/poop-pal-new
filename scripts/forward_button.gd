@@ -7,6 +7,13 @@ extends TextureButton
 var was_pressed := false
 
 func _gui_input(event):
+	# the finger slides off while holding (the user, 2026-10-31): it lets go right there, as if lifted on it
+	if event is InputEventMouseMotion and was_pressed and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) \
+			and not Rect2(Vector2.ZERO, size).has_point(event.position):
+		disabled = true                  # (drops the button's own press)
+		disabled = false
+		_release(true)
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			was_pressed = true
@@ -18,23 +25,27 @@ func _gui_input(event):
 				click_sound.play()
 			Input.vibrate_handheld(25)
 		elif event.is_released() and was_pressed:
-			if GameScreen.is_active:
-				_route_to_minigame("on_forward_button_up")
 			var mouse_pos = get_local_mouse_position()
-			if mouse_pos.x >= 0 and mouse_pos.y >= 0 and mouse_pos.x <= size.x and mouse_pos.y <= size.y:
-				if release_sound:
-					release_sound.stop()
-					release_sound.play()
-				Input.vibrate_handheld(25)
+			_release(mouse_pos.x >= 0 and mouse_pos.y >= 0 and mouse_pos.x <= size.x and mouse_pos.y <= size.y)
 
-				if _is_menu_toggled_and_flippable():
-					flip_current_menu_page()
-				elif GameScreen.is_active:
-					_route_to_minigame("on_forward_button_pressed")
-				elif music_controller and not GameScreen.is_active:
-					music_controller.skip_to_next_random_song()
+## The finger lifts (or slides off: inside = true)
+func _release(inside: bool) -> void:
+	if GameScreen.is_active:
+		_route_to_minigame("on_forward_button_up")
+	if inside:
+		if release_sound:
+			release_sound.stop()
+			release_sound.play()
+		Input.vibrate_handheld(25)
 
-			was_pressed = false
+		if _is_menu_toggled_and_flippable():
+			flip_current_menu_page()
+		elif GameScreen.is_active:
+			_route_to_minigame("on_forward_button_pressed")
+		elif music_controller and not GameScreen.is_active:
+			music_controller.skip_to_next_random_song()
+
+	was_pressed = false
 
 
 func _is_menu_toggled_and_flippable() -> bool:

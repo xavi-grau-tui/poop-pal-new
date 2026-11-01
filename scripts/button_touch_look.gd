@@ -23,6 +23,13 @@ static func attach_all(main_ui: Node) -> void:
 			b.add_child(look)
 
 func _input(event: InputEvent) -> void:
+	# a finger sliding off lets go of the look too (the user, 2026-10-31: as the button itself does)
+	if event is InputEventScreenDrag and _touches.has(event.index):
+		var r := Rect2(Vector2.ZERO, button.size)       # (the button's own edge, as it lets go there)
+		if not (button.get_global_transform_with_canvas() * r).has_point(event.position):
+			_touches.erase(event.index)
+			_show(not _touches.is_empty())
+		return
 	if not (event is InputEventScreenTouch) or not button.is_visible_in_tree():
 		return
 	if event.pressed:

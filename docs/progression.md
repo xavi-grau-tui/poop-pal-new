@@ -1,5 +1,8 @@
 # KamiTomo: the skeleton (progression foundation)
 
+**PILLAR (2026-10-31): the economy and the progression loop are gathered in `docs/economy_pillar.md`.
+The user: very important, to be thought through very carefully as one system before building.**
+
 DECIDED with the user 2026-10-16 (the open points are in section 8). The one place that says how the whole game fits together: the
 games and their difficulty, the pals and the meal clock, drinks and boosts, special foods, coins,
 and when a player gets what. Everything else is built on it, bit by bit. Once confirmed it replaces
@@ -638,3 +641,61 @@ TO REVIEW (built 2026-10-30 for the hokora, the user to confirm or change on the
   Spin's stickers moved to first-clear prizes.
 - The hokora colour presets and the sky sets' colours (tune by eye on the phone).
 - Prices unchanged; the model still passes (section 5).
+
+OPEN QUESTIONS (the user, 2026-10-31: "leave this in notes for now"; to think through, nothing built;
+the summary and the decisions: docs/economy_pillar.md)
+- **Drinks = one game's boost each?** Today 5 drink types each give one boost word that every game
+  reads its own way (watery Splash, fizzy Fizz, caffeinated Focus, milky Sturdy, fruity Lucky), and
+  their main use is opening secrets. The idea (the user, refined): each drink is THE power of one
+  game. The two RC Prix share one (they're essentially the same game), or RC Prix 2177 gets a
+  different power than speed. 7 games (Splash Hoops, Tilt Maze, RC Prix, RC Prix 2177, Paper Sumo,
+  Top Spin, Tomo Tunes) with the two RC Prix sharing = 6 powers: ONE NEW DRINK TYPE (6 drinks), or
+  two new (7) if 2177 gets its own power.
+  The power does two things at once, so the pieces fall together:
+  1. **The third star:** without the game's drink the 3rd star is VERY hard (still possible, for
+     the best players); with it, reachable. Needs very careful balance per level (star times and
+     scores tuned with and without the power; FAST autopilot runs to measure both).
+  2. **The secrets and special items:** the same power opens them, built into the level naturally,
+     not a locked box. E.g. in the races, the boost reaches an alternative path (a ramp into a
+     tunnel, a route through the clouds) that leads to the item, a more complex circuit to master.
+     Each game finds its own version (an underwater hoop, a hidden corridor, a heavier push...).
+  To weigh: drinks become the completionist's key, so they must come steadily (the drink timer,
+  their price); a drink no longer matters in the other games (or a mild bonus there); the 58
+  drink-gated secrets (section 4b) get remapped to their game's drink; the new drink type needs its
+  art (3 levels, like the others), a place in the drink menu and the pacing model; any future game
+  needs a power too (a new drink, or sharing one with a game like it).
+- **DIRECTION (the user, 2026-10-31): the drinks are what makes the third stars reachable** (the
+  power of each game, above). And the coins must close the loop: **getting all the stars in all
+  the games pays for the whole catalogue**. The rule to keep: the total price of everything sold
+  (games, food packs, special foods, drink levels, the new drink type, stickers, cases, the HOME
+  stall, any home or set that's sold) ≈ the coins from all the stars (1 a star, 972 now) plus the
+  small sources (requests, secrets, Lucky Pinch), with a small margin left over. Today's model:
+  a regular earns ~1285 and ends with ~155 unspent (section 5), so it's close; every new priced
+  item (homes, the homes' sets, the 6th drink's levels) must fit inside that budget or come with
+  more stars. To add to pacing.py: a check "all stars => every sold item affordable, spare
+  under N coins", and the spend per stage (first hour, week, month) against the stars earned then.
+- **The pals' pace and a reason to start over** (the user, 2026-10-31: think it through). Today a
+  meal that makes a NEW pal sets the next meal's wait by its size (Sho 3 min, Chu 10, Dai / mutant /
+  legend 30; pal_state.gd WAIT_NEW), a known one 0; the model finds all 120 around day 28 for a
+  regular, day 58-63 for a casual player (section 6). To tune: the wait per evolution step against
+  how long a branch takes to walk (a pal needs several meals of the right food in a row), so the
+  last pals don't drag; and why someone would START OVER once a spirit is grown: e.g. the send-off
+  (flush) of a final-form spirit leaves an heirloom (a trait, a colour, a family's bonus) for the
+  next baby, new branches that only open on a second run, a "generation" counter on the Pal Pedia.
+  Not a wipe: the collection, the coins and the homes stay.
+- **Boosts for a while, not one shot** (the user's idea): a drink's power lasts a few minutes
+  (~5) instead of until it fires once; the drink countdown (15 min today, lcd_screen.gd
+  drink_duration) then rations it. With third stars needing the game's drink, a player can't
+  clear every game's third stars in one sitting: a little waiting, a reason to come back. To set
+  together: the power's minutes, the drink countdown, the 6 drink types (one power at a time), and
+  the drink levels (level 2-3 = longer, or stronger). Check it in pacing.py: the days to 100% of
+  the stars shouldn't jump.
+- **Where the items come from.** Should the coolest pieces be in the Shop (a reason to save coins)
+  and the "standard" ones won in the games (a reason to play), or the other way round (the best
+  things earned, never bought)? Today: the games and the Tomopedia give most of the collection,
+  the Shop's HOME stall sells 12 plain pieces (CHANGED rule, above). Whatever is chosen, the
+  economy has to be rebalanced as one: coins in (stars, secrets, requests) vs prices, the pace of
+  unlocks against the games' difficulty curve (harder worlds pay better), and the motivation at
+  each stage (the first hour, the first week, the late game; section 6). Rerun pacing.py after.
+- These also touch the homes (big prizes) and their sets (docs/kami_future_hokoras.md,
+  docs/kami_ornaments_brief.md): decide the sources together.

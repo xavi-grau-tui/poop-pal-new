@@ -4,10 +4,12 @@ extends RefCounted
 ## catalogue (gut decor, gut colours, its sky scenes) stays in collection.gd, untouched: it comes
 ## back with the gut (the dev launcher's HOME: GUT). Collection reads this one in a shrine home.
 ##
-## HOME DECOR, four slots that combine (one item each):
+## HOME DECOR, slots that combine (one item each):
+##   home     the whole hokora (HOMES)
 ##   lantern  the pair of paper lanterns under the eaves (never empty: off = the red ones)
 ##   hanging  something across the front beam (a shimenawa, wind chimes, pennants...)
-##   shelf    a pair on the stone slab, one each side of the offering stand
+##   shelf, shelf_right  one object on each ledge, either side of the offering stand (the user,
+##            2026-10-31: a different one on each side; both slots pick from the "shelf" items)
 ##   colour   the wood and the roof (a recolour by the shader, no new art: hokora_colour.gdshader)
 ## BACKGROUNDS, two slots:
 ##   sky      the sky's colours at dawn / day / dusk / night (it follows the real clock by itself)
@@ -15,10 +17,12 @@ extends RefCounted
 ##
 ## Art: a piece is drawn from its own files when they exist, so a designer's PNG dropped in its
 ## place shows up by itself (docs/kami_collection_art.md lists every file):
+##   (each one <id>.png, or frames <id>_0.png, _1 ... played in a loop; tools/art/ornaments_install.py
+##   puts the designer's 220-pixel drawings at the canvas' scale)
 ##   lantern  ART_DIR/<id>.png (like the red lantern: 108 x 176, its hook at the top middle)
-##   hanging  ART_DIR/<id>-1.png, -2.png (the front's 925 x 925 canvas, two frames of a sway)
-##   shelf    ART_DIR/<id>.png, or <id>_left.png + <id>_right.png for a pair that differs (the
-##            left one mirrored otherwise); standing on the slab, its foot at the bottom middle
+##   hanging  ART_DIR/<id>.png (up to 378 x 156), hung from its top middle at the home's beam
+##   shelf    ART_DIR/<id>.png (up to 126 x 151), facing right, its foot at the bottom middle on the
+##            left ledge; the right ledge mirrors it, or uses <id>_left.png when it's drawn
 ##   icons    ART_DIR/icons/<id>.png (96 x 96, the menu card's picture)
 ## Until then: a lantern is the red one recoloured ("tint"), a colour is a shader preset, a sky
 ## set is only colours, a drift is a particle kind drawn in code; a hanging or shelf piece without
@@ -29,6 +33,19 @@ const ART_DIR := "res://textures/pet/shrine_new/decor/"
 ## "tint": [hue shift (turns), saturation x, value x] for the placeholder lantern; "glow": the candle
 ## through its paper. Colours: "wood", "roof", "moss", each [hue shift, saturation x, value x].
 const DECOR := {
+	# --- homes (the whole hokora: HOMES has each one's art and hooks; ON TRIAL 2026-10-30, the
+	# designer's v4 homes, sources to decide: docs/kami_future_hokoras.md)
+	"house_forest": { "name": "Forest Hokora", "kind": "home", "unlocked": true, "unlock": "" },
+	"house_neon_cyber": { "name": "Neon Shrine", "kind": "home", "unlock": "Coming soon" },
+	"house_moon": { "name": "Moon Shrine", "kind": "home", "unlock": "Coming soon" },
+	"house_golden": { "name": "Golden Temple", "kind": "home", "unlock": "Coming soon" },
+	"house_ruined_night": { "name": "Ruined Shrine", "kind": "home", "unlock": "Coming soon" },
+	"house_tree_hollow": { "name": "Tree Hollow", "kind": "home", "unlock": "Coming soon" },
+	"house_ramen_stall": { "name": "Ramen Stall", "kind": "home", "unlock": "Coming soon" },
+	"house_capsule_apartment": { "name": "Capsule Pod", "kind": "home", "unlock": "Coming soon" },
+	"house_arcade_cabinet": { "name": "Arcade Cabinet", "kind": "home", "unlock": "Coming soon" },
+	"house_bathhouse": { "name": "Bathhouse", "kind": "home", "unlock": "Coming soon" },
+	"house_fire": { "name": "Fire Shrine", "kind": "home", "unlock": "Coming soon" },
 	# --- lanterns
 	"lantern_red": { "name": "Red Lanterns", "kind": "lantern", "unlocked": true, "unlock": "", "glow": "#ffc270" },
 	"lantern_goldfish": { "name": "Goldfish Lanterns", "kind": "lantern", "unlock": "Splash Hoops: 5 stars", "tint": [0.055, 1.0, 1.05], "glow": "#ffb060" },
@@ -42,6 +59,29 @@ const DECOR := {
 	"lantern_daruma": { "name": "Daruma Lanterns", "kind": "lantern", "unlock": "Lucky Pinch", "tint": [0.985, 1.2, 0.9], "glow": "#ffb080" },
 	"lantern_neon": { "name": "Neon Lanterns", "kind": "lantern", "unlock": "RC Prix 2177: 5 stars", "tint": [0.83, 1.3, 1.15], "glow": "#ff60e0" },
 	"lantern_gold": { "name": "Gold Lanterns", "kind": "lantern", "unlock": "100 spirits found", "tint": [0.11, 0.9, 1.1], "glow": "#ffe080" },
+	# (round 1's lanterns as the designer drew them; the recoloured ones above stay: the user)
+	"lantern_goldfish_drawn": { "name": "Painted Goldfish", "kind": "lantern", "unlock": "Coming soon", "glow": "#ffb060" },
+	"lantern_white_drawn": { "name": "Painted White", "kind": "lantern", "unlock": "Coming soon", "glow": "#fff0d0" },
+	"lantern_indigo_drawn": { "name": "Painted Indigo", "kind": "lantern", "unlock": "Coming soon", "glow": "#a8b8ff" },
+	"lantern_festival_drawn": { "name": "Painted Festival", "kind": "lantern", "unlock": "Coming soon", "glow": "#ffb07a" },
+	"lantern_jellyfish_drawn": { "name": "Painted Jellyfish", "kind": "lantern", "unlock": "Coming soon", "glow": "#d8b0ff" },
+	"lantern_moon_drawn": { "name": "Painted Moon Rabbit", "kind": "lantern", "unlock": "Coming soon", "glow": "#e0e8ff" },
+	"lantern_hozuki_drawn": { "name": "Painted Hozuki", "kind": "lantern", "unlock": "Coming soon", "glow": "#ff9a40" },
+	"lantern_fox_drawn": { "name": "Painted Fox-fire", "kind": "lantern", "unlock": "Coming soon", "glow": "#90d8ff" },
+	"lantern_daruma_drawn": { "name": "Painted Daruma", "kind": "lantern", "unlock": "Coming soon", "glow": "#ffb080" },
+	"lantern_neon_drawn": { "name": "Painted Neon", "kind": "lantern", "unlock": "Coming soon", "glow": "#ff60e0" },
+	"lantern_gold_drawn": { "name": "Painted Gold", "kind": "lantern", "unlock": "Coming soon", "glow": "#ffe080" },
+	# (round 3, 2026-10-31: each home's set, then the extras; sources to decide with the economy pillar)
+	"lantern_firefly_jar": { "name": "Firefly Jars", "kind": "lantern", "unlock": "Coming soon", "glow": "#e8ff90" },
+	"lantern_holo_cube": { "name": "Holo Cubes", "kind": "lantern", "unlock": "Coming soon", "glow": "#60f0ff" },
+	"lantern_crescent": { "name": "Crescent Lamps", "kind": "lantern", "unlock": "Coming soon", "glow": "#e0e8ff" },
+	"lantern_phoenix": { "name": "Phoenix Lanterns", "kind": "lantern", "unlock": "Coming soon", "glow": "#ffb040" },
+	"lantern_ghost_stone": { "name": "Ghost-fire Stones", "kind": "lantern", "unlock": "Coming soon", "glow": "#80c0ff" },
+	"lantern_akachochin": { "name": "Akachochin", "kind": "lantern", "unlock": "Coming soon", "glow": "#ff9a60" },
+	"lantern_pod_led": { "name": "Pod Lamps", "kind": "lantern", "unlock": "Coming soon", "glow": "#a0f0ff" },
+	"lantern_pixel_heart": { "name": "Pixel Hearts", "kind": "lantern", "unlock": "Coming soon", "glow": "#ff6080" },
+	"lantern_frosted_bath": { "name": "Bath Lamps", "kind": "lantern", "unlock": "Coming soon", "glow": "#d0f0ff" },
+	"lantern_iron_flame": { "name": "Iron Cages", "kind": "lantern", "unlock": "Coming soon", "glow": "#ff8030" },
 	# --- hanging (across the front beam)
 	"hang_none": { "name": "Nothing", "kind": "hanging", "unlocked": true, "unlock": "" },
 	"hang_furin": { "name": "Wind Chimes", "kind": "hanging", "unlock": "Splash Hoops: 15 stars" },
@@ -59,6 +99,22 @@ const DECOR := {
 	"hang_bunting": { "name": "Festival Flags", "kind": "hanging", "unlock": "Lucky Pinch" },
 	"hang_noren": { "name": "Noren Curtain", "kind": "hanging", "unlock": "The Shop", "price": 25 },
 	"hang_fairy": { "name": "Fairy Lights", "kind": "hanging", "unlock": "The Shop", "price": 25 },
+	# (round 3, 2026-10-31: each home's set, then the extras; sources to decide with the economy pillar)
+	"hang_acorn_vine": { "name": "Acorn Vine", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_led_cable": { "name": "LED Cable", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_stars": { "name": "Stars and Moons", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_gold_tassels": { "name": "Gold Tassels", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_cobweb_rope": { "name": "Cobweb Rope", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_menu_plaques": { "name": "Menu Plaques", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_photos": { "name": "Photo String", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_tokens": { "name": "Tokens and Plushies", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_towels": { "name": "Towel Line", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_chilies": { "name": "Dried Chilies", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_wisteria": { "name": "Wisteria", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_persimmons": { "name": "Dried Persimmons", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_tanabata": { "name": "Tanabata Wishes", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_omamori": { "name": "Omamori", "kind": "hanging", "unlock": "Coming soon" },
+	"hang_origami_stars": { "name": "Origami Stars", "kind": "hanging", "unlock": "Coming soon" },
 	# --- shelf (a pair on the slab)
 	"shelf_none": { "name": "Nothing", "kind": "shelf", "unlocked": true, "unlock": "" },
 	"shelf_goldfish": { "name": "Goldfish Bowls", "kind": "shelf", "unlock": "Splash Hoops: 60 stars" },
@@ -76,6 +132,25 @@ const DECOR := {
 	"shelf_candles": { "name": "Candles", "kind": "shelf", "unlock": "The Shop", "price": 15 },
 	"shelf_stone": { "name": "Stone Lanterns", "kind": "shelf", "unlock": "The Shop", "price": 30 },
 	"shelf_bonsai": { "name": "Bonsai", "kind": "shelf", "unlock": "The Shop", "price": 30 },
+	# (round 3, 2026-10-31: each home's set, then the extras; sources to decide with the economy pillar)
+	"shelf_sleeping_squirrel": { "name": "Sleeping Squirrel", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_robot_maneki": { "name": "Robot Lucky Cat", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_moon_rabbit": { "name": "Moon Rabbit", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_phoenix": { "name": "Golden Phoenix", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_glow_mushrooms": { "name": "Glow Mushrooms", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_steaming_pot": { "name": "Steaming Pot", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_desk_fan": { "name": "Desk Fan", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_claw_toy": { "name": "Claw Machine", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_duck_bucket": { "name": "Bath Duck", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_fire_salamander": { "name": "Fire Salamander", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_tanuki": { "name": "Tanuki", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_kokeshi": { "name": "Kokeshi", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_shishi_odoshi": { "name": "Bamboo Fountain", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_incense": { "name": "Incense Burner", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_omikuji": { "name": "Omikuji Box", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_frog": { "name": "Frog Statue", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_firefly_jar": { "name": "Firefly Jar", "kind": "shelf", "unlock": "Coming soon" },
+	"shelf_sleeping_cat": { "name": "Sleeping Cat", "kind": "shelf", "unlock": "Coming soon" },
 	# --- colours (the wood and the roof): the realms' colours come with their spirits
 	"colour_cedar": { "name": "Weathered Cedar", "kind": "colour", "unlocked": true, "unlock": "" },
 	"colour_moss": { "name": "Moss", "kind": "colour", "unlock": "10 Mountain spirits",
@@ -97,11 +172,33 @@ const DECOR := {
 	"colour_gold": { "name": "Gold Leaf", "kind": "colour", "unlock": "All 120 spirits",
 		"wood": [0.04, 1.45, 1.06], "roof": [0.1, 1.1, 1.0], "moss": [0.0, 1.0, 1.0] },
 }
-const DECOR_SECTIONS := ["lantern", "hanging", "shelf", "colour"]
-const SECTION_NAMES := { "lantern": "Lanterns", "hanging": "Hanging", "shelf": "Shelf", "colour": "Colours", "sky": "Sky", "drift": "Clouds" }
+const DECOR_SECTIONS := ["home", "lantern", "hanging", "shelf", "shelf_right", "colour"]
+const SECTION_NAMES := { "home": "Homes", "lantern": "Lanterns", "hanging": "Hanging", "shelf": "Left Shelf", "shelf_right": "Right Shelf", "colour": "Colours", "sky": "Sky", "drift": "Clouds" }
 ## Each slot's item when nothing else is picked (picking the one in use goes back to it)
-const DEFAULTS := { "lantern": "lantern_red", "hanging": "hang_none", "shelf": "shelf_none", "colour": "colour_cedar",
+const DEFAULTS := { "home": "house_forest", "lantern": "lantern_red", "hanging": "hang_none", "shelf": "shelf_none", "shelf_right": "shelf_none", "colour": "colour_cedar",
 	"sky": "sky_shrine", "drift": "clouds" }
+
+## The homes other than the forest hokora (their art: tools/art/homes_install.py, on the forest's 925
+## canvas and grid, so the spirit, the offering stand and the shelf keep their places): where the bell
+## rope and the two lanterns hang (grid cells, as Shrine.NEW_ROPE_AT), the colour of the recess behind
+## the inside. No colour presets yet (the Colours slot only recolours the forest hokora).
+const HOMES_DIR := "res://textures/pet/homes/"
+const HOMES := {   # (v5, 220 art; hooks from each guide.png)
+	"house_neon_cyber": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#1a091f" },
+	"house_moon": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#40223b" },
+	"house_golden": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#0a0507" },
+	"house_ruined_night": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#150d1c" },
+	"house_tree_hollow": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#381020" },
+	"house_ramen_stall": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#290d0e" },
+	"house_capsule_apartment": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#192234" },
+	"house_arcade_cabinet": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#14061d" },
+	"house_bathhouse": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#152445" },
+	"house_fire": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "socket": "#341228" },
+}
+
+## A home's folder ("" = the forest hokora, textures/pet/shrine_new/)
+static func home_dir(id: String) -> String:
+	return HOMES_DIR + id.trim_prefix("house_") + "/" if HOMES.has(id) else ""
 
 ## The sky: "day", "dusk" (dawn too) and "night" colours (the sky picture's own colour is the
 ## default's day, #e5a5a6; the default's dusk and night are that pink under today's light).
@@ -248,14 +345,27 @@ static func order(category: String) -> Array:
 				out.append(id)
 	return out
 
+## The kind of item a slot takes (both shelf slots take "shelf" items)
+static func slot_kind(slot: String) -> String:
+	return "shelf" if slot == "shelf_right" else slot
+
 static func section_ids(category: String, section: String) -> Array:
 	var src: Dictionary = DECOR if category == "decor" else SKY
-	return src.keys().filter(func(id): return src[id]["kind"] == section)
+	return src.keys().filter(func(id): return src[id]["kind"] == slot_kind(section))
 
 ## A piece's file in the art folder ("" = not drawn yet)
 static func art(id: String, suffix := "") -> String:
 	var p := ART_DIR + id + suffix + ".png"
 	return p if ResourceLoader.exists(p) else ""
+
+## A piece's frames: <id><suffix>_0.png, _1 ... or the one <id><suffix>.png ([] = not drawn yet)
+static func frames(id: String, suffix := "") -> Array[String]:
+	var out: Array[String] = []
+	while art(id, "%s_%d" % [suffix, out.size()]) != "":
+		out.append(art(id, "%s_%d" % [suffix, out.size()]))
+	if out.is_empty() and art(id, suffix) != "":
+		out.append(art(id, suffix))
+	return out
 
 static func icon_path(id: String) -> String:
 	var p := ART_DIR + "icons/" + id + ".png"
@@ -265,10 +375,8 @@ static func icon_path(id: String) -> String:
 static func has_art(id: String) -> bool:
 	var item: Dictionary = DECOR.get(id, SKY.get(id, {}))
 	match item.get("kind", ""):
-		"hanging":
-			return id == "hang_none" or art(id, "-1") != ""
-		"shelf":
-			return id == "shelf_none" or art(id) != "" or art(id, "_left") != ""
+		"hanging", "shelf":
+			return id.ends_with("_none") or not frames(id).is_empty()
 		"drift":
 			return item.get("particles", "") != "dragon" or art("dragon") != ""
 	return true
@@ -289,6 +397,8 @@ static func preview(id: String) -> Texture2D:
 		match item.get("kind", ""):
 			"lantern":
 				tex = lantern_texture(id)
+			"home":
+				tex = load(home_dir(id) + "card.png") if HOMES.has(id) else _forest_icon()   # (a corner: tools/art/homes_cards.py)
 			"colour":
 				tex = _colour_preview(item)
 			"sky":
@@ -299,8 +409,7 @@ static func preview(id: String) -> Texture2D:
 					tex = preload("res://scripts/sky_drift.gd").preview(item["particles"], Color.html(SKY["sky_shrine"]["day"]))
 			"hanging", "shelf":
 				if has_art(id) and not id.ends_with("_none"):
-					var p := art(id, "-1") if item["kind"] == "hanging" else (art(id) if art(id) != "" else art(id, "_left"))
-					tex = load(p)
+					tex = load(frames(id)[0])
 	_previews[id] = tex
 	return tex
 
@@ -309,7 +418,8 @@ static var _lanterns := {}
 static func lantern_texture(id: String) -> Texture2D:
 	if _lanterns.has(id):
 		return _lanterns[id]
-	var own := art(id)
+	var drawn := frames(id)
+	var own := drawn[0] if not drawn.is_empty() else ""
 	var tex: Texture2D = load(own) if own != "" else load("res://textures/pet/shrine_new/lantern.png")
 	var item: Dictionary = DECOR.get(id, {})
 	if own == "" and item.has("tint"):
@@ -343,6 +453,15 @@ static func _material(c: Color, item: Dictionary) -> Array:
 	return item.get("wood", [0.0, 1.0, 1.0])
 
 ## The hokora's left eave and pillar in a colour (a small crop, recoloured once)
+## The forest hokora's card: its whole front, small (the new homes have the designer's icons)
+static func _forest_icon() -> Texture2D:   # (a corner, as the Colours cards and the homes' card.png)
+	var img: Image = (load("res://textures/pet/shrine_new/front.png") as Texture2D).get_image()
+	if img.is_compressed():
+		img.decompress()
+	img = img.get_region(Rect2i(60, 120, 330, 330))
+	img.resize(110, 110, Image.INTERPOLATE_NEAREST)
+	return ImageTexture.create_from_image(img)
+
 static func _colour_preview(item: Dictionary) -> Texture2D:
 	var img: Image = (load("res://textures/pet/shrine_new/front.png") as Texture2D).get_image()
 	if img.is_compressed():

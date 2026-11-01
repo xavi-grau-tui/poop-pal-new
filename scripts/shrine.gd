@@ -18,11 +18,34 @@ const STONE_BOX := Vector4(0.2, 0.762, 0.805, 0.915)
 var side_count := 20
 var asset_dir := "res://textures/pet/shrine/"
 ## Home Decor and Backgrounds (Collection.home_piece, _apply_decor): the beam's hanging piece (over
-## the front, its two frames swaying), the shelf pair on the slab, what drifts in the sky
+## the front), an object on each ledge, what drifts in the sky; lanterns, hanging and shelf objects
+## play their frames in a loop (_decor_frames)
 var hanging: Sprite2D
-var _hang_frames: Array[Texture2D] = []
-var shelf: Sprite2D
+var shelf: Sprite2D                   # (the left ledge)
+var shelf_right: Sprite2D
+var _decor_frames := {}               # sprite -> [frames, ms per frame]
+## Where the pieces go, on the front's 925 canvas: the beam's middle (the hanging piece hangs from
+## it) and the two ledges' tops (each object's foot): the forest's (docs/mockups/hokora_decor
+## guide_hanging.png, guide_shelf.png: its slab, lifted with it) and the homes' (their guide.png)
+const BEAM_AT := Vector2(462.5, 250.0)
+const LEDGES_AT := [Vector2(280.0, 698.0), Vector2(654.0, 698.0)]
+const HOME_BEAM_AT := Vector2(468.8, 288.0)
+const HOME_LEDGES_AT := [Vector2(161.9, 681.1), Vector2(767.3, 681.1)]
 var drift: Node2D
+## The home (Home Decor's Homes; HokoraCatalog.HOMES, _apply_home): "" = the forest hokora; another
+## home brings its own front, inside and sides, its recess (socket: the window the inside is seen
+## through, in its dark colour behind it) and where its bell and lanterns hang
+var _home := ""
+var socket: Sprite2D
+var glass: Sprite2D                   # (a home's glass over its openings: the capsule's, the arcade's)
+var _rope_at := Vector2(11, 30)       # (NEW_ROPE_AT, or the home's)
+var _lantern_at := Vector2(85, 30)    # (NEW_LANTERN_AT, or the home's)
+var _left_lantern_at := Vector2(25, 30)
+## A home's own offering table (v5: table.png, its 3D from stacked copies of table_side.png, where the
+## sanbo stands; the forest's sanbo hidden meanwhile): sprite -> depth, its face last
+var _sanbo: Array[Sprite2D] = []
+var _table_parts := {}
+const TABLE_COPIES := 14
 const CELL := 925.0 / 110.0           # px per grid cell in the pictures
 ## Px per full tilt, against PetView (which itself comes 14 px towards you: TiltParallax.FRONT)
 const FRONT := 20.0                   # the front face, towards you
@@ -89,7 +112,7 @@ var window: Node2D                    # the inside and its walls, seen only thro
 const ROPE_AT := Vector2(14, 30)      # left eave hanger on the chosen front frame (grid)
 const NEW_ROPE_AT := Vector2(11, 30)  # far left eave, beyond the pair of lanterns
 const ROPE_N := 7                     # beads (the user: modular, like the painted one; the last white one off)
-const NEW_ROPE_N := 6                 # outlined oval beads under the outer bell
+const NEW_ROPE_N := 5                 # outlined oval beads under the outer bell (the last white one off: the user)
 const ROPE_SEG := 3.3                 # grid cells between them (they just overlap, as painted)
 const NEW_ROPE_SEG := 5.0             # slimmer ovals overlap more; the first meets the bell
 const NEW_BELL_HANG := 58.0           # keep the first oval tucked against the bell
@@ -174,6 +197,8 @@ func _ready() -> void:
 	window.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
 	window.draw.connect(_draw_window)
 	add_child(window)
+	socket = _layer(null, 0)
+	socket.reparent(window, false)
 	inside = _layer(load(asset_dir + "inside.png"), 0)
 	inside.reparent(window, false)
 	if DevLaunch.new_shrine:
@@ -225,6 +250,7 @@ func _ready() -> void:
 	by_depth.sort_custom(func(a, b): return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
 	for e in by_depth:
 		move_child(e[2], -1)
+	glass = _layer(null, 1)                       # (under the front: its rims frame it)
 	front = _layer(load(asset_dir + "front.png"), 1)
 	if DevLaunch.new_shrine:
 		# Enlarge the foreground frame slightly around its own center; keep the room and spirit scale.
@@ -245,9 +271,15 @@ func _ready() -> void:
 			var sp := _layer(st, 1)
 			_depth_of[sp] = dd
 			near.append([dd, piece[3], sp])
+			_sanbo.append(sp)
 		var face := _layer(load(asset_dir + piece[0] + ".png"), 1)
 		_depth_of[face] = piece[2]
 		near.append([piece[2], piece[3], face])
+		_sanbo.append(face)
+	for j in TABLE_COPIES + 1:                    # (a home's table: empty in the forest)
+		var tp := _layer(null, 1)
+		_table_parts[tp] = lerpf(TRAY_B, TRAY_F, float(j) / TABLE_COPIES)
+		near.append([_table_parts[tp], 2, tp])
 	# what's offered stands on the tray at its depth: seen from below, the tray's front hides its foot
 	offering = _layer(null, 1)
 	offering.visible = false
@@ -275,17 +307,23 @@ func _ready() -> void:
 	tokkuri = _prop_sprite(load(asset_dir + "tokkuri.png"), PROP_PX)
 	tokkuri.z_index = 2
 	tokkuri.scale = Vector2.ONE * TOKKURI_PX * CELL * _gut_scale.x
-	# the Home Decor shelf pair: one picture on the slab's canvas with both pieces in place, stood on the
-	# slab beside the stand at the ornaments' depth (its picture: _apply_decor)
+	# the Home Decor ledge objects, one each side of the stand at the ornaments' depth (a home's: its
+	# front's), each its foot on its ledge (_apply_decor)
 	shelf = _layer(null, 1)
-	_depth_of[shelf] = ORN_F
-	near.append([ORN_F, 1.5, shelf])
+	shelf_right = _layer(null, 1)
+	for sp in [shelf, shelf_right]:
+		sp.centered = false
+		sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_depth_of[sp] = ORN_F
+		near.append([ORN_F, 1.5, sp])
 	near.sort_custom(func(a, b): return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
 	for e in near:
 		move_child(e[2], -1)
 	# the beam's hanging piece, on the front's own canvas, over it (under the lanterns and the bell)
 	hanging = _layer(null, 1)
 	hanging.scale = front.scale
+	hanging.centered = false
+	hanging.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 	for i in rope_count:
 		var segment := _layer(load(asset_dir + ("bead_red.png" if i % 2 == 0 else "bead_white.png")), 2)
@@ -304,8 +342,8 @@ func _ready() -> void:
 	if DevLaunch.new_shrine:
 		bell.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		bell.centered = false
-		bell.offset = Vector2(-bell.texture.get_width() * 0.5, -3.0)
-		_bp = _g(NEW_ROPE_AT.x, NEW_ROPE_AT.y) + front.position + Vector2(0, bell.texture.get_height() * 0.52 * _gut_scale.y)
+		bell.offset = Vector2(-bell.texture.get_width() * 0.5, -5.0)   # (-3 before its outline grew 2 px)
+		_bp = _g(_rope_at.x, _rope_at.y) + front.position + Vector2(0, bell.texture.get_height() * 0.52 * _gut_scale.y)
 		_bq = _bp
 	lantern_glow = _lantern_glow()
 	lantern = _layer(load(asset_dir + "lantern.png"), 2)
@@ -313,7 +351,7 @@ func _ready() -> void:
 		lantern.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	lantern.centered = false
 	lantern.offset = Vector2(-lantern.texture.get_width() * 0.5, -3.0) if DevLaunch.new_shrine else -LANTERN_PIVOT * Vector2(CELL, 8.4)
-	var lantern_at := NEW_LANTERN_AT if DevLaunch.new_shrine else LANTERN_AT
+	var lantern_at := _lantern_at if DevLaunch.new_shrine else LANTERN_AT
 	var lantern_length := NEW_LANTERN_L if DevLaunch.new_shrine else LANTERN_L
 	_lp = _g(lantern_at.x, lantern_at.y) + Vector2(0, lantern_length * 8.4 * _gut_scale.y)
 	_lq = _lp
@@ -323,7 +361,7 @@ func _ready() -> void:
 		lantern_left.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		lantern_left.centered = false
 		lantern_left.offset = lantern.offset
-		_lp_left = _g(NEW_LEFT_LANTERN_AT.x, NEW_LEFT_LANTERN_AT.y) + Vector2(0, NEW_LANTERN_L * 8.4 * _gut_scale.y)
+		_lp_left = _g(_left_lantern_at.x, _left_lantern_at.y) + Vector2(0, NEW_LANTERN_L * 8.4 * _gut_scale.y)
 		_lq_left = _lp_left
 	# the sky: behind the clouds, in front of the sky picture (absolute z: the sky's own)
 	sun = _layer(load(asset_dir + "sun.png"), -6)
@@ -334,7 +372,7 @@ func _ready() -> void:
 		moons.append(load(asset_dir + "moon_%d.png" % i))
 	sun.modulate.a = 0.7                               # (far away: a little see-through)
 	moon.modulate.a = 0.8
-	var rope_at := NEW_ROPE_AT if DevLaunch.new_shrine else ROPE_AT
+	var rope_at := _rope_at if DevLaunch.new_shrine else ROPE_AT
 	var a := _g(rope_at.x, rope_at.y)
 	if DevLaunch.new_shrine:
 		a.y += NEW_BELL_HANG * _gut_scale.y
@@ -344,26 +382,73 @@ func _ready() -> void:
 		_rq.append(p)
 	drift = SkyDrift.new()
 	add_child(drift)
+	_apply_home()
 	_apply_decor()
 	Collection.equipped_changed.connect(func(cat, _id):
+		if cat == "decor":
+			_apply_home()
 		if cat in ["decor", "backgrounds"]:
 			_apply_decor())
 
+## The home (HokoraCatalog.HOMES): its pictures on the same boxes as the forest hokora's (front,
+## inside, the stacked sides), its recess as the window, its hooks; the forest's own pieces (the
+## root planes, the stone slab) only in the forest. ON TRIAL (2026-10-30): the designer's v4 homes.
+func _apply_home() -> void:
+	if not DevLaunch.new_shrine:
+		return
+	var hid := Collection.home_piece("home")
+	var h: Dictionary = Hokora.HOMES.get(hid, {})
+	_home = hid if not h.is_empty() else ""
+	var dir := Hokora.home_dir(hid) if _home != "" else asset_dir
+	front.texture = load(dir + "front.png")
+	front.scale = _gut_scale * (1.04 if _home == "" else 1.0)
+	hanging.scale = front.scale
+	inside.texture = load(dir + "inside.png")
+	_inside_center_offset = Vector2(-14.0 * _gut_scale.x, 0.0) if _home == "" else Vector2.ZERO
+	var side_tex: Texture2D = load(dir + "side.png")
+	for j in sides.size():
+		sides[j].texture = load(dir + "side_back.png") if j == 0 else side_tex
+	socket.texture = load(dir + "socket.png") if _home != "" else null
+	glass.texture = load(dir + "glass.png") if _home != "" and ResourceLoader.exists(dir + "glass.png") else null
+	glass.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	for sp in [front, inside, socket] + sides:
+		sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if _home != "" else CanvasItem.TEXTURE_FILTER_PARENT_NODE
+	for plane_data in root_planes:
+		(plane_data["node"] as CanvasItem).visible = _home == ""
+	for sp in [slab] + slab_front + slab_back:
+		sp.visible = _home == ""
+	var has_table := _home != "" and ResourceLoader.exists(dir + "table.png")
+	for sp in _sanbo:
+		sp.visible = not has_table
+	var parts := _table_parts.keys()
+	for k in parts.size():
+		var tp: Sprite2D = parts[k]
+		tp.texture = load(dir + ("table.png" if k == parts.size() - 1 else "table_side.png")) if has_table else null
+		tp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_rope_at = h.get("bell", NEW_ROPE_AT)
+	var hooks: Array = h.get("lanterns", [NEW_LEFT_LANTERN_AT, NEW_LANTERN_AT])
+	_left_lantern_at = hooks[0]
+	_lantern_at = hooks[1]
+	for sp in [shelf, shelf_right]:                # (a home's ledges are part of its front)
+		_depth_of[sp] = ORN_F if _home == "" else FRONT
+	walls.set_meta("drawn", false)                 # (_process places it all again)
+
 ## Home Decor and Backgrounds in the hokora (Collection.home_piece; HokoraCatalog): the lanterns'
 ## picture (their own drawing, or the red one recoloured by the colour shader) and their glow, the
-## beam's hanging piece, the shelf pair, the wood and roof colour (the forest hokora only: the first
+## beam's hanging piece, the ledges' objects, the wood and roof colour (the forest hokora only: the first
 ## model's vermilion would read as its roof), what drifts in the sky. A piece not drawn yet shows
 ## nothing (a hanging or shelf piece) until its PNG is in Hokora.ART_DIR.
 func _apply_decor() -> void:
 	var lid := Collection.home_piece("lantern")
 	var item: Dictionary = Hokora.DECOR.get(lid, {})
-	var own := Hokora.art(lid) if DevLaunch.new_shrine else ""
-	var base: Texture2D = load(own) if own != "" else load(asset_dir + "lantern.png")
+	var drawn := _load_frames(Hokora.frames(lid) if DevLaunch.new_shrine else [])
+	var base: Texture2D = drawn[0] if not drawn.is_empty() else load(asset_dir + "lantern.png")
 	var lmat: ShaderMaterial = null
-	if own == "" and item.has("tint"):
+	if drawn.is_empty() and item.has("tint"):
 		lmat = _colour_material({ "wood": item["tint"] }, false, false)
 	for l in [lantern, lantern_left]:
 		if l:
+			_play(l, drawn, 260)
 			l.texture = base
 			l.material = lmat
 			if DevLaunch.new_shrine:
@@ -373,23 +458,43 @@ func _apply_decor() -> void:
 			g.self_modulate = Color.html(item.get("glow", "#ffc270"))
 	# the wood and the roof
 	var colour: Dictionary = Hokora.DECOR.get(Collection.home_piece("colour"), {})
-	var cmat: ShaderMaterial = _colour_material(colour) if DevLaunch.new_shrine and colour.has("wood") else null
+	var cmat: ShaderMaterial = _colour_material(colour) if DevLaunch.new_shrine and _home == "" and colour.has("wood") else null
 	var rmat: ShaderMaterial = _colour_material(colour, true, true) if cmat else null
 	for sp in [front] + sides:
 		sp.material = cmat
 	for plane_data in root_planes:
 		(plane_data["node"] as CanvasItem).material = rmat if rmat else plane_data["mat"]
-	# the beam's hanging piece (two frames) and the shelf pair: their drawings, when they exist
-	var hid := Collection.home_piece("hanging")
-	_hang_frames.clear()
-	for k in ["-1", "-2"]:
-		var p := Hokora.art(hid, k)
-		if p != "" and DevLaunch.new_shrine:
-			_hang_frames.append(load(p))
-	hanging.texture = _hang_frames[0] if not _hang_frames.is_empty() else null
-	var sp_path := Hokora.art(Collection.home_piece("shelf"))
-	shelf.texture = load(sp_path) if sp_path != "" and DevLaunch.new_shrine else null
+	# the beam's hanging piece and the ledges' objects: their drawings, when they exist
+	var beam: Vector2 = BEAM_AT if _home == "" else HOME_BEAM_AT
+	var hang := _load_frames(Hokora.frames(Collection.home_piece("hanging")) if DevLaunch.new_shrine else [])
+	_play(hanging, hang, 400)
+	if not hang.is_empty():
+		hanging.offset = beam - Vector2(462.5, 462.0) - Vector2(hang[0].get_width() * 0.5, 0.0)
+	var ledges: Array = LEDGES_AT if _home == "" else HOME_LEDGES_AT
+	var lift := Vector2.ZERO if _home == "" else Vector2(0, 4.0 * CELL)   # (a home has no lifted slab)
+	for side in 2:
+		var sp: Sprite2D = [shelf, shelf_right][side]
+		var sid := Collection.home_piece(["shelf", "shelf_right"][side])
+		var own_left: Array = Hokora.frames(sid, "_left") if side == 1 else []
+		var pics := _load_frames((own_left if not own_left.is_empty() else Hokora.frames(sid)) if DevLaunch.new_shrine else [])
+		sp.flip_h = side == 1 and own_left.is_empty()   # (drawn facing right: mirrored on the right ledge)
+		_play(sp, pics, 300)
+		if not pics.is_empty():
+			sp.offset = ledges[side] - Vector2(462.5, 462.0) + lift - Vector2(pics[0].get_width() * 0.5, pics[0].get_height())
 	drift.set_kind(Hokora.SKY.get(Collection.home_piece("drift"), {}).get("particles", ""), _south())
+
+func _load_frames(paths: Array) -> Array[Texture2D]:
+	var out: Array[Texture2D] = []
+	for p in paths:
+		out.append(load(p))
+	return out
+
+## A piece shows its first frame, and plays the rest in a loop (_process) when it has more
+func _play(sp: Sprite2D, pics: Array[Texture2D], ms: int) -> void:
+	sp.texture = pics[0] if not pics.is_empty() else null
+	_decor_frames.erase(sp)
+	if pics.size() > 1:
+		_decor_frames[sp] = [pics, ms]
 
 ## The colour shader with a colour item's sets (wood / roof / moss); roots: the root planes' version
 ## (their faint edge pixels dropped, as their own shader did)
@@ -430,8 +535,10 @@ func _process(delta: float) -> void:
 	_sky(t)
 	_rain_step(delta)
 	drift.step(delta, Rect2(_g(-6.0, -4.0), _g(116.0, 112.0) - _g(-6.0, -4.0)), t, _night)
-	if _hang_frames.size() > 1:                    # (the hanging piece sways: its two frames)
-		hanging.texture = _hang_frames[int(Time.get_ticks_msec() / 650) % _hang_frames.size()]
+	var now := Time.get_ticks_msec()
+	for sp in _decor_frames:                      # (the pieces' loops; the right lantern a frame behind)
+		var pics: Array = _decor_frames[sp][0]
+		sp.texture = pics[(now / int(_decor_frames[sp][1]) + (1 if sp == lantern else 0)) % pics.size()]
 	if stream.visible:
 		_aim_stream()
 	if t.is_equal_approx(tilt) and walls.get_meta("drawn", false):
@@ -441,6 +548,7 @@ func _process(delta: float) -> void:
 		(land.material as ShaderMaterial).set_shader_parameter("tilt", tilt)
 	front.position = (tilt * FRONT).round()
 	hanging.position = front.position
+	glass.position = front.position
 	slab.position = (tilt * SLAB).round() + _platform_offset()
 	for j in slab_back.size():
 		var slab_back_depth := SLAB_BACK
@@ -450,6 +558,8 @@ func _process(delta: float) -> void:
 
 	for sp in _depth_of:
 		sp.position = (tilt * float(_depth_of[sp])).round() + _platform_offset()
+	for part in _table_parts:                     # (drawn where it stands: no platform offset)
+		part.position = (tilt * float(_table_parts[part])).round()
 	_place_offering()
 	_place_cup()
 	for plane_data in root_planes:
@@ -467,6 +577,7 @@ func _process(delta: float) -> void:
 		var p3 := _g(x, bottom) + tilt * z0
 		plane.polygon = PackedVector2Array([p0, p1, p2, p3])
 	inside.position = _inside_center_offset + (-tilt * INSIDE).round()
+	socket.position = front.position
 	for j in side_count:
 		sides[j].position = (-tilt * BACK).lerp(tilt * FRONT, float(j) / side_count).round()
 	walls.set_meta("drawn", true)
@@ -1204,7 +1315,7 @@ func set_hatch(open: bool) -> void:
 
 func _rope_step(dt: float) -> void:
 	_t += dt
-	var rope_at := NEW_ROPE_AT if DevLaunch.new_shrine else ROPE_AT
+	var rope_at := _rope_at if DevLaunch.new_shrine else ROPE_AT
 	var bell_anchor := _g(rope_at.x, rope_at.y) + front.position
 	var down := _real_down(dt)
 	var rope_down := down
@@ -1257,7 +1368,7 @@ func _bell_step(dt: float, down: Vector2, breeze: Vector2) -> void:
 	if not DevLaunch.new_shrine:
 		bell.rotation = 0.0
 		return
-	var top := _g(NEW_ROPE_AT.x, NEW_ROPE_AT.y) + front.position
+	var top := _g(_rope_at.x, _rope_at.y) + front.position
 	var v := _bp - _bq
 	_bq = _bp
 	_bp += v * NEW_ROPE_DAMP + (down * NEW_ROPE_G + breeze * NEW_ROPE_BREEZE_SCALE) * dt * dt
@@ -1283,7 +1394,7 @@ func _real_down(dt: float) -> Vector2:
 	return _down
 
 func _lantern_step(dt: float, down: Vector2, breeze: Vector2) -> void:
-	var lantern_at := NEW_LANTERN_AT if DevLaunch.new_shrine else LANTERN_AT
+	var lantern_at := _lantern_at if DevLaunch.new_shrine else LANTERN_AT
 	var top := _g(lantern_at.x, lantern_at.y) + front.position
 	var v := _lp - _lq
 	_lq = _lp
@@ -1304,7 +1415,7 @@ func _lantern_step(dt: float, down: Vector2, breeze: Vector2) -> void:
 	var warm := 1.0 + 0.12 * f * lerpf(0.7, 1.0, _night)     # (the candle through the paper)
 	lantern.modulate = Color(warm, warm * 0.97, 1.0)
 	if DevLaunch.new_shrine:
-		var left_top := _g(NEW_LEFT_LANTERN_AT.x, NEW_LEFT_LANTERN_AT.y) + front.position
+		var left_top := _g(_left_lantern_at.x, _left_lantern_at.y) + front.position
 		var left_velocity := _lp_left - _lq_left
 		_lq_left = _lp_left
 		_lp_left += left_velocity * 0.975 + (down * ROPE_G + breeze) * dt * dt
@@ -1542,6 +1653,10 @@ func _g(gx: float, gy: float) -> Vector2:
 
 ## The window in the front (a cell bigger all round: the pillars and the beam cover its edges)
 func _draw_window() -> void:
+	if _home != "":                              # (a home: its recess's own outline)
+		var size := Vector2(socket.texture.get_size()) * socket.scale
+		window.draw_texture_rect(socket.texture, Rect2(front.position - size * 0.5, size), false)
+		return
 	var a := _g(OPEN.position.x - 1.0, OPEN.position.y - 1.0) + front.position
 	var b := _g(OPEN.end.x + 1.0, OPEN.end.y + 1.0) + front.position
 	window.draw_rect(Rect2(a, b - a), Color.WHITE)
@@ -1550,6 +1665,8 @@ func _draw_window() -> void:
 ## the side the inside slid away from shows (tilt right: the right wall), in strips a grid cell
 ## wide (the art's pixels), darker deeper in, a dark seam where they meet the back
 func _draw_walls() -> void:
+	if _home != "":                              # (a home's recess: its socket shows, no walls yet)
+		return
 	var f0 := _g(OPEN.position.x, OPEN.position.y) + front.position
 	var f1 := _g(OPEN.end.x, OPEN.end.y) + front.position
 	var d := inside.position - front.position

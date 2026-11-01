@@ -172,7 +172,7 @@ func _run() -> void:
 
 ## menu=food / drinks / special / games / gear / shop[:page] / dress / decor / backgrounds / pedia / cases:
 ## opens it like a tap on its button, then a screenshot (shop:2 = its 3rd page; decor / backgrounds in
-## the hokora: section=N its slot, lanterns 0 .. colours 3)
+## the hokora: section=N its slot, homes 0, lanterns 1 .. colours 5)
 func _open_menu(which: String) -> void:
 	var mgr = get_tree().root.get_node_or_null("PoopPal/Main UI/MenuManager")
 	var name := which.get_slice(":", 0)

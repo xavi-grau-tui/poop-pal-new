@@ -43,7 +43,8 @@ const KIND_TAGS := {
 	# the hokora's slots
 	"lantern": ["Lantern", Color8(240, 196, 168)],
 	"hanging": ["Hanging", Color8(180, 208, 226)],
-	"shelf": ["Shelf", Color8(206, 214, 178)],
+	"shelf": ["Left", Color8(206, 214, 178)],
+	"shelf_right": ["Right", Color8(206, 214, 178)],
 	"colour": ["Colour", Color8(232, 182, 196)],
 	"sky": ["Sky", Color8(198, 186, 226)],
 	"drift": ["Clouds", Color8(180, 208, 226)],
@@ -253,6 +254,7 @@ func confirm_selected(sel: Node) -> bool:
 			return_selection = selection
 			_show_detail(action["id"])
 		"equip":
+			Collection.home_slot = _section_slot(view)
 			if Collection.equip(action["category"], action["id"]):
 				_sfx("res://sounds/fx/gamecoin.wav", -8.0)
 				return true
@@ -578,6 +580,7 @@ func _build_list(v: int) -> void:
 	var cat: String = LISTS[v]["category"]
 	var cat_catalog := Collection.catalog(cat)
 	var ids := _list_ids(v)
+	Collection.home_slot = _section_slot(v)
 	page = clampi(page, 0, _list_pages(v) - 1)
 	for slot in LIST_PER_PAGE:
 		var i := page * LIST_PER_PAGE + slot
@@ -602,8 +605,9 @@ func _build_list(v: int) -> void:
 		elif Collection.in_shrine() and cat in ["decor", "backgrounds"] and not Hokora.has_art(id):
 			st.text = "Art soon"                                # (a hokora piece still to be drawn)
 		# backgrounds / gut decor: the kind, on a tag like the food types
-		if owned and KIND_TAGS.has(item.get("kind", "")):
-			_card_tag(row, KIND_TAGS[item["kind"]])
+		var tag_kind: String = Collection.home_slot if Collection.home_slot.begins_with("shelf") else item.get("kind", "")
+		if owned and KIND_TAGS.has(tag_kind):
+			_card_tag(row, KIND_TAGS[tag_kind])
 		row.set_meta("action", { "type": "equip", "category": cat, "id": id } if owned else { "type": "locked" })
 		if Collection.is_new(cat, id):
 			var tag := _new_badge(26)
@@ -862,7 +866,7 @@ func _build_shop() -> void:
 				_card_tag(row, ["Case", Color8(200, 222, 210)])
 			"home":
 				var piece_kind: String = Collection.find_item(it["category"], it["piece"]).get("kind", "")
-				_card_tag(row, KIND_TAGS.get(piece_kind, ["Home", Color8(220, 196, 150)]))
+				_card_tag(row, ["Shelf", KIND_TAGS["shelf"][1]] if piece_kind == "shelf" else KIND_TAGS.get(piece_kind, ["Home", Color8(220, 196, 150)]))
 			_:
 				_card_tag(row, UiArt.TYPE_TAGS.get(fam, [fam.capitalize(), Color8(220, 196, 150)]))
 		var tag: Sprite2D = row.get_child(row.get_child_count() - 2)
@@ -1038,6 +1042,11 @@ func _sections(v: int) -> Array:
 		View.BACKGROUNDS:
 			return Hokora.SKY_SECTIONS
 	return []
+
+## The hokora's slot a list view shows now ("" outside the hokora's sections)
+func _section_slot(v: int) -> String:
+	var secs := _sections(v)
+	return "" if secs.is_empty() else secs[clampi(section, 0, secs.size() - 1)]
 
 ## The ids a list view shows (in the hokora: the current section's)
 func _list_ids(v: int) -> Array:

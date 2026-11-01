@@ -10,6 +10,8 @@ extends TextureButton
 @export var pal_sounds: Array[AudioStreamPlayer2D] = []
 
 var was_pressed_inside := false
+var _held := false                       # a finger is down on it (a slide off it lets go there)
+var _game_held := false                  # held as a game's control (Tomo Tunes)
 
 func _ready():
 	update_visual()
@@ -45,6 +47,22 @@ func update_audio():
 			game_screen.set_game_music_volume(volume)
 
 func _gui_input(event):
+	# the finger slides off while holding (the user, 2026-10-31): it lets go right there, as if lifted on it
+	# (a mute toggle, or a game control's release); the button's own press is dropped
+	if event is InputEventMouseMotion and (_held or _game_held) and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) \
+			and not Rect2(Vector2.ZERO, size).has_point(event.position):
+		disabled = true
+		disabled = false
+		if _game_held:
+			show_held(false)
+		else:
+			button_pressed = not button_pressed
+		_held = false
+		_game_held = false
+		accept_event()
+		return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+		_held = false
 	# In a game that uses this button as a control (Tummy Tunes: the left lane), it plays
 	# instead of muting
 	if GameScreen.is_active and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -53,10 +71,15 @@ func _gui_input(event):
 			if event.pressed:
 				gs.current_game.on_sound_button_pressed()
 				Input.vibrate_handheld(15)
+			elif not _game_held:
+				accept_event()                  # (already let go when the finger slid off)
+				return
+			_game_held = event.pressed
 			show_held(event.pressed)
 			accept_event()
 			return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_held = true
 		was_pressed_inside = get_global_rect().has_point(event.position)
 		if click_sound:
 			click_sound.stop()

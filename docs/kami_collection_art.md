@@ -175,3 +175,30 @@ Tunes' gold drum.
 - Sky sprites: 8 kinds (petals, maple, fireflies, snow, sky fish, sky lanterns, fireworks, wisps)
   and the cloud dragon.
 - Planned: 8 dress-ups, 8 cases, 14 stickers and a sticker-book tab.
+
+## Next rounds with the designer (the user's plan, 2026-10-30)
+
+1. **This round first.** When the designer delivers, we review together what can be used as drawn
+   (his hanging pieces came as standalone garlands across the beam, the shelf pieces as standalone
+   pairs, e.g. the goldfish bowls) and adapt the code to his formats where it makes sense, rather
+   than asking for redraws.
+2. **Then the future hokoras** (`docs/kami_future_hokoras.md`): every home has the same anchors
+   (spirit window, offering table, two lantern hooks, the beam, two shelf spots, the bell hook), so
+   every decoration fits every home. Shrine-like homes keep the forest positions; the later ones
+   (capsule, arcade, bathhouse) may move the anchors, which the code then reads per home.
+3. **Then more ornaments** (the user, later the same day: maybe three slots are enough). Lanterns
+   on the two hooks, one hanging piece in the middle (the beam garlands from round 1 are exactly
+   that, hung high enough to stay off the spirit), shelf objects on the two spots. The bell rope stays
+   the home's own piece (it rings for the Lucky Pinch) and its ribbon/beads take the home's colour
+   preset instead of being a slot. Ask for: more shelf objects (as single objects, so each side can
+   differ), their animations (2-4 frame loops: fish swimming, a cat's paw waving, a candle flicker,
+   a pinwheel turning), more middle hanging pieces.
+4. **To decide then:** a different lantern on each hook, a different object on each shelf spot (no
+   new art needed for either), and which pieces animate.
+
+Round 1 review (2026-10-30): 118 high-res ImageGen sources in
+`docs/mockups/hokora_decor/imagegen_sources/` (lanterns, hanging x2 frames, shelf pairs, sky, icons),
+not on the guides and 3-4x finer than the hokora's grid. Most are usable: we convert them (shrink to
+half the hokora's pixel, 4.2 px, hard alpha, clean the plum halo, place on the anchors). The
+comparison is `docs/mockups/hokora_decor/reference_pixel_density.png`. Brief for the homes:
+`docs/kami_future_hokoras.md`.
