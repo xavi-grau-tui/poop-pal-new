@@ -1,4 +1,4 @@
-"""The v6 offering tables (docs/mockups/hokora_homes/v6/tables/: front faces only, the user 2026-11-01)
+"""The v6 offering tables (docs/mockups/hokora_homes/v6_1/tables/, else v6/tables/: front faces only, the user 2026-11-01)
 into the game: textures/pet/homes/<home>/table.png on the 925 canvas, each table pixel 2 x 2 (the
 lanterns' definition), standing where the home's v5 table stood (its middle and its foot); a two-part
 table's tray sits on its base. table_side.png is its outline in a dark mid tone (Shrine stacks copies
@@ -10,16 +10,17 @@ import os
 import numpy as np
 from PIL import Image
 
-SRC = "docs/mockups/hokora_homes/v6/tables/"
+SRCS = ["docs/mockups/hokora_homes/v6_1/tables/", "docs/mockups/hokora_homes/v6/tables/"]   # (v6.1's first)
 OUT = "textures/pet/homes/"
 CANVAS = 925
 PX = 2                                   # (screen pixels per table pixel, the lanterns')
 
 
 def part(name):
-    path = SRC + name + "_116.png"
-    if not os.path.exists(path):
+    paths = [src + name + "_116.png" for src in SRCS if os.path.exists(src + name + "_116.png")]
+    if not paths:
         return None
+    path = paths[0]
     im = Image.open(path).convert("RGBA")
     im = im.crop(im.getbbox())
     return im.resize((im.width * PX, im.height * PX), Image.NEAREST)
@@ -35,7 +36,7 @@ def mid_tone(img):
 
 for home in sorted(os.listdir(OUT)):
     one = part(home + "_table_front")
-    base, tray = part(home + "_base_front"), part(home + "_tray_front")
+    base, tray = (None, None) if one is not None else (part(home + "_base_front"), part(home + "_tray_front"))
     if one is None and base is None:
         continue
     old = Image.open(OUT + home + "/table.png").getbbox()      # (where the v5 table stood)

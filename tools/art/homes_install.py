@@ -12,7 +12,9 @@ textures/pet/homes/<home>/ on the forest hokora's 925 x 925 canvas (nearest, the
   icon.png       the designer's 96 x 96 menu icon
 
 v5 (docs/mockups/hokora_homes/v5/<home>/: front, inside, table, guide, icon) replaces v4 when it exists;
-v6 (docs/mockups/hokora_homes/v6/<home>/, the same files, 2026-11-01) replaces v5 when it exists. The v6
+v6 and v6_1 (docs/mockups/hokora_homes/v6/, v6_1/<home>/, the same files, 2026-11-01) replace it in
+turn when they exist (a v6_1 folder with only a bell and a guide keeps v6's home); the home's bell and
+beads (bell.png, bead_1.png, bead_2.png, the lanterns' definition) are copied as they are. The v6
 tables (front faces) are placed by tools/art/tables_install.py, run after this.
 
 Prints each home's socket colour for HokoraCatalog.HOMES. Run: .venv/bin/python tools/art/homes_install.py
@@ -27,7 +29,9 @@ OUT = "textures/pet/homes/"
 HOMES = ["neon_cyber", "moon", "golden", "ruined_night", "tree_hollow", "ramen_stall",
          "capsule_apartment", "arcade_cabinet", "bathhouse", "fire"]
 CANVAS = 925
-RIM = (54, 35, 45)                       # (the forest side_back's rim colour)
+RIM = (54, 35, 45)
+V61_HOMES = ["golden", "ramen_stall", "moon", "capsule_apartment", "arcade_cabinet"]   # (v6.1 revised these;
+                                         # its other fronts are re-exports of the approved ones: kept as they were)                       # (the forest side_back's rim colour)
 
 
 def rgba(path):
@@ -54,8 +58,11 @@ def mid_tone(img, mask):
 
 for home in HOMES:
     d = SRC + home + "/"
-    v5 = SRC + ("v6/" if os.path.exists(SRC + "v6/" + home + "/front.png") else
-                "v5_tech/" if os.path.exists(SRC + "v5_tech/" + home + "/front.png") else "v5/") + home + "/"
+    v5 = SRC + next(v for v in ("v6_1/", "v6/", "v5_tech/", "v5/") if os.path.exists(SRC + v + home + "/front.png")
+                    and (v != "v6_1/" or home in V61_HOMES)) + home + "/"
+    for f in ("bell.png", "bead_1.png", "bead_2.png"):
+        if os.path.exists(SRC + "v6_1/" + home + "/" + f):
+            Image.open(SRC + "v6_1/" + home + "/" + f).convert("RGBA").save(OUT + home + "/" + f)
     os.makedirs(OUT + home, exist_ok=True)
     if os.path.exists(v5 + "front.png"):
         d = v5
@@ -72,7 +79,7 @@ for home in HOMES:
             in_mask = ndimage.binary_fill_holes(lab == keep)
         if os.path.exists(d + "glass.png"):
             Image.open(d + "glass.png").convert("RGBA").resize((CANVAS, CANVAS), Image.NEAREST).save(OUT + home + "/glass.png")
-        g = rgba(d + "guide.png")
+        g = rgba(SRC + "v6_1/" + home + "/guide.png" if os.path.exists(SRC + "v6_1/" + home + "/guide.png") else d + "guide.png")
         k = 110.0 / g.shape[0]
         def dots(col):
             ys, xs = np.where((np.abs(g[..., :3].astype(int) - col).sum(-1) < 30) & (g[..., 3] > 0))
