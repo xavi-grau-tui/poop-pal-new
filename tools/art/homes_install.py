@@ -14,7 +14,8 @@ textures/pet/homes/<home>/ on the forest hokora's 925 x 925 canvas (nearest, the
 v5 (docs/mockups/hokora_homes/v5/<home>/: front, inside, table, guide, icon) replaces v4 when it exists;
 v6 and v6_1 (docs/mockups/hokora_homes/v6/, v6_1/<home>/, the same files, 2026-11-01) replace it in
 turn when they exist (a v6_1 folder with only a bell and a guide keeps v6's home); the home's bell and
-beads (bell.png, bead_1.png, bead_2.png, the lanterns' definition) are copied as they are. The v6
+beads (bell.png, bead_1.png, bead_2.png) are redrawn at the red lantern's look (2 x 2 pixels, its thick
+plum outline: ornaments_from_sources.shrink; the user, 2026-11-02). The v6
 tables (front faces) are placed by tools/art/tables_install.py, run after this.
 
 Prints each home's socket colour for HokoraCatalog.HOMES. Run: .venv/bin/python tools/art/homes_install.py
@@ -23,6 +24,7 @@ import os
 import numpy as np
 from PIL import Image
 from scipy import ndimage
+from ornaments_from_sources import shrink     # (the bells: the red lantern's 2 x 2 pixel and thick plum outline)
 
 SRC = "docs/mockups/hokora_homes/"
 OUT = "textures/pet/homes/"
@@ -31,7 +33,8 @@ HOMES = ["neon_cyber", "moon", "golden", "ruined_night", "tree_hollow", "ramen_s
 CANVAS = 925
 RIM = (54, 35, 45)
 V6_HOMES = []                                   # (v6's Ruined Night: a hard cut in its opening, back to the designer)
-V61_HOMES = ["golden", "ramen_stall", "moon"]   # (v6.1's approved fronts, 2026-11-01; its Capsule and Arcade
+V61_HOMES = ["golden", "ramen_stall", "moon"]
+V62_HOMES = ["arcade_cabinet", "capsule_apartment", "ruined_night"]   # (v6.2, 2026-11-02)   # (v6.1's approved fronts, 2026-11-01; its Capsule and Arcade
                                          # go round again, its other fronts are re-exports of the approved ones)                       # (the forest side_back's rim colour)
 
 
@@ -59,11 +62,14 @@ def mid_tone(img, mask):
 
 for home in HOMES:
     d = SRC + home + "/"
-    v5 = SRC + next(v for v in ("v6_1/", "v6/", "v5_tech/", "v5/") if os.path.exists(SRC + v + home + "/front.png")
-                    and (v != "v6_1/" or home in V61_HOMES) and (v != "v6/" or home in V6_HOMES)) + home + "/"
-    for f in ("bell.png", "bead_1.png", "bead_2.png"):
-        if os.path.exists(SRC + "v6_1/" + home + "/" + f):
-            Image.open(SRC + "v6_1/" + home + "/" + f).convert("RGBA").save(OUT + home + "/" + f)
+    v5 = SRC + next(v for v in ("v6_2/", "v6_1/", "v6/", "v5_tech/", "v5/") if os.path.exists(SRC + v + home + "/front.png")
+                    and (v != "v6_2/" or home in V62_HOMES) and (v != "v6_1/" or home in V61_HOMES)
+                    and (v != "v6/" or home in V6_HOMES)) + home + "/"
+    for f in ("bell.png", "bead_1.png", "bead_2.png"):   # (the newest delivery's, at the lanterns' look)
+        src = next((SRC + v + home + "/" + f for v in ("v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/" + f)), None)
+        if src:
+            im = Image.open(src).convert("RGBA")
+            shrink(im.crop(im.getbbox()), (im.width + 8, im.height + 8), 2).save(OUT + home + "/" + f)   # (+ the outline: same size)
     os.makedirs(OUT + home, exist_ok=True)
     if os.path.exists(v5 + "front.png"):
         d = v5
@@ -80,7 +86,7 @@ for home in HOMES:
             in_mask = ndimage.binary_fill_holes(lab == keep)
         if os.path.exists(d + "glass.png"):
             Image.open(d + "glass.png").convert("RGBA").resize((CANVAS, CANVAS), Image.NEAREST).save(OUT + home + "/glass.png")
-        g = rgba(SRC + "v6_1/" + home + "/guide.png" if os.path.exists(SRC + "v6_1/" + home + "/guide.png") else d + "guide.png")
+        g = rgba(next((SRC + v + home + "/guide.png" for v in ("v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/guide.png")), d + "guide.png"))
         k = 110.0 / g.shape[0]
         def dots(col):
             ys, xs = np.where((np.abs(g[..., :3].astype(int) - col).sum(-1) < 30) & (g[..., 3] > 0))
