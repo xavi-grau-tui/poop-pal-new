@@ -24,6 +24,7 @@ var hanging: Sprite2D
 var shelf: Sprite2D                   # (the left ledge)
 var shelf_right: Sprite2D
 var shelf_glass: Sprite2D             # (a home's side-window glass over its shelf objects: the Capsule's)
+var shelf_rim: Sprite2D               # (and the window frame over both)
 var _decor_frames := {}               # sprite -> [frames, ms per frame]
 ## Where the pieces go, on the front's 925 canvas: the beam's middle (the hanging piece hangs from
 ## it) and the two ledges' tops (each object's foot): the forest's (docs/mockups/hokora_decor
@@ -324,7 +325,11 @@ func _ready() -> void:
 	shelf_glass = _layer(null, 1)
 	shelf_glass.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	move_child(shelf_glass, shelf_right.get_index() + 1)
-	_depth_of[shelf_glass] = FRONT
+	shelf_rim = _layer(null, 1)                    # (and its frame round them, over both)
+	shelf_rim.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	move_child(shelf_rim, shelf_glass.get_index() + 1)
+	for sp in [shelf_glass, shelf_rim]:
+		_depth_of[sp] = FRONT
 	# the beam's hanging piece, on the front's own canvas, over it (under the lanterns and the bell)
 	hanging = _layer(null, 1)
 	hanging.scale = front.scale
@@ -489,8 +494,14 @@ func _apply_decor() -> void:
 	var k: float = home.get("shelf_scale", 1.0)          # (the Capsule's: smaller, inside its side windows)
 	for sp in [shelf, shelf_right]:
 		sp.scale = front.scale * k
-	shelf_glass.texture = load(Hokora.home_dir(Collection.home_piece("home")) + "side_glass.png") if home.get("shelf_glass", false) else null
-	shelf_glass.scale = front.scale
+	var windows: bool = home.get("shelf_glass", false)   # (inside the side windows: deeper, under the glass and the frame)
+	var hdir := Hokora.home_dir(Collection.home_piece("home"))
+	shelf_glass.texture = load(hdir + "side_glass.png") if windows else null
+	shelf_rim.texture = load(hdir + "window_rim.png") if windows else null
+	for sp in [shelf_glass, shelf_rim]:
+		sp.scale = front.scale
+	for sp in [shelf, shelf_right]:
+		_depth_of[sp] = (FRONT + INSIDE) * 0.5 if windows else (ORN_F if _home == "" else FRONT)
 	var lift := Vector2.ZERO if _home == "" else Vector2(0, 4.0 * CELL)   # (a home has no lifted slab)
 	for side in 2:
 		var sp: Sprite2D = [shelf, shelf_right][side]
