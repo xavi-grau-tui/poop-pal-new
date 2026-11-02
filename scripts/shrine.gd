@@ -450,11 +450,18 @@ func _apply_home() -> void:
 	for sp in [shelf, shelf_right]:                # (a home's ledges are part of its front)
 		_depth_of[sp] = ORN_F if _home == "" else FRONT
 	# the Capsule's side windows (v6.5, cut out of its front): their back walls and trays, the shelf
-	# objects on them, then the glass and the front over them; other homes' objects stand over the front
+	# objects on them, the front, then the lanterns hung in front of it and the glass over it all, so
+	# the lanterns hang behind the glass too (the user, 2026-11-02); other homes' objects stand over
+	# the front, their glass under it
 	var layered := _home != "" and ResourceLoader.exists(dir + "window_trays.png")
 	window_trays.texture = load(dir + "window_trays.png") if layered else null
 	for n in [window_trays, shelf, shelf_right]:
-		_put_before(n, glass if layered else _shelf_spot)
+		_put_before(n, front if layered else _shelf_spot)
+	glass.z_index = 2 if layered else 1
+	if layered:
+		move_child(glass, -1)
+	else:
+		_put_before(glass, front)
 	walls.set_meta("drawn", false)                 # (_process places it all again)
 
 ## Home Decor and Backgrounds in the hokora (Collection.home_piece; HokoraCatalog): the lanterns'
