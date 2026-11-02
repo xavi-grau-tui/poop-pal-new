@@ -23,8 +23,7 @@ var asset_dir := "res://textures/pet/shrine/"
 var hanging: Sprite2D
 var shelf: Sprite2D                   # (the left ledge)
 var shelf_right: Sprite2D
-var window_back: Sprite2D             # (a home's side windows cut out of its front: the room behind them, the Capsule's)
-var window_trays: Sprite2D            # (and the floors its shelf objects stand on)
+var window_trays: Sprite2D            # (a home's side windows cut out of its front: the back wall and tray behind each, the Capsule's)
 var _shelf_spot: Node                 # (where the shelf objects draw in a home without side windows: over its front)
 var _decor_frames := {}               # sprite -> [frames, ms per frame]
 ## Where the pieces go, on the front's 925 canvas: the beam's middle (the hanging piece hangs from
@@ -322,17 +321,14 @@ func _ready() -> void:
 	near.sort_custom(func(a, b): return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
 	for e in near:
 		move_child(e[2], -1)
-	# a home's side windows' room and trays, under its shelf objects (_apply_home moves them all under
+	# a home's side windows' back walls and trays, under its shelf objects (_apply_home moves them all under
 	# the glass and the front when the home has them)
-	window_back = _layer(null, 1)
 	window_trays = _layer(null, 1)
-	_put_before(window_back, shelf)
 	_put_before(window_trays, shelf)
 	_shelf_spot = Node.new()
 	add_child(_shelf_spot)
 	move_child(_shelf_spot, shelf_right.get_index() + 1)
-	for sp in [window_back, window_trays]:
-		sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	window_trays.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	# the beam's hanging piece, on the front's own canvas, over it (under the lanterns and the bell)
 	hanging = _layer(null, 1)
 	hanging.scale = front.scale
@@ -453,12 +449,11 @@ func _apply_home() -> void:
 	_lantern_at = hooks[1]
 	for sp in [shelf, shelf_right]:                # (a home's ledges are part of its front)
 		_depth_of[sp] = ORN_F if _home == "" else FRONT
-	# the Capsule's side windows (v6.4, cut out of its front): their room, their trays, the shelf
+	# the Capsule's side windows (v6.5, cut out of its front): their back walls and trays, the shelf
 	# objects on them, then the glass and the front over them; other homes' objects stand over the front
 	var layered := _home != "" and ResourceLoader.exists(dir + "window_trays.png")
-	window_back.texture = load(dir + "window_back.png") if layered else null
 	window_trays.texture = load(dir + "window_trays.png") if layered else null
-	for n in [window_back, window_trays, shelf, shelf_right]:
+	for n in [window_trays, shelf, shelf_right]:
 		_put_before(n, glass if layered else _shelf_spot)
 	walls.set_meta("drawn", false)                 # (_process places it all again)
 
@@ -586,7 +581,6 @@ func _process(delta: float) -> void:
 	front.position = (tilt * FRONT).round()
 	hanging.position = front.position
 	glass.position = front.position
-	window_back.position = front.position
 	window_trays.position = front.position
 	slab.position = (tilt * SLAB).round() + _platform_offset()
 	for j in slab_back.size():

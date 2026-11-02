@@ -13,8 +13,9 @@ textures/pet/homes/<home>/ on the forest hokora's 925 x 925 canvas (nearest, the
 
 v5 (docs/mockups/hokora_homes/v5/<home>/: front, inside, table, guide, icon) replaces v4 when it exists;
 v6 and v6_1 (docs/mockups/hokora_homes/v6/, v6_1/<home>/, the same files, 2026-11-01) replace it in
-turn when they exist, then v6_2 and v6_4 (the Capsule's side windows cut out of its front, with
-window_back.png and window_trays.png: the room and the object floors behind them) (a v6_1 folder with only a bell and a guide keeps v6's home); the home's bell and
+turn when they exist, then v6_2 and v6_5 (the Capsule's side windows cut out of its front, with
+trays.png: the back wall and object floor behind each, installed as window_trays.png; files it
+doesn't bring come from the delivery before) (a v6_1 folder with only a bell and a guide keeps v6's home); the home's bell and
 beads (bell.png, bead_1.png, bead_2.png) are redrawn at the red lantern's look (2 x 2 pixels, its thick
 plum outline: ornaments_from_sources.shrink; the user, 2026-11-02). The v6
 tables (front faces) are placed by tools/art/tables_install.py, run after this.
@@ -37,7 +38,7 @@ V6_HOMES = []                                   # (v6's Ruined Night: a hard cut
 V61_HOMES = ["golden", "ramen_stall", "moon"]
 CUT_BELLS = ["capsule_apartment"]              # (its delivered bell is cut off on one side)
 V_FRONT_ONLY = ["v6_3b/", "v6_3/"]                      # (deliveries with only a new front: the Arcade's side trays, 2026-11-02)
-V64_HOMES = ["capsule_apartment"]             # (v6.4, 2026-11-02: the Capsule wider, its side windows as layers)
+V64_HOMES = ["capsule_apartment"]             # (v6.4 and v6.5, 2026-11-02: the Capsule wider, its side windows as layers)
 V62_HOMES = ["arcade_cabinet", "capsule_apartment", "ruined_night"]   # (v6.2, 2026-11-02)   # (v6.1's approved fronts, 2026-11-01; its Capsule and Arcade
                                          # go round again, its other fronts are re-exports of the approved ones)                       # (the forest side_back's rim colour)
 
@@ -66,9 +67,13 @@ def mid_tone(img, mask):
 
 for home in HOMES:
     d = SRC + home + "/"
-    v5 = SRC + next(v for v in ("v6_4/", "v6_2/", "v6_1/", "v6/", "v5_tech/", "v5/") if os.path.exists(SRC + v + home + "/front.png")
-                    and (v != "v6_4/" or home in V64_HOMES) and (v != "v6_2/" or home in V62_HOMES) and (v != "v6_1/" or home in V61_HOMES)
-                    and (v != "v6/" or home in V6_HOMES)) + home + "/"
+    vers = ("v6_5/", "v6_4/", "v6_2/", "v6_1/", "v6/", "v5_tech/", "v5/")
+    ver = next(v for v in vers if os.path.exists(SRC + v + home + "/front.png")
+               and (v not in ("v6_5/", "v6_4/") or home in V64_HOMES) and (v != "v6_2/" or home in V62_HOMES)
+               and (v != "v6_1/" or home in V61_HOMES) and (v != "v6/" or home in V6_HOMES))
+    def pick(f, default=None):                     # (a delivery without the file: the one before's)
+        return next((SRC + v + home + "/" + f for v in vers[vers.index(ver):] if os.path.exists(SRC + v + home + "/" + f)), default)
+    v5 = SRC + ver + home + "/"
     for f in ("bell.png", "bead_1.png", "bead_2.png"):   # (the newest delivery's, at the lanterns' look)
         src = next((SRC + v + home + "/" + f for v in ("v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/" + f)), None)
         if src:
@@ -88,7 +93,7 @@ for home in HOMES:
     if os.path.exists(v5 + "front.png"):
         d = v5
         front = rgba(next((SRC + v + home + "/front.png" for v in V_FRONT_ONLY if os.path.exists(SRC + v + home + "/front.png")), d + "front.png"))
-        inside = rgba(d + "inside.png")
+        inside = rgba(pick("inside.png"))
         in_mask = inside[..., 3] > 0
         if os.path.exists(d + "hollow_mask.png"):  # (v5_tech: the inside runs past the hole; the window is the hole)
             in_mask = rgba(d + "hollow_mask.png")[..., 3] > 0
@@ -98,9 +103,9 @@ for home in HOMES:
             c = front.shape[0] // 2
             keep = lab[c, c] if lab[c, c] else np.bincount(lab.ravel())[1:].argmax() + 1
             in_mask = ndimage.binary_fill_holes(lab == keep)
-        if os.path.exists(d + "glass.png"):
-            Image.open(d + "glass.png").convert("RGBA").resize((CANVAS, CANVAS), Image.NEAREST).save(OUT + home + "/glass.png")
-        g = rgba(next((SRC + v + home + "/guide.png" for v in ("v6_4/", "v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/guide.png")), d + "guide.png"))
+        if pick("glass.png"):
+            Image.open(pick("glass.png")).convert("RGBA").resize((CANVAS, CANVAS), Image.NEAREST).save(OUT + home + "/glass.png")
+        g = rgba(next((SRC + v + home + "/guide.png" for v in ("v6_5/", "v6_4/", "v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/guide.png")), d + "guide.png"))
         k = 110.0 / g.shape[0]
         def dots(col):
             ys, xs = np.where((np.abs(g[..., :3].astype(int) - col).sum(-1) < 30) & (g[..., 3] > 0))
@@ -108,20 +113,13 @@ for home in HOMES:
             return [tuple(round(v * k) for v in ndimage.center_of_mass(lab == i + 1)[::-1]) for i in range(n)]
         hooks = (dots((255, 112, 20)), sorted(dots((255, 193, 15))))
         all_mask = (front[..., 3] > 0) | in_mask
-        if os.path.exists(d + "window_back.png"):  # (v6.4: side windows cut out of the front, their room and trays behind)
-            back, trays = rgba(d + "window_back.png"), rgba(d + "window_trays.png")
-            opening = ~(front[..., 3] > 0) & ndimage.binary_fill_holes(front[..., 3] > 0) & ~in_mask
-            lab, n = ndimage.label(opening)
-            panes = np.isin(lab, [i for i in range(1, n + 1) if ((lab == i) & (back[..., 3] > 0)).any()])
-            gap = panes & ~(back[..., 3] > 0) & ~(trays[..., 3] > 0)
-            near = ndimage.distance_transform_edt(~(back[..., 3] > 0), return_distances=False, return_indices=True)
-            back[gap] = back[near[0][gap], near[1][gap]]     # (a few unpainted pixels: the nearest wall's)
-            save(back, OUT + home + "/window_back.png")
+        if os.path.exists(d + "trays.png"):        # (v6.5: side windows cut out of the front, their back wall and tray behind)
+            trays = rgba(d + "trays.png")
             save(trays, OUT + home + "/window_trays.png")
-            all_mask |= (back[..., 3] > 0) | (trays[..., 3] > 0)
+            all_mask |= trays[..., 3] > 0
         whole = front.copy()
         whole[in_mask & ~(front[..., 3] > 0)] = inside[in_mask & ~(front[..., 3] > 0)]
-        table = rgba((d if os.path.exists(d + "table.png") else SRC + "v5/" + home + "/") + "table.png")
+        table = rgba(pick("table.png", SRC + "v5/" + home + "/table.png"))
         t_mask = table[..., 3] > 0
         save(table, OUT + home + "/table.png")
         save(flat(t_mask, mid_tone(table, t_mask)), OUT + home + "/table_side.png")

@@ -193,7 +193,7 @@ const HOMES := {   # (v5, 220 art; hooks from each guide.png; ledges: where the 
 	"house_ruined_night": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 250), "ledges": [Vector2(205, 688), Vector2(720, 688)], "socket": "#1c1023" },
 	"house_tree_hollow": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 250), "ledges": [Vector2(235, 655), Vector2(705, 655)], "socket": "#381020" },
 	"house_ramen_stall": { "bell": Vector2(7, 24), "lanterns": [Vector2(21.4, 25.2), Vector2(88.6, 25.2)], "beam": Vector2(462.5, 248), "ledges": [Vector2(152, 600), Vector2(790, 600)], "shelf_scale": 0.75, "socket": "#280a0d" },
-	"house_capsule_apartment": { "bell": Vector2(5, 43), "lanterns": [Vector2(24, 30), Vector2(86, 30)], "beam": Vector2(462.5, 238), "ledges": [Vector2(187, 576), Vector2(738, 576)], "shelf_scale": 0.75, "socket": "#1b1f31" },
+	"house_capsule_apartment": { "bell": Vector2(5, 43), "lanterns": [Vector2(24, 30), Vector2(86, 30)], "beam": Vector2(462.5, 238), "ledges": [Vector2(189, 576), Vector2(736, 576)], "shelf_scale": 0.75, "socket": "#1b1f31" },
 	"house_arcade_cabinet": { "bell": Vector2(14, 35), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 248), "ledges": [Vector2(64, 618), Vector2(860, 618)], "shelf_scale": 0.75, "socket": "#14061d" },
 	"house_bathhouse": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 220), "ledges": [Vector2(170, 603), Vector2(755, 603)], "socket": "#152445" },
 	"house_fire": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 252), "ledges": [Vector2(235, 603), Vector2(695, 603)], "socket": "#341228" },
