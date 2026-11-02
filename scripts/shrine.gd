@@ -23,6 +23,7 @@ var asset_dir := "res://textures/pet/shrine/"
 var hanging: Sprite2D
 var shelf: Sprite2D                   # (the left ledge)
 var shelf_right: Sprite2D
+var shelf_glass: Sprite2D             # (a home's side-window glass over its shelf objects: the Capsule's)
 var _decor_frames := {}               # sprite -> [frames, ms per frame]
 ## Where the pieces go, on the front's 925 canvas: the beam's middle (the hanging piece hangs from
 ## it) and the two ledges' tops (each object's foot): the forest's (docs/mockups/hokora_decor
@@ -319,6 +320,11 @@ func _ready() -> void:
 	near.sort_custom(func(a, b): return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
 	for e in near:
 		move_child(e[2], -1)
+	# a home's side-window glass, over its shelf objects (HOMES "shelf_glass")
+	shelf_glass = _layer(null, 1)
+	shelf_glass.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	move_child(shelf_glass, shelf_right.get_index() + 1)
+	_depth_of[shelf_glass] = FRONT
 	# the beam's hanging piece, on the front's own canvas, over it (under the lanterns and the bell)
 	hanging = _layer(null, 1)
 	hanging.scale = front.scale
@@ -478,7 +484,13 @@ func _apply_decor() -> void:
 	_play(hanging, hang, 400)
 	if not hang.is_empty():
 		hanging.offset = beam - Vector2(462.5, 462.0) - Vector2(hang[0].get_width() * 0.5, 0.0)
-	var ledges: Array = LEDGES_AT if _home == "" else HOME_LEDGES_AT
+	var home: Dictionary = Hokora.HOMES.get(Collection.home_piece("home"), {}) if _home != "" else {}
+	var ledges: Array = LEDGES_AT if _home == "" else home.get("ledges", HOME_LEDGES_AT)
+	var k: float = home.get("shelf_scale", 1.0)          # (the Capsule's: smaller, inside its side windows)
+	for sp in [shelf, shelf_right]:
+		sp.scale = front.scale * k
+	shelf_glass.texture = load(Hokora.home_dir(Collection.home_piece("home")) + "side_glass.png") if home.get("shelf_glass", false) else null
+	shelf_glass.scale = front.scale
 	var lift := Vector2.ZERO if _home == "" else Vector2(0, 4.0 * CELL)   # (a home has no lifted slab)
 	for side in 2:
 		var sp: Sprite2D = [shelf, shelf_right][side]
@@ -488,7 +500,7 @@ func _apply_decor() -> void:
 		sp.flip_h = side == 1 and own_left.is_empty()   # (drawn facing right: mirrored on the right ledge)
 		_play(sp, pics, 300)
 		if not pics.is_empty():
-			sp.offset = ledges[side] - Vector2(462.5, 462.0) + lift - Vector2(pics[0].get_width() * 0.5, pics[0].get_height())
+			sp.offset = (ledges[side] - Vector2(462.5, 462.0) + lift) / k - Vector2(pics[0].get_width() * 0.5, pics[0].get_height())   # (in its own px)
 	drift.set_kind(Hokora.SKY.get(Collection.home_piece("drift"), {}).get("particles", ""), _south())
 
 func _load_frames(paths: Array) -> Array[Texture2D]:
