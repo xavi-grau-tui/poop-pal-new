@@ -34,6 +34,7 @@ CANVAS = 925
 RIM = (54, 35, 45)
 V6_HOMES = []                                   # (v6's Ruined Night: a hard cut in its opening, back to the designer)
 V61_HOMES = ["golden", "ramen_stall", "moon"]
+CUT_BELLS = ["capsule_apartment"]              # (its delivered bell is cut off on one side)
 V62_HOMES = ["arcade_cabinet", "capsule_apartment", "ruined_night"]   # (v6.2, 2026-11-02)   # (v6.1's approved fronts, 2026-11-01; its Capsule and Arcade
                                          # go round again, its other fronts are re-exports of the approved ones)                       # (the forest side_back's rim colour)
 
@@ -69,6 +70,16 @@ for home in HOMES:
         src = next((SRC + v + home + "/" + f for v in ("v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/" + f)), None)
         if src:
             im = Image.open(src).convert("RGBA")
+            if f == "bell.png" and home in CUT_BELLS:     # (cut on its right: the left half mirrored round its loop)
+                a = np.array(im)
+                top = np.where(a[:12, :, 3].any(0))[0]
+                axis = (top.min() + top.max() + 1) / 2.0
+                w = int(axis)
+                left = a[:, :w]
+                full = np.zeros((a.shape[0], 2 * w, 4), np.uint8)
+                full[:, :w] = left
+                full[:, w:] = left[:, ::-1]
+                im = Image.fromarray(full, "RGBA")
             shrink(im.crop(im.getbbox()), (im.width + 8, im.height + 8), 2).save(OUT + home + "/" + f)   # (+ the outline: same size)
     os.makedirs(OUT + home, exist_ok=True)
     if os.path.exists(v5 + "front.png"):
