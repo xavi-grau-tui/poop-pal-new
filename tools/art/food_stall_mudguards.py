@@ -4,7 +4,8 @@
 top by COVER rows; the right one its mirror, both mirrored about the stall's middle line (column 111),
 and the wheels the left one and its mirror (the delivered right one is a column wider). The stall is
 v6.6's front, the approved one with only its wheels taken out (homes_install.py). Writes, on the 925
-canvas: wheels.png, mudguards.png (their faces) and mudguards_side.png (their outline in a mid tone,
+canvas: front.png again without the unused iron hook on its left post (that spot copied from the right
+post, mirrored: x -> 220 - x for the posts), wheels.png, mudguards.png (their faces) and mudguards_side.png (their outline in a mid tone,
 Shrine stacks it for their depth). Prints the two tray tops for HokoraCatalog.HOMES "ledges". Run after
 tools/art/homes_install.py:
 
@@ -64,6 +65,12 @@ side = tuple(int(c * 0.47) for c in body[(bl > np.percentile(bl, 30)) & (bl < np
 flat = np.zeros_like(mud)
 flat[m] = side + (255,)
 
+front = np.array(Image.open(SRC + "ramen_stall/front.png").convert("RGBA"))
+hook = front.copy()
+for yy in range(54, 73):                          # (the hook, rows 54-72 right of the left post)
+    for xx in range(25, 46):
+        hook[yy, xx] = front[yy, 220 - xx]
+big(hook).save(OUT + "front.png")
 big(wheels).save(OUT + "wheels.png")
 big(mud).save(OUT + "mudguards.png")
 big(flat).save(OUT + "mudguards_side.png")
