@@ -280,3 +280,34 @@ We LOVE the v6.2 pod's front: please keep its shape, design and colours exactly.
 
 Deliver in docs/mockups/hokora_homes/v6_4/capsule_apartment/.
 ```
+
+## v6.5: the Capsule Pod's layers, simpler (the user, 2026-11-02)
+
+v6.4 was installed (window_back, window_trays, glass, front with the windows cut) but its layers
+weren't clean: a jagged cut in the front, gaps in the back wall, a ragged tray, stray pixels. The
+user: much simpler, four clean layers, nothing to patch. The message:
+
+```
+CAPSULE POD – the side windows, simpler (v6.5)
+Thanks for v6.4! The wider pod is good, but the window layers aren't clean yet: the cut in the
+front is jagged, the back wall has gaps, the tray edges are ragged and there are stray pixels, so
+it reads messy in the game. Let's make it much simpler. Just FOUR layers, all 220 x 220 on the same
+canvas, hard pixel edges, no soft or half-transparent pixels except the glass:
+
+1. front.png – the v6.4 pod exactly, with each side window's opening cut out as ONE clean shape
+   (the same rounded rectangle as the frame's inner edge, straight smooth edges, no notches),
+   fully transparent inside. Nothing else changes.
+2. glass.png – one simple pane per side window, exactly the opening's shape, one light flat tint
+   plus one or two clean diagonal highlight lines. Nothing else on this layer.
+3. (the ornament: ours, the game places it here)
+4. trays.png – per side window: the little room behind the glass as ONE simple flat back wall
+   (2-3 flat tones, no detail) that fills the whole opening with no gaps, and the tray it stands
+   on: a clean flat shelf, about 30 columns wide, flat top. Back wall + tray together in this one
+   layer, drawn behind and below the ornament.
+
+In the game, back to front: trays.png, the ornament, glass.png, front.png. Please check before
+sending: put the four layers together over a magenta background and make sure no magenta shows
+through anywhere inside the windows, and no stray pixels.
+guide.png: the middle of each tray's top (green dot), the bell and lantern hooks as before.
+preview_8x.png all together, and icon.png. Deliver in docs/mockups/hokora_homes/v6_5/capsule_apartment/.
+```
