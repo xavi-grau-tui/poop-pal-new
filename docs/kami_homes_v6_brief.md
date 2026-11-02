@@ -243,3 +243,40 @@ PLEASE REDO:
 
 ORDER: 3, 4 and 5 (small), then the Arcade, then the Capsule.
 ```
+
+## v6.4: the Capsule Pod's layers (2026-11-02)
+
+The user loves the v6.2 pod's front. Three changes, so its shelf objects can really stand inside its side
+windows (front frame and glass in front, the objects, the trays and the window's back wall behind).
+The Arcade's side trays were done in-house instead (tools/art/arcade_trays_behind.py).
+
+The message, ready to send:
+
+```
+CAPSULE POD – same front, three changes
+
+We LOVE the v6.2 pod's front: please keep its shape, design and colours exactly. Three changes:
+
+1. PIXEL DENSITY: align it a bit more with the other homes and the lanterns: a cleaner, crisper
+   220-grid finish (clean outlines, flat tone steps, no soft or blurry pixels), like Neon.
+
+2. SLIGHTLY WIDER: make the whole pod a little wider (about 8-10 columns of the 220 grid), mostly so
+   the two side windows (glasses) get a little wider. Keep it centred, the round opening the same.
+
+3. THE SIDE WINDOWS AS SEPARATE LAYERS, so the player's objects can stand inside them, behind the
+   frame and the glass. Today the windows are painted on the front, so anything we put "inside" is
+   hidden. Please deliver:
+   - front.png: the pod with each side window's opening CUT OUT (transparent) inside its frame;
+   - window_back.png: what's seen behind each window (its back wall, the little room), filling each
+     opening, nothing else;
+   - window_trays.png: the two trays / window floors alone, where the objects stand (flat on top,
+     about 30 columns wide), nothing else;
+   - glass.png: the glass for each side window (and the main opening's if it has one), see-through
+     like before, with one or two highlight lines;
+   - guide.png: mark the middle of each tray's top (where an object's foot goes).
+   In the game, back to front: window_back, window_trays, the object, glass, front. So the frame
+   overlaps the object's edges and the glass tints it.
+   preview_8x.png with all the layers together, and the usual icon.png.
+
+Deliver in docs/mockups/hokora_homes/v6_4/capsule_apartment/.
+```
