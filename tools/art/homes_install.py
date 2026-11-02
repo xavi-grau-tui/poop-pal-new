@@ -35,7 +35,7 @@ RIM = (54, 35, 45)
 V6_HOMES = []                                   # (v6's Ruined Night: a hard cut in its opening, back to the designer)
 V61_HOMES = ["golden", "ramen_stall", "moon"]
 CUT_BELLS = ["capsule_apartment"]              # (its delivered bell is cut off on one side)
-V_FRONT_ONLY = ["v6_3/"]                      # (deliveries with only a new front: the Arcade's side trays, 2026-11-02)
+V_FRONT_ONLY = ["v6_3b/", "v6_3/"]                      # (deliveries with only a new front: the Arcade's side trays, 2026-11-02)
 V62_HOMES = ["arcade_cabinet", "capsule_apartment", "ruined_night"]   # (v6.2, 2026-11-02)   # (v6.1's approved fronts, 2026-11-01; its Capsule and Arcade
                                          # go round again, its other fronts are re-exports of the approved ones)                       # (the forest side_back's rim colour)
 
