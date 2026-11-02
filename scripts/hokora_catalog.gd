@@ -185,17 +185,18 @@ const DEFAULTS := { "home": "house_forest", "lantern": "lantern_red", "hanging":
 const HOMES_DIR := "res://textures/pet/homes/"
 const HOMES := {   # (v5, 220 art; hooks from each guide.png; ledges: where the two shelf objects stand, their
                    # foot in the home's 925 art px (picked on each picture, 2026-11-02); shelf_scale: their size
-                   # there; shelf_glass: side_glass.png over them, its windows' glass (tools/art/side_glass.py))
-	"house_neon_cyber": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "ledges": [Vector2(200, 620), Vector2(740, 620)], "socket": "#1a091f" },
-	"house_moon": { "bell": Vector2(16, 42), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "ledges": [Vector2(295, 655), Vector2(630, 655)], "socket": "#40223b" },
-	"house_golden": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "ledges": [Vector2(195, 688), Vector2(730, 688)], "socket": "#0a0406" },
-	"house_ruined_night": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "ledges": [Vector2(205, 688), Vector2(720, 688)], "socket": "#1c1023" },
-	"house_tree_hollow": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "ledges": [Vector2(235, 655), Vector2(705, 655)], "socket": "#381020" },
-	"house_ramen_stall": { "bell": Vector2(7, 24), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "ledges": [Vector2(152, 500), Vector2(790, 500)], "shelf_scale": 0.85, "socket": "#280a0d" },
-	"house_capsule_apartment": { "bell": Vector2(7, 43), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "ledges": [Vector2(187, 572), Vector2(738, 572)], "shelf_scale": 0.75, "shelf_glass": true, "socket": "#1b1f31" },
-	"house_arcade_cabinet": { "bell": Vector2(14, 35), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "ledges": [Vector2(185, 652), Vector2(770, 652)], "socket": "#14061d" },
-	"house_bathhouse": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "ledges": [Vector2(170, 603), Vector2(755, 603)], "socket": "#152445" },
-	"house_fire": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "ledges": [Vector2(235, 603), Vector2(695, 603)], "socket": "#341228" },
+                   # there; shelf_glass: side_glass.png over them, its windows' glass (tools/art/side_glass.py); beam: where
+                   # the hanging piece hangs from (its top middle, under the eave: the user, in front and higher))
+	"house_neon_cyber": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 245), "ledges": [Vector2(200, 620), Vector2(740, 620)], "socket": "#1a091f" },
+	"house_moon": { "bell": Vector2(16, 42), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 252), "ledges": [Vector2(295, 655), Vector2(630, 655)], "socket": "#40223b" },
+	"house_golden": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 258), "ledges": [Vector2(195, 688), Vector2(730, 688)], "socket": "#0a0406" },
+	"house_ruined_night": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 250), "ledges": [Vector2(205, 688), Vector2(720, 688)], "socket": "#1c1023" },
+	"house_tree_hollow": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 250), "ledges": [Vector2(235, 655), Vector2(705, 655)], "socket": "#381020" },
+	"house_ramen_stall": { "bell": Vector2(7, 24), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 248), "ledges": [Vector2(152, 500), Vector2(790, 500)], "shelf_scale": 0.85, "socket": "#280a0d" },
+	"house_capsule_apartment": { "bell": Vector2(7, 43), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 238), "ledges": [Vector2(187, 572), Vector2(738, 572)], "shelf_scale": 0.75, "shelf_glass": true, "socket": "#1b1f31" },
+	"house_arcade_cabinet": { "bell": Vector2(14, 35), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 248), "ledges": [Vector2(185, 652), Vector2(770, 652)], "socket": "#14061d" },
+	"house_bathhouse": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 220), "ledges": [Vector2(170, 603), Vector2(755, 603)], "socket": "#152445" },
+	"house_fire": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 252), "ledges": [Vector2(235, 603), Vector2(695, 603)], "socket": "#341228" },
 }
 
 ## A home's folder ("" = the forest hokora, textures/pet/shrine_new/)

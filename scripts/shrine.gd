@@ -479,12 +479,12 @@ func _apply_decor() -> void:
 	for plane_data in root_planes:
 		(plane_data["node"] as CanvasItem).material = rmat if rmat else plane_data["mat"]
 	# the beam's hanging piece and the ledges' objects: their drawings, when they exist
-	var beam: Vector2 = BEAM_AT if _home == "" else HOME_BEAM_AT
+	var home: Dictionary = Hokora.HOMES.get(Collection.home_piece("home"), {}) if _home != "" else {}
+	var beam: Vector2 = BEAM_AT if _home == "" else home.get("beam", HOME_BEAM_AT)
 	var hang := _load_frames(Hokora.frames(Collection.home_piece("hanging")) if DevLaunch.new_shrine else [])
 	_play(hanging, hang, 400)
 	if not hang.is_empty():
 		hanging.offset = beam - Vector2(462.5, 462.0) - Vector2(hang[0].get_width() * 0.5, 0.0)
-	var home: Dictionary = Hokora.HOMES.get(Collection.home_piece("home"), {}) if _home != "" else {}
 	var ledges: Array = LEDGES_AT if _home == "" else home.get("ledges", HOME_LEDGES_AT)
 	var k: float = home.get("shelf_scale", 1.0)          # (the Capsule's: smaller, inside its side windows)
 	for sp in [shelf, shelf_right]:

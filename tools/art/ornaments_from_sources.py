@@ -9,7 +9,8 @@ its frames side by side (or stacked); the first one is cut out, shrunk to fit it
 
   lantern  fits 108 x 176 (its hook at the top middle)
   shelf    fits 156 x 176 (bigger than the slab's boxes: the user, they read smaller than designed)
-  hanging  fits 420 x 112 (shallow: the user, they hung too low; to redo later)
+  hanging  fits 380 x 96 (2026-11-02, redone at the lanterns' look: hung higher from each home's eave,
+           shallow enough to stay above nearly every grown spirit's head, between the two lanterns)
 Like the red lantern (the user: "keep the aesthetics exactly like the original lanterns, same
 outlines, colour densities"): drawn on a 2 x 2 pixel (shrunk to half, enlarged back with hard
 edges), the painting's near-black edges turned into the red lantern's plum (OUTLINE) and a thick
@@ -32,8 +33,10 @@ from PIL import Image
 SRC = "docs/mockups/hokora_decor/round3/"
 R1 = "docs/mockups/hokora_decor/imagegen_sources/"
 OUT = sys.argv[1] if len(sys.argv) > 1 else "textures/pet/shrine_new/decor/"
-BOX = {"lantern": (108, 176), "shelf": (156, 176), "hang": (420, 112)}
-RING = {"lantern": 2, "shelf": 2, "hang": 1}   # (outline width in art pixels)
+BOX = {"lantern": (108, 176), "shelf": (156, 176), "hang": (380, 96)}
+RING = {"lantern": 2, "shelf": 2, "hang": 2}   # (outline width in art pixels)
+GRID = {"hang_stars": (3, 1), "hang_cobweb_rope": (1, 3)}   # (sheets the frame finder splits wrong: columns, rows)
+TRIM_TOP = {"hang_stars": 0.3}           # (the share of its height that is only the ropes it hangs from)
 SATURATION = 1.15
 PX = 2                                   # (screen pixels per art pixel, the red lantern's)
 OUTLINE = (31, 10, 27)                   # (the red lantern's outline colour)
@@ -113,7 +116,17 @@ if __name__ == "__main__":
         done.add(pid)
         if kind == "lantern" and "/round1/" in f:
             pid += "_drawn"
-        shrink(first_frame(Image.open(f).convert("RGBA")), BOX[kind], RING[kind]).save(OUT + pid + ".png")
+        img = Image.open(f).convert("RGBA")
+        if pid in GRID:
+            cols, rows = GRID[pid]
+            cell = img.crop((0, 0, img.width // cols, img.height // rows))
+            first = cell.crop(cell.getbbox())
+            t = int(first.height * TRIM_TOP.get(pid, 0.0))
+            first = first.crop((0, t, first.width, first.height))
+            first = first.crop(first.getbbox())
+        else:
+            first = first_frame(img)
+        shrink(first, BOX[kind], RING[kind]).save(OUT + pid + ".png")
         n += 1
     for f in sorted(glob.glob(R1 + "hanging/*-1.png")):
         pid = os.path.basename(f)[:-len("-1.png")]
