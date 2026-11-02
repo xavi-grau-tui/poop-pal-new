@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://byn3n6ettq81t"
-path="res://.godot/imported/mudguards_side.png-54494493849fab0e798be37fa7c8082c.ctex"
+uid="uid://dolaaeomss03b"
+path="res://.godot/imported/ledges_side.png-c3862e26fe91938abb3defcb76c5b7fc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/pet/homes/ramen_stall/mudguards_side.png"
-dest_files=["res://.godot/imported/mudguards_side.png-54494493849fab0e798be37fa7c8082c.ctex"]
+source_file="res://textures/pet/homes/arcade_cabinet/ledges_side.png"
+dest_files=["res://.godot/imported/ledges_side.png-c3862e26fe91938abb3defcb76c5b7fc.ctex"]
 
 [params]
 

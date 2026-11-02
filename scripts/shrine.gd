@@ -470,12 +470,13 @@ func _apply_home() -> void:
 	window_trays.texture = load(dir + "window_trays.png") if layered else null
 	for n in [window_trays, shelf, shelf_right]:
 		_put_before(n, front if layered else _shelf_spot)
-	# the Food Stall's mudguards: their depth, the wheels over it, their faces over the wheels' tops
-	# (like hats, the user, 2026-11-02), the objects on them
-	var has_mud := _home != "" and ResourceLoader.exists(dir + "mudguards.png")
+	# a home's ledges drawn apart (ledges.png: the Food Stall's mudguards, the Arcade's side trays):
+	# their depth, the wheels over it if any, their faces (over the wheels' tops: like hats, the user,
+	# 2026-11-02), the objects on them
+	var has_mud := _home != "" and ResourceLoader.exists(dir + "ledges.png")
 	var mud := _mud_parts.keys()
 	for k in mud.size():
-		mud[k].texture = load(dir + ("mudguards.png" if k == mud.size() - 1 else "mudguards_side.png")) if has_mud else null
+		mud[k].texture = load(dir + ("ledges.png" if k == mud.size() - 1 else "ledges_side.png")) if has_mud else null
 	_put_before(wheels, shelf)
 	_put_before(mud[mud.size() - 1], shelf)
 	# a home whose lanterns hang from behind its front (HOMES "lanterns_behind": the Food Stall's, from
@@ -485,7 +486,7 @@ func _apply_home() -> void:
 		l.z_index = 1 if behind else 2
 		if behind:
 			_put_before(l, front)
-	wheels.texture = load(dir + "wheels.png") if has_mud else null
+	wheels.texture = load(dir + "wheels.png") if has_mud and ResourceLoader.exists(dir + "wheels.png") else null
 	if has_mud:                                    # (the objects stand on the mudguards' tops)
 		for sp in [shelf, shelf_right]:
 			_depth_of[sp] = FRONT + MUD_D * 0.5

@@ -41,6 +41,7 @@ CUT_BELLS = ["capsule_apartment"]              # (its delivered bell is cut off 
 V_FRONT_ONLY = ["v6_3b/", "v6_3/"]                      # (deliveries with only a new front: the Arcade's side trays, 2026-11-02)
 V66_HOMES = ["ramen_stall"]                   # (v6.6, 2026-11-02: the Food Stall with its wheels taken out: food_stall_mudguards.py)
 ICON_FROM = {"ramen_stall": "v6_1/"}          # (v6.6's icon shows the mudguards it was sent with, not the ones used)
+FINAL = {"arcade_cabinet": "v7/arcade_cabinet/final_c/"}   # (a home redrawn from scratch: only its own files, 2026-11-02)
 V64_HOMES = ["capsule_apartment"]             # (v6.4 and v6.5, 2026-11-02: the Capsule wider, its side windows as layers)
 V62_HOMES = ["arcade_cabinet", "capsule_apartment", "ruined_night"]   # (v6.2, 2026-11-02)   # (v6.1's approved fronts, 2026-11-01; its Capsule and Arcade
                                          # go round again, its other fronts are re-exports of the approved ones)                       # (the forest side_back's rim colour)
@@ -75,8 +76,10 @@ for home in HOMES:
                and (v != "v6_6/" or home in V66_HOMES) and (v not in ("v6_5b/", "v6_5/", "v6_4/") or home in V64_HOMES) and (v != "v6_2/" or home in V62_HOMES)
                and (v != "v6_1/" or home in V61_HOMES) and (v != "v6/" or home in V6_HOMES))
     def pick(f, default=None):                     # (a delivery without the file: the one before's)
+        if home in FINAL:
+            return SRC + FINAL[home] + f if os.path.exists(SRC + FINAL[home] + f) else default
         return next((SRC + v + home + "/" + f for v in vers[vers.index(ver):] if os.path.exists(SRC + v + home + "/" + f)), default)
-    v5 = SRC + ver + home + "/"
+    v5 = SRC + FINAL[home] if home in FINAL else SRC + ver + home + "/"
     for f in ("bell.png", "bead_1.png", "bead_2.png"):   # (the newest delivery's, at the lanterns' look)
         src = next((SRC + v + home + "/" + f for v in ("v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/" + f)), None)
         if src:
@@ -95,7 +98,7 @@ for home in HOMES:
     os.makedirs(OUT + home, exist_ok=True)
     if os.path.exists(v5 + "front.png"):
         d = v5
-        front = rgba(next((SRC + v + home + "/front.png" for v in V_FRONT_ONLY if os.path.exists(SRC + v + home + "/front.png")), d + "front.png"))
+        front = rgba(next((SRC + v + home + "/front.png" for v in V_FRONT_ONLY if home not in FINAL and os.path.exists(SRC + v + home + "/front.png")), d + "front.png"))
         inside = rgba(pick("inside.png"))
         in_mask = inside[..., 3] > 0
         if os.path.exists(d + "hollow_mask.png"):  # (v5_tech: the inside runs past the hole; the window is the hole)
@@ -108,7 +111,10 @@ for home in HOMES:
             in_mask = ndimage.binary_fill_holes(lab == keep)
         if pick("glass.png"):
             Image.open(pick("glass.png")).convert("RGBA").resize((CANVAS, CANVAS), Image.NEAREST).save(OUT + home + "/glass.png")
-        g = rgba(next((SRC + v + home + "/guide.png" for v in ("v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/guide.png")), d + "guide.png"))
+        elif os.path.exists(OUT + home + "/glass.png"):
+            os.remove(OUT + home + "/glass.png")
+            os.remove(OUT + home + "/glass.png.import")    # (or Godot still finds the old glass)
+        g = rgba(next((SRC + v + home + "/guide.png" for v in ("v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/") if home not in FINAL and os.path.exists(SRC + v + home + "/guide.png")), d + "guide.png"))
         k = 110.0 / g.shape[0]
         def dots(col):
             ys, xs = np.where((np.abs(g[..., :3].astype(int) - col).sum(-1) < 30) & (g[..., 3] > 0))
@@ -116,7 +122,13 @@ for home in HOMES:
             return [tuple(round(v * k) for v in ndimage.center_of_mass(lab == i + 1)[::-1]) for i in range(n)]
         hooks = (dots((255, 112, 20)), sorted(dots((255, 193, 15))))
         all_mask = (front[..., 3] > 0) | in_mask
-        if os.path.exists(d + "trays.png"):        # (v6.5: side windows cut out of the front, their back wall and tray behind)
+        if os.path.exists(d + "trays.png") and home in FINAL:   # (v7: the Arcade's side trays apart, Shrine gives them depth)
+            ledges = rgba(d + "trays.png")
+            l_mask = ledges[..., 3] > 0
+            save(ledges, OUT + home + "/ledges.png")
+            save(flat(l_mask, mid_tone(ledges, l_mask)), OUT + home + "/ledges_side.png")
+            all_mask |= l_mask
+        elif os.path.exists(d + "trays.png"):      # (v6.5: side windows cut out of the front, their back wall and tray behind)
             trays = rgba(d + "trays.png")
             save(trays, OUT + home + "/window_trays.png")
             all_mask |= trays[..., 3] > 0

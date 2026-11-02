@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://n6opntcsju8b"
-path="res://.godot/imported/glass.png-8e8d8dccfa958c5dee4759e869a7dbea.ctex"
+uid="uid://n0cnphmhgkco"
+path="res://.godot/imported/ledges.png-79d26d483f283686b14222b72f197378.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/pet/homes/arcade_cabinet/glass.png"
-dest_files=["res://.godot/imported/glass.png-8e8d8dccfa958c5dee4759e869a7dbea.ctex"]
+source_file="res://textures/pet/homes/ramen_stall/ledges.png"
+dest_files=["res://.godot/imported/ledges.png-79d26d483f283686b14222b72f197378.ctex"]
 
 [params]
 
