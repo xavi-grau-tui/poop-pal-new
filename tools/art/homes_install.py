@@ -15,8 +15,7 @@ v5 (docs/mockups/hokora_homes/v5/<home>/: front, inside, table, guide, icon) rep
 v6 and v6_1 (docs/mockups/hokora_homes/v6/, v6_1/<home>/, the same files, 2026-11-01) replace it in
 turn when they exist, then v6_2 and v6_5 (the Capsule's side windows cut out of its front, with
 trays.png: the back wall and object floor behind each, installed as window_trays.png; files it
-doesn't bring come from the delivery before), v6_6 (the Food Stall: its wheels apart as wheels.png,
-its mudguards as mudguards.png and their outline in a mid tone, mudguards_side.png, for their depth) (a v6_1 folder with only a bell and a guide keeps v6's home); the home's bell and
+doesn't bring come from the delivery before) (a v6_1 folder with only a bell and a guide keeps v6's home); the home's bell and
 beads (bell.png, bead_1.png, bead_2.png) are redrawn at the red lantern's look (2 x 2 pixels, its thick
 plum outline: ornaments_from_sources.shrink; the user, 2026-11-02). The v6
 tables (front faces) are placed by tools/art/tables_install.py, run after this.
@@ -39,7 +38,6 @@ V6_HOMES = []                                   # (v6's Ruined Night: a hard cut
 V61_HOMES = ["golden", "ramen_stall", "moon"]
 CUT_BELLS = ["capsule_apartment"]              # (its delivered bell is cut off on one side)
 V_FRONT_ONLY = ["v6_3b/", "v6_3/"]                      # (deliveries with only a new front: the Arcade's side trays, 2026-11-02)
-V66_HOMES = ["ramen_stall"]                   # (v6.6, 2026-11-02: the Food Stall's mudguards, its wheels apart)
 V64_HOMES = ["capsule_apartment"]             # (v6.4 and v6.5, 2026-11-02: the Capsule wider, its side windows as layers)
 V62_HOMES = ["arcade_cabinet", "capsule_apartment", "ruined_night"]   # (v6.2, 2026-11-02)   # (v6.1's approved fronts, 2026-11-01; its Capsule and Arcade
                                          # go round again, its other fronts are re-exports of the approved ones)                       # (the forest side_back's rim colour)
@@ -69,9 +67,9 @@ def mid_tone(img, mask):
 
 for home in HOMES:
     d = SRC + home + "/"
-    vers = ("v6_6/", "v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/", "v6/", "v5_tech/", "v5/")
+    vers = ("v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/", "v6/", "v5_tech/", "v5/")
     ver = next(v for v in vers if os.path.exists(SRC + v + home + "/front.png")
-               and (v != "v6_6/" or home in V66_HOMES) and (v not in ("v6_5b/", "v6_5/", "v6_4/") or home in V64_HOMES) and (v != "v6_2/" or home in V62_HOMES)
+               and (v not in ("v6_5b/", "v6_5/", "v6_4/") or home in V64_HOMES) and (v != "v6_2/" or home in V62_HOMES)
                and (v != "v6_1/" or home in V61_HOMES) and (v != "v6/" or home in V6_HOMES))
     def pick(f, default=None):                     # (a delivery without the file: the one before's)
         return next((SRC + v + home + "/" + f for v in vers[vers.index(ver):] if os.path.exists(SRC + v + home + "/" + f)), default)
@@ -107,7 +105,7 @@ for home in HOMES:
             in_mask = ndimage.binary_fill_holes(lab == keep)
         if pick("glass.png"):
             Image.open(pick("glass.png")).convert("RGBA").resize((CANVAS, CANVAS), Image.NEAREST).save(OUT + home + "/glass.png")
-        g = rgba(next((SRC + v + home + "/guide.png" for v in ("v6_6/", "v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/guide.png")), d + "guide.png"))
+        g = rgba(next((SRC + v + home + "/guide.png" for v in ("v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/guide.png")), d + "guide.png"))
         k = 110.0 / g.shape[0]
         def dots(col):
             ys, xs = np.where((np.abs(g[..., :3].astype(int) - col).sum(-1) < 30) & (g[..., 3] > 0))
@@ -119,16 +117,6 @@ for home in HOMES:
             trays = rgba(d + "trays.png")
             save(trays, OUT + home + "/window_trays.png")
             all_mask |= trays[..., 3] > 0
-        if os.path.exists(d + "wheels.png"):       # (v6.6: the wheels apart, over the mudguards and their depth)
-            wheels = rgba(d + "wheels.png")
-            mud = rgba(d + "mudguard_left.png")
-            right = rgba(d + "mudguard_right.png")
-            mud[right[..., 3] > 0] = right[right[..., 3] > 0]
-            m_mask = mud[..., 3] > 0
-            save(wheels, OUT + home + "/wheels.png")
-            save(mud, OUT + home + "/mudguards.png")
-            save(flat(m_mask, mid_tone(mud, m_mask)), OUT + home + "/mudguards_side.png")
-            all_mask |= wheels[..., 3] > 0
         whole = front.copy()
         whole[in_mask & ~(front[..., 3] > 0)] = inside[in_mask & ~(front[..., 3] > 0)]
         table = rgba(pick("table.png", SRC + "v5/" + home + "/table.png"))
