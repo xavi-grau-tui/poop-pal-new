@@ -67,9 +67,9 @@ def mid_tone(img, mask):
 
 for home in HOMES:
     d = SRC + home + "/"
-    vers = ("v6_5/", "v6_4/", "v6_2/", "v6_1/", "v6/", "v5_tech/", "v5/")
+    vers = ("v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/", "v6/", "v5_tech/", "v5/")
     ver = next(v for v in vers if os.path.exists(SRC + v + home + "/front.png")
-               and (v not in ("v6_5/", "v6_4/") or home in V64_HOMES) and (v != "v6_2/" or home in V62_HOMES)
+               and (v not in ("v6_5b/", "v6_5/", "v6_4/") or home in V64_HOMES) and (v != "v6_2/" or home in V62_HOMES)
                and (v != "v6_1/" or home in V61_HOMES) and (v != "v6/" or home in V6_HOMES))
     def pick(f, default=None):                     # (a delivery without the file: the one before's)
         return next((SRC + v + home + "/" + f for v in vers[vers.index(ver):] if os.path.exists(SRC + v + home + "/" + f)), default)
@@ -105,7 +105,7 @@ for home in HOMES:
             in_mask = ndimage.binary_fill_holes(lab == keep)
         if pick("glass.png"):
             Image.open(pick("glass.png")).convert("RGBA").resize((CANVAS, CANVAS), Image.NEAREST).save(OUT + home + "/glass.png")
-        g = rgba(next((SRC + v + home + "/guide.png" for v in ("v6_5/", "v6_4/", "v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/guide.png")), d + "guide.png"))
+        g = rgba(next((SRC + v + home + "/guide.png" for v in ("v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/guide.png")), d + "guide.png"))
         k = 110.0 / g.shape[0]
         def dots(col):
             ys, xs = np.where((np.abs(g[..., :3].astype(int) - col).sum(-1) < 30) & (g[..., 3] > 0))
