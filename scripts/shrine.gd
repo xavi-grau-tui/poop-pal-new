@@ -23,7 +23,9 @@ var asset_dir := "res://textures/pet/shrine/"
 var hanging: Sprite2D
 var shelf: Sprite2D                   # (the left ledge)
 var shelf_right: Sprite2D
-var shelf_glass: Sprite2D             # (a home's side-window glass over its shelf objects: the Capsule's)
+var window_back: Sprite2D             # (a home's side windows cut out of its front: the room behind them, the Capsule's)
+var window_trays: Sprite2D            # (and the floors its shelf objects stand on)
+var _shelf_spot: Node                 # (where the shelf objects draw in a home without side windows: over its front)
 var _decor_frames := {}               # sprite -> [frames, ms per frame]
 ## Where the pieces go, on the front's 925 canvas: the beam's middle (the hanging piece hangs from
 ## it) and the two ledges' tops (each object's foot): the forest's (docs/mockups/hokora_decor
@@ -320,11 +322,17 @@ func _ready() -> void:
 	near.sort_custom(func(a, b): return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
 	for e in near:
 		move_child(e[2], -1)
-	# a home's side-window glass, over its shelf objects (HOMES "shelf_glass")
-	shelf_glass = _layer(null, 1)
-	shelf_glass.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	move_child(shelf_glass, shelf_right.get_index() + 1)
-	_depth_of[shelf_glass] = FRONT
+	# a home's side windows' room and trays, under its shelf objects (_apply_home moves them all under
+	# the glass and the front when the home has them)
+	window_back = _layer(null, 1)
+	window_trays = _layer(null, 1)
+	_put_before(window_back, shelf)
+	_put_before(window_trays, shelf)
+	_shelf_spot = Node.new()
+	add_child(_shelf_spot)
+	move_child(_shelf_spot, shelf_right.get_index() + 1)
+	for sp in [window_back, window_trays]:
+		sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	# the beam's hanging piece, on the front's own canvas, over it (under the lanterns and the bell)
 	hanging = _layer(null, 1)
 	hanging.scale = front.scale
@@ -445,6 +453,13 @@ func _apply_home() -> void:
 	_lantern_at = hooks[1]
 	for sp in [shelf, shelf_right]:                # (a home's ledges are part of its front)
 		_depth_of[sp] = ORN_F if _home == "" else FRONT
+	# the Capsule's side windows (v6.4, cut out of its front): their room, their trays, the shelf
+	# objects on them, then the glass and the front over them; other homes' objects stand over the front
+	var layered := _home != "" and ResourceLoader.exists(dir + "window_trays.png")
+	window_back.texture = load(dir + "window_back.png") if layered else null
+	window_trays.texture = load(dir + "window_trays.png") if layered else null
+	for n in [window_back, window_trays, shelf, shelf_right]:
+		_put_before(n, glass if layered else _shelf_spot)
 	walls.set_meta("drawn", false)                 # (_process places it all again)
 
 ## Home Decor and Backgrounds in the hokora (Collection.home_piece; HokoraCatalog): the lanterns'
@@ -489,8 +504,6 @@ func _apply_decor() -> void:
 	var k: float = home.get("shelf_scale", 1.0)          # (the Capsule's: smaller, inside its side windows)
 	for sp in [shelf, shelf_right]:
 		sp.scale = front.scale * k
-	shelf_glass.texture = load(Hokora.home_dir(Collection.home_piece("home")) + "side_glass.png") if home.get("shelf_glass", false) else null
-	shelf_glass.scale = front.scale
 	var lift := Vector2.ZERO if _home == "" else Vector2(0, 4.0 * CELL)   # (a home has no lifted slab)
 	for side in 2:
 		var sp: Sprite2D = [shelf, shelf_right][side]
@@ -545,6 +558,10 @@ func _layer(tex: Texture2D, z: int) -> Sprite2D:
 	add_child(sp)
 	return sp
 
+## Draw n just under target (both the shrine's children)
+func _put_before(n: Node, target: Node) -> void:
+	move_child(n, target.get_index() - (1 if n.get_index() < target.get_index() else 0))
+
 func _platform_offset() -> Vector2:
 	return Vector2(0, -4.0 * CELL * _gut_scale.y) if DevLaunch.new_shrine else Vector2.ZERO
 
@@ -569,6 +586,8 @@ func _process(delta: float) -> void:
 	front.position = (tilt * FRONT).round()
 	hanging.position = front.position
 	glass.position = front.position
+	window_back.position = front.position
+	window_trays.position = front.position
 	slab.position = (tilt * SLAB).round() + _platform_offset()
 	for j in slab_back.size():
 		var slab_back_depth := SLAB_BACK

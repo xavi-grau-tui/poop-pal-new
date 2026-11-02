@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cykbj7ywr4ejl"
-path="res://.godot/imported/side_glass.png-7cd325bacbffd1ae01ce6030ff3db086.ctex"
+uid="uid://dlqp2oqshr8mp"
+path="res://.godot/imported/window_back.png-d09e82270fbc9ae46e4735235b7ca57b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/pet/homes/capsule_apartment/side_glass.png"
-dest_files=["res://.godot/imported/side_glass.png-7cd325bacbffd1ae01ce6030ff3db086.ctex"]
+source_file="res://textures/pet/homes/capsule_apartment/window_back.png"
+dest_files=["res://.godot/imported/window_back.png-d09e82270fbc9ae46e4735235b7ca57b.ctex"]
 
 [params]
 
