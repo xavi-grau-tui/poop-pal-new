@@ -25,6 +25,10 @@ var shelf: Sprite2D                   # (the left ledge)
 var shelf_right: Sprite2D
 var window_trays: Sprite2D            # (a home's side windows cut out of its front: the back wall and tray behind each, the Capsule's)
 var _shelf_spot: Node                 # (where the shelf objects draw in a home without side windows: over its front)
+var wheels: Sprite2D                  # (a home's wheels drawn apart, over its mudguards: the Food Stall's)
+var _mud_parts := {}                  # (its mudguards: copies of their outline out to the face, the objects on top) sprite -> depth
+const MUD_COPIES := 8
+const MUD_D := 8.0                    # (how far the mudguards stand out of the front)
 var _decor_frames := {}               # sprite -> [frames, ms per frame]
 ## Where the pieces go, on the front's 925 canvas: the beam's middle (the hanging piece hangs from
 ## it) and the two ledges' tops (each object's foot): the forest's (docs/mockups/hokora_decor
@@ -329,6 +333,15 @@ func _ready() -> void:
 	add_child(_shelf_spot)
 	move_child(_shelf_spot, shelf_right.get_index() + 1)
 	window_trays.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	# a home's mudguards (stacked out to their face) under its shelf objects, its wheels over them all,
+	# so the mudguards' depth never shows over a wheel (the user, 2026-11-02)
+	for j in MUD_COPIES + 1:
+		var mp := _layer(null, 1)
+		mp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_mud_parts[mp] = lerpf(FRONT, FRONT + MUD_D, float(j) / MUD_COPIES)
+		_put_before(mp, window_trays)
+	wheels = _layer(null, 1)
+	wheels.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	# the beam's hanging piece, on the front's own canvas, over it (under the lanterns and the bell)
 	hanging = _layer(null, 1)
 	hanging.scale = front.scale
@@ -457,6 +470,15 @@ func _apply_home() -> void:
 	window_trays.texture = load(dir + "window_trays.png") if layered else null
 	for n in [window_trays, shelf, shelf_right]:
 		_put_before(n, front if layered else _shelf_spot)
+	_put_before(wheels, _shelf_spot)
+	var has_mud := _home != "" and ResourceLoader.exists(dir + "mudguards.png")
+	var mud := _mud_parts.keys()
+	for k in mud.size():
+		mud[k].texture = load(dir + ("mudguards.png" if k == mud.size() - 1 else "mudguards_side.png")) if has_mud else null
+	wheels.texture = load(dir + "wheels.png") if has_mud else null
+	if has_mud:                                    # (the objects stand on the mudguards' tops)
+		for sp in [shelf, shelf_right]:
+			_depth_of[sp] = FRONT + MUD_D * 0.5
 	glass.z_index = 2 if layered else 1
 	if layered:
 		move_child(glass, -1)
@@ -589,6 +611,9 @@ func _process(delta: float) -> void:
 	hanging.position = front.position
 	glass.position = front.position
 	window_trays.position = front.position
+	wheels.position = front.position
+	for part in _mud_parts:
+		part.position = (tilt * float(_mud_parts[part])).round()
 	slab.position = (tilt * SLAB).round() + _platform_offset()
 	for j in slab_back.size():
 		var slab_back_depth := SLAB_BACK
