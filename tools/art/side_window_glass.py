@@ -1,7 +1,7 @@
 """A home's side-window glass over the whole window inside its frame (the user, 2026-11-02: the glass
 should cover all of the Capsule's side windows, the ceiling band and the lanterns' hooks too, not just
 the cut): each row's run between the frame's white (the outer frame, the middle opening's arch) through
-the window's middle, from the frame above the band to the frame below the shelf, holes filled, over the front. Its tint and highlight lines are the designer's
+the window's middle, from the frame above the band to the frame below the shelf, holes filled, made symmetric (the knob in the left window's corner stops its runs), over the front. Its tint and highlight lines are the designer's
 glass.png's: its pane colour fills the rest. Writes textures/pet/homes/<home>/glass.png on the 925
 canvas (Shrine draws it over the front and the lanterns for a home with side windows). Run after
 tools/art/homes_install.py:
@@ -45,6 +45,7 @@ for home, (ver, cols) in HOMES.items():
             last = (x0, x1)
             pane[yy, x0:x1 + 1] = True
     pane = ndimage.binary_fill_holes(pane)
+    pane |= pane[:, ::-1]                       # (the pod is symmetric: the left window's knob breaks its runs)
     tint = glass[(glass[..., 3] > 0)]
     base = np.median(tint, axis=0).astype(np.uint8)          # (the pane's own colour)
     out = np.zeros_like(glass)
