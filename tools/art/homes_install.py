@@ -15,7 +15,8 @@ v5 (docs/mockups/hokora_homes/v5/<home>/: front, inside, table, guide, icon) rep
 v6 and v6_1 (docs/mockups/hokora_homes/v6/, v6_1/<home>/, the same files, 2026-11-01) replace it in
 turn when they exist, then v6_2 and v6_5 (the Capsule's side windows cut out of its front, with
 trays.png: the back wall and object floor behind each, installed as window_trays.png; files it
-doesn't bring come from the delivery before) (a v6_1 folder with only a bell and a guide keeps v6's home); the home's bell and
+doesn't bring come from the delivery before), v6_6 (the Food Stall with its wheels taken out: its
+wheels and mudguards by tools/art/food_stall_mudguards.py, run after this) (a v6_1 folder with only a bell and a guide keeps v6's home); the home's bell and
 beads (bell.png, bead_1.png, bead_2.png) are redrawn at the red lantern's look (2 x 2 pixels, its thick
 plum outline: ornaments_from_sources.shrink; the user, 2026-11-02). The v6
 tables (front faces) are placed by tools/art/tables_install.py, run after this.
@@ -38,6 +39,8 @@ V6_HOMES = []                                   # (v6's Ruined Night: a hard cut
 V61_HOMES = ["golden", "ramen_stall", "moon"]
 CUT_BELLS = ["capsule_apartment"]              # (its delivered bell is cut off on one side)
 V_FRONT_ONLY = ["v6_3b/", "v6_3/"]                      # (deliveries with only a new front: the Arcade's side trays, 2026-11-02)
+V66_HOMES = ["ramen_stall"]                   # (v6.6, 2026-11-02: the Food Stall with its wheels taken out: food_stall_mudguards.py)
+ICON_FROM = {"ramen_stall": "v6_1/"}          # (v6.6's icon shows the mudguards it was sent with, not the ones used)
 V64_HOMES = ["capsule_apartment"]             # (v6.4 and v6.5, 2026-11-02: the Capsule wider, its side windows as layers)
 V62_HOMES = ["arcade_cabinet", "capsule_apartment", "ruined_night"]   # (v6.2, 2026-11-02)   # (v6.1's approved fronts, 2026-11-01; its Capsule and Arcade
                                          # go round again, its other fronts are re-exports of the approved ones)                       # (the forest side_back's rim colour)
@@ -67,9 +70,9 @@ def mid_tone(img, mask):
 
 for home in HOMES:
     d = SRC + home + "/"
-    vers = ("v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/", "v6/", "v5_tech/", "v5/")
+    vers = ("v6_6/", "v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/", "v6/", "v5_tech/", "v5/")
     ver = next(v for v in vers if os.path.exists(SRC + v + home + "/front.png")
-               and (v not in ("v6_5b/", "v6_5/", "v6_4/") or home in V64_HOMES) and (v != "v6_2/" or home in V62_HOMES)
+               and (v != "v6_6/" or home in V66_HOMES) and (v not in ("v6_5b/", "v6_5/", "v6_4/") or home in V64_HOMES) and (v != "v6_2/" or home in V62_HOMES)
                and (v != "v6_1/" or home in V61_HOMES) and (v != "v6/" or home in V6_HOMES))
     def pick(f, default=None):                     # (a delivery without the file: the one before's)
         return next((SRC + v + home + "/" + f for v in vers[vers.index(ver):] if os.path.exists(SRC + v + home + "/" + f)), default)
@@ -117,6 +120,8 @@ for home in HOMES:
             trays = rgba(d + "trays.png")
             save(trays, OUT + home + "/window_trays.png")
             all_mask |= trays[..., 3] > 0
+        if os.path.exists(d + "wheels.png"):       # (v6.6: the wheels apart, in the home's 3D sides too)
+            all_mask |= rgba(d + "wheels.png")[..., 3] > 0
         whole = front.copy()
         whole[in_mask & ~(front[..., 3] > 0)] = inside[in_mask & ~(front[..., 3] > 0)]
         table = rgba(pick("table.png", SRC + "v5/" + home + "/table.png"))
@@ -144,5 +149,5 @@ for home in HOMES:
     back = flat(all_mask, side)
     back[rim] = RIM + (255,)
     save(back, OUT + home + "/side_back.png")
-    Image.open(d + "icon.png").convert("RGBA").save(OUT + home + "/icon.png")
+    Image.open((SRC + ICON_FROM[home] + home + "/" if home in ICON_FROM else d) + "icon.png").convert("RGBA").save(OUT + home + "/icon.png")
     print('"%s": "#%02x%02x%02x",%s' % ((home,) + socket + (" (v5) bell %s lanterns %s" % hooks if d == v5 else "",)))
