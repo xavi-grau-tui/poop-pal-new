@@ -14,7 +14,8 @@ SRCS = ["docs/mockups/hokora_homes/v6_1/tables/", "docs/mockups/hokora_homes/v6/
 OUT = "textures/pet/homes/"
 CANVAS = 925
 PX = 2                                   # (screen pixels per table pixel, the lanterns')
-SHIFT = {"arcade_cabinet": 25}           # (px down from the v5 table's foot: the Arcade made taller, arcade_widen.py)
+SHIFT = {"arcade_cabinet": 4}            # (px down from the v5 table's foot: the Arcade's deck in final_k_study)
+SHIFT_X = {"arcade_cabinet": -28}        # (px right: the Arcade's table centred between its joystick and buttons)
 
 
 def part(name):
@@ -41,7 +42,7 @@ for home in sorted(os.listdir(OUT)):
     if one is None and base is None:
         continue
     old = Image.open(OUT + home + "/table.png").getbbox()      # (where the v5 table stood)
-    mid, foot = (old[0] + old[2]) // 2, old[3] + SHIFT.get(home, 0)
+    mid, foot = (old[0] + old[2]) // 2 + SHIFT_X.get(home, 0), old[3] + SHIFT.get(home, 0)
     canvas = Image.new("RGBA", (CANVAS, CANVAS))
     if one is not None:
         canvas.alpha_composite(one, (mid - one.width // 2, foot - one.height))

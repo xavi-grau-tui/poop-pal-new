@@ -41,7 +41,7 @@ CUT_BELLS = ["capsule_apartment"]              # (its delivered bell is cut off 
 V_FRONT_ONLY = ["v6_3b/", "v6_3/"]                      # (deliveries with only a new front: the Arcade's side trays, 2026-11-02)
 V66_HOMES = ["ramen_stall"]                   # (v6.6, 2026-11-02: the Food Stall with its wheels taken out: food_stall_mudguards.py)
 ICON_FROM = {"ramen_stall": "v6_1/"}          # (v6.6's icon shows the mudguards it was sent with, not the ones used)
-FINAL = {"arcade_cabinet": "v7/arcade_cabinet/final_c_wide/"}   # (final_c made wider and taller: tools/art/arcade_widen.py)   # (a home redrawn from scratch: only its own files, 2026-11-02)
+FINAL = {"arcade_cabinet": "v7/arcade_cabinet/final_k_study/"}   # (the user's chosen ImageGen study on the 220 grid, 2026-11-02: arcade_layers.py)   # (a home redrawn from scratch: only its own files)
 V64_HOMES = ["capsule_apartment"]             # (v6.4 and v6.5, 2026-11-02: the Capsule wider, its side windows as layers)
 V62_HOMES = ["arcade_cabinet", "capsule_apartment", "ruined_night"]   # (v6.2, 2026-11-02)   # (v6.1's approved fronts, 2026-11-01; its Capsule and Arcade
                                          # go round again, its other fronts are re-exports of the approved ones)                       # (the forest side_back's rim colour)
@@ -113,7 +113,8 @@ for home in HOMES:
             Image.open(pick("glass.png")).convert("RGBA").resize((CANVAS, CANVAS), Image.NEAREST).save(OUT + home + "/glass.png")
         elif os.path.exists(OUT + home + "/glass.png"):
             os.remove(OUT + home + "/glass.png")
-            os.remove(OUT + home + "/glass.png.import")    # (or Godot still finds the old glass)
+            if os.path.exists(OUT + home + "/glass.png.import"):
+                os.remove(OUT + home + "/glass.png.import")    # (or Godot still finds the old glass)
         g = rgba(next((SRC + v + home + "/guide.png" for v in ("v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/") if home not in FINAL and os.path.exists(SRC + v + home + "/guide.png")), d + "guide.png"))
         k = 110.0 / g.shape[0]
         def dots(col):

@@ -478,7 +478,15 @@ func _apply_home() -> void:
 	for k in mud.size():
 		mud[k].texture = load(dir + ("ledges.png" if k == mud.size() - 1 else "ledges_side.png")) if has_mud else null
 	_put_before(wheels, shelf)
-	_put_before(mud[mud.size() - 1], shelf)
+	# (behind the front instead, HOMES "ledges_behind": the Arcade's trays, their inner ends under its deck)
+	var ledges_behind: bool = h.get("ledges_behind", false)
+	for k in mud.size():
+		if ledges_behind:
+			_put_before(mud[k], front)
+		elif k < mud.size() - 1:
+			_put_before(mud[k], window_trays)
+	if not ledges_behind:
+		_put_before(mud[mud.size() - 1], shelf)
 	# a home whose lanterns hang from behind its front (HOMES "lanterns_behind": the Food Stall's, from
 	# under its awning, the user 2026-11-02): their hooks hidden by it
 	var behind: bool = h.get("lanterns_behind", false)
