@@ -21,6 +21,7 @@ GRID = (67, 24)                     # (its pixels)
 AXIS = 111                          # (the stall's middle line: x -> 2 * AXIS - 1 - x)
 LEFT = 4                            # (the left mudguard's first column: centred on the left wheel)
 COVER = 2                           # (rows of the wheel's top under the arch)
+POST_ROWS, POST_IN = (70, 146), 67  # (the window's left post: its rows, the column inside it)
 
 
 def big(a):
@@ -70,6 +71,11 @@ hook = front.copy()
 for yy in range(54, 73):                          # (the hook, rows 54-72 right of the left post)
     for xx in range(25, 46):
         hook[yy, xx] = front[yy, 220 - xx]
+for yy in range(*POST_ROWS):                      # (the window's posts alike, outlined both sides (the user): the
+    if hook[yy, POST_IN - 4, 3] and not hook[yy, POST_IN, 3]:    # left one's inner side outlined, the right
+        hook[yy, POST_IN] = hook[yy, POST_IN - 6]                # one its mirror, the hole cut it thinner)
+        for xx in range(220 - POST_IN, 221 - (POST_IN - 7)):
+            hook[yy, xx] = hook[yy, 220 - xx]
 big(hook).save(OUT + "front.png")
 big(wheels).save(OUT + "wheels.png")
 big(mud).save(OUT + "ledges.png")
