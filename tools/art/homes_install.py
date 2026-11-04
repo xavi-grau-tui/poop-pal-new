@@ -32,7 +32,10 @@ from ornaments_from_sources import shrink     # (the bells: the red lantern's 2 
 SRC = "docs/mockups/hokora_homes/"
 OUT = "textures/pet/homes/"
 HOMES = ["neon_cyber", "moon", "golden", "ruined_night", "tree_hollow", "ramen_stall",
-         "capsule_apartment", "arcade_cabinet", "bathhouse", "fire", "river_shrine"]
+         "capsule_apartment", "arcade_cabinet", "bathhouse", "fire", "river_shrine", "forest"]
+import sys
+if "--only" in sys.argv:                        # (--only a,b: just those homes; the others' files untouched)
+    HOMES = sys.argv[sys.argv.index("--only") + 1].split(",")
 CANVAS = 925
 RIM = (54, 35, 45)
 V6_HOMES = []                                   # (v6's Ruined Night: a hard cut in its opening, back to the designer)
@@ -42,7 +45,10 @@ V_FRONT_ONLY = ["v6_3b/", "v6_3/"]                      # (deliveries with only 
 V66_HOMES = ["ramen_stall"]                   # (v6.6, 2026-11-02: the Food Stall with its wheels taken out: food_stall_mudguards.py)
 ICON_FROM = {"ramen_stall": "v6_1/"}          # (v6.6's icon shows the mudguards it was sent with, not the ones used)
 FINAL = {"arcade_cabinet": "v7/arcade_cabinet/final_k_study/",   # (the user's chosen ImageGen study on the 220 grid, 2026-11-02: arcade_layers.py)   # (a home redrawn from scratch: only its own files)
-         "river_shrine": "v8/river_shrine/final/"}   # (v8's 12th home, its front fixed by river_shrine.py, 2026-11-03)
+         "river_shrine": "v8/river_shrine/final/",
+         "forest": "v8/forest_hokora/final/"}   # (v8's forest hokora, its front polished by forest_v8.py, 2026-11-04: the default home)
+TABLE_FROM = {"forest": "v8/river_shrine/final/table.png"}   # (no table of its own yet: the River Shrine's stone one)
+MATERIALS = {"forest": "materials.png"}         # (its materials, forest_v8.py's: the Colours recolour each as its own)   # (v8's 12th home, its front fixed by river_shrine.py, 2026-11-03)
 V64_HOMES = ["capsule_apartment"]             # (v6.4 and v6.5, 2026-11-02: the Capsule wider, its side windows as layers)
 V62_HOMES = ["arcade_cabinet", "capsule_apartment", "ruined_night"]   # (v6.2, 2026-11-02)   # (v6.1's approved fronts, 2026-11-01; its Capsule and Arcade
                                          # go round again, its other fronts are re-exports of the approved ones)                       # (the forest side_back's rim colour)
@@ -139,7 +145,7 @@ for home in HOMES:
             all_mask |= rgba(d + "wheels.png")[..., 3] > 0
         whole = front.copy()
         whole[in_mask & ~(front[..., 3] > 0)] = inside[in_mask & ~(front[..., 3] > 0)]
-        table = rgba(pick("table.png", SRC + "v5/" + home + "/table.png"))
+        table = rgba(pick("table.png", SRC + TABLE_FROM.get(home, "v5/" + home + "/table.png")))
         t_mask = table[..., 3] > 0
         save(table, OUT + home + "/table.png")
         save(flat(t_mask, mid_tone(table, t_mask)), OUT + home + "/table_side.png")
@@ -151,6 +157,8 @@ for home in HOMES:
         front = whole.copy()
         front[in_mask] = 0
     save(front, OUT + home + "/front.png")
+    if home in MATERIALS:                          # (its roof, moss, stone and wood for the Colours)
+        save(rgba(SRC + FINAL[home] + MATERIALS[home]), OUT + home + "/material_mask.png")
     save(inside, OUT + home + "/inside.png")
     # the socket: the recess's darkest quarter, averaged
     px = inside[in_mask & (inside[..., 3] > 0)][:, :3].astype(float)

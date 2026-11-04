@@ -199,6 +199,7 @@ const HOMES := {   # (v5, 220 art; hooks from each guide.png; ledges: where the 
 	"house_bathhouse": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 220), "ledges": [Vector2(170, 603), Vector2(755, 603)], "socket": "#152445" },
 	"house_fire": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 252), "ledges": [Vector2(235, 603), Vector2(695, 603)], "socket": "#341228" },
 	"house_river_shrine": { "bell": Vector2(10.5, 34), "lanterns": [Vector2(23, 30), Vector2(86.5, 30)], "beam": Vector2(462.5, 252), "ledges": [Vector2(164, 610), Vector2(761, 610)], "socket": "#122226" },
+	"house_forest": { "bell": Vector2(15.5, 37), "lanterns": [Vector2(25, 31), Vector2(85, 31)], "beam": Vector2(462.5, 300), "ledges": [Vector2(200, 600), Vector2(725, 600)], "socket": "#200d10" },   # (v8, 2026-11-04: the forest hokora redrawn; the old one's art stays in textures/pet/shrine_new/)
 }
 
 ## A home's folder ("" = the forest hokora, textures/pet/shrine_new/)
@@ -458,20 +459,23 @@ static func _material(c: Color, item: Dictionary) -> Array:
 	return item.get("wood", [0.0, 1.0, 1.0])
 
 ## The hokora's left eave and pillar in a colour (a small crop, recoloured once)
+const FOREST_FRONT := "res://textures/pet/homes/forest/front.png"   # (v8; the old: textures/pet/shrine_new/front.png)
+const FOREST_CORNER := Rect2i(38, 98, 330, 330)     # (its top-left corner, as tools/art/homes_cards.py's card.png)
+
 ## The forest hokora's card: its whole front, small (the new homes have the designer's icons)
 static func _forest_icon() -> Texture2D:   # (a corner, as the Colours cards and the homes' card.png)
-	var img: Image = (load("res://textures/pet/shrine_new/front.png") as Texture2D).get_image()
+	var img: Image = (load(FOREST_FRONT) as Texture2D).get_image()
 	if img.is_compressed():
 		img.decompress()
-	img = img.get_region(Rect2i(60, 120, 330, 330))
+	img = img.get_region(FOREST_CORNER)
 	img.resize(110, 110, Image.INTERPOLATE_NEAREST)
 	return ImageTexture.create_from_image(img)
 
 static func _colour_preview(item: Dictionary) -> Texture2D:
-	var img: Image = (load("res://textures/pet/shrine_new/front.png") as Texture2D).get_image()
+	var img: Image = (load(FOREST_FRONT) as Texture2D).get_image()
 	if img.is_compressed():
 		img.decompress()
-	img = img.get_region(Rect2i(60, 120, 330, 330))
+	img = img.get_region(FOREST_CORNER)
 	img.convert(Image.FORMAT_RGBA8)
 	img.resize(110, 110, Image.INTERPOLATE_NEAREST)
 	for y in img.get_height():

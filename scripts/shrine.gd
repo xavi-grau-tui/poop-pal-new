@@ -530,7 +530,12 @@ func _apply_decor() -> void:
 			g.self_modulate = Color.html(item.get("glow", "#ffc270"))
 	# the wood and the roof
 	var colour: Dictionary = Hokora.DECOR.get(Collection.home_piece("colour"), {})
-	var cmat: ShaderMaterial = _colour_material(colour) if DevLaunch.new_shrine and _home == "" and colour.has("wood") else null
+	var mask_path := Hokora.home_dir(_home) + "material_mask.png" if _home != "" else ""
+	var recolours := _home == "" or (mask_path != "" and ResourceLoader.exists(mask_path))   # (the forest hokora, old or v8)
+	var cmat: ShaderMaterial = _colour_material(colour) if DevLaunch.new_shrine and recolours and colour.has("wood") else null
+	if cmat and mask_path != "":
+		cmat.set_shader_parameter("use_mask", true)
+		cmat.set_shader_parameter("material_mask", load(mask_path))
 	var rmat: ShaderMaterial = _colour_material(colour, true, true) if cmat else null
 	for sp in [front] + sides:
 		sp.material = cmat
@@ -573,6 +578,7 @@ func _play(sp: Sprite2D, pics: Array[Texture2D], ms: int) -> void:
 		_decor_frames[sp] = [pics, ms]
 
 ## The colour shader with a colour item's sets (wood / roof / moss); roots: the root planes' version
+## (the v8 forest's materials from its material_mask.png instead of the hues and STONE_BOX: _apply_decor)
 ## (their faint edge pixels dropped, as their own shader did)
 func _colour_material(item: Dictionary, classify := true, roots := false) -> ShaderMaterial:
 	var m := ShaderMaterial.new()

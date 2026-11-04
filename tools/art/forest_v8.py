@@ -124,6 +124,18 @@ roof &= ~(gable & (gr >= 0.45))
 wood = warm & ~roof
 kind = np.zeros(op.shape, int)
 kind[stone], kind[wood], kind[roof], kind[green], kind[line], kind[edge] = 1, 2, 3, 4, 5, 6
+# its materials for the game's Colours (shaders/hokora_colour.gdshader's material mask): roof red, moss
+# green, stone blue, wood black, all opaque; the inner lines the material beside them (the outline: none)
+mat_of = np.where((kind >= 1) & (kind <= 4), kind, 0)
+iy, ix = ndimage.distance_transform_edt(mat_of == 0, return_distances=False, return_indices=True)
+near = mat_of[iy, ix]
+mk = np.where(line, near, mat_of)
+mask = np.zeros((220, 220, 4), np.uint8)
+mask[mk == 3, 0] = 255
+mask[mk == 4, 1] = 255
+mask[mk == 1, 2] = 255
+mask[..., 3] = np.where(mk > 0, 255, 0)
+Image.fromarray(mask).save(OUT + "materials.png")
 
 h = hsv.copy()
 h[wood, 1] *= WOOD_S

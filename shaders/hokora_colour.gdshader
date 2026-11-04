@@ -14,6 +14,11 @@ uniform bool cut_alpha = false;
 // The stone base under the slab is painted in the front's picture with the wood's pale beige: its
 // pale pixels inside this box (UV: x0, y0, x1, y1) keep their colour
 uniform vec4 stone_box = vec4(2.0, 2.0, 2.0, 2.0);
+// A home with its materials drawn apart (the v8 forest hokora: material_mask.png, tools/art/forest_v8.py):
+// red the roof, green the moss, blue the stone (kept), black the wood, clear the outline (kept); used
+// instead of the hues and the stone box
+uniform bool use_mask = false;
+uniform sampler2D material_mask : filter_nearest;
 
 varying vec4 tint;
 
@@ -42,10 +47,14 @@ void fragment() {
 		discard;
 	}
 	vec3 hsv = rgb2hsv(tex.rgb);
-	bool stone = hsv.y < 0.4 && UV.x > stone_box.x && UV.y > stone_box.y && UV.x < stone_box.z && UV.y < stone_box.w;
+	vec4 m = use_mask ? texture(material_mask, UV) : vec4(0.0);
+	bool stone = use_mask ? (m.a < 0.5 || m.b > 0.5)
+		: (hsv.y < 0.4 && UV.x > stone_box.x && UV.y > stone_box.y && UV.x < stone_box.z && UV.y < stone_box.w);
 	if (hsv.z > 0.22 && hsv.y > 0.08 && !stone) {
 		vec3 t = wood;
-		if (classify) {
+		if (use_mask) {
+			t = m.r > 0.5 ? roof : (m.g > 0.5 ? moss : wood);
+		} else if (classify) {
 			float h = hsv.x * 360.0;
 			if (h >= 45.0 && h < 170.0) {
 				t = moss;
