@@ -47,12 +47,12 @@
 [ext_resource type="Texture2D" uid="uid://g5c2y7iv4f7j" path="res://textures/buttons/forwardbuttonnormal.png" id="36_b1qrp"]
 [ext_resource type="Script" uid="uid://cuy6wqihtmngh" path="res://scripts/forward_button.gd" id="37_b1qrp"]
 [ext_resource type="Texture2D" uid="uid://draa87514bx6o" path="res://textures/buttons/forwardbuttonpressed.png" id="37_come4"]
-[ext_resource type="Texture2D" uid="uid://dj06bmjhg4oj5" path="res://textures/menus/diapositive1.png" id="40_4lmeg"]
+[ext_resource type="Texture2D" uid="uid://ixsv8xuiiawf" path="res://textures/menus/slide_clear.png" id="40_4lmeg"]
 [ext_resource type="Script" uid="uid://b8mnbyrm0d4rs" path="res://scripts/menu_manager.gd" id="40_h8e4i"]
 [ext_resource type="Texture2D" uid="uid://dugynklb3cvxw" path="res://textures/buttons/mainbuttonnormal.png" id="40_hrvbo"]
-[ext_resource type="Texture2D" uid="uid://cqxku4o1ltwxv" path="res://textures/menus/diapositive2.png" id="41_d2t1y"]
+[ext_resource type="Texture2D" uid="uid://df46no6r1nqh7" path="res://textures/menus/slide_mid.png" id="41_d2t1y"]
 [ext_resource type="Texture2D" uid="uid://diy5hvjw8p57s" path="res://textures/buttons/mainbuttonpressed.png" id="41_uypp3"]
-[ext_resource type="Texture2D" uid="uid://biban86smu8yk" path="res://textures/menus/diapositive3.png" id="42_gngh3"]
+[ext_resource type="Texture2D" uid="uid://df4ipsc1w7c3n" path="res://textures/menus/slide_brown.png" id="42_gngh3"]
 [ext_resource type="Texture2D" uid="uid://bjbe6x1h881vk" path="res://textures/menus/foodmenulabel.png" id="42_qnost"]
 [ext_resource type="Script" uid="uid://sj3tr7wnc0av" path="res://scripts/main_button.gd" id="42_uypp3"]
 [ext_resource type="Script" uid="uid://s1y2o8orygci" path="res://scripts/foodmenudebug.gd" id="43_blkrb"]
@@ -901,7 +901,6 @@ libraries = {
 [node name="Background" type="Sprite2D" parent="Main UI/Menus/FoodMenu/Menu"]
 z_index = 1
 position = Vector2(1018.06, -826.462)
-scale = Vector2(2.19606, 2.30562)
 texture = ExtResource("40_4lmeg")
 
 [node name="VBoxFood" type="VBoxContainer" parent="Main UI/Menus/FoodMenu/Menu"]
@@ -1441,7 +1440,6 @@ libraries = {
 [node name="Background" type="Sprite2D" parent="Main UI/Menus/GameMenu/Menu"]
 z_index = 1
 position = Vector2(1018.06, -826.462)
-scale = Vector2(2.19606, 2.30562)
 texture = ExtResource("41_d2t1y")
 
 [node name="VBoxGame1" type="VBoxContainer" parent="Main UI/Menus/GameMenu/Menu"]
@@ -2587,7 +2585,6 @@ libraries = {
 [node name="Sprite2D" type="Sprite2D" parent="Main UI/Menus/Settings Menu/Menu"]
 z_index = 1
 position = Vector2(1024.3, -826.871)
-scale = Vector2(2.19606, 2.30562)
 texture = ExtResource("42_gngh3")
 
 [node name="MenuManager" type="Node2D" parent="Main UI" node_paths=PackedStringArray("menus_root", "pet_view", "pet_view_animation_player", "game_screen")]

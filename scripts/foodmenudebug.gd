@@ -678,7 +678,7 @@ func _build_barrier() -> void:
 	# laid on top, so the shutter slides in behind the frame's border and rounded corners
 	var bg: Sprite2D = $Menu/Background
 	var ring := Sprite2D.new()
-	ring.texture = load("res://textures/menus/diapositive1_ring.png")
+	ring.texture = load("res://textures/menus/slide_clear_ring.png")   # (the new wooden slide's frame: tools/art/slide_install.py)
 	ring.position = bg.position
 	ring.scale = bg.scale
 	ring.texture_filter = bg.texture_filter

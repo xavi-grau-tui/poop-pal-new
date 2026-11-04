@@ -1,0 +1,6 @@
+Menu Slides v2 exact-mask check
+All variants: 402x394; 4x previews: 1608x1576
+Alpha mask mismatches: 0
+Opaque opening pixels: 0
+Outer outline colour mismatches within 1 grid pixel: 0
+Five stepped material tones informed by the ImageGen studies, shaded top-left to bottom-right on the 4x4 grid.

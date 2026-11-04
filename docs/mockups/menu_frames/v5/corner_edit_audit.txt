@@ -1,0 +1,14 @@
+Menu slide corner edit audit
+Originals: docs/mockups/menu_frames/v5_brief/
+Output: docs/mockups/menu_frames/v5/
+Allowed change zones: four 300x300 corner boxes only.
+
+slide_clear.png: 33532 changed pixels; outside zones=0; alpha identical=True; bounds=(70, 69, 1535, 1518)
+  source sha256: cf274e968e4414f0c50da9081c29646238fbefdf4e8d181141bcaf7e0436c516
+  output sha256: bb1303ae779e0e291d8384ddc6a14dcc33f8ae600af86cb321bf7282733dda59
+slide_mid.png: 32712 changed pixels; outside zones=0; alpha identical=True; bounds=(71, 69, 1535, 1518)
+  source sha256: a48d15c3d2302bd1f132e9a5580820e96d170e7b6196a34033f16fa6e59ae3c4
+  output sha256: 4a4022e921ea4fb185ccc04d0069503b1ad7ce5740a5309fe075bc5e1216dfc0
+slide_brown.png: 33837 changed pixels; outside zones=0; alpha identical=True; bounds=(70, 70, 1536, 1518)
+  source sha256: 29ae4916428b0d09128017cdb826040abf716d4cc3d52e9e2c285e5bd3b49f85
+  output sha256: 2e17505c1d7d4000842a3fa18308f8c8ec6cbff9aedfeb0e2c2760e7ea763e2c
