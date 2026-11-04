@@ -46,6 +46,7 @@ const DECOR := {
 	"house_arcade_cabinet": { "name": "Arcade Cabinet", "kind": "home", "unlock": "Coming soon" },
 	"house_bathhouse": { "name": "Bathhouse", "kind": "home", "unlock": "Coming soon" },
 	"house_fire": { "name": "Fire Shrine", "kind": "home", "unlock": "Coming soon" },
+	"house_river_shrine": { "name": "River Shrine", "kind": "home", "unlock": "Coming soon" },
 	# --- lanterns
 	"lantern_red": { "name": "Red Lanterns", "kind": "lantern", "unlocked": true, "unlock": "", "glow": "#ffc270" },
 	"lantern_goldfish": { "name": "Goldfish Lanterns", "kind": "lantern", "unlock": "Splash Hoops: 5 stars", "tint": [0.055, 1.0, 1.05], "glow": "#ffb060" },
@@ -197,6 +198,7 @@ const HOMES := {   # (v5, 220 art; hooks from each guide.png; ledges: where the 
 	"house_arcade_cabinet": { "bell": Vector2(15, 12), "lanterns": [Vector2(26.5, 33.5), Vector2(83, 33.5)], "beam": Vector2(462.5, 230), "ledges": [Vector2(84, 614), Vector2(841, 614)], "ledges_behind": true, "socket": "#11051a" },
 	"house_bathhouse": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 220), "ledges": [Vector2(170, 603), Vector2(755, 603)], "socket": "#152445" },
 	"house_fire": { "bell": Vector2(11, 30), "lanterns": [Vector2(25, 30), Vector2(85, 30)], "beam": Vector2(462.5, 252), "ledges": [Vector2(235, 603), Vector2(695, 603)], "socket": "#341228" },
+	"house_river_shrine": { "bell": Vector2(10.5, 34), "lanterns": [Vector2(23, 30), Vector2(86.5, 30)], "beam": Vector2(462.5, 252), "ledges": [Vector2(164, 610), Vector2(761, 610)], "socket": "#122226" },
 }
 
 ## A home's folder ("" = the forest hokora, textures/pet/shrine_new/)

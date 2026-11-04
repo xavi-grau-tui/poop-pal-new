@@ -1,0 +1,1 @@
+Forest Hokora ImageGen front revision, exported to the 220 grid for review. Includes 8x preview and comparison sheet beside Fire, Neon Cyber and Bathhouse. Review only; no install or game asset changes.

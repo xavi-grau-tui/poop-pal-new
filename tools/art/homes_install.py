@@ -32,7 +32,7 @@ from ornaments_from_sources import shrink     # (the bells: the red lantern's 2 
 SRC = "docs/mockups/hokora_homes/"
 OUT = "textures/pet/homes/"
 HOMES = ["neon_cyber", "moon", "golden", "ruined_night", "tree_hollow", "ramen_stall",
-         "capsule_apartment", "arcade_cabinet", "bathhouse", "fire"]
+         "capsule_apartment", "arcade_cabinet", "bathhouse", "fire", "river_shrine"]
 CANVAS = 925
 RIM = (54, 35, 45)
 V6_HOMES = []                                   # (v6's Ruined Night: a hard cut in its opening, back to the designer)
@@ -41,7 +41,8 @@ CUT_BELLS = ["capsule_apartment"]              # (its delivered bell is cut off 
 V_FRONT_ONLY = ["v6_3b/", "v6_3/"]                      # (deliveries with only a new front: the Arcade's side trays, 2026-11-02)
 V66_HOMES = ["ramen_stall"]                   # (v6.6, 2026-11-02: the Food Stall with its wheels taken out: food_stall_mudguards.py)
 ICON_FROM = {"ramen_stall": "v6_1/"}          # (v6.6's icon shows the mudguards it was sent with, not the ones used)
-FINAL = {"arcade_cabinet": "v7/arcade_cabinet/final_k_study/"}   # (the user's chosen ImageGen study on the 220 grid, 2026-11-02: arcade_layers.py)   # (a home redrawn from scratch: only its own files)
+FINAL = {"arcade_cabinet": "v7/arcade_cabinet/final_k_study/",   # (the user's chosen ImageGen study on the 220 grid, 2026-11-02: arcade_layers.py)   # (a home redrawn from scratch: only its own files)
+         "river_shrine": "v8/river_shrine/final/"}   # (v8's 12th home, its front fixed by river_shrine.py, 2026-11-03)
 V64_HOMES = ["capsule_apartment"]             # (v6.4 and v6.5, 2026-11-02: the Capsule wider, its side windows as layers)
 V62_HOMES = ["arcade_cabinet", "capsule_apartment", "ruined_night"]   # (v6.2, 2026-11-02)   # (v6.1's approved fronts, 2026-11-01; its Capsule and Arcade
                                          # go round again, its other fronts are re-exports of the approved ones)                       # (the forest side_back's rim colour)
@@ -72,16 +73,17 @@ def mid_tone(img, mask):
 for home in HOMES:
     d = SRC + home + "/"
     vers = ("v6_6/", "v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/", "v6/", "v5_tech/", "v5/")
-    ver = next(v for v in vers if os.path.exists(SRC + v + home + "/front.png")
+    ver = next((v for v in vers if os.path.exists(SRC + v + home + "/front.png")
                and (v != "v6_6/" or home in V66_HOMES) and (v not in ("v6_5b/", "v6_5/", "v6_4/") or home in V64_HOMES) and (v != "v6_2/" or home in V62_HOMES)
-               and (v != "v6_1/" or home in V61_HOMES) and (v != "v6/" or home in V6_HOMES))
+               and (v != "v6_1/" or home in V61_HOMES) and (v != "v6/" or home in V6_HOMES)), None)   # (none: a FINAL home new in v8)
     def pick(f, default=None):                     # (a delivery without the file: the one before's)
         if home in FINAL:
             return SRC + FINAL[home] + f if os.path.exists(SRC + FINAL[home] + f) else default
         return next((SRC + v + home + "/" + f for v in vers[vers.index(ver):] if os.path.exists(SRC + v + home + "/" + f)), default)
     v5 = SRC + FINAL[home] if home in FINAL else SRC + ver + home + "/"
+    os.makedirs(OUT + home, exist_ok=True)
     for f in ("bell.png", "bead_1.png", "bead_2.png"):   # (the newest delivery's, at the lanterns' look)
-        src = next((SRC + v + home + "/" + f for v in ("v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/" + f)), None)
+        src = next((SRC + v + home + "/" + f for v in ("v6_2/", "v6_1/") if os.path.exists(SRC + v + home + "/" + f)), pick(f) if home in FINAL else None)
         if src:
             im = Image.open(src).convert("RGBA")
             if f == "bell.png" and home in CUT_BELLS:     # (cut on its right: the left half mirrored round its loop)
@@ -115,7 +117,7 @@ for home in HOMES:
             os.remove(OUT + home + "/glass.png")
             if os.path.exists(OUT + home + "/glass.png.import"):
                 os.remove(OUT + home + "/glass.png.import")    # (or Godot still finds the old glass)
-        g = rgba(next((SRC + v + home + "/guide.png" for v in ("v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/") if home not in FINAL and os.path.exists(SRC + v + home + "/guide.png")), d + "guide.png"))
+        g = rgba(next((SRC + v + home + "/guide.png" for v in ("v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/") if home not in FINAL and os.path.exists(SRC + v + home + "/guide.png")), d + "guide.png")) if os.path.exists(d + "guide.png") or home not in FINAL else np.zeros((110, 110, 4), np.uint8)   # (v8 has no guide: its hooks picked on the picture)
         k = 110.0 / g.shape[0]
         def dots(col):
             ys, xs = np.where((np.abs(g[..., :3].astype(int) - col).sum(-1) < 30) & (g[..., 3] > 0))

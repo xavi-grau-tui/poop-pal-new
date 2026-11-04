@@ -10,7 +10,8 @@ import os
 import numpy as np
 from PIL import Image
 
-SRCS = ["docs/mockups/hokora_homes/v6_1/tables/", "docs/mockups/hokora_homes/v6/tables/"]   # (v6.1's first)
+SRCS = ["docs/mockups/hokora_homes/v6_1/tables/", "docs/mockups/hokora_homes/v6/tables/",   # (v6.1's first)
+        "docs/mockups/hokora_homes/v8/river_shrine/final/"]                                     # (v8's River Shrine)
 OUT = "textures/pet/homes/"
 CANVAS = 925
 PX = 2                                   # (screen pixels per table pixel, the lanterns')

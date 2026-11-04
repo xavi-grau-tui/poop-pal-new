@@ -1,0 +1,1 @@
+Forest Hokora front revision for review only. The approved roof, plaque, shimenawa, ema, plants and steps are retained. Foxes were replaced with stone corner blocks and roots; the opening edge was cleared. No table or installed assets are included.
