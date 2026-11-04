@@ -12,8 +12,8 @@ fill (the Food grid, the Games and Decor wood bands) is painted in it, the menu 
   3. the new wooden slide over it (slide_wood.py's, at 883 x 908, 1:1 on the phone)
 
 Writes textures/menus/slide_<tone>.png (food: clear, games: mid, settings / decor: brown) and
-slide_clear_ring.png (the clear slide without its window's fill: the frame the Food menu's shutter
-slides in behind, as diapositive1_ring.png was). The old textures stay as they were. The sprites in
+slide_clear_ring.png (the clear slide's frame round its window, RING_W px: the Food menu's shutter
+slides in behind it, as diapositive1_ring.png; the band's dots and arrow stay above). The old textures stay as they were. The sprites in
 scenes/main.tscn use the new ones at scale 1.
 
 Run: .venv/bin/python tools/art/slide_install.py [--slides <dir>] [--brown <dir>]
@@ -31,6 +31,7 @@ from slide_preview import fill_corners, SCALE     # noqa: E402
 M = "docs/mockups/menu_frames/"
 OUT = "textures/menus/"
 MENUS = [("clear", 1), ("mid", 2), ("brown", 3)]   # (food, games, settings / decor: today's tints)
+RING_W = 40                                       # (the Food shutter's overlay: the frame this far round the window)
 RING_OFF = 6                                      # (today's ring and this many px round it: off)
 
 ap = argparse.ArgumentParser()
@@ -57,6 +58,9 @@ for tone, tint in MENUS:
     outp[..., :3] = na[..., :3] * al + base[..., :3] * (1 - al)
     outp[..., 3] = np.where(win, 255, na[..., 3])            # (the window opaque, the edge as the slide's)
     Image.fromarray(np.round(outp).astype(np.uint8)).save(OUT + "slide_%s.png" % tone)
-    if tone == "clear":
-        new.save(OUT + "slide_clear_ring.png")
+    if tone == "clear":                        # (only round the window: the shutter's edges hide under
+        ring_px = ndimage.distance_transform_edt(~win) <= RING_W   # it; the band's dots, arrow and
+        r = np.array(new)                                            # legend stay on top, as before)
+        r[..., 3] = np.where(ring_px, r[..., 3], 0)
+        Image.fromarray(r).save(OUT + "slide_clear_ring.png")
     print(tone, "->", OUT + "slide_%s.png" % tone)
