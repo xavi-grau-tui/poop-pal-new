@@ -44,6 +44,15 @@ var drift: Node2D
 var _home := ""
 var socket: Sprite2D
 var glass: Sprite2D                   # (a home's glass over its openings: the capsule's, the arcade's)
+## (the Capsule, the user 2026-11-08: its lanterns inside the pod, behind its glass but not washed out:
+## the glass split in two, GLASS_UNDER of it under the lanterns, GLASS_OVER over them; the shelf
+## objects under both look as through the whole glass)
+var glass_over: Sprite2D
+## (the Capsule's side windows' grey inner walls, cut out of its front by tools/art/capsule_recess.py:
+## behind its shelf objects and lanterns, its white frame (front_frame.png) over them)
+var recess: Sprite2D
+const GLASS_UNDER := 0.6
+const GLASS_OVER := 0.48
 var _rope_at := Vector2(11, 30)       # (NEW_ROPE_AT, or the home's)
 var _lantern_at := Vector2(85, 30)    # (NEW_LANTERN_AT, or the home's)
 var _left_lantern_at := Vector2(25, 30)
@@ -266,6 +275,8 @@ func _ready() -> void:
 	for e in by_depth:
 		move_child(e[2], -1)
 	glass = _layer(null, 1)                       # (under the front: its rims frame it)
+	glass_over = _layer(null, 1)
+	recess = _layer(null, 1)
 	front = _layer(load(asset_dir + "front.png"), 1)
 	if DevLaunch.new_shrine:
 		# Enlarge the foreground frame slightly around its own center; keep the room and spirit scale.
@@ -433,7 +444,10 @@ func _apply_home() -> void:
 	var h: Dictionary = Hokora.HOMES.get(hid, {})
 	_home = hid if not h.is_empty() else ""
 	var dir := Hokora.home_dir(hid) if _home != "" else asset_dir
-	front.texture = load(dir + "front.png")
+	var split_front := _home != "" and ResourceLoader.exists(dir + "recess.png")
+	front.texture = load(dir + ("front_frame.png" if split_front else "front.png"))
+	recess.texture = load(dir + "recess.png") if split_front else null
+	recess.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	front.scale = _gut_scale * (1.04 if _home == "" else 1.0)
 	hanging.scale = front.scale
 	inside.texture = load(dir + "inside.png")
@@ -481,6 +495,7 @@ func _apply_home() -> void:
 	window_trays.texture = load(dir + "window_trays.png") if layered else null
 	for n in [window_trays, shelf, shelf_right]:
 		_put_before(n, front if layered else _shelf_spot)
+	_put_before(recess, shelf)                    # (after the window trays, under the shelf objects)
 	# a home's ledges drawn apart (ledges.png: the Food Stall's mudguards, the Arcade's side trays):
 	# their depth, the wheels over it if any, their faces (over the wheels' tops: like hats, the user,
 	# 2026-11-02), the objects on them
@@ -510,8 +525,14 @@ func _apply_home() -> void:
 		for sp in [shelf, shelf_right]:
 			_depth_of[sp] = FRONT + MUD_D * 0.5
 	glass.z_index = 2 if layered and not behind else 1
-	if layered and behind:
-		_put_before(glass, lantern_left_glow)        # (the Capsule, 2026-11-08: its lanterns behind the front but over the glass, not dimmed by it)
+	var split := layered and behind and glass.texture != null
+	glass_over.texture = glass.texture if split else null
+	glass_over.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	glass.modulate.a = GLASS_UNDER if split else 1.0
+	glass_over.modulate.a = GLASS_OVER
+	if split:
+		_put_before(glass, lantern_left_glow)        # (the Capsule: the glass, its lanterns, a lighter glass, the front)
+		_put_before(glass_over, front)
 	elif layered:
 		move_child(glass, -1)
 	else:
@@ -692,6 +713,8 @@ func _process(delta: float) -> void:
 	front.position = (tilt * FRONT).round()
 	hanging.position = front.position
 	glass.position = front.position
+	glass_over.position = front.position
+	recess.position = front.position
 	window_trays.position = front.position
 	wheels.position = front.position
 	for part in _mud_parts:
