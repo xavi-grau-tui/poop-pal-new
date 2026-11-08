@@ -1,0 +1,6 @@
+Front and trays: 220x220 RGBA
+Moved plank layer bbox: (25, 158, 195, 168) (target top row 158)
+Changed front pixels: 2628
+Changed pixels outside 12 px of old/new tray zones: 0
+Front alpha is binary (0 or 255): True
+Alpha pixels changed within tray zones: 809

@@ -54,8 +54,17 @@ V62_HOMES = ["arcade_cabinet", "capsule_apartment", "ruined_night"]   # (v6.2, 2
                                          # go round again, its other fronts are re-exports of the approved ones)                       # (the forest side_back's rim colour)
 
 
+RAISE = {"forest": 8}                           # (art px up on the 220 grid: the forest sat low in the window, the
+                                                #  user, 2026-11-04: as far from its top as its bottom; the spirit stays)
+_raise = [0]
+
+
 def rgba(path):
-    return np.array(Image.open(path).convert("RGBA"))
+    a = np.array(Image.open(path).convert("RGBA"))
+    k = _raise[0]
+    if k and a.shape[0] == 220:                    # (a 220 layer of a raised home: moved up, the bottom left clear)
+        a = np.concatenate([a[k:], np.zeros((k,) + a.shape[1:], a.dtype)])
+    return a
 
 
 def save(arr, path):
@@ -77,6 +86,7 @@ def mid_tone(img, mask):
 
 
 for home in HOMES:
+    _raise[0] = RAISE.get(home, 0)
     d = SRC + home + "/"
     vers = ("v6_6/", "v6_5b/", "v6_5/", "v6_4/", "v6_2/", "v6_1/", "v6/", "v5_tech/", "v5/")
     ver = next((v for v in vers if os.path.exists(SRC + v + home + "/front.png")
