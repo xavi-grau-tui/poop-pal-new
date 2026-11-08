@@ -509,8 +509,10 @@ func _apply_home() -> void:
 	if has_mud:                                    # (the objects stand on the mudguards' tops)
 		for sp in [shelf, shelf_right]:
 			_depth_of[sp] = FRONT + MUD_D * 0.5
-	glass.z_index = 2 if layered else 1
-	if layered:
+	glass.z_index = 2 if layered and not behind else 1
+	if layered and behind:
+		_put_before(glass, lantern_left_glow)        # (the Capsule, 2026-11-08: its lanterns behind the front but over the glass, not dimmed by it)
+	elif layered:
 		move_child(glass, -1)
 	else:
 		_put_before(glass, front)
