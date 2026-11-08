@@ -56,6 +56,12 @@ var section := 0
 const PEDIA_FAMILIES := ["green", "sweet", "greasy", "spicy", "sour"]
 const PEDIA_PAGES := 7                 # the Sho + 5 Chu, one per Chu (+ its 3 Dai), the specials
 const STAGE_WORD := { 1: "Sho", 2: "Chu", 3: "Dai", 4: "mutant", 5: "legend" }
+## The new spirits' realms, one per food family (docs/kami_spirits_tree.md): the Pedia's page titles and
+## the cards' "Fox Chu" (the old pals keep their family's name with SPIRITS: OLD)
+const REALM := { "green": "Mountain", "sweet": "Moon", "greasy": "Fox", "spicy": "Fire", "sour": "River" }
+
+static func _group_name(fam: String) -> String:
+	return REALM.get(fam, fam.capitalize()) if DevLaunch.new_spirits else String(UiArt.TYPE_TAGS[fam][0])
 const LIST_PER_PAGE := 3              # cosmetics lists: forward flips pages, like the Games menu
 
 # Inner (brown) area of the golden frame, in Menu-local coordinates
@@ -445,7 +451,7 @@ func _update_hub_card_info() -> void:
 
 func _build_pedia() -> void:
 	var fam: String = PEDIA_FAMILIES[pedia_family]
-	title.text = "%s SPIRITS" % String(UiArt.TYPE_TAGS[fam][0]).to_upper()      # (yokai migration: spirits)
+	title.text = "%s SPIRITS" % _group_name(fam).to_upper()      # (yokai migration: spirits)
 	var all := _pedia_family_ids(fam)
 	var found := 0
 	for id in all:
@@ -589,7 +595,7 @@ func _show_detail(id: String) -> void:
 	var stage := int(f.get("stage", 1))
 	var stage_l := _label(Vector2(262, 100), Vector2(330, 44), 30, TEXT_DARK, card)
 	stage_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	var words := "%s %s" % [String(f["family"]).capitalize(), STAGE_WORD.get(stage, "pal")]
+	var words := "%s %s" % [_group_name(String(f["family"])), STAGE_WORD.get(stage, "pal")]
 	if stage == 3:
 		words += " " + String(f.get("variant", ""))
 	stage_l.text = words
