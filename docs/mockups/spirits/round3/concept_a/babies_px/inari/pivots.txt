@@ -1,0 +1,5 @@
+canvas=56x56
+baseline_y=54
+body_pivot=(28,54)
+face_pivot=(28,43)
+loose_part_pivot=(28,32)

@@ -1,0 +1,121 @@
+id,name_en,name_jp,body_type,signature,features,one_liner
+bud,Seedwick,タネビ,round mascot,single sprout leaf,single sprout leaf,A brave seed-spirit carrying one bright sprout.
+peapod,Peapod,マメポッド,folklore yokai,KID,,"Three peas, one opinion."
+usagi,Usagi,ウサギ,folklore yokai,KID,ears_bunny,Pounds mochi under the moon.
+kakiage,Kakiage,カキアゲ,folklore yokai,KID,crust speckle:green,A tempura fritter that walks.
+tengu,Tengu,テング,folklore yokai,KID,face_patch:spicy longnose:spicy feather:wood,A forest goblin with a red face.
+kiwi,Kiwi,キウイ,folklore yokai,KID,face_patch:lime,"Fuzzy outside, sour inside."
+avocado,Avocado,アボカド,green,ULTRA,belly:wood,"A pea that grew up: green, big, proud of its stone."
+melon_pan,Melon Pan,メロンパン,green,BLOOM,checker:lime,A sweet bun with a melon-skin crust.
+wasabi_pea,Wasabi Pea,ワサビマメ,green,CLASH,crust:lime,"Crunchy, green, furious."
+yomogi,Yomogi,ヨモギ,green,ROOT,,"Mugwort dumplings on a stick. Earthy, chewy."
+usagi_manju,Usagi Manju,ウサギマンジュ,green,PEAK,ears_bunny:white,"A rabbit-shaped bun, blue bean paste inside."
+yamabiko,Yamabiko,ヤマビコ,green,CHAOS,ears_mouse,Repeats everything you shout.
+kinoko,Kinoko,キノコ,green,ROOT,cap:spicy capspots,A mushroom yokai. Do not eat.
+mujina,Mujina,ムジナ,green,PEAK,mask:char,A badger that is mostly rumours.
+kodama,Kodama,コダマ,green,CHAOS,leaf,A tree spirit. Nods slowly.
+karasu_tengu,Karasu Tengu,カラステング,green,ROOT,beak_f wings:green,A crow tengu. Guards the mountain path.
+horseradish,Horseradish,ワサビネ,green,PEAK,leaf2,Clears your nose from a mile away.
+komainu,Komainu,コマイヌ,green,CHAOS,curl:stone ears_bear:stone,A stone lion-dog that guards the gate.
+kappa,Kappa,カッパ,green,ROOT,plate:ice beak_f shell:moss,Keep its head plate wet.
+gherk,Gherk,キュウリ,green,PEAK,warts leaf,A gherkin that learned to crawl.
+kiwi_bird,Kiwi Bird,キウイバード,green,CHAOS,longbeak,The fruit grew a beak. Finally friends.
+karakuri,Karakuri,カラクリ,folklore mutant,TECH,bolts chip,A clockwork doll that serves tea.
+zorb,Zorb,ゾーブ,folklore mutant,COSMIC,antennae,"Ate alien goo. Three eyes, no worries."
+world_tree,World Tree,セカイジュ,realm legend,LEGEND,base:wood spots:spicy sparkles halo,A forest spirit that keeps the gut green.
+nib,Moonbean,ツキマメ,round mascot,crescent crest,crescent crest,A quiet moon bean with a soft crescent crest.
+leafwing,Leafwing,,folklore yokai,KID,wings:green antennae,Looks exactly like a leaf. On purpose.
+fudge,Fudge,,folklore yokai,KID,glaze:sweet,Fudge. Dense. Dependable.
+glazy,Glazy,,folklore yokai,KID,glaze:sweet sprinkles,A donut with a blue glaze.
+choco_taco,Choco Taco,,folklore yokai,KID,cap:sweet,Ice cream in a crunchy shell.
+bumble,Bumble,,folklore yokai,KID,hstripes:sweet wings_bug antennae,A bumblebee in blue stripes.
+owlet,Owlet,,sweet,ROOT,ears belly:cream beak_f,"Up all night, every night."
+pistachio,Pistachio,,sweet,PEAK,,A pistachio scoop on a waffle cone.
+scarab,Scarab,,sweet,CHAOS,half:gold antennae,Rolls cocoa beans home.
+bonbon,Bonbon,,sweet,ULTRA,wrapper:pink sparkles,"A blue chocolate bonbon, wrapped like a gift."
+kuri,Kuri,,sweet,BLOOM,base:cream,A chestnut sweet. Shiny on top.
+gremlin,Gremlin,,sweet,CLASH,ears_fox:purple,Do not feed it after midnight.
+eclair,Eclair,,sweet,ROOT,glaze:sweet,"Long, glazed, full of blue cream."
+churro,Churro,,sweet,PEAK,ridges:crust sugar,"Long, ridged, dusted in sugar."
+candy_corn,Candy Corn,,sweet,CHAOS,,Half of everyone hates it. It knows.
+hot_cocoa,Hot Cocoa,,sweet,ROOT,cap:cream steam,Cocoa with a pinch of chilli.
+cocoa_fire,Cocoa Fire,,sweet,PEAK,cap:cream flame,Hot chocolate with a fire inside.
+taiyaki,Taiyaki,,sweet,CHAOS,tail_fish:crust scales:crust,"A fish-shaped cake, blue inside."
+honeybear,Honeybear,,sweet,ROOT,ears_bear:greasy belly:cream drip:sweet,Fell asleep in the honey pot.
+ramune,Ramune,,sweet,PEAK,bubbles,A marble soda. Fizzy and blue.
+bruin,Bruin,,sweet,CHAOS,ears_bear:greasy drip:sweet,A bear cub sticky with blue honey.
+cocoa_9,Cocoa-9,,folklore mutant,TECH,bolts,"A chocolate robot, model 9."
+kaguya,Kaguya,,folklore mutant,COSMIC,stars halo,"A princess from the moon, inside a mochi."
+tsukuyomi,Tsukuyomi,,realm legend,LEGEND,ears_bunny:white stars halo sparkles,The moon rabbit god.
+inari,Pouchkin,アゲコ,round mascot,pouch tail,pouch tail,A lucky tofu pouch with a swaying tail.
+kitsune,Kitsune,,folklore yokai,KID,ears_fox tail_fluff belly:white,A fox who loves fried tofu.
+waffle,Waffle,,folklore yokai,KID,checker:crust drip:sweet,A waffle with blue syrup.
+fried_egg,Fried Egg,,folklore yokai,KID,,"Sunny side up, every day."
+drumstick,Drumstick,,folklore yokai,KID,crust bone,"All drumstick, no fear."
+oden,Oden,,folklore yokai,KID,,"Everything simmered, on one stick."
+kyubi,Kyubi,,greasy,ROOT,ears_fox tails:gold belly:white mark:spicy,A fox with nine tails. Only shows one.
+konoha,Konoha,,greasy,PEAK,ears_fox leafpin,A fox with a leaf disguise.
+okonomi,Okonomi,,greasy,CHAOS,speckle:green drip:choc,"Everything in the fridge, fried flat."
+popcorn,Popcorn,,greasy,ROOT,dapple:lemon,Pops when it is surprised.
+daigaku_imo,Daigaku Imo,,greasy,PEAK,glaze:gold sesame,Candied sweet potato. A student favourite.
+stroopwafel,Stroopwafel,,greasy,CHAOS,grill:crust drip:choc,Two waffles holding a secret.
+burger,Burger,,greasy,ULTRA,sesame,"Bun, lettuce, patty, bun. Classic."
+hot_dog,Hot Dog,,greasy,BLOOM,base:gold drip:lemon,A sausage in a bun. Mustard optional.
+fish_taco,Fish Taco,,greasy,CLASH,cap:green,A taco that swims.
+kushikatsu,Kushikatsu,,greasy,ROOT,crust,Dip it in the sauce only once.
+kitsu,Kitsu,,greasy,PEAK,ears_fox tail_fluff:spicy belly:white,A fire fox with a white chest.
+hothog,Hothog,,greasy,CHAOS,quills:spicy,A hedgehog with hot quills.
+ebi_fry,Ebi Fry,,greasy,ROOT,crust tail_fish:coral,"A fried prawn, tail and all."
+shiso_tempura,Shiso Tempura,,greasy,PEAK,crust:green leafveins:leaf,A shiso leaf in a light batter.
+walrusk,Walrusk,,greasy,CHAOS,tusks whiskers,A walrus with a fine moustache.
+robobear,Robobear,,folklore mutant,TECH,ears_bear bolts,Hugs at exactly 12 newtons.
+nebula_nug,Nebula Nug,,folklore mutant,COSMIC,crust:goo stars,A nugget from the Milky Way.
+sunbear,Sunbear,,realm legend,LEGEND,ears_bear:gold belly:cream crown sparkles,The king of fried things.
+ember,Hibiko,ヒビコ,round mascot,small flame,small flame,A small flame spirit with a steady warm heart.
+paprika,Redpepper Imp,アカトウ,folklore yokai,pepper leaf,pepper leaf,Looks mild; its little ember says otherwise.
+daruma,Wobble Wish,ユラダル,folklore yokai,single wish eye,single wish eye,"It tips toward every wish, then rights itself."
+nacho,Crisp Cape,パリカケ,folklore yokai,folded cape,folded cape,One toasted flap becomes a daring little cape.
+dotty,Soot Dot,スミテン,folklore yokai,three bold spots,three bold spots,Three bold spots mark its mischievous shell.
+kimchi,Jarling,ツケコ,folklore yokai,round lid,round lid,A sealed jar spirit that ferments its courage.
+hoozuki,Husk Lantern,ホオヅキン,spicy,husk cap,husk cap,A ribbed husk opens to guide lost night walkers.
+pepper_plant,Vine Ember,ツルビ,spicy,two large pods,two large pods,Its hanging pods sway from a living vine crown.
+chameleon,Patchtongue,イロベロ,spicy,curled tail,curled tail,It changes its colors before it changes its mind.
+oo_daruma,Grand Wish-Doll,オオダル,spicy,one wish eye,one wish eye,A steady lacquer guardian with one brave eye.
+maneki,Beckon Cat,マネキネコ,spicy,raised paw,raised paw,One hinged paw invites good fortune inside.
+spicecake,Peppercake Oni,カラケーキ,spicy,pepper crest,pepper crest,A sweet-spiced mask hides a little fire.
+popper,Fuse Sprite,ハゼコ,spicy,short fuse nubs,short fuse nubs,"A paper fuse flickers, but never quite bursts."
+quesadilla,Folded Fan,オリヤキ,spicy,broad folded flaps,broad folded flaps,Its toasted panels open like a festival fan.
+burrito,Wrap Walker,マキマキ,spicy,tied end,tied end,A straw tie keeps this sleepy spirit snug.
+firebug,Lantern Beetle,ヒトボシ,spicy,three bold spots,three bold spots,Its bright belly lights the path between shrines.
+salamander,Cinder Newt,ヒノイモリ,spicy,curled tail,curled tail,It naps in warmth and curls its flame-tail.
+ladyluck,Fortune Shell,アオテント,spicy,charm shell,charm shell,A charm beetle with luck on both sides.
+gochujang,Red Paste Keeper,ベニツボ,spicy,paste crest,paste crest,A thick crest protects its tiny simmering flame.
+ceviche,Citrus Mist,ユズケムリ,spicy,lime fin,lime fin,Cool lime air rises from a warm little spirit.
+takoyaki,Pan Octo,タコヤキン,spicy,two broad arms,two broad arms,A small iron-pan spirit keeps its arms in order.
+mecha_oni,Clock Oni,カラクリオニ,folklore mutant,two short horns,two short horns,Its red joints click softly instead of shouting.
+comet_chili,Farfire Chili,ホシトウ,folklore mutant,comet tail,comet tail,A seed-star trail follows its long comet tail.
+hou_ou,Ashwing Crown,ホムラバネ,realm legend,broad wings and crown plume,broad wings and crown plume,A calm firebird rises with a crown of flame-feathers.
+picklet,Sourdrop,スッパリ,round mascot,water bead,water bead,"A rain-drop spirit with a cool, unimpressed face."
+kappa_maki,Kappa Maki,,folklore yokai,KID,cap:rice face_patch:rice,A cucumber roll with a calm mind.
+sourpatch,Sourpatch,,folklore yokai,KID,sugar half:sweet,"Sour, then sweet, then gone."
+hermit,Hermit,,folklore yokai,KID,cap:lemon claws:coral,A hermit crab living in half a lemon.
+buzz,Buzz,,folklore yokai,KID,hstripes:char wings_bug antennae,A sour wasp that never stings.
+teru_teru,Teru Teru,,folklore yokai,KID,skirt:white collar:lime,Hang it up to stop the rain.
+ume_onigiri,Ume Onigiri,,sour,ROOT,nori topknot:berry,A rice ball with a sour plum on top.
+granny,Granny,,sour,PEAK,stem leaf,A green apple. Crunchy and sour.
+hoot,Hoot,,sour,CHAOS,ears:p beak_f,Turns its head all the way round.
+lemon_sweet,Lemon Sweet,,sour,ROOT,wrapper:cream sugar,"A sour candy, still in its wrapper."
+cream_soda,Cream Soda,,sour,PEAK,cap:white cherry bubbles,Melon soda with a scoop on top.
+lime,Lime,,sour,CHAOS,leaf,"Juicy, friendly, a bit sharp."
+anemone,Anemone,,sour,ROOT,tentacles:coral,Waves at fish all day.
+calamari,Calamari,,sour,PEAK,crust,"A squid ring. Crunchy, a bit chewy."
+octopepper,Octopepper,,sour,CHAOS,tentacles,"Eight spicy legs, one calm mind."
+lemon_ant,Lemon Ant,,sour,ROOT,antennae legs:char,A lemon ant. It really tastes of citrus.
+shichimi,Shichimi,,sour,PEAK,hat:wood speckle:lemon,Seven spices in one little bottle.
+axel,Axel,,sour,CHAOS,frills:pink,Smiles on the inside.
+omamori,Omamori,,sour,ULTRA,topknot:gold band:gold kanji,A lucky charm pouch. Keeps the gut safe.
+kokeshi,Kokeshi,,sour,BLOOM,bangs:char band:spicy,A wooden doll. Watches over the room.
+karakasa,Karakasa,,sour,CLASH,leg,An old umbrella that came alive.
+robofrog,Robofrog,,folklore mutant,TECH,feet chip,Croaks in binary.
+ningyo,Ningyo,,folklore mutant,COSMIC,tail_fish,A mermaid from outer space.
+frog_king,Frog King,,realm legend,LEGEND,feet:lime crown sparkles,The sour king of every pond.

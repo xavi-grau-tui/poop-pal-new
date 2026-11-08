@@ -1,0 +1,122 @@
+{
+ "kakiage": {
+  "realm": "mountain",
+  "parts": {}
+ },
+ "nacho": {
+  "realm": "fire",
+  "parts": {
+   "flame": {
+    "kind": "flame",
+    "box": [
+     24,
+     18,
+     32,
+     29
+    ],
+    "pivot": [
+     28,
+     29
+    ]
+   }
+  }
+ },
+ "popper": {
+  "realm": "fire",
+  "parts": {
+   "tassel": {
+    "kind": "swing",
+    "box": [
+     23,
+     46,
+     32,
+     54
+    ],
+    "pivot": [
+     28,
+     46
+    ]
+   }
+  }
+ },
+ "ladyluck": {
+  "realm": "fire",
+  "parts": {
+   "bolt": {
+    "kind": "bolt",
+    "box": [
+     10,
+     14,
+     31,
+     34
+    ],
+    "pivot": [
+     22,
+     34
+    ]
+   }
+  }
+ },
+ "komainu": {
+  "realm": "mountain",
+  "parts": {
+   "tongue": {
+    "kind": "flick",
+    "box": [
+     16,
+     42,
+     22,
+     47
+    ],
+    "pivot": [
+     19,
+     47
+    ]
+   }
+  }
+ },
+ "tengu": {
+  "realm": "mountain",
+  "parts": {
+   "tuft_l": {
+    "kind": "flap",
+    "box": [
+     10,
+     41,
+     19,
+     52
+    ],
+    "pivot": [
+     15,
+     52
+    ]
+   },
+   "tuft_r": {
+    "kind": "flap",
+    "box": [
+     37,
+     40,
+     45,
+     52
+    ],
+    "pivot": [
+     41,
+     52
+    ]
+   },
+   "cap": {
+    "kind": "slip",
+    "box": [
+     15,
+     26,
+     40,
+     43
+    ],
+    "pivot": [
+     27,
+     43
+    ]
+   }
+  }
+ }
+}

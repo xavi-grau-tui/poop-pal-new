@@ -1,0 +1,1147 @@
+{
+ "sheets": [
+  {
+   "name": "mountain_prep_1",
+   "spirits": [
+    {
+     "realm": "mountain",
+     "id": "peapod",
+     "parts": {
+      "sprout": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "mountain",
+     "id": "avocado",
+     "parts": {}
+    },
+    {
+     "realm": "mountain",
+     "id": "melon_pan",
+     "parts": {
+      "sprout": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "mountain",
+     "id": "wasabi_pea",
+     "parts": {}
+    },
+    {
+     "realm": "mountain",
+     "id": "usagi",
+     "parts": {
+      "leaf": {
+       "kind": "sway",
+       "at": "top"
+      },
+      "petal": {
+       "kind": "bob",
+       "at": "right"
+      }
+     }
+    },
+    {
+     "realm": "mountain",
+     "id": "yomogi",
+     "parts": {
+      "leaf": {
+       "kind": "sway"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "mountain_prep_2",
+   "spirits": [
+    {
+     "realm": "mountain",
+     "id": "usagi_manju",
+     "parts": {
+      "petal": {
+       "kind": "bob"
+      }
+     }
+    },
+    {
+     "realm": "mountain",
+     "id": "yamabiko",
+     "parts": {
+      "cloud_l": {
+       "kind": "bob",
+       "at": "left"
+      },
+      "cloud_r": {
+       "kind": "bob",
+       "at": "right"
+      }
+     }
+    },
+    {
+     "realm": "mountain",
+     "id": "kinoko",
+     "parts": {
+      "little": {
+       "kind": "bob"
+      }
+     }
+    },
+    {
+     "realm": "mountain",
+     "id": "mujina",
+     "parts": {
+      "leaf": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "mountain",
+     "id": "kodama",
+     "parts": {
+      "sprout": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "mountain",
+     "id": "karasu_tengu",
+     "parts": {
+      "cap": {
+       "kind": "slip",
+       "seed": "dark",
+       "solid": true
+      },
+      "wing_l": {
+       "kind": "flap",
+       "seed": "white",
+       "at": "left"
+      },
+      "wing_r": {
+       "kind": "flap",
+       "seed": "white",
+       "at": "right"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "mountain_prep_3",
+   "spirits": [
+    {
+     "realm": "mountain",
+     "id": "horseradish",
+     "parts": {}
+    },
+    {
+     "realm": "mountain",
+     "id": "kiwi",
+     "parts": {}
+    },
+    {
+     "realm": "mountain",
+     "id": "kappa",
+     "parts": {}
+    },
+    {
+     "realm": "mountain",
+     "id": "gherk",
+     "parts": {
+      "antennae": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "mountain",
+     "id": "kiwi_bird",
+     "parts": {},
+     "wobbly": true
+    },
+    {
+     "realm": "mountain",
+     "id": "bud",
+     "parts": {
+      "sprout": {
+       "kind": "sway"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "mountain_prep_4",
+   "spirits": [
+    {
+     "realm": "mountain",
+     "id": "karakuri",
+     "parts": {
+      "key": {
+       "kind": "spin",
+       "seed": "gold",
+       "at": "top"
+      },
+      "sprout": {
+       "kind": "sway",
+       "seed": "green"
+      }
+     }
+    },
+    {
+     "realm": "mountain",
+     "id": "zorb",
+     "parts": {
+      "star": {
+       "kind": "sway",
+       "at": "top"
+      },
+      "stars": {
+       "kind": "twinkle",
+       "at": "rest"
+      }
+     }
+    },
+    {
+     "realm": "mountain",
+     "id": "world_tree",
+     "parts": {}
+    }
+   ]
+  },
+  {
+   "name": "moon_prep_1",
+   "spirits": [
+    {
+     "realm": "moon",
+     "id": "leafwing",
+     "parts": {
+      "flowers": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "moon",
+     "id": "owlet",
+     "parts": {
+      "wing_l": {
+       "kind": "flap",
+       "at": "left"
+      },
+      "wing_r": {
+       "kind": "flap",
+       "at": "right"
+      }
+     }
+    },
+    {
+     "realm": "moon",
+     "id": "pistachio",
+     "parts": {}
+    },
+    {
+     "realm": "moon",
+     "id": "scarab",
+     "parts": {
+      "wisp_l": {
+       "kind": "flame",
+       "at": "left"
+      },
+      "wisp_r": {
+       "kind": "flame",
+       "at": "right"
+      }
+     },
+     "flicker": true
+    },
+    {
+     "realm": "moon",
+     "id": "fudge",
+     "parts": {
+      "ears": {
+       "kind": "twitch"
+      }
+     }
+    },
+    {
+     "realm": "moon",
+     "id": "bonbon",
+     "parts": {
+      "ears": {
+       "kind": "twitch",
+       "at": "top"
+      },
+      "pestle": {
+       "kind": "bob",
+       "at": "right"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "moon_prep_2",
+   "spirits": [
+    {
+     "realm": "moon",
+     "id": "kuri",
+     "parts": {
+      "ears": {
+       "kind": "twitch"
+      }
+     }
+    },
+    {
+     "realm": "moon",
+     "id": "gremlin",
+     "parts": {
+      "wisps": {
+       "kind": "bob"
+      }
+     }
+    },
+    {
+     "realm": "moon",
+     "id": "glazy",
+     "parts": {}
+    },
+    {
+     "realm": "moon",
+     "id": "eclair",
+     "parts": {}
+    },
+    {
+     "realm": "moon",
+     "id": "churro",
+     "parts": {
+      "star": {
+       "kind": "twinkle"
+      }
+     }
+    },
+    {
+     "realm": "moon",
+     "id": "candy_corn",
+     "parts": {}
+    }
+   ]
+  },
+  {
+   "name": "moon_prep_3",
+   "spirits": [
+    {
+     "realm": "moon",
+     "id": "choco_taco",
+     "parts": {
+      "chime": {
+       "kind": "swing",
+       "solid": true
+      }
+     },
+     "wobbly": true
+    },
+    {
+     "realm": "moon",
+     "id": "hot_cocoa",
+     "parts": {},
+     "wobbly": true
+    },
+    {
+     "realm": "moon",
+     "id": "cocoa_fire",
+     "parts": {}
+    },
+    {
+     "realm": "moon",
+     "id": "taiyaki",
+     "parts": {
+      "tail": {
+       "kind": "wag"
+      }
+     }
+    },
+    {
+     "realm": "moon",
+     "id": "bumble",
+     "parts": {
+      "leaf": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "moon",
+     "id": "honeybear",
+     "parts": {}
+    }
+   ]
+  },
+  {
+   "name": "moon_prep_4",
+   "spirits": [
+    {
+     "realm": "moon",
+     "id": "ramune",
+     "parts": {
+      "marble": {
+       "kind": "bob"
+      }
+     }
+    },
+    {
+     "realm": "moon",
+     "id": "bruin",
+     "parts": {}
+    },
+    {
+     "realm": "moon",
+     "id": "nib",
+     "parts": {}
+    },
+    {
+     "realm": "moon",
+     "id": "cocoa_9",
+     "parts": {
+      "key": {
+       "kind": "spin",
+       "solid": true
+      }
+     }
+    },
+    {
+     "realm": "moon",
+     "id": "kaguya",
+     "parts": {
+      "sparkles": {
+       "kind": "twinkle",
+       "seed": "gold"
+      },
+      "leaves": {
+       "kind": "sway",
+       "seed": "green"
+      }
+     }
+    },
+    {
+     "realm": "moon",
+     "id": "tsukuyomi",
+     "parts": {
+      "ears": {
+       "kind": "twitch"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "fox_prep_1",
+   "spirits": [
+    {
+     "realm": "fox",
+     "id": "kitsune",
+     "parts": {
+      "shide": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "fox",
+     "id": "kyubi",
+     "parts": {
+      "wisp_l": {
+       "kind": "flame",
+       "at": "left"
+      },
+      "wisp_r": {
+       "kind": "flame",
+       "at": "right"
+      }
+     }
+    },
+    {
+     "realm": "fox",
+     "id": "konoha",
+     "parts": {
+      "leaf": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "fox",
+     "id": "okonomi",
+     "parts": {}
+    },
+    {
+     "realm": "fox",
+     "id": "waffle",
+     "parts": {
+      "leaf": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "fox",
+     "id": "popcorn",
+     "parts": {}
+    }
+   ]
+  },
+  {
+   "name": "fox_prep_2",
+   "spirits": [
+    {
+     "realm": "fox",
+     "id": "daigaku_imo",
+     "parts": {}
+    },
+    {
+     "realm": "fox",
+     "id": "stroopwafel",
+     "parts": {}
+    },
+    {
+     "realm": "fox",
+     "id": "fried_egg",
+     "parts": {
+      "tail": {
+       "kind": "wag"
+      }
+     }
+    },
+    {
+     "realm": "fox",
+     "id": "burger",
+     "parts": {
+      "leaf": {
+       "kind": "sway",
+       "at": "top"
+      },
+      "tail": {
+       "kind": "wag",
+       "at": "right"
+      }
+     }
+    },
+    {
+     "realm": "fox",
+     "id": "hot_dog",
+     "parts": {
+      "tail": {
+       "kind": "wag"
+      }
+     }
+    },
+    {
+     "realm": "fox",
+     "id": "fish_taco",
+     "parts": {
+      "tail": {
+       "kind": "wag",
+       "at": "right"
+      },
+      "flask": {
+       "kind": "bob",
+       "at": "left"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "fox_prep_3",
+   "spirits": [
+    {
+     "realm": "fox",
+     "id": "drumstick",
+     "parts": {
+      "bachi_l": {
+       "kind": "beat",
+       "at": "left"
+      },
+      "bachi_r": {
+       "kind": "beat",
+       "at": "right"
+      }
+     }
+    },
+    {
+     "realm": "fox",
+     "id": "kushikatsu",
+     "parts": {}
+    },
+    {
+     "realm": "fox",
+     "id": "kitsu",
+     "parts": {
+      "tassel": {
+       "kind": "swing",
+       "solid": true
+      }
+     },
+     "wobbly": true
+    },
+    {
+     "realm": "fox",
+     "id": "hothog",
+     "parts": {
+      "sprout": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "fox",
+     "id": "oden",
+     "parts": {}
+    },
+    {
+     "realm": "fox",
+     "id": "ebi_fry",
+     "parts": {}
+    }
+   ]
+  },
+  {
+   "name": "fox_prep_4",
+   "spirits": [
+    {
+     "realm": "fox",
+     "id": "shiso_tempura",
+     "parts": {}
+    },
+    {
+     "realm": "fox",
+     "id": "walrusk",
+     "parts": {},
+     "wobbly": true
+    },
+    {
+     "realm": "fox",
+     "id": "inari",
+     "parts": {}
+    },
+    {
+     "realm": "fox",
+     "id": "robobear",
+     "parts": {
+      "key": {
+       "kind": "spin",
+       "solid": true
+      }
+     }
+    },
+    {
+     "realm": "fox",
+     "id": "nebula_nug",
+     "parts": {
+      "flame": {
+       "kind": "flame",
+       "seed": "blue",
+       "at": "top"
+      },
+      "stars": {
+       "kind": "twinkle",
+       "seed": "gold"
+      }
+     }
+    },
+    {
+     "realm": "fox",
+     "id": "sunbear",
+     "parts": {
+      "leaf": {
+       "kind": "sway",
+       "at": "top"
+      },
+      "tail": {
+       "kind": "wag",
+       "at": "right"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "fire_prep_1",
+   "spirits": [
+    {
+     "realm": "fire",
+     "id": "paprika",
+     "parts": {}
+    },
+    {
+     "realm": "fire",
+     "id": "hoozuki",
+     "parts": {
+      "leaf": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "fire",
+     "id": "pepper_plant",
+     "parts": {
+      "leaves": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "fire",
+     "id": "chameleon",
+     "parts": {},
+     "wobbly": true
+    },
+    {
+     "realm": "fire",
+     "id": "daruma",
+     "parts": {},
+     "wobbly": true
+    },
+    {
+     "realm": "fire",
+     "id": "oo_daruma",
+     "parts": {},
+     "wobbly": true
+    }
+   ]
+  },
+  {
+   "name": "fire_prep_2",
+   "spirits": [
+    {
+     "realm": "fire",
+     "id": "maneki",
+     "parts": {}
+    },
+    {
+     "realm": "fire",
+     "id": "spicecake",
+     "parts": {}
+    },
+    {
+     "realm": "fire",
+     "id": "quesadilla",
+     "parts": {}
+    },
+    {
+     "realm": "fire",
+     "id": "burrito",
+     "parts": {
+      "smoke": {
+       "kind": "bob"
+      }
+     }
+    },
+    {
+     "realm": "fire",
+     "id": "dotty",
+     "parts": {}
+    },
+    {
+     "realm": "fire",
+     "id": "firebug",
+     "parts": {
+      "bolt": {
+       "kind": "bolt"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "fire_prep_3",
+   "spirits": [
+    {
+     "realm": "fire",
+     "id": "salamander",
+     "parts": {
+      "drops": {
+       "kind": "bob"
+      }
+     },
+     "flicker": true
+    },
+    {
+     "realm": "fire",
+     "id": "kimchi",
+     "parts": {}
+    },
+    {
+     "realm": "fire",
+     "id": "gochujang",
+     "parts": {}
+    },
+    {
+     "realm": "fire",
+     "id": "ceviche",
+     "parts": {}
+    },
+    {
+     "realm": "fire",
+     "id": "takoyaki",
+     "parts": {}
+    },
+    {
+     "realm": "fire",
+     "id": "ember",
+     "parts": {},
+     "flicker": true
+    }
+   ]
+  },
+  {
+   "name": "fire_prep_4",
+   "spirits": [
+    {
+     "realm": "fire",
+     "id": "mecha_oni",
+     "parts": {
+      "key": {
+       "kind": "spin",
+       "solid": true
+      }
+     }
+    },
+    {
+     "realm": "fire",
+     "id": "comet_chili",
+     "parts": {
+      "spark": {
+       "kind": "flame"
+      }
+     }
+    },
+    {
+     "realm": "fire",
+     "id": "hou_ou",
+     "parts": {
+      "crest": {
+       "kind": "flame",
+       "at": "top"
+      },
+      "tail": {
+       "kind": "flame",
+       "at": "right"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "river_prep_1",
+   "spirits": [
+    {
+     "realm": "river",
+     "id": "kappa_maki",
+     "parts": {
+      "leaf": {
+       "kind": "sway",
+       "at": "top"
+      },
+      "drop": {
+       "kind": "bob",
+       "at": "right"
+      }
+     }
+    },
+    {
+     "realm": "river",
+     "id": "ume_onigiri",
+     "parts": {
+      "drip": {
+       "kind": "bob"
+      }
+     }
+    },
+    {
+     "realm": "river",
+     "id": "granny",
+     "parts": {
+      "bud": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "river",
+     "id": "hoot",
+     "parts": {}
+    },
+    {
+     "realm": "river",
+     "id": "sourpatch",
+     "parts": {
+      "leaf": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "river",
+     "id": "lemon_sweet",
+     "parts": {
+      "cherries": {
+       "kind": "sway"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "river_prep_2",
+   "spirits": [
+    {
+     "realm": "river",
+     "id": "cream_soda",
+     "parts": {
+      "cherry": {
+       "kind": "sway"
+      }
+     }
+    },
+    {
+     "realm": "river",
+     "id": "lime",
+     "parts": {
+      "drops": {
+       "kind": "bob",
+       "seed": "blue"
+      },
+      "leaf": {
+       "kind": "sway",
+       "seed": "green"
+      }
+     }
+    },
+    {
+     "realm": "river",
+     "id": "hermit",
+     "parts": {},
+     "wobbly": true
+    },
+    {
+     "realm": "river",
+     "id": "anemone",
+     "parts": {
+      "splashes": {
+       "kind": "bob"
+      }
+     }
+    },
+    {
+     "realm": "river",
+     "id": "calamari",
+     "parts": {
+      "fin_l": {
+       "kind": "flap",
+       "at": "left"
+      },
+      "fin_r": {
+       "kind": "flap",
+       "at": "right"
+      }
+     }
+    },
+    {
+     "realm": "river",
+     "id": "octopepper",
+     "parts": {
+      "knot": {
+       "kind": "sway"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "river_prep_3",
+   "spirits": [
+    {
+     "realm": "river",
+     "id": "buzz",
+     "parts": {}
+    },
+    {
+     "realm": "river",
+     "id": "lemon_ant",
+     "parts": {}
+    },
+    {
+     "realm": "river",
+     "id": "shichimi",
+     "parts": {}
+    },
+    {
+     "realm": "river",
+     "id": "axel",
+     "parts": {
+      "gills_l": {
+       "kind": "flap",
+       "at": "left"
+      },
+      "gills_r": {
+       "kind": "flap",
+       "at": "right"
+      }
+     }
+    },
+    {
+     "realm": "river",
+     "id": "teru_teru",
+     "parts": {
+      "drops": {
+       "kind": "bob"
+      }
+     },
+     "wobbly": true
+    },
+    {
+     "realm": "river",
+     "id": "omamori",
+     "parts": {},
+     "wobbly": true
+    }
+   ]
+  },
+  {
+   "name": "river_prep_4",
+   "spirits": [
+    {
+     "realm": "river",
+     "id": "kokeshi",
+     "parts": {},
+     "wobbly": true
+    },
+    {
+     "realm": "river",
+     "id": "karakasa",
+     "parts": {}
+    },
+    {
+     "realm": "river",
+     "id": "picklet",
+     "parts": {}
+    },
+    {
+     "realm": "river",
+     "id": "robofrog",
+     "parts": {
+      "key": {
+       "kind": "spin",
+       "solid": true
+      }
+     }
+    },
+    {
+     "realm": "river",
+     "id": "ningyo",
+     "parts": {
+      "fin_l": {
+       "kind": "flap",
+       "at": "left"
+      },
+      "fin_r": {
+       "kind": "flap",
+       "at": "right"
+      }
+     }
+    },
+    {
+     "realm": "river",
+     "id": "frog_king",
+     "parts": {
+      "crown": {
+       "kind": "bob",
+       "solid": true
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "clockwork": {
+  "name": "tech_clockwork",
+  "rows": [
+   "1 base (don't edit)",
+   "2 key turned 1/8",
+   "3 key edge-on",
+   "4 key turned 3/8",
+   "5 cogs 1/3 tooth on",
+   "6 cogs 2/3 tooth on"
+  ],
+  "spirits": [
+   {
+    "realm": "mountain",
+    "id": "karakuri",
+    "parts": {
+     "key": {
+      "kind": "spin"
+     },
+     "cogs": {
+      "kind": "spin"
+     }
+    }
+   },
+   {
+    "realm": "moon",
+    "id": "cocoa_9",
+    "parts": {
+     "key": {
+      "kind": "spin"
+     },
+     "cogs": {
+      "kind": "spin"
+     }
+    }
+   },
+   {
+    "realm": "fox",
+    "id": "robobear",
+    "parts": {
+     "key": {
+      "kind": "spin"
+     },
+     "cogs": {
+      "kind": "spin"
+     }
+    }
+   },
+   {
+    "realm": "fire",
+    "id": "mecha_oni",
+    "parts": {
+     "key": {
+      "kind": "spin"
+     },
+     "cogs": {
+      "kind": "spin"
+     }
+    }
+   },
+   {
+    "realm": "river",
+    "id": "robofrog",
+    "parts": {
+     "key": {
+      "kind": "spin"
+     },
+     "cogs": {
+      "kind": "spin"
+     }
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,1724 @@
+{
+  "pilot": {
+    "pilot_1": {
+      "face_box": [
+        92,
+        179,
+        167,
+        222
+      ],
+      "changed_pixels": 2950,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "pilot_2": {
+      "face_box": [
+        95,
+        168,
+        168,
+        217
+      ],
+      "changed_pixels": 3292,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "pilot_3": {
+      "face_box": [
+        96,
+        99,
+        174,
+        158
+      ],
+      "changed_pixels": 4317,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "pilot_4": {
+      "face_box": [
+        84,
+        162,
+        184,
+        215
+      ],
+      "changed_pixels": 4898,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "pilot_5": {
+      "face_box": [
+        50,
+        153,
+        152,
+        207
+      ],
+      "changed_pixels": 5177,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "pilot_6": {
+      "face_box": [
+        88,
+        185,
+        178,
+        225
+      ],
+      "changed_pixels": 3294,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    }
+  },
+  "mountain_prep_1": {
+    "peapod": {
+      "face_box": [
+        88,
+        169,
+        169,
+        210
+      ],
+      "changed_pixels": 3053,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "avocado": {
+      "face_box": [
+        91,
+        143,
+        171,
+        214
+      ],
+      "changed_pixels": 5378,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "melon_pan": {
+      "face_box": [
+        86,
+        157,
+        176,
+        209
+      ],
+      "changed_pixels": 4390,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "wasabi_pea": {
+      "face_box": [
+        103,
+        137,
+        184,
+        203
+      ],
+      "changed_pixels": 5050,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "usagi": {
+      "face_box": [
+        82,
+        169,
+        183,
+        216
+      ],
+      "changed_pixels": 4431,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "yomogi": {
+      "face_box": [
+        80,
+        159,
+        181,
+        213
+      ],
+      "changed_pixels": 5147,
+      "registration": [
+        1,
+        0
+      ],
+      "restored_missing_row6_body": false
+    }
+  },
+  "mountain_prep_2": {
+    "usagi_manju": {
+      "face_box": [
+        83,
+        158,
+        175,
+        225
+      ],
+      "changed_pixels": 5839,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "yamabiko": {
+      "face_box": [
+        79,
+        154,
+        183,
+        218
+      ],
+      "changed_pixels": 6313,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "kinoko": {
+      "face_box": [
+        49,
+        161,
+        154,
+        226
+      ],
+      "changed_pixels": 6444,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "mujina": {
+      "face_box": [
+        80,
+        156,
+        181,
+        224
+      ],
+      "changed_pixels": 6525,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "kodama": {
+      "face_box": [
+        79,
+        150,
+        183,
+        224
+      ],
+      "changed_pixels": 7329,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "karasu_tengu": {
+      "face_box": [
+        80,
+        155,
+        182,
+        219
+      ],
+      "changed_pixels": 6050,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    }
+  },
+  "mountain_prep_3": {
+    "horseradish": {
+      "face_box": [
+        80,
+        145,
+        183,
+        219
+      ],
+      "changed_pixels": 7272,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "kiwi": {
+      "face_box": [
+        48,
+        161,
+        149,
+        229
+      ],
+      "changed_pixels": 6500,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "kappa": {
+      "face_box": [
+        75,
+        145,
+        185,
+        219
+      ],
+      "changed_pixels": 7766,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "gherk": {
+      "face_box": [
+        80,
+        150,
+        183,
+        225
+      ],
+      "changed_pixels": 7369,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "kiwi_bird": {
+      "face_box": [
+        86,
+        135,
+        181,
+        217
+      ],
+      "changed_pixels": 7432,
+      "registration": [
+        1,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "bud": {
+      "face_box": [
+        80,
+        147,
+        183,
+        220
+      ],
+      "changed_pixels": 7163,
+      "registration": [
+        0,
+        1
+      ],
+      "restored_missing_row6_body": false
+    }
+  },
+  "mountain_prep_4": {
+    "karakuri": {
+      "face_box": [
+        80,
+        145,
+        183,
+        219
+      ],
+      "changed_pixels": 7246,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "zorb": {
+      "face_box": [
+        75,
+        149,
+        185,
+        222
+      ],
+      "changed_pixels": 7662,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "world_tree": {
+      "face_box": [
+        80,
+        151,
+        185,
+        224
+      ],
+      "changed_pixels": 7312,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    }
+  },
+  "moon_prep_1": {
+    "leafwing": {
+      "face_box": [
+        77,
+        158,
+        182,
+        214
+      ],
+      "changed_pixels": 5547,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "owlet": {
+      "face_box": [
+        90,
+        127,
+        170,
+        193
+      ],
+      "changed_pixels": 4983,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "pistachio": {
+      "face_box": [
+        82,
+        160,
+        177,
+        215
+      ],
+      "changed_pixels": 4922,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "scarab": {
+      "face_box": [
+        78,
+        158,
+        182,
+        221
+      ],
+      "changed_pixels": 6175,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "fudge": {
+      "face_box": [
+        79,
+        162,
+        182,
+        220
+      ],
+      "changed_pixels": 5562,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "bonbon": {
+      "face_box": [
+        81,
+        163,
+        181,
+        222
+      ],
+      "changed_pixels": 5553,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    }
+  },
+  "moon_prep_2": {
+    "kuri": {
+      "face_box": [
+        81,
+        163,
+        180,
+        222
+      ],
+      "changed_pixels": 5472,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "gremlin": {
+      "face_box": [
+        79,
+        150,
+        185,
+        218
+      ],
+      "changed_pixels": 6793,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "glazy": {
+      "face_box": [
+        80,
+        151,
+        181,
+        221
+      ],
+      "changed_pixels": 6715,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "eclair": {
+      "face_box": [
+        77,
+        153,
+        181,
+        220
+      ],
+      "changed_pixels": 6614,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "churro": {
+      "face_box": [
+        83,
+        144,
+        180,
+        209
+      ],
+      "changed_pixels": 5968,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "candy_corn": {
+      "face_box": [
+        73,
+        153,
+        187,
+        220
+      ],
+      "changed_pixels": 7250,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    }
+  },
+  "moon_prep_3": {
+    "choco_taco": {
+      "face_box": [
+        79,
+        155,
+        181,
+        225
+      ],
+      "changed_pixels": 6641,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "hot_cocoa": {
+      "face_box": [
+        86,
+        158,
+        176,
+        224
+      ],
+      "changed_pixels": 5626,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "cocoa_fire": {
+      "face_box": [
+        79,
+        153,
+        182,
+        216
+      ],
+      "changed_pixels": 6158,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "taiyaki": {
+      "face_box": [
+        51,
+        159,
+        139,
+        221
+      ],
+      "changed_pixels": 5130,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "bumble": {
+      "face_box": [
+        88,
+        167,
+        174,
+        222
+      ],
+      "changed_pixels": 4433,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "honeybear": {
+      "face_box": [
+        54,
+        130,
+        206,
+        209
+      ],
+      "changed_pixels": 11502,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    }
+  },
+  "moon_prep_4": {
+    "ramune": {
+      "face_box": [
+        83,
+        168,
+        181,
+        229
+      ],
+      "changed_pixels": 5632,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "bruin": {
+      "face_box": [
+        78,
+        120,
+        182,
+        175
+      ],
+      "changed_pixels": 5332,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "nib": {
+      "face_box": [
+        83,
+        145,
+        181,
+        223
+      ],
+      "changed_pixels": 7220,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "cocoa_9": {
+      "face_box": [
+        80,
+        151,
+        182,
+        218
+      ],
+      "changed_pixels": 6481,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "kaguya": {
+      "face_box": [
+        93,
+        122,
+        167,
+        171
+      ],
+      "changed_pixels": 3369,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "tsukuyomi": {
+      "face_box": [
+        73,
+        150,
+        188,
+        223
+      ],
+      "changed_pixels": 7757,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    }
+  },
+  "fox_prep_1": {
+    "kitsune": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8413,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "kyubi": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8398,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "konoha": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8417,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "okonomi": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8397,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "waffle": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8397,
+      "registration": [
+        1,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "popcorn": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8412,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    }
+  },
+  "fox_prep_2": {
+    "daigaku_imo": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8405,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "stroopwafel": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8419,
+      "registration": [
+        0,
+        1
+      ],
+      "restored_missing_row6_body": true
+    },
+    "fried_egg": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8384,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "burger": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8409,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "hot_dog": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8349,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "fish_taco": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8408,
+      "registration": [
+        0,
+        1
+      ],
+      "restored_missing_row6_body": false
+    }
+  },
+  "fox_prep_3": {
+    "drumstick": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8367,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "kushikatsu": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8417,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "kitsu": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8384,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "hothog": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8417,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "oden": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8389,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "ebi_fry": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8422,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    }
+  },
+  "fox_prep_4": {
+    "shiso_tempura": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8413,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "walrusk": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8394,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "inari": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8394,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "robobear": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8407,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "nebula_nug": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8383,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "sunbear": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8421,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    }
+  },
+  "fire_prep_1": {
+    "paprika": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8416,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "hoozuki": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8418,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "pepper_plant": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8390,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "chameleon": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8417,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "daruma": {
+      "face_box": [
+        76,
+        104,
+        182,
+        183
+      ],
+      "changed_pixels": 7992,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "oo_daruma": {
+      "face_box": [
+        62,
+        81,
+        198,
+        178
+      ],
+      "changed_pixels": 12720,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    }
+  },
+  "fire_prep_2": {
+    "maneki": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8421,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "spicecake": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8404,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "quesadilla": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8414,
+      "registration": [
+        0,
+        1
+      ],
+      "restored_missing_row6_body": true
+    },
+    "burrito": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8385,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "dotty": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8412,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "firebug": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8421,
+      "registration": [
+        1,
+        0
+      ],
+      "restored_missing_row6_body": false
+    }
+  },
+  "fire_prep_3": {
+    "salamander": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8408,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "kimchi": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8414,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "gochujang": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8412,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "ceviche": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8420,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "takoyaki": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8407,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "ember": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8403,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    }
+  },
+  "fire_prep_4": {
+    "mecha_oni": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8419,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "comet_chili": {
+      "face_box": [
+        78,
+        142,
+        181,
+        210
+      ],
+      "changed_pixels": 6569,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "hou_ou": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8399,
+      "registration": [
+        1,
+        0
+      ],
+      "restored_missing_row6_body": false
+    }
+  },
+  "river_prep_1": {
+    "kappa_maki": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8422,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "ume_onigiri": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8410,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "granny": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8422,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "hoot": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8417,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "sourpatch": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8392,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "lemon_sweet": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8418,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    }
+  },
+  "river_prep_2": {
+    "cream_soda": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8407,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "lime": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8423,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "hermit": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8422,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "anemone": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8420,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "calamari": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8393,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "octopepper": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8407,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    }
+  },
+  "river_prep_3": {
+    "buzz": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8398,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "lemon_ant": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8394,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "shichimi": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8407,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "axel": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8324,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "teru_teru": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8382,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "omamori": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8397,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    }
+  },
+  "river_prep_4": {
+    "kokeshi": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8366,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "karakasa": {
+      "face_box": [
+        88,
+        92,
+        177,
+        175
+      ],
+      "changed_pixels": 7037,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "picklet": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8401,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "robofrog": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8404,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": true
+    },
+    "ningyo": {
+      "face_box": [
+        75,
+        145,
+        185,
+        225
+      ],
+      "changed_pixels": 8422,
+      "registration": [
+        0,
+        0
+      ],
+      "restored_missing_row6_body": false
+    },
+    "frog_king": {
+      "face_box": [
+        48,
+        86,
+        212,
+        172
+      ],
+      "changed_pixels": 13592,
+      "registration": [
+        1,
+        0
+      ],
+      "restored_missing_row6_body": false
+    }
+  }
+}

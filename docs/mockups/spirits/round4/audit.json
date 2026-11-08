@@ -1,0 +1,107 @@
+{
+  "ember": {
+    "source_size": [
+      1254,
+      1254
+    ],
+    "sprite_size": [
+      56,
+      56
+    ],
+    "visible_size": [
+      29,
+      30
+    ],
+    "hard_source_alpha": true
+  },
+  "paprika": {
+    "source_size": [
+      1254,
+      1254
+    ],
+    "sprite_size": [
+      56,
+      56
+    ],
+    "visible_size": [
+      31,
+      34
+    ],
+    "hard_source_alpha": true
+  },
+  "daruma": {
+    "source_size": [
+      1254,
+      1254
+    ],
+    "sprite_size": [
+      56,
+      56
+    ],
+    "visible_size": [
+      35,
+      34
+    ],
+    "hard_source_alpha": true
+  },
+  "nacho": {
+    "source_size": [
+      1254,
+      1254
+    ],
+    "sprite_size": [
+      56,
+      56
+    ],
+    "visible_size": [
+      35,
+      34
+    ],
+    "hard_source_alpha": true
+  },
+  "dotty": {
+    "source_size": [
+      1254,
+      1254
+    ],
+    "sprite_size": [
+      56,
+      56
+    ],
+    "visible_size": [
+      24,
+      34
+    ],
+    "hard_source_alpha": true
+  },
+  "kimchi": {
+    "source_size": [
+      1254,
+      1254
+    ],
+    "sprite_size": [
+      56,
+      56
+    ],
+    "visible_size": [
+      30,
+      34
+    ],
+    "hard_source_alpha": true
+  },
+  "ladyluck": {
+    "source_size": [
+      1254,
+      1254
+    ],
+    "sprite_size": [
+      56,
+      56
+    ],
+    "visible_size": [
+      38,
+      34
+    ],
+    "hard_source_alpha": true
+  }
+}

@@ -1,0 +1,3 @@
+outline #07174A
+body #385B93
+light #C0DAE6

@@ -1,0 +1,8 @@
+PASS: 768x5632 item and filled sheets
+PASS: exact nearest-neighbour 4x round trip
+PASS: binary alpha only (0 or 255)
+PASS: unchanged template pixels outside item alpha
+PASS: 19 requested/approved active rows; hitodama, notes and petals absent
+PASS: only first cell contains item pixels in every row
+PASS: approved goldfish and sugegasa first cells pixel-identical to pilot
+PASS: swim-ring halves recombine pixel-identically to the one ImageGen ring

@@ -1,0 +1,26 @@
+{
+  "fire_prep_1": {
+    "spirits": 6,
+    "row_1_6_7_exact": true,
+    "face_box_only": true,
+    "2x_nearest": true
+  },
+  "fire_prep_2": {
+    "spirits": 6,
+    "row_1_6_7_exact": true,
+    "face_box_only": true,
+    "2x_nearest": true
+  },
+  "fire_prep_3": {
+    "spirits": 6,
+    "row_1_6_7_exact": true,
+    "face_box_only": true,
+    "2x_nearest": true
+  },
+  "fire_prep_4": {
+    "spirits": 3,
+    "row_1_6_7_exact": true,
+    "face_box_only": true,
+    "2x_nearest": true
+  }
+}

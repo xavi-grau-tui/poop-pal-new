@@ -1,0 +1,3 @@
+outline #6B1017
+body #C83929
+light #F4B756

@@ -1,0 +1,79 @@
+{
+  "paprika": {
+    "source": "paprika_source.png",
+    "dimensions": [
+      1074,
+      1464
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ]
+  },
+  "daruma": {
+    "source": "daruma_source.png",
+    "dimensions": [
+      1312,
+      1199
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ]
+  },
+  "kimchi": {
+    "source": "kimchi_source.png",
+    "dimensions": [
+      1312,
+      1199
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ]
+  },
+  "firebug": {
+    "source": "firebug_source.png",
+    "dimensions": [
+      1312,
+      1199
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ]
+  },
+  "salamander": {
+    "source": "salamander_source.png",
+    "dimensions": [
+      1536,
+      1024
+    ],
+    "alpha_extrema": [
+      0,
+      254
+    ]
+  },
+  "hoozuki": {
+    "source": "hoozuki_source.png",
+    "dimensions": [
+      1312,
+      1199
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ]
+  },
+  "gochujang": {
+    "source": "gochujang_source.png",
+    "dimensions": [
+      1312,
+      1199
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ]
+  }
+}

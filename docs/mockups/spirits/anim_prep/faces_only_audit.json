@@ -1,0 +1,172 @@
+{
+  "sheets": {
+    "mountain_prep_1": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 109743,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "mountain_prep_2": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 154214,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "mountain_prep_3": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 173821,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "mountain_prep_4": {
+      "spirits": 3,
+      "expression_cells": 12,
+      "changed_pixels_in_face_boxes": 88850,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "moon_prep_1": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 131285,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "moon_prep_2": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 155121,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "moon_prep_3": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 158419,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "moon_prep_4": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 143350,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "fox_prep_1": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 201825,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "fox_prep_2": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 201499,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "fox_prep_3": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 201605,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "fox_prep_4": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 201363,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "fire_prep_1": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 217307,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "fire_prep_2": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 201764,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "fire_prep_3": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 201894,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "fire_prep_4": {
+      "spirits": 3,
+      "expression_cells": 12,
+      "changed_pixels_in_face_boxes": 93318,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "river_prep_1": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 201878,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "river_prep_2": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 201704,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "river_prep_3": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 201017,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    },
+    "river_prep_4": {
+      "spirits": 6,
+      "expression_cells": 24,
+      "changed_pixels_in_face_boxes": 216872,
+      "protected_rows_exact": true,
+      "outside_face_boxes_exact": true,
+      "nearest_2x": true
+    }
+  },
+  "totals": {
+    "sheets": 20,
+    "spirits": 114,
+    "unintended_pixels": 0,
+    "protected_rows_changed_pixels": 0,
+    "missing_expressions": 0,
+    "bad_2x": 0
+  }
+}

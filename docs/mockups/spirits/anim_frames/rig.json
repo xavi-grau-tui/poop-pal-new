@@ -1,0 +1,2677 @@
+{
+ "kakiage": {
+  "realm": "mountain",
+  "parts": {}
+ },
+ "nacho": {
+  "realm": "fire",
+  "parts": {
+   "flame": {
+    "kind": "flame",
+    "box": [
+     24,
+     18,
+     32,
+     29
+    ],
+    "pivot": [
+     28,
+     29
+    ],
+    "embers": true
+   }
+  }
+ },
+ "popper": {
+  "realm": "fire",
+  "parts": {
+   "tassel": {
+    "kind": "swing",
+    "box": [
+     23,
+     46,
+     32,
+     54
+    ],
+    "pivot": [
+     28,
+     46
+    ]
+   }
+  }
+ },
+ "ladyluck": {
+  "realm": "fire",
+  "parts": {
+   "bolt": {
+    "kind": "bolt",
+    "box": [
+     10,
+     14,
+     31,
+     34
+    ],
+    "pivot": [
+     22,
+     34
+    ]
+   }
+  }
+ },
+ "komainu": {
+  "realm": "mountain",
+  "parts": {
+   "tongue": {
+    "kind": "flick",
+    "box": [
+     16,
+     42,
+     22,
+     47
+    ],
+    "pivot": [
+     19,
+     47
+    ]
+   }
+  }
+ },
+ "tengu": {
+  "realm": "",
+  "parts": {}
+ },
+ "peapod": {
+  "realm": "mountain",
+  "parts": {
+   "sprout": {
+    "box": [
+     23,
+     20,
+     38,
+     27
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     31,
+     27
+    ]
+   }
+  }
+ },
+ "avocado": {
+  "realm": "mountain",
+  "parts": {}
+ },
+ "melon_pan": {
+  "realm": "mountain",
+  "parts": {
+   "sprout": {
+    "box": [
+     31,
+     17,
+     46,
+     25
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     38,
+     25
+    ]
+   }
+  }
+ },
+ "wasabi_pea": {
+  "realm": "mountain",
+  "parts": {}
+ },
+ "usagi": {
+  "realm": "mountain",
+  "parts": {
+   "leaf": {
+    "box": [
+     26,
+     22,
+     35,
+     30
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     30,
+     30
+    ]
+   },
+   "petal": {
+    "box": [
+     40,
+     45,
+     48,
+     52
+    ],
+    "kind": "drift",
+    "pivot": [
+     44,
+     52
+    ]
+   }
+  }
+ },
+ "yomogi": {
+  "realm": "mountain",
+  "parts": {
+   "leaf": {
+    "box": [
+     13,
+     16,
+     25,
+     27
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "l",
+    "frames": 3,
+    "pivot": [
+     19,
+     27
+    ]
+   }
+  }
+ },
+ "usagi_manju": {
+  "realm": "mountain",
+  "parts": {
+   "petal": {
+    "box": [
+     39,
+     21,
+     45,
+     27
+    ],
+    "kind": "fall",
+    "style": "petal",
+    "floor": 54,
+    "pivot": [
+     42,
+     27
+    ]
+   }
+  }
+ },
+ "yamabiko": {
+  "realm": "mountain",
+  "parts": {
+   "cloud_l": {
+    "box": [
+     1,
+     29,
+     17,
+     46
+    ],
+    "kind": "drift",
+    "axis": "x",
+    "side": -1,
+    "pivot": [
+     8,
+     46
+    ]
+   },
+   "cloud_r": {
+    "box": [
+     38,
+     29,
+     53,
+     46
+    ],
+    "kind": "drift",
+    "axis": "x",
+    "side": 1,
+    "pivot": [
+     45,
+     46
+    ]
+   }
+  }
+ },
+ "kinoko": {
+  "realm": "mountain",
+  "parts": {}
+ },
+ "mujina": {
+  "realm": "mountain",
+  "parts": {
+   "leaf": {
+    "box": [
+     21,
+     21,
+     36,
+     31
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     28,
+     31
+    ]
+   }
+  }
+ },
+ "kodama": {
+  "realm": "mountain",
+  "parts": {
+   "sprout": {
+    "box": [
+     19,
+     18,
+     35,
+     29
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "l",
+    "frames": 3,
+    "pivot": [
+     27,
+     29
+    ]
+   }
+  }
+ },
+ "karasu_tengu": {
+  "realm": "mountain",
+  "parts": {
+   "cap": {
+    "box": [
+     19,
+     19,
+     35,
+     27
+    ],
+    "kind": "lag",
+    "pivot": [
+     27,
+     27
+    ]
+   },
+   "wing_l": {
+    "box": [
+     4,
+     32,
+     16,
+     45
+    ],
+    "kind": "bend",
+    "style": "flap",
+    "anchor": "right",
+    "amp": 2,
+    "side": "l",
+    "frames": 5,
+    "pivot": [
+     11,
+     45
+    ]
+   },
+   "wing_r": {
+    "box": [
+     42,
+     32,
+     51,
+     45
+    ],
+    "kind": "bend",
+    "style": "flap",
+    "anchor": "left",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     46,
+     45
+    ]
+   }
+  }
+ },
+ "horseradish": {
+  "realm": "mountain",
+  "parts": {}
+ },
+ "kiwi": {
+  "realm": "mountain",
+  "parts": {}
+ },
+ "kappa": {
+  "realm": "mountain",
+  "parts": {},
+  "fx": [
+   {
+    "type": "glints",
+    "points": [
+     [
+      21,
+      18
+     ],
+     [
+      31,
+      17
+     ]
+    ]
+   }
+  ]
+ },
+ "gherk": {
+  "realm": "mountain",
+  "parts": {
+   "antennae": {
+    "box": [
+     18,
+     16,
+     37,
+     26
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "l",
+    "frames": 3,
+    "pivot": [
+     27,
+     26
+    ]
+   }
+  }
+ },
+ "kiwi_bird": {
+  "realm": "mountain",
+  "parts": {},
+  "wobbly": true
+ },
+ "bud": {
+  "realm": "mountain",
+  "parts": {
+   "sprout": {
+    "box": [
+     22,
+     25,
+     33,
+     30
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "l",
+    "frames": 3,
+    "pivot": [
+     28,
+     30
+    ]
+   }
+  }
+ },
+ "karakuri": {
+  "realm": "mountain",
+  "parts": {
+   "sprout": {
+    "box": [
+     37,
+     16,
+     46,
+     23
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     41,
+     23
+    ]
+   },
+   "key": {
+    "kind": "cycle",
+    "frames": 4,
+    "rate": 3,
+    "box": [
+     17,
+     12,
+     37,
+     25
+    ],
+    "pivot": [
+     28,
+     25
+    ]
+   },
+   "cog_l": {
+    "kind": "cycle",
+    "frames": 3,
+    "rate": 2,
+    "box": [
+     11,
+     35,
+     19,
+     45
+    ],
+    "pivot": [
+     15,
+     45
+    ]
+   },
+   "cog_r": {
+    "kind": "cycle",
+    "frames": 3,
+    "rate": 2,
+    "box": [
+     36,
+     36,
+     45,
+     45
+    ],
+    "pivot": [
+     41,
+     45
+    ]
+   }
+  }
+ },
+ "zorb": {
+  "realm": "mountain",
+  "parts": {
+   "star": {
+    "box": [
+     20,
+     21,
+     33,
+     34
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 2,
+    "side": "l",
+    "frames": 5,
+    "pivot": [
+     26,
+     34
+    ]
+   },
+   "stars0": {
+    "box": [
+     11,
+     25,
+     14,
+     27
+    ],
+    "kind": "twinkle",
+    "pivot": [
+     12,
+     27
+    ]
+   },
+   "stars1": {
+    "box": [
+     36,
+     15,
+     38,
+     17
+    ],
+    "kind": "twinkle",
+    "pivot": [
+     37,
+     17
+    ]
+   },
+   "stars2": {
+    "box": [
+     40,
+     22,
+     44,
+     26
+    ],
+    "kind": "twinkle",
+    "pivot": [
+     42,
+     26
+    ]
+   }
+  }
+ },
+ "world_tree": {
+  "realm": "mountain",
+  "parts": {
+   "canopy": {
+    "box": [
+     9,
+     14,
+     49,
+     22
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     29,
+     22
+    ]
+   }
+  }
+ },
+ "leafwing": {
+  "realm": "moon",
+  "parts": {
+   "leaf": {
+    "box": [
+     16,
+     21,
+     42,
+     36
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     29,
+     36
+    ]
+   },
+   "bells": {
+    "box": [
+     11,
+     24,
+     28,
+     38
+    ],
+    "kind": "bend",
+    "style": "swing",
+    "anchor": "top",
+    "amp": 2,
+    "side": "l",
+    "frames": 5,
+    "pivot": [
+     21,
+     38
+    ]
+   }
+  }
+ },
+ "owlet": {
+  "realm": "moon",
+  "parts": {
+   "wing_l": {
+    "box": [
+     2,
+     26,
+     19,
+     52
+    ],
+    "kind": "bend",
+    "style": "flap",
+    "anchor": "right",
+    "amp": 2,
+    "side": "l",
+    "frames": 5,
+    "pivot": [
+     12,
+     52
+    ]
+   },
+   "wing_r": {
+    "box": [
+     37,
+     26,
+     53,
+     52
+    ],
+    "kind": "bend",
+    "style": "flap",
+    "anchor": "left",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     44,
+     52
+    ]
+   }
+  }
+ },
+ "pistachio": {
+  "realm": "moon",
+  "parts": {}
+ },
+ "scarab": {
+  "realm": "moon",
+  "parts": {
+   "wisp_l": {
+    "box": [
+     2,
+     22,
+     13,
+     37
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     7,
+     37
+    ]
+   },
+   "wisp_r": {
+    "box": [
+     43,
+     32,
+     53,
+     48
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     47,
+     48
+    ]
+   },
+   "tips": {
+    "box": [
+     16,
+     15,
+     40,
+     31
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     28,
+     31
+    ]
+   }
+  }
+ },
+ "fudge": {
+  "realm": "moon",
+  "parts": {
+   "ear_l": {
+    "box": [
+     17,
+     20,
+     27,
+     29
+    ],
+    "kind": "bend",
+    "style": "twitch",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "l",
+    "frames": 3,
+    "pivot": [
+     22,
+     29
+    ]
+   },
+   "ear_r": {
+    "box": [
+     28,
+     20,
+     38,
+     29
+    ],
+    "kind": "bend",
+    "style": "twitch",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     32,
+     29
+    ]
+   }
+  }
+ },
+ "bonbon": {
+  "realm": "moon",
+  "parts": {
+   "ear_l": {
+    "box": [
+     11,
+     15,
+     25,
+     25
+    ],
+    "kind": "bend",
+    "style": "twitch",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "l",
+    "frames": 3,
+    "pivot": [
+     18,
+     25
+    ]
+   },
+   "ear_r": {
+    "box": [
+     26,
+     15,
+     37,
+     25
+    ],
+    "kind": "bend",
+    "style": "twitch",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     31,
+     25
+    ]
+   }
+  }
+ },
+ "kuri": {
+  "realm": "moon",
+  "parts": {
+   "ear_l": {
+    "box": [
+     17,
+     15,
+     29,
+     31
+    ],
+    "kind": "bend",
+    "style": "twitch",
+    "anchor": "bottom",
+    "amp": 2,
+    "side": "l",
+    "frames": 5,
+    "pivot": [
+     24,
+     31
+    ]
+   },
+   "ear_r": {
+    "box": [
+     30,
+     17,
+     42,
+     31
+    ],
+    "kind": "bend",
+    "style": "twitch",
+    "anchor": "bottom",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     35,
+     31
+    ]
+   }
+  }
+ },
+ "gremlin": {
+  "realm": "moon",
+  "parts": {
+   "ghost": {
+    "box": [
+     41,
+     35,
+     53,
+     45
+    ],
+    "kind": "drift",
+    "pivot": [
+     47,
+     45
+    ]
+   },
+   "dots0": {
+    "box": [
+     2,
+     49,
+     7,
+     54
+    ],
+    "kind": "drift",
+    "pivot": [
+     4,
+     54
+    ]
+   },
+   "dots1": {
+    "box": [
+     46,
+     27,
+     49,
+     31
+    ],
+    "kind": "drift",
+    "pivot": [
+     48,
+     31
+    ]
+   }
+  }
+ },
+ "glazy": {
+  "realm": "moon",
+  "parts": {}
+ },
+ "eclair": {
+  "realm": "moon",
+  "parts": {}
+ },
+ "churro": {
+  "realm": "moon",
+  "parts": {
+   "star": {
+    "box": [
+     41,
+     46,
+     49,
+     54
+    ],
+    "kind": "twinkle",
+    "pivot": [
+     45,
+     54
+    ]
+   }
+  }
+ },
+ "candy_corn": {
+  "realm": "moon",
+  "parts": {}
+ },
+ "choco_taco": {
+  "realm": "moon",
+  "parts": {
+   "chime": {
+    "box": [
+     24,
+     46,
+     32,
+     54
+    ],
+    "kind": "bend",
+    "style": "swing",
+    "anchor": "top",
+    "amp": 1,
+    "side": "l",
+    "frames": 3,
+    "pivot": [
+     27,
+     54
+    ]
+   }
+  },
+  "wobbly": true
+ },
+ "hot_cocoa": {
+  "realm": "moon",
+  "parts": {},
+  "wobbly": true
+ },
+ "cocoa_fire": {
+  "realm": "moon",
+  "parts": {
+   "light": {
+    "box": [
+     18,
+     33,
+     36,
+     42
+    ],
+    "kind": "glow",
+    "frames": 3,
+    "pivot": [
+     27,
+     42
+    ]
+   }
+  }
+ },
+ "taiyaki": {
+  "realm": "moon",
+  "parts": {
+   "tail": {
+    "box": [
+     40,
+     29,
+     52,
+     45
+    ],
+    "kind": "bend",
+    "style": "wag",
+    "anchor": "left",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     45,
+     45
+    ]
+   }
+  }
+ },
+ "bumble": {
+  "realm": "moon",
+  "parts": {
+   "leaf": {
+    "box": [
+     37,
+     33,
+     42,
+     37
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "left",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     39,
+     37
+    ]
+   }
+  }
+ },
+ "honeybear": {
+  "realm": "moon",
+  "parts": {}
+ },
+ "ramune": {
+  "realm": "moon",
+  "parts": {
+   "marble": {
+    "box": [
+     24,
+     25,
+     33,
+     35
+    ],
+    "kind": "lag",
+    "pivot": [
+     28,
+     35
+    ]
+   }
+  },
+  "fx": [
+   {
+    "type": "bubbles",
+    "box": [
+     18,
+     34,
+     40,
+     49
+    ]
+   }
+  ]
+ },
+ "bruin": {
+  "realm": "moon",
+  "parts": {}
+ },
+ "nib": {
+  "realm": "moon",
+  "parts": {}
+ },
+ "cocoa_9": {
+  "realm": "moon",
+  "parts": {
+   "key": {
+    "kind": "cycle",
+    "frames": 4,
+    "rate": 3,
+    "box": [
+     17,
+     8,
+     37,
+     17
+    ],
+    "pivot": [
+     27,
+     17
+    ]
+   },
+   "cog_l": {
+    "kind": "cycle",
+    "frames": 3,
+    "rate": 2,
+    "box": [
+     8,
+     35,
+     18,
+     45
+    ],
+    "pivot": [
+     13,
+     45
+    ]
+   },
+   "cog_r": {
+    "kind": "cycle",
+    "frames": 3,
+    "rate": 2,
+    "box": [
+     36,
+     35,
+     47,
+     45
+    ],
+    "pivot": [
+     42,
+     45
+    ]
+   }
+  }
+ },
+ "kaguya": {
+  "realm": "moon",
+  "parts": {
+   "sparkles0": {
+    "box": [
+     4,
+     24,
+     9,
+     29
+    ],
+    "kind": "twinkle",
+    "pivot": [
+     7,
+     29
+    ]
+   },
+   "sparkles1": {
+    "box": [
+     11,
+     16,
+     16,
+     22
+    ],
+    "kind": "twinkle",
+    "pivot": [
+     13,
+     22
+    ]
+   },
+   "sparkles2": {
+    "box": [
+     46,
+     34,
+     50,
+     39
+    ],
+    "kind": "twinkle",
+    "pivot": [
+     48,
+     39
+    ]
+   }
+  }
+ },
+ "tsukuyomi": {
+  "realm": "moon",
+  "parts": {
+   "ear_l": {
+    "box": [
+     11,
+     11,
+     26,
+     29
+    ],
+    "kind": "bend",
+    "style": "twitch",
+    "anchor": "bottom",
+    "amp": 2,
+    "side": "l",
+    "frames": 5,
+    "pivot": [
+     19,
+     29
+    ]
+   },
+   "ear_r": {
+    "box": [
+     30,
+     11,
+     46,
+     29
+    ],
+    "kind": "bend",
+    "style": "twitch",
+    "anchor": "bottom",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     37,
+     29
+    ]
+   }
+  }
+ },
+ "kitsune": {
+  "realm": "fox",
+  "parts": {
+   "ear_l": {
+    "box": [
+     12,
+     21,
+     21,
+     29
+    ],
+    "kind": "bend",
+    "style": "twitch",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "l",
+    "frames": 3,
+    "pivot": [
+     16,
+     29
+    ]
+   },
+   "ear_r": {
+    "box": [
+     33,
+     21,
+     43,
+     29
+    ],
+    "kind": "bend",
+    "style": "twitch",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     38,
+     29
+    ]
+   }
+  }
+ },
+ "kyubi": {
+  "realm": "fox",
+  "parts": {
+   "wisp_l": {
+    "box": [
+     2,
+     28,
+     12,
+     44
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     7,
+     44
+    ]
+   },
+   "wisp_r": {
+    "box": [
+     43,
+     27,
+     53,
+     46
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     48,
+     46
+    ]
+   }
+  }
+ },
+ "konoha": {
+  "realm": "fox",
+  "parts": {
+   "leaf": {
+    "box": [
+     16,
+     16,
+     44,
+     34
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     31,
+     34
+    ]
+   }
+  }
+ },
+ "okonomi": {
+  "realm": "fox",
+  "parts": {}
+ },
+ "waffle": {
+  "realm": "fox",
+  "parts": {
+   "leaf": {
+    "box": [
+     28,
+     21,
+     42,
+     31
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "left",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     34,
+     31
+    ]
+   }
+  }
+ },
+ "popcorn": {
+  "realm": "fox",
+  "parts": {}
+ },
+ "daigaku_imo": {
+  "realm": "fox",
+  "parts": {}
+ },
+ "stroopwafel": {
+  "realm": "fox",
+  "parts": {}
+ },
+ "fried_egg": {
+  "realm": "fox",
+  "parts": {
+   "tail": {
+    "box": [
+     39,
+     32,
+     50,
+     48
+    ],
+    "kind": "bend",
+    "style": "wag",
+    "anchor": "left",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     44,
+     48
+    ]
+   }
+  }
+ },
+ "burger": {
+  "realm": "fox",
+  "parts": {
+   "leaf": {
+    "box": [
+     21,
+     20,
+     32,
+     28
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "l",
+    "frames": 3,
+    "pivot": [
+     26,
+     28
+    ]
+   },
+   "tail": {
+    "box": [
+     40,
+     31,
+     53,
+     47
+    ],
+    "kind": "bend",
+    "style": "wag",
+    "anchor": "left",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     46,
+     47
+    ]
+   }
+  }
+ },
+ "hot_dog": {
+  "realm": "fox",
+  "parts": {
+   "tail": {
+    "box": [
+     40,
+     33,
+     52,
+     50
+    ],
+    "kind": "bend",
+    "style": "wag",
+    "anchor": "left",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     45,
+     50
+    ]
+   }
+  }
+ },
+ "fish_taco": {
+  "realm": "fox",
+  "parts": {
+   "tail": {
+    "box": [
+     42,
+     35,
+     53,
+     50
+    ],
+    "kind": "bend",
+    "style": "wag",
+    "anchor": "left",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     47,
+     50
+    ]
+   }
+  }
+ },
+ "drumstick": {
+  "realm": "fox",
+  "parts": {
+   "bachi_l": {
+    "box": [
+     3,
+     27,
+     11,
+     39
+    ],
+    "kind": "bend",
+    "style": "beat",
+    "amp": 0,
+    "side": "l",
+    "frames": 3,
+    "pivot": [
+     7,
+     39
+    ]
+   },
+   "bachi_r": {
+    "box": [
+     43,
+     27,
+     52,
+     39
+    ],
+    "kind": "bend",
+    "style": "beat",
+    "amp": 0,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     47,
+     39
+    ]
+   }
+  }
+ },
+ "kushikatsu": {
+  "realm": "fox",
+  "parts": {}
+ },
+ "kitsu": {
+  "realm": "fox",
+  "parts": {},
+  "wobbly": true
+ },
+ "hothog": {
+  "realm": "fox",
+  "parts": {
+   "sprout": {
+    "box": [
+     23,
+     14,
+     39,
+     24
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     31,
+     24
+    ]
+   }
+  }
+ },
+ "oden": {
+  "realm": "fox",
+  "parts": {}
+ },
+ "ebi_fry": {
+  "realm": "fox",
+  "parts": {}
+ },
+ "shiso_tempura": {
+  "realm": "fox",
+  "parts": {}
+ },
+ "walrusk": {
+  "realm": "fox",
+  "parts": {},
+  "wobbly": true
+ },
+ "inari": {
+  "realm": "fox",
+  "parts": {}
+ },
+ "robobear": {
+  "realm": "fox",
+  "parts": {
+   "key": {
+    "kind": "cycle",
+    "frames": 4,
+    "rate": 3,
+    "box": [
+     16,
+     7,
+     37,
+     16
+    ],
+    "pivot": [
+     27,
+     16
+    ]
+   },
+   "cog_l": {
+    "kind": "cycle",
+    "frames": 3,
+    "rate": 2,
+    "box": [
+     8,
+     34,
+     18,
+     45
+    ],
+    "pivot": [
+     13,
+     45
+    ]
+   },
+   "cog_r": {
+    "kind": "cycle",
+    "frames": 3,
+    "rate": 2,
+    "box": [
+     36,
+     34,
+     47,
+     44
+    ],
+    "pivot": [
+     41,
+     44
+    ]
+   }
+  }
+ },
+ "nebula_nug": {
+  "realm": "fox",
+  "parts": {
+   "flame": {
+    "box": [
+     17,
+     14,
+     33,
+     25
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     26,
+     25
+    ]
+   },
+   "stars0": {
+    "box": [
+     11,
+     40,
+     12,
+     42
+    ],
+    "kind": "twinkle",
+    "pivot": [
+     11,
+     42
+    ]
+   },
+   "stars1": {
+    "box": [
+     38,
+     38,
+     39,
+     38
+    ],
+    "kind": "twinkle",
+    "pivot": [
+     38,
+     38
+    ]
+   },
+   "stars2": {
+    "box": [
+     39,
+     35,
+     41,
+     36
+    ],
+    "kind": "twinkle",
+    "pivot": [
+     40,
+     36
+    ]
+   },
+   "stars3": {
+    "box": [
+     45,
+     40,
+     46,
+     44
+    ],
+    "kind": "twinkle",
+    "pivot": [
+     45,
+     44
+    ]
+   }
+  }
+ },
+ "sunbear": {
+  "realm": "fox",
+  "parts": {
+   "leaf": {
+    "box": [
+     21,
+     16,
+     37,
+     25
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     30,
+     25
+    ]
+   }
+  }
+ },
+ "paprika": {
+  "realm": "fire",
+  "parts": {}
+ },
+ "hoozuki": {
+  "realm": "fire",
+  "parts": {
+   "leaf": {
+    "box": [
+     32,
+     19,
+     50,
+     35
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "left",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     42,
+     35
+    ]
+   }
+  }
+ },
+ "pepper_plant": {
+  "realm": "fire",
+  "parts": {
+   "stem": {
+    "box": [
+     29,
+     14,
+     36,
+     24
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     34,
+     24
+    ]
+   }
+  }
+ },
+ "chameleon": {
+  "realm": "fire",
+  "parts": {},
+  "wobbly": true
+ },
+ "daruma": {
+  "realm": "fire",
+  "parts": {},
+  "wobbly": true
+ },
+ "oo_daruma": {
+  "realm": "fire",
+  "parts": {},
+  "wobbly": true
+ },
+ "maneki": {
+  "realm": "fire",
+  "parts": {}
+ },
+ "spicecake": {
+  "realm": "fire",
+  "parts": {}
+ },
+ "quesadilla": {
+  "realm": "fire",
+  "parts": {
+   "light": {
+    "box": [
+     10,
+     22,
+     46,
+     44
+    ],
+    "kind": "glow",
+    "frames": 3,
+    "pivot": [
+     28,
+     44
+    ]
+   }
+  }
+ },
+ "burrito": {
+  "realm": "fire",
+  "parts": {
+   "smoke": {
+    "box": [
+     12,
+     7,
+     22,
+     22
+    ],
+    "kind": "rise",
+    "pivot": [
+     16,
+     22
+    ]
+   }
+  }
+ },
+ "dotty": {
+  "realm": "fire",
+  "parts": {}
+ },
+ "firebug": {
+  "realm": "fire",
+  "parts": {
+   "bolt": {
+    "box": [
+     29,
+     16,
+     37,
+     32
+    ],
+    "kind": "bolt",
+    "nohide": true,
+    "pivot": [
+     32,
+     32
+    ]
+   },
+   "flame_l": {
+    "box": [
+     2,
+     25,
+     14,
+     40
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     9,
+     40
+    ]
+   },
+   "flame_r": {
+    "box": [
+     42,
+     29,
+     53,
+     38
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     46,
+     38
+    ]
+   },
+   "flame_t": {
+    "box": [
+     17,
+     21,
+     25,
+     30
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     22,
+     30
+    ]
+   }
+  }
+ },
+ "salamander": {
+  "realm": "fire",
+  "parts": {
+   "tips": {
+    "box": [
+     15,
+     16,
+     38,
+     32
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     28,
+     32
+    ]
+   },
+   "drop_a": {
+    "box": [
+     5,
+     30,
+     16,
+     42
+    ],
+    "kind": "drift",
+    "pivot": [
+     11,
+     42
+    ]
+   },
+   "drop_b": {
+    "box": [
+     41,
+     26,
+     47,
+     34
+    ],
+    "kind": "drift",
+    "pivot": [
+     44,
+     34
+    ]
+   },
+   "drop_c": {
+    "box": [
+     46,
+     39,
+     50,
+     46
+    ],
+    "kind": "drift",
+    "pivot": [
+     48,
+     46
+    ]
+   }
+  }
+ },
+ "kimchi": {
+  "realm": "fire",
+  "parts": {}
+ },
+ "gochujang": {
+  "realm": "fire",
+  "parts": {}
+ },
+ "ceviche": {
+  "realm": "fire",
+  "parts": {}
+ },
+ "takoyaki": {
+  "realm": "fire",
+  "parts": {}
+ },
+ "ember": {
+  "realm": "fire",
+  "parts": {
+   "tip": {
+    "box": [
+     20,
+     27,
+     31,
+     35
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     27,
+     35
+    ]
+   }
+  }
+ },
+ "mecha_oni": {
+  "realm": "fire",
+  "parts": {
+   "key": {
+    "kind": "cycle",
+    "frames": 4,
+    "rate": 3,
+    "box": [
+     17,
+     9,
+     37,
+     18
+    ],
+    "pivot": [
+     27,
+     18
+    ]
+   },
+   "cog_l": {
+    "kind": "cycle",
+    "frames": 3,
+    "rate": 2,
+    "box": [
+     8,
+     34,
+     19,
+     46
+    ],
+    "pivot": [
+     14,
+     46
+    ]
+   },
+   "cog_r": {
+    "kind": "cycle",
+    "frames": 3,
+    "rate": 2,
+    "box": [
+     35,
+     34,
+     46,
+     45
+    ],
+    "pivot": [
+     40,
+     45
+    ]
+   }
+  }
+ },
+ "comet_chili": {
+  "realm": "fire",
+  "parts": {
+   "spark": {
+    "box": [
+     21,
+     6,
+     33,
+     23
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     27,
+     23
+    ]
+   }
+  }
+ },
+ "hou_ou": {
+  "realm": "fire",
+  "parts": {
+   "crest": {
+    "box": [
+     11,
+     8,
+     36,
+     25
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     24,
+     25
+    ]
+   },
+   "tail": {
+    "box": [
+     31,
+     15,
+     53,
+     43
+    ],
+    "kind": "flame",
+    "embers": true,
+    "pivot": [
+     41,
+     43
+    ]
+   }
+  }
+ },
+ "kappa_maki": {
+  "realm": "river",
+  "parts": {
+   "drop": {
+    "box": [
+     32,
+     22,
+     40,
+     29
+    ],
+    "kind": "twinkle",
+    "pivot": [
+     36,
+     29
+    ]
+   }
+  },
+  "fx": [
+   {
+    "type": "drip",
+    "at": [
+     44,
+     31
+    ]
+   }
+  ]
+ },
+ "ume_onigiri": {
+  "realm": "river",
+  "parts": {
+   "drip": {
+    "box": [
+     44,
+     28,
+     51,
+     37
+    ],
+    "kind": "fall",
+    "style": "drip",
+    "floor": 54,
+    "pivot": [
+     48,
+     37
+    ]
+   }
+  },
+  "fx": [
+   {
+    "type": "glints",
+    "points": [
+     [
+      20,
+      23
+     ],
+     [
+      36,
+      22
+     ]
+    ]
+   }
+  ]
+ },
+ "granny": {
+  "realm": "river",
+  "parts": {
+   "bud": {
+    "box": [
+     42,
+     32,
+     52,
+     41
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     47,
+     41
+    ]
+   }
+  }
+ },
+ "hoot": {
+  "realm": "river",
+  "parts": {}
+ },
+ "sourpatch": {
+  "realm": "river",
+  "parts": {
+   "leaf": {
+    "box": [
+     36,
+     25,
+     45,
+     34
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "left",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     40,
+     34
+    ]
+   }
+  }
+ },
+ "lemon_sweet": {
+  "realm": "river",
+  "parts": {
+   "cherries": {
+    "box": [
+     17,
+     11,
+     38,
+     30
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     29,
+     30
+    ]
+   }
+  }
+ },
+ "cream_soda": {
+  "realm": "river",
+  "parts": {
+   "cherry": {
+    "box": [
+     29,
+     12,
+     42,
+     30
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     36,
+     30
+    ]
+   }
+  },
+  "fx": [
+   {
+    "type": "bubbles",
+    "box": [
+     10,
+     31,
+     46,
+     45
+    ]
+   }
+  ]
+ },
+ "lime": {
+  "realm": "river",
+  "parts": {
+   "drops0": {
+    "box": [
+     14,
+     16,
+     19,
+     21
+    ],
+    "kind": "drift",
+    "pivot": [
+     16,
+     21
+    ]
+   },
+   "drops1": {
+    "box": [
+     46,
+     36,
+     49,
+     40
+    ],
+    "kind": "drift",
+    "pivot": [
+     48,
+     40
+    ]
+   },
+   "leaf": {
+    "box": [
+     27,
+     14,
+     33,
+     25
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "bottom",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     30,
+     25
+    ]
+   }
+  }
+ },
+ "hermit": {
+  "realm": "river",
+  "parts": {},
+  "wobbly": true
+ },
+ "anemone": {
+  "realm": "river",
+  "parts": {
+   "splashes0": {
+    "box": [
+     2,
+     26,
+     6,
+     32
+    ],
+    "kind": "drift",
+    "pivot": [
+     4,
+     32
+    ]
+   },
+   "splashes1": {
+    "box": [
+     2,
+     41,
+     8,
+     47
+    ],
+    "kind": "drift",
+    "pivot": [
+     5,
+     47
+    ]
+   },
+   "splashes2": {
+    "box": [
+     45,
+     41,
+     52,
+     48
+    ],
+    "kind": "drift",
+    "pivot": [
+     49,
+     48
+    ]
+   },
+   "splashes3": {
+    "box": [
+     47,
+     23,
+     52,
+     29
+    ],
+    "kind": "drift",
+    "pivot": [
+     50,
+     29
+    ]
+   },
+   "splashes4": {
+    "box": [
+     51,
+     32,
+     53,
+     34
+    ],
+    "kind": "drift",
+    "pivot": [
+     52,
+     34
+    ]
+   },
+   "tentacles": {
+    "box": [
+     8,
+     41,
+     49,
+     54
+    ],
+    "kind": "bend",
+    "style": "swing",
+    "anchor": "top",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     28,
+     54
+    ]
+   }
+  }
+ },
+ "calamari": {
+  "realm": "river",
+  "parts": {
+   "fin_l": {
+    "box": [
+     2,
+     26,
+     15,
+     42
+    ],
+    "kind": "bend",
+    "style": "flap",
+    "anchor": "right",
+    "amp": 2,
+    "side": "l",
+    "frames": 5,
+    "pivot": [
+     10,
+     42
+    ]
+   },
+   "fin_r": {
+    "box": [
+     41,
+     27,
+     53,
+     42
+    ],
+    "kind": "bend",
+    "style": "flap",
+    "anchor": "left",
+    "amp": 2,
+    "side": "r",
+    "frames": 5,
+    "pivot": [
+     46,
+     42
+    ]
+   }
+  }
+ },
+ "octopepper": {
+  "realm": "river",
+  "parts": {
+   "knot": {
+    "box": [
+     39,
+     24,
+     47,
+     32
+    ],
+    "kind": "bend",
+    "style": "sway",
+    "anchor": "left",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     43,
+     32
+    ]
+   },
+   "tentacles": {
+    "box": [
+     8,
+     45,
+     45,
+     54
+    ],
+    "kind": "bend",
+    "style": "swing",
+    "anchor": "top",
+    "amp": 1,
+    "side": "l",
+    "frames": 3,
+    "pivot": [
+     27,
+     54
+    ]
+   }
+  }
+ },
+ "buzz": {
+  "realm": "river",
+  "parts": {}
+ },
+ "lemon_ant": {
+  "realm": "river",
+  "parts": {}
+ },
+ "shichimi": {
+  "realm": "river",
+  "parts": {}
+ },
+ "axel": {
+  "realm": "river",
+  "parts": {
+   "gills_l": {
+    "box": [
+     2,
+     28,
+     14,
+     45
+    ],
+    "kind": "bend",
+    "style": "flap",
+    "anchor": "right",
+    "amp": 2,
+    "side": "l",
+    "frames": 5,
+    "pivot": [
+     9,
+     45
+    ]
+   },
+   "gills_r": {
+    "box": [
+     41,
+     28,
+     52,
+     45
+    ],
+    "kind": "bend",
+    "style": "flap",
+    "anchor": "left",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     46,
+     45
+    ]
+   }
+  }
+ },
+ "teru_teru": {
+  "realm": "river",
+  "parts": {
+   "drops0": {
+    "box": [
+     7,
+     33,
+     11,
+     40
+    ],
+    "kind": "fall",
+    "style": "rain",
+    "floor": 54,
+    "pivot": [
+     9,
+     40
+    ]
+   },
+   "drops1": {
+    "box": [
+     40,
+     35,
+     43,
+     40
+    ],
+    "kind": "fall",
+    "style": "rain",
+    "floor": 54,
+    "pivot": [
+     42,
+     40
+    ]
+   },
+   "drops2": {
+    "box": [
+     43,
+     25,
+     47,
+     32
+    ],
+    "kind": "fall",
+    "style": "rain",
+    "floor": 54,
+    "pivot": [
+     45,
+     32
+    ]
+   }
+  },
+  "wobbly": true
+ },
+ "omamori": {
+  "realm": "river",
+  "parts": {},
+  "wobbly": true
+ },
+ "kokeshi": {
+  "realm": "river",
+  "parts": {},
+  "wobbly": true
+ },
+ "karakasa": {
+  "realm": "river",
+  "parts": {}
+ },
+ "picklet": {
+  "realm": "river",
+  "parts": {}
+ },
+ "robofrog": {
+  "realm": "river",
+  "parts": {
+   "key": {
+    "kind": "cycle",
+    "frames": 4,
+    "rate": 3,
+    "box": [
+     17,
+     9,
+     37,
+     17
+    ],
+    "pivot": [
+     27,
+     17
+    ]
+   },
+   "cog_l": {
+    "kind": "cycle",
+    "frames": 3,
+    "rate": 2,
+    "box": [
+     9,
+     35,
+     18,
+     45
+    ],
+    "pivot": [
+     14,
+     45
+    ]
+   },
+   "cog_r": {
+    "kind": "cycle",
+    "frames": 3,
+    "rate": 2,
+    "box": [
+     37,
+     35,
+     46,
+     45
+    ],
+    "pivot": [
+     41,
+     45
+    ]
+   }
+  }
+ },
+ "ningyo": {
+  "realm": "river",
+  "parts": {
+   "fin_l": {
+    "box": [
+     5,
+     27,
+     13,
+     39
+    ],
+    "kind": "bend",
+    "style": "flap",
+    "anchor": "right",
+    "amp": 1,
+    "side": "l",
+    "frames": 3,
+    "pivot": [
+     9,
+     39
+    ]
+   },
+   "fin_r": {
+    "box": [
+     39,
+     27,
+     49,
+     39
+    ],
+    "kind": "bend",
+    "style": "flap",
+    "anchor": "left",
+    "amp": 1,
+    "side": "r",
+    "frames": 3,
+    "pivot": [
+     44,
+     39
+    ]
+   }
+  }
+ },
+ "frog_king": {
+  "realm": "river",
+  "parts": {
+   "crown": {
+    "box": [
+     18,
+     8,
+     37,
+     21
+    ],
+    "kind": "lag",
+    "pivot": [
+     28,
+     21
+    ]
+   }
+  },
+  "fx": [
+   {
+    "type": "glints",
+    "points": [
+     [
+      23,
+      13
+     ],
+     [
+      33,
+      13
+     ]
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,10 @@
+PASS: 768x5632 filled and transparent item sheets
+PASS: exact 4x4 game-pixel round-trip
+PASS: only binary alpha
+PASS: filled sheet unchanged outside the item pixels
+PASS: only rows 1, 4, 5, 14 and 20 have new art
+PASS: crossed head-item cell is empty
+PASS: torii back print 270x480, 9 colours
+PASS: torii front print 270x480, 7 colours
+PASS: seigaiha back print 270x480, 7 colours
+PASS: seigaiha front print 270x480, 7 colours
