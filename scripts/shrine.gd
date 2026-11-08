@@ -81,6 +81,15 @@ const ORN_F := 39.0
 const ORN_B := 27.0
 const ORN_COPIES := 12
 const OFFER_AT := Vector2(55.5, 76.0)
+## A home's own table (the user, 2026-11-08: nothing floating): the offering stands on the middle of
+## its top (found in table.png, TABLE_INSET px into its top edge, so the edge hides its foot), and the
+## spirit stands right behind it, centred on it, its feet FEET_BELOW px below that top (picture px,
+## the 925 grid: hidden by the table's edge, its face clear of the food)
+const TABLE_INSET := 5.0
+const FEET_BELOW := 2.0
+const PAL_FLOOR := 60.0               # the pal's floor below its node's middle (texels: poop.gd OLD_BASELINE)
+var _offer_px := Vector2.ZERO         # where the offering's foot stands (this node's space)
+var _pal_at0 := Vector2(NAN, NAN)     # the spirit's place as first set (the old forest's)
 const OFFER_D := 33.0
 const OFFER_W := 11.0                 # an offering's width on the tray (grid cells)
 ## The pal's window in the front (grid): where the inner walls start
@@ -418,6 +427,7 @@ func _ready() -> void:
 ## root planes, the stone slab) only in the forest. ON TRIAL (2026-10-30): the designer's v4 homes.
 func _apply_home() -> void:
 	if not DevLaunch.new_shrine:
+		_fit_to_table(Vector2(-1, -1))           # (the first hokora: its sanbo's tray)
 		return
 	var hid := Collection.home_piece("home")
 	var h: Dictionary = Hokora.HOMES.get(hid, {})
@@ -448,6 +458,7 @@ func _apply_home() -> void:
 		var tp: Sprite2D = parts[k]
 		tp.texture = load(dir + ("table.png" if k == parts.size() - 1 else "table_side.png")) if has_table else null
 		tp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_fit_to_table(_table_top(dir + "table.png") if has_table else Vector2(-1, -1))
 	_rope_at = h.get("bell", NEW_ROPE_AT)
 	# the bell and its beads: the home's own, in its colours and materials, or the forest's until drawn
 	# (the user, 2026-11-01: part of every shrine, not a slot)
@@ -607,6 +618,50 @@ func _layer(tex: Texture2D, z: int) -> Sprite2D:
 	add_child(sp)
 	return sp
 
+## The middle of a table's top in its picture (px): the first opaque row over the middle third of
+## its width (a bucket or a rim on it counts: things go in it); (-1, -1) without a table
+func _table_top(path: String) -> Vector2:
+	var img: Image = (load(path) as Texture2D).get_image()
+	if img.is_compressed():
+		img.decompress()
+	var used := img.get_used_rect()
+	if used.size.x <= 0:
+		return Vector2(-1, -1)
+	var x0 := used.position.x + used.size.x / 3
+	var x1 := used.end.x - used.size.x / 3
+	for y in range(used.position.y, used.end.y):
+		for x in range(x0, x1):
+			if img.get_pixel(x, y).a > 0.5:
+				return Vector2(used.position.x + used.size.x * 0.5, y)
+	return Vector2(-1, -1)
+
+## The offering onto the home's table and the spirit behind it (no table: the old sanbo's tray and
+## the spirit's first place)
+func _fit_to_table(top: Vector2) -> void:
+	var pal := get_parent().get_node_or_null("Poop") as Node2D
+	if pal and is_nan(_pal_at0.x):
+		_pal_at0 = pal.get("base_position")
+	if top.y < 0:
+		_offer_px = _g(OFFER_AT.x, OFFER_AT.y) + _platform_offset()
+	else:
+		_offer_px = Vector2((top.x - 462.5) * _gut_scale.x, (top.y + TABLE_INSET - 462.5) * _gut_scale.y)
+	if offering:
+		_place_offering()
+	if cup_parts.size() > 0:
+		_place_cup()
+	if not pal:
+		return
+	var at := _pal_at0
+	if top.y >= 0:
+		var bs: Vector2 = pal.get("base_scale")
+		at = position + Vector2((top.x - 462.5) * _gut_scale.x, (top.y + FEET_BELOW - 462.5) * _gut_scale.y - PAL_FLOOR * bs.y)
+	var bp: Vector2 = pal.get("base_position")
+	pal.position += at - bp
+	pal.set("base_position", at)
+	var waiting = pal.get("mystery")
+	if waiting and (waiting as Sprite2D).visible:
+		pal.call("_show_mystery")
+
 ## Draw n just under target (both the shrine's children)
 func _put_before(n: Node, target: Node) -> void:
 	move_child(n, target.get_index() - (1 if n.get_index() < target.get_index() else 0))
@@ -677,6 +732,13 @@ func _process(delta: float) -> void:
 ## Put an offering on the tray (null: take it away)
 func show_offering(tex: Texture2D) -> void:
 	offering.texture = tex
+	_offer_pad = 0.0
+	if tex:                                      # (its picture's clear rows under the food: it stands on the food)
+		var img := tex.get_image()
+		if img:
+			if img.is_compressed():
+				img.decompress()
+			_offer_pad = float(img.get_height() - img.get_used_rect().end.y)
 	offering.visible = tex != null
 	_bites = 0
 	_set_bites()
@@ -685,6 +747,7 @@ func show_offering(tex: Texture2D) -> void:
 var _drop := 0.0                      # px the offering is still above the tray (falling)
 var _squash := Vector2.ONE            # its landing squash (its foot stays on the tray)
 var _bites := 0
+var _offer_pad := 0.0                 # the offering picture's clear rows under the food (texels)
 
 func _place_offering() -> void:
 	if not offering.texture:
@@ -692,7 +755,7 @@ func _place_offering() -> void:
 	var w := float(offering.texture.get_width())
 	offering.scale = Vector2.ONE * OFFER_W * CELL * _gut_scale.x / w * _squash
 	var h := float(offering.texture.get_height()) * offering.scale.y
-	offering.position = (_g(OFFER_AT.x, OFFER_AT.y) + _platform_offset()) + Vector2(0, -h * 0.5 - _drop) + (tilt * OFFER_D).round()
+	offering.position = _offer_px + Vector2(0, -h * 0.5 - _drop + _offer_pad * offering.scale.y) + (tilt * OFFER_D).round()
 
 # ------------------------------------------------------------------ FEEDING
 ## The meal in the shrine (the gut's falling chunks and digestion's place; main_button.gd): the
@@ -856,7 +919,7 @@ func _puff() -> void:
 	var img := Image.create(2, 2, false, Image.FORMAT_RGBA8)
 	img.fill(Color(1, 0.98, 0.94, 0.9))
 	var dot := ImageTexture.create_from_image(img)
-	var at := (_g(OFFER_AT.x, OFFER_AT.y) + _platform_offset()) + (tilt * OFFER_D).round()
+	var at := _offer_px + (tilt * OFFER_D).round()
 	for k in 8:
 		var d := Sprite2D.new()
 		d.texture = dot
@@ -1155,7 +1218,7 @@ func _prop_sprite(tex: Texture2D, px := CUP_PX) -> Sprite2D:
 func _place_cup() -> void:
 	for sp in cup_parts:
 		var h: float = sp.texture.get_height() * sp.scale.y
-		sp.position = (_g(OFFER_AT.x, OFFER_AT.y) + _platform_offset()) + Vector2(0, -h * 0.5) + (tilt * float(cup_parts[sp])).round()
+		sp.position = _offer_px + Vector2(0, -h * 0.5) + (tilt * float(cup_parts[sp])).round()
 
 func _cup_mouth() -> Vector2:
 	# (the drink's surface: the mouth's middle, a third of the way down the cup's picture)
