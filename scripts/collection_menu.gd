@@ -612,7 +612,8 @@ func _show_detail(id: String) -> void:
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	desc.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.text = f["desc"] if known else _pal_hint(id)
+	# (the new spirits' line, "It's a fox spirit.", from the naming day; the old pals' line with SPIRITS: OLD)
+	desc.text = (str(f.get("kind", f["desc"])) if DevLaunch.new_spirits else str(f["desc"])) if known else _pal_hint(id)
 	_refresh_pager()
 
 func _build_list(v: int) -> void:

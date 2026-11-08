@@ -48,6 +48,22 @@ var _badge_bob: Tween
 const ACCESSORY_FOLLOW_SCALE := 0.12   # scale changes smaller than this (breathing) are ignored
 var accessory: Sprite2D
 
+# The new spirits (2026-11-07): the animation (spirit_anim.gd) plays on top, the old picture stays
+# for the body's size and the taps, unseen. A whole, even scale: 1 art px = 2 rig px = 5 screen px
+# (the node itself is scaled 2.65 x 2.77, so the rig undoes that). It breathes, blinks, hops,
+# chomps and sleeps by itself, so the node's own breathing and squish tweens are off for it.
+const SPIRIT_PX := 2.5
+const OLD_BASELINE := 60.0          # the old pictures' floor, below this node's centre (texels)
+const NIGHT_SLEEP := 0.85           # the shrine's night (0..1) above which the spirit sleeps
+## At night it dozes off only when left alone this long (s). A tap, a rub or an offering wakes it
+## and it stays up while you're with it (the user 2026-11-07: not asleep from a set hour no matter what)
+const DOZE_AFTER := 30.0
+var rig: Node2D
+var _sleep_t := 0.0
+var _alone_t := DOZE_AFTER          # (opened at night: found asleep)
+## The tap's bounce pace (1.8 = about 0.6 s, the user's pick 2026-11-07; 1 = a third of a second)
+static var POKE_PACE := 1.8
+
 func _ready():
 	base_scale = scale
 	base_position = position
@@ -67,14 +83,53 @@ func _ready():
 	if PetState.has_poop():
 		sprite_frames = PetState.build_sprite_frames()
 		play("idle")
+		_attach_rig()
 		_start_breathing()
 	else:
 		modulate.a = 0.0
 	_refresh_accessory()
 
+## The new spirit's animation on this pal (or none: the old picture shows, as before)
+func _attach_rig() -> void:
+	if rig:
+		rig.queue_free()
+		rig = null
+	self_modulate.a = 1.0
+	if not PetState.has_poop() or not PetState.has_spirit_anim():
+		return
+	rig = preload("res://scripts/spirit_anim.gd").new()
+	rig.name = "Spirit"
+	rig.scale = Vector2(SPIRIT_PX / base_scale.x, SPIRIT_PX / base_scale.y)
+	add_child(rig)
+	rig.setup(PetState.form_id, "res://textures/spirits", OLD_BASELINE * base_scale.y / SPIRIT_PX, "res://data/spirit_rig.json")
+	self_modulate.a = 0.0
+	_sleep_t = 0.0
+	_check_sleep()
+
+## Someone's with it: awake (whatever it plays next replaces the sleep), the doze clock restarts
+func _wake() -> void:
+	_alone_t = 0.0
+
+## Asleep at night in the shrine, awake by day (checked every couple of seconds)
+func _check_sleep() -> void:
+	if not rig:
+		return
+	var shrine := get_parent().get_node_or_null("Shrine")
+	var night: float = shrine.get("_night") if shrine else 0.0
+	if night >= NIGHT_SLEEP and rig.state == "idle" and _alone_t >= DOZE_AFTER:
+		rig.play("sleep")
+	elif night < NIGHT_SLEEP and rig.state == "sleep":
+		rig.play("idle")
+
 func _process(delta: float) -> void:
 	_time += delta
 	_follow_accessory()
+	if rig:
+		_alone_t += delta
+		_sleep_t += delta
+		if _sleep_t >= 2.0:
+			_sleep_t = 0.0
+			_check_sleep()
 	if _trail:
 		_sendoff_trail(delta)
 	if flush_charge > 0.0:
@@ -84,6 +139,9 @@ func _process(delta: float) -> void:
 func _start_breathing():
 	if breathing_tween:
 		breathing_tween.kill()
+	if rig:
+		scale = base_scale
+		return                               # (the spirit breathes in its own animation)
 	breathing_tween = create_tween()
 	breathing_tween.tween_property(self, "scale", base_scale + breathing_amount, breathing_time) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -184,7 +242,7 @@ func _on_stroke() -> void:
 	while not _rub_times.is_empty() and now - _rub_times[0] > TICKLE_WINDOW:
 		_rub_times.pop_front()
 	# every stroke gives a tiny squish, so the pal feels touched
-	if not (fx_tween and fx_tween.is_running()):
+	if not rig and not (fx_tween and fx_tween.is_running()):
 		if _squish:
 			_squish.kill()
 		_squish = create_tween()
@@ -195,6 +253,13 @@ func _on_stroke() -> void:
 		_tickle()
 
 func _tickle() -> void:
+	if rig:
+		_play_sfx("res://sounds/fx/giggle.wav", -10.0)
+		_hearts()
+		_wake()
+		rig.play("happy")
+		_tickle_ready_at = Time.get_ticks_msec() / 1000.0 + TICKLE_COOLDOWN
+		return
 	_tickling = true
 	_stop_all_tweens()
 	scale = base_scale
@@ -229,6 +294,26 @@ func poke() -> void:
 	if not PetState.has_poop() or _tickling or _transforming or flush_charge > 0.0 or modulate.a < 0.5:
 		return                               # (hatching / evolving can't be interrupted)
 	if fx_tween and fx_tween.is_running() and not has_meta("poking"):
+		return
+	if rig:
+		# (the mix, the user 2026-11-07: a quick bounce of the whole spirit right on the tap, then its
+		# own poke plays on: eyes squeezed, a happy hop. A tap during the bounce restarts it.)
+		_play_sfx("res://sounds/fx/giggle_short.wav", -12.0, randf_range(0.92, 1.12))
+		_wake()
+		rig.play("poke")
+		if fx_tween:
+			fx_tween.kill()
+		scale = base_scale
+		rotation = 0.0
+		var lean := 0.09 if randf() < 0.5 else -0.09
+		fx_tween = create_tween()
+		var k := POKE_PACE
+		fx_tween.tween_property(self, "scale", base_scale * Vector2(1.16, 0.84), 0.045 * k)
+		fx_tween.parallel().tween_property(self, "rotation", lean, 0.045 * k)
+		fx_tween.tween_property(self, "scale", base_scale * Vector2(0.93, 1.09), 0.08 * k).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		fx_tween.parallel().tween_property(self, "rotation", -lean * 0.5, 0.08 * k)
+		fx_tween.tween_property(self, "scale", base_scale, 0.22 * k).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		fx_tween.parallel().tween_property(self, "rotation", 0.0, 0.18 * k).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		return
 	# (the digestion blink keeps going: only the breathing and a previous poke stop)
 	for t in [breathing_tween, fx_tween]:
@@ -362,6 +447,9 @@ func _refresh_accessory() -> void:
 	_refresh_aura()
 	if not accessory:
 		return
+	if PetState.has_poop() and PetState.has_spirit_anim():
+		accessory.texture = null            # (the old pals' hats don't fit the spirits: their dress-ups are coming)
+		return
 	var dir: String = Collection.ACCESSORIES.get(Collection.equipped_accessory, {}).get("dir", "")
 	var path := "%s%s-1.png" % [dir, PetState.form_id]      # one still frame (no breathing)
 	if dir == "" or not PetState.has_poop() or not ResourceLoader.exists(path):
@@ -378,6 +466,7 @@ func _on_form_changed(_form_id: String, reason: String) -> void:
 		"evolve":
 			_play_evolve()
 		"flush":
+			_attach_rig()                    # (no spirit now: the animation goes with it)
 			_show_mystery()
 
 ## True while hatching or evolving: pokes wait, so the new form always shows up
@@ -395,6 +484,7 @@ func _play_hatch() -> void:
 	_hide_mystery()
 	sprite_frames = PetState.build_sprite_frames()
 	play("idle")
+	_attach_rig()
 	_refresh_accessory()
 	scale = Vector2.ZERO
 	modulate = Color(1, 1, 1, 1)
@@ -418,6 +508,10 @@ func _new_form_sfx() -> String:
 func notice_food() -> void:
 	if _transforming or not PetState.has_poop():
 		return
+	if rig:
+		_wake()
+		rig.play("happy")
+		return
 	var hop := create_tween()
 	for k in 2:
 		hop.tween_property(self, "position:y", base_position.y - 12.0, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
@@ -426,6 +520,10 @@ func notice_food() -> void:
 ## One bite of the offering (shrine.gd): a quick lunge down to the tray and back
 func bite() -> void:
 	if _transforming or not PetState.has_poop():
+		return
+	if rig:
+		_wake()
+		rig.play("eat")
 		return
 	var t := create_tween()
 	t.tween_property(self, "position:y", base_position.y + 10.0, 0.09).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
@@ -506,6 +604,7 @@ func _play_evolve() -> void:
 	fx_tween.tween_callback(func():
 		sprite_frames = PetState.build_sprite_frames()
 		play("idle")
+		_attach_rig()
 		_refresh_accessory()
 		_play_sfx(_new_form_sfx(), -6.0))
 	# 4) spring back out

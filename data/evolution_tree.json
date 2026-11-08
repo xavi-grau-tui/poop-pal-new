@@ -2,7 +2,7 @@
  "forms": {
   "bud": {
    "no": 1,
-   "name": "Bud",
+   "name": "Mebuki",
    "stage": 1,
    "stage_name": "baby",
    "family": "green",
@@ -13,11 +13,12 @@
    ],
    "desc": "A seed that stood up.",
    "hint": "Start a pal with a green Sho food.",
-   "line": "Bud | bean | green | leaf2 | gloss flat | A seed that stood up."
+   "line": "Bud | bean | green | leaf2 | gloss flat | A seed that stood up.",
+   "kind": "It's a sprouting seed."
   },
   "peapod": {
    "no": 2,
-   "name": "Peapod",
+   "name": "Kokemaru",
    "stage": 2,
    "stage_name": "kid",
    "family": "green",
@@ -27,12 +28,13 @@
     "green"
    ],
    "desc": "Three peas, one opinion.",
-   "hint": "Feed Bud a green Chu food.",
-   "line": "Peapod | pod | green/lime | | dot flat | Three peas, one opinion."
+   "hint": "Feed Mebuki a green Chu food.",
+   "line": "Peapod | pod | green/lime | | dot flat | Three peas, one opinion.",
+   "kind": "It's a moss-stone spirit."
   },
   "usagi": {
    "no": 3,
-   "name": "Usagi",
+   "name": "Hanami",
    "stage": 2,
    "stage_name": "kid",
    "family": "green",
@@ -42,12 +44,13 @@
     "sweet"
    ],
    "desc": "Pounds mochi under the moon.",
-   "hint": "Feed Bud a sweet Chu food.",
-   "line": "Usagi | mochi | green/sweet | ears_bunny | sleep w | Pounds mochi under the moon."
+   "hint": "Feed Mebuki a sweet Chu food.",
+   "line": "Usagi | mochi | green/sweet | ears_bunny | sleep w | Pounds mochi under the moon.",
+   "kind": "It's a spring-mochi spirit."
   },
   "kakiage": {
    "no": 4,
-   "name": "Kakiage",
+   "name": "Button",
    "stage": 2,
    "stage_name": "kid",
    "family": "green",
@@ -57,12 +60,13 @@
     "greasy"
    ],
    "desc": "A tempura fritter that walks.",
-   "hint": "Feed Bud a greasy Chu food.",
-   "line": "Kakiage | pebble | crust/green | crust speckle:green | heavy flat | A tempura fritter that walks."
+   "hint": "Feed Mebuki a greasy Chu food.",
+   "line": "Kakiage | pebble | crust/green | crust speckle:green | heavy flat | A tempura fritter that walks.",
+   "kind": "It's a little mushroom spirit."
   },
   "tengu": {
    "no": 5,
-   "name": "Tengu",
+   "name": "Piyosuke",
    "stage": 2,
    "stage_name": "kid",
    "family": "green",
@@ -72,12 +76,13 @@
     "spicy"
    ],
    "desc": "A forest goblin with a red face.",
-   "hint": "Feed Bud a spicy Chu food.",
-   "line": "Tengu | egg | green/spicy | face_patch:spicy longnose:spicy feather:wood | stern flat | A forest goblin with a red face."
+   "hint": "Feed Mebuki a spicy Chu food.",
+   "line": "Tengu | egg | green/spicy | face_patch:spicy longnose:spicy feather:wood | stern flat | A forest goblin with a red face.",
+   "kind": "It's a leaf-tengu chick."
   },
   "kiwi": {
    "no": 6,
-   "name": "Kiwi",
+   "name": "Pillow",
    "stage": 2,
    "stage_name": "kid",
    "family": "green",
@@ -87,12 +92,13 @@
     "sour"
    ],
    "desc": "Fuzzy outside, sour inside.",
-   "hint": "Feed Bud a sour Chu food.",
-   "line": "Kiwi | egg | wood/lime | face_patch:lime | dot flat | Fuzzy outside, sour inside."
+   "hint": "Feed Mebuki a sour Chu food.",
+   "line": "Kiwi | egg | wood/lime | face_patch:lime | dot flat | Fuzzy outside, sour inside.",
+   "kind": "It's a pill-bug spirit."
   },
   "avocado": {
    "no": 7,
-   "name": "Avocado",
+   "name": "Uro",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -102,12 +108,13 @@
     "green"
    ],
    "desc": "A pea that grew up: green, big, proud of its stone.",
-   "hint": "Feed Peapod a green Dai food: green all the way.",
-   "line": "Avocado | pear | green/olive | belly:wood | dot flat | A pea that grew up: green, big, proud of its stone."
+   "hint": "Feed Kokemaru a green Dai food: green all the way.",
+   "line": "Avocado | pear | green/olive | belly:wood | dot flat | A pea that grew up: green, big, proud of its stone.",
+   "kind": "It's a tree-hollow spirit."
   },
   "melon_pan": {
    "no": 8,
-   "name": "Melon Pan",
+   "name": "Hikobae",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -118,12 +125,13 @@
     "sweet"
    ],
    "desc": "A sweet bun with a melon-skin crust.",
-   "hint": "Feed Peapod a friend food: a sour or sweet Dai food.",
-   "line": "Melon Pan | bun | lime/crust | checker:lime | dot w | A sweet bun with a melon-skin crust."
+   "hint": "Feed Kokemaru a friend food: a sour or sweet Dai food.",
+   "line": "Melon Pan | bun | lime/crust | checker:lime | dot w | A sweet bun with a melon-skin crust.",
+   "kind": "It's a tree-stump spirit."
   },
   "wasabi_pea": {
    "no": 9,
-   "name": "Wasabi Pea",
+   "name": "Iga",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -134,12 +142,13 @@
     "spicy"
    ],
    "desc": "Crunchy, green, furious.",
-   "hint": "Feed Peapod a rival food: a greasy or spicy Dai food.",
-   "line": "Wasabi Pea | ball | lime/spicy | crust:lime | stern flat | Crunchy, green, furious."
+   "hint": "Feed Kokemaru a rival food: a greasy or spicy Dai food.",
+   "line": "Wasabi Pea | ball | lime/spicy | crust:lime | stern flat | Crunchy, green, furious.",
+   "kind": "It's a chestnut-burr spirit."
   },
   "yomogi": {
    "no": 10,
-   "name": "Yomogi",
+   "name": "Mochigusa",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -149,12 +158,13 @@
     "green"
    ],
    "desc": "Mugwort dumplings on a stick. Earthy, chewy.",
-   "hint": "Feed Usagi a green Dai food, back to its roots.",
-   "line": "Yomogi | dango | moss/green/leaf | | dot flat | Mugwort dumplings on a stick. Earthy, chewy."
+   "hint": "Feed Hanami a green Dai food, back to its roots.",
+   "line": "Yomogi | dango | moss/green/leaf | | dot flat | Mugwort dumplings on a stick. Earthy, chewy.",
+   "kind": "It's a mugwort spirit."
   },
   "usagi_manju": {
    "no": 11,
-   "name": "Usagi Manju",
+   "name": "Mankai",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -164,12 +174,13 @@
     "sweet"
    ],
    "desc": "A rabbit-shaped bun, blue bean paste inside.",
-   "hint": "Feed Usagi a sweet Dai food, even more sweet.",
-   "line": "Usagi Manju | mochi sx=1.1 | white/sweet | ears_bunny:white | dot w | A rabbit-shaped bun, blue bean paste inside."
+   "hint": "Feed Hanami a sweet Dai food, even more sweet.",
+   "line": "Usagi Manju | mochi sx=1.1 | white/sweet | ears_bunny:white | dot w | A rabbit-shaped bun, blue bean paste inside.",
+   "kind": "It's a cherry-blossom spirit."
   },
   "yamabiko": {
    "no": 12,
-   "name": "Yamabiko",
+   "name": "Takane",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -181,12 +192,13 @@
     "sour"
    ],
    "desc": "Repeats everything you shout.",
-   "hint": "Feed Usagi any other Dai food: greasy, spicy or sour.",
-   "line": "Yamabiko | ball | cream/green | ears_mouse | wide o | Repeats everything you shout."
+   "hint": "Feed Hanami any other Dai food: greasy, spicy or sour.",
+   "line": "Yamabiko | ball | cream/green | ears_mouse | wide o | Repeats everything you shout.",
+   "kind": "It's a mountain-echo spirit (yamabiko)."
   },
   "kinoko": {
    "no": 13,
-   "name": "Kinoko",
+   "name": "Oyatake",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -196,12 +208,13 @@
     "green"
    ],
    "desc": "A mushroom yokai. Do not eat.",
-   "hint": "Feed Kakiage a green Dai food, back to its roots.",
-   "line": "Kinoko | mush | cream/spicy | cap:spicy capspots | glance flat | A mushroom yokai. Do not eat."
+   "hint": "Feed Button a green Dai food, back to its roots.",
+   "line": "Kinoko | mush | cream/spicy | cap:spicy capspots | glance flat | A mushroom yokai. Do not eat.",
+   "kind": "It's a mushroom spirit with its little one."
   },
   "mujina": {
    "no": 14,
-   "name": "Mujina",
+   "name": "Anaguma",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -211,12 +224,13 @@
     "greasy"
    ],
    "desc": "A badger that is mostly rumours.",
-   "hint": "Feed Kakiage a greasy Dai food, even more greasy.",
-   "line": "Mujina | bean | stone/cream | mask:char | glance flat | A badger that is mostly rumours."
+   "hint": "Feed Button a greasy Dai food, even more greasy.",
+   "line": "Mujina | bean | stone/cream | mask:char | glance flat | A badger that is mostly rumours.",
+   "kind": "It's a badger trickster (mujina)."
   },
   "kodama": {
    "no": 15,
-   "name": "Kodama",
+   "name": "Dongri",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -228,12 +242,13 @@
     "sour"
    ],
    "desc": "A tree spirit. Nods slowly.",
-   "hint": "Feed Kakiage any other Dai food: sweet, spicy or sour.",
-   "line": "Kodama | gum | white/green | leaf | dot o | A tree spirit. Nods slowly."
+   "hint": "Feed Button any other Dai food: sweet, spicy or sour.",
+   "line": "Kodama | gum | white/green | leaf | dot o | A tree spirit. Nods slowly.",
+   "kind": "It's a tree spirit (kodama)."
   },
   "karasu_tengu": {
    "no": 16,
-   "name": "Karasu Tengu",
+   "name": "Sojo",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -243,12 +258,13 @@
     "green"
    ],
    "desc": "A crow tengu. Guards the mountain path.",
-   "hint": "Feed Tengu a green Dai food, back to its roots.",
-   "line": "Karasu Tengu | bird | green/spicy | beak_f wings:green | stern flat | A crow tengu. Guards the mountain path."
+   "hint": "Feed Piyosuke a green Dai food, back to its roots.",
+   "line": "Karasu Tengu | bird | green/spicy | beak_f wings:green | stern flat | A crow tengu. Guards the mountain path.",
+   "kind": "It's a crow tengu."
   },
   "horseradish": {
    "no": 17,
-   "name": "Horseradish",
+   "name": "Hora",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -258,12 +274,13 @@
     "spicy"
    ],
    "desc": "Clears your nose from a mile away.",
-   "hint": "Feed Tengu a spicy Dai food, even more spicy.",
-   "line": "Horseradish | onion | cream/spicy | leaf2 | cross fang | Clears your nose from a mile away."
+   "hint": "Feed Piyosuke a spicy Dai food, even more spicy.",
+   "line": "Horseradish | onion | cream/spicy | leaf2 | cross fang | Clears your nose from a mile away.",
+   "kind": "It's a mountain-monk spirit (yamabushi)."
   },
   "komainu": {
    "no": 18,
-   "name": "Komainu",
+   "name": "Kozuchi",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -275,12 +292,13 @@
     "sour"
    ],
    "desc": "A stone lion-dog that guards the gate.",
-   "hint": "Feed Tengu any other Dai food: sweet, greasy or sour.",
-   "line": "Komainu | gum | stone/green | curl:stone ears_bear:stone | stern flat | A stone lion-dog that guards the gate."
+   "hint": "Feed Piyosuke any other Dai food: sweet, greasy or sour.",
+   "line": "Komainu | gum | stone/green | curl:stone ears_bear:stone | stern flat | A stone lion-dog that guards the gate.",
+   "kind": "It's a tsuchinoko, the snake of legend."
   },
   "kappa": {
    "no": 19,
-   "name": "Kappa",
+   "name": "Kawataro",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -290,12 +308,13 @@
     "green"
    ],
    "desc": "Keep its head plate wet.",
-   "hint": "Feed Kiwi a green Dai food, back to its roots.",
-   "line": "Kappa | gum | green/teal | plate:ice beak_f shell:moss | gloss flat | Keep its head plate wet."
+   "hint": "Feed Pillow a green Dai food, back to its roots.",
+   "line": "Kappa | gum | green/teal | plate:ice beak_f shell:moss | gloss flat | Keep its head plate wet.",
+   "kind": "It's a kappa."
   },
   "gherk": {
    "no": 20,
-   "name": "Gherk",
+   "name": "Hoodie",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -305,12 +324,13 @@
     "sour"
    ],
    "desc": "A gherkin that learned to crawl.",
-   "hint": "Feed Kiwi a sour Dai food, even more sour.",
-   "line": "Gherk | worm | sour/green | warts leaf | dot flat | A gherkin that learned to crawl."
+   "hint": "Feed Pillow a sour Dai food, even more sour.",
+   "line": "Gherk | worm | sour/green | warts leaf | dot flat | A gherkin that learned to crawl.",
+   "kind": "It's a leaf-cloaked bug."
   },
   "kiwi_bird": {
    "no": 21,
-   "name": "Kiwi Bird",
+   "name": "Koyo",
    "stage": 3,
    "stage_name": "adult",
    "family": "green",
@@ -322,12 +342,13 @@
     "spicy"
    ],
    "desc": "The fruit grew a beak. Finally friends.",
-   "hint": "Feed Kiwi any other Dai food: sweet, greasy or spicy.",
-   "line": "Kiwi Bird | bird | wood | longbeak | dot flat | The fruit grew a beak. Finally friends."
+   "hint": "Feed Pillow any other Dai food: sweet, greasy or spicy.",
+   "line": "Kiwi Bird | bird | wood | longbeak | dot flat | The fruit grew a beak. Finally friends.",
+   "kind": "It's a maple-leaf spirit."
   },
   "karakuri": {
    "no": 22,
-   "name": "Karakuri",
+   "name": "Zenmai",
    "stage": 4,
    "stage_name": "mutant",
    "family": "green",
@@ -338,11 +359,12 @@
    ],
    "desc": "A clockwork doll that serves tea.",
    "hint": "Feed any grown-up (Dai) green pal some tech food.",
-   "line": "Karakuri | tall | wood/metal | bolts chip | visor flat | A clockwork doll that serves tea."
+   "line": "Karakuri | tall | wood/metal | bolts chip | visor flat | A clockwork doll that serves tea.",
+   "kind": "It's a wind-up spirit (karakuri)."
   },
   "zorb": {
    "no": 23,
-   "name": "Zorb",
+   "name": "Hoshigoke",
    "stage": 4,
    "stage_name": "mutant",
    "family": "green",
@@ -353,11 +375,12 @@
    ],
    "desc": "Ate alien goo. Three eyes, no worries.",
    "hint": "Feed any grown-up (Dai) green pal some cosmic food.",
-   "line": "Zorb | ball | slime | antennae | three flat | Ate alien goo. Three eyes, no worries."
+   "line": "Zorb | ball | slime | antennae | three flat | Ate alien goo. Three eyes, no worries.",
+   "kind": "It's a moss ball from the stars."
   },
   "world_tree": {
    "no": 24,
-   "name": "World Tree",
+   "name": "Chiyo",
    "stage": 5,
    "stage_name": "legend",
    "family": "green",
@@ -367,12 +390,13 @@
     "legend"
    ],
    "desc": "A forest spirit that keeps the gut green.",
-   "hint": "Feed Avocado (the ULTRA green pal) the Golden Seed.",
-   "line": "World Tree | tree sy=1.2 | green/wood | base:wood spots:spicy sparkles halo | sleep none | A forest spirit that keeps the gut green."
+   "hint": "Feed Uro (the ULTRA green pal) the Golden Seed.",
+   "line": "World Tree | tree sy=1.2 | green/wood | base:wood spots:spicy sparkles halo | sleep none | A forest spirit that keeps the gut green.",
+   "kind": "It's the sacred tree."
   },
   "nib": {
    "no": 25,
-   "name": "Nib",
+   "name": "Tsubu",
    "stage": 1,
    "stage_name": "baby",
    "family": "sweet",
@@ -383,11 +407,12 @@
    ],
    "desc": "A cocoa bean with something to say.",
    "hint": "Start a pal with a sweet Sho food.",
-   "line": "Nib | bean sy=.85 | sweet | half:navy | dot flat | A cocoa bean with something to say."
+   "line": "Nib | bean sy=.85 | sweet | half:navy | dot flat | A cocoa bean with something to say.",
+   "kind": "It's a drop of night."
   },
   "leafwing": {
    "no": 26,
-   "name": "Leafwing",
+   "name": "Suzuran",
    "stage": 2,
    "stage_name": "kid",
    "family": "sweet",
@@ -397,12 +422,13 @@
     "green"
    ],
    "desc": "Looks exactly like a leaf. On purpose.",
-   "hint": "Feed Nib a green Chu food.",
-   "line": "Leafwing | bean | green/sweet | wings:green antennae | glance flat | Looks exactly like a leaf. On purpose."
+   "hint": "Feed Tsubu a green Chu food.",
+   "line": "Leafwing | bean | green/sweet | wings:green antennae | glance flat | Looks exactly like a leaf. On purpose.",
+   "kind": "It's a lily-of-the-valley spirit."
   },
   "fudge": {
    "no": 27,
-   "name": "Fudge",
+   "name": "Pyon",
    "stage": 2,
    "stage_name": "kid",
    "family": "sweet",
@@ -412,12 +438,13 @@
     "sweet"
    ],
    "desc": "Fudge. Dense. Dependable.",
-   "hint": "Feed Nib a sweet Chu food.",
-   "line": "Fudge | cube | choc/sweet | glaze:sweet | lid flat | Fudge. Dense. Dependable."
+   "hint": "Feed Tsubu a sweet Chu food.",
+   "line": "Fudge | cube | choc/sweet | glaze:sweet | lid flat | Fudge. Dense. Dependable.",
+   "kind": "It's a moon-rabbit kit."
   },
   "glazy": {
    "no": 28,
-   "name": "Glazy",
+   "name": "Mikazuki",
    "stage": 2,
    "stage_name": "kid",
    "family": "sweet",
@@ -427,12 +454,13 @@
     "greasy"
    ],
    "desc": "A donut with a blue glaze.",
-   "hint": "Feed Nib a greasy Chu food.",
-   "line": "Glazy | ring | crust/sweet | glaze:sweet sprinkles | gloss smirk | A donut with a blue glaze."
+   "hint": "Feed Tsubu a greasy Chu food.",
+   "line": "Glazy | ring | crust/sweet | glaze:sweet sprinkles | gloss smirk | A donut with a blue glaze.",
+   "kind": "It's a moon mochi."
   },
   "choco_taco": {
    "no": 29,
-   "name": "Choco Taco",
+   "name": "Chirin",
    "stage": 2,
    "stage_name": "kid",
    "family": "sweet",
@@ -442,12 +470,13 @@
     "spicy"
    ],
    "desc": "Ice cream in a crunchy shell.",
-   "hint": "Feed Nib a spicy Chu food.",
-   "line": "Choco Taco | half | crust/sweet | cap:sweet | glance smirk | Ice cream in a crunchy shell."
+   "hint": "Feed Tsubu a spicy Chu food.",
+   "line": "Choco Taco | half | crust/sweet | cap:sweet | glance smirk | Ice cream in a crunchy shell.",
+   "kind": "It's a wind-chime spirit (fūrin)."
   },
   "bumble": {
    "no": 30,
-   "name": "Bumble",
+   "name": "Dango",
    "stage": 2,
    "stage_name": "kid",
    "family": "sweet",
@@ -457,12 +486,13 @@
     "sour"
    ],
    "desc": "A bumblebee in blue stripes.",
-   "hint": "Feed Nib a sour Chu food.",
-   "line": "Bumble | ball | greasy/sweet | hstripes:sweet wings_bug antennae | gloss flat | A bumblebee in blue stripes."
+   "hint": "Feed Tsubu a sour Chu food.",
+   "line": "Bumble | ball | greasy/sweet | hstripes:sweet wings_bug antennae | gloss flat | A bumblebee in blue stripes.",
+   "kind": "It's a moon-viewing dumpling spirit."
   },
   "owlet": {
    "no": 31,
-   "name": "Owlet",
+   "name": "Mayu",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -472,12 +502,13 @@
     "sweet"
    ],
    "desc": "Up all night, every night.",
-   "hint": "Feed Leafwing a sweet Dai food, back to its roots.",
-   "line": "Owlet | ball | sweet/cream | ears belly:cream beak_f | wide none | Up all night, every night."
+   "hint": "Feed Suzuran a sweet Dai food, back to its roots.",
+   "line": "Owlet | ball | sweet/cream | ears belly:cream beak_f | wide none | Up all night, every night.",
+   "kind": "It's a moon moth."
   },
   "pistachio": {
    "no": 32,
-   "name": "Pistachio",
+   "name": "Yugao",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -487,12 +518,13 @@
     "green"
    ],
    "desc": "A pistachio scoop on a waffle cone.",
-   "hint": "Feed Leafwing a green Dai food, even more green.",
-   "line": "Pistachio | icecream | crust/lime | | dot w | A pistachio scoop on a waffle cone."
+   "hint": "Feed Suzuran a green Dai food, even more green.",
+   "line": "Pistachio | icecream | crust/lime | | dot w | A pistachio scoop on a waffle cone.",
+   "kind": "It's a night-blossom spirit."
   },
   "scarab": {
    "no": 33,
-   "name": "Scarab",
+   "name": "Nightlight",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -504,12 +536,13 @@
     "sour"
    ],
    "desc": "Rolls cocoa beans home.",
-   "hint": "Feed Leafwing any other Dai food: greasy, spicy or sour.",
-   "line": "Scarab | ball | navy/gold | half:gold antennae | gloss flat | Rolls cocoa beans home."
+   "hint": "Feed Suzuran any other Dai food: greasy, spicy or sour.",
+   "line": "Scarab | ball | navy/gold | half:gold antennae | gloss flat | Rolls cocoa beans home.",
+   "kind": "It's a midnight flame."
   },
   "bonbon": {
    "no": 34,
-   "name": "Bonbon",
+   "name": "Kine",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -519,12 +552,13 @@
     "sweet"
    ],
    "desc": "A blue chocolate bonbon, wrapped like a gift.",
-   "hint": "Feed Fudge a sweet Dai food: sweet all the way.",
-   "line": "Bonbon | ball sx=1.1 | sweet/navy | wrapper:pink sparkles | lid flat | A blue chocolate bonbon, wrapped like a gift."
+   "hint": "Feed Pyon a sweet Dai food: sweet all the way.",
+   "line": "Bonbon | ball sx=1.1 | sweet/navy | wrapper:pink sparkles | lid flat | A blue chocolate bonbon, wrapped like a gift.",
+   "kind": "It's the mochi-pounding rabbit."
   },
   "kuri": {
    "no": 35,
-   "name": "Kuri",
+   "name": "Bunzo",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -535,12 +569,13 @@
     "greasy"
    ],
    "desc": "A chestnut sweet. Shiny on top.",
-   "hint": "Feed Fudge a friend food: a green or greasy Dai food.",
-   "line": "Kuri | kiss | wood/cream | base:cream | dot flat | A chestnut sweet. Shiny on top."
+   "hint": "Feed Pyon a friend food: a green or greasy Dai food.",
+   "line": "Kuri | kiss | wood/cream | base:cream | dot flat | A chestnut sweet. Shiny on top.",
+   "kind": "It's a rabbit-bun spirit."
   },
   "gremlin": {
    "no": 36,
-   "name": "Gremlin",
+   "name": "Komori",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -551,12 +586,13 @@
     "sour"
    ],
    "desc": "Do not feed it after midnight.",
-   "hint": "Feed Fudge a rival food: a spicy or sour Dai food.",
-   "line": "Gremlin | squat | sweet/purple | ears_fox:purple | glance grin | Do not feed it after midnight."
+   "hint": "Feed Pyon a rival food: a spicy or sour Dai food.",
+   "line": "Gremlin | squat | sweet/purple | ears_fox:purple | glance grin | Do not feed it after midnight.",
+   "kind": "It's a sleepy patch of night sky."
   },
   "eclair": {
    "no": 37,
-   "name": "Eclair",
+   "name": "Kumonori",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -566,12 +602,13 @@
     "sweet"
    ],
    "desc": "Long, glazed, full of blue cream.",
-   "hint": "Feed Glazy a sweet Dai food, back to its roots.",
-   "line": "Eclair | sausage | crust/sweet | glaze:sweet | lid flat | Long, glazed, full of blue cream."
+   "hint": "Feed Mikazuki a sweet Dai food, back to its roots.",
+   "line": "Eclair | sausage | crust/sweet | glaze:sweet | lid flat | Long, glazed, full of blue cream.",
+   "kind": "It's a cloud-riding moon mochi."
   },
   "churro": {
    "no": 38,
-   "name": "Churro",
+   "name": "Oyasumi",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -581,12 +618,13 @@
     "greasy"
    ],
    "desc": "Long, ridged, dusted in sugar.",
-   "hint": "Feed Glazy a greasy Dai food, even more greasy.",
-   "line": "Churro | tall | crust | ridges:crust sugar | heavy smirk | Long, ridged, dusted in sugar."
+   "hint": "Feed Mikazuki a greasy Dai food, even more greasy.",
+   "line": "Churro | tall | crust | ridges:crust sugar | heavy smirk | Long, ridged, dusted in sugar.",
+   "kind": "It's a moon mochi tucked into bed."
   },
   "candy_corn": {
    "no": 39,
-   "name": "Candy Corn",
+   "name": "Wataame",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -598,12 +636,13 @@
     "sour"
    ],
    "desc": "Half of everyone hates it. It knows.",
-   "hint": "Feed Glazy any other Dai food: green, spicy or sour.",
-   "line": "Candy Corn | corn | lemon/orange/white | | dot flat | Half of everyone hates it. It knows."
+   "hint": "Feed Mikazuki any other Dai food: green, spicy or sour.",
+   "line": "Candy Corn | corn | lemon/orange/white | | dot flat | Half of everyone hates it. It knows.",
+   "kind": "It's a dawn-cloud spirit."
   },
   "hot_cocoa": {
    "no": 40,
-   "name": "Hot Cocoa",
+   "name": "Bellamy",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -613,12 +652,13 @@
     "sweet"
    ],
    "desc": "Cocoa with a pinch of chilli.",
-   "hint": "Feed Choco Taco a sweet Dai food, back to its roots.",
-   "line": "Hot Cocoa | pot | sweet/cream | cap:cream steam | sleep w | Cocoa with a pinch of chilli."
+   "hint": "Feed Chirin a sweet Dai food, back to its roots.",
+   "line": "Hot Cocoa | pot | sweet/cream | cap:cream steam | sleep w | Cocoa with a pinch of chilli.",
+   "kind": "It's a temple-bell spirit."
   },
   "cocoa_fire": {
    "no": 41,
-   "name": "Cocoa Fire",
+   "name": "Akari",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -628,12 +668,13 @@
     "spicy"
    ],
    "desc": "Hot chocolate with a fire inside.",
-   "hint": "Feed Choco Taco a spicy Dai food, even more spicy.",
-   "line": "Cocoa Fire | pot | choc/spicy | cap:cream flame | lid flat | Hot chocolate with a fire inside."
+   "hint": "Feed Chirin a spicy Dai food, even more spicy.",
+   "line": "Cocoa Fire | pot | choc/spicy | cap:cream flame | lid flat | Hot chocolate with a fire inside.",
+   "kind": "It's a stone-lantern spirit."
   },
   "taiyaki": {
    "no": 42,
-   "name": "Taiyaki",
+   "name": "Oyoge",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -645,8 +686,9 @@
     "sour"
    ],
    "desc": "A fish-shaped cake, blue inside.",
-   "hint": "Feed Choco Taco any other Dai food: green, greasy or sour.",
-   "line": "Taiyaki | fish | crust/sweet | tail_fish:crust scales:crust | gloss flat | A fish-shaped cake, blue inside."
+   "hint": "Feed Chirin any other Dai food: green, greasy or sour.",
+   "line": "Taiyaki | fish | crust/sweet | tail_fish:crust scales:crust | gloss flat | A fish-shaped cake, blue inside.",
+   "kind": "It's a taiyaki spirit."
   },
   "honeybear": {
    "no": 43,
@@ -660,8 +702,9 @@
     "sweet"
    ],
    "desc": "Fell asleep in the honey pot.",
-   "hint": "Feed Bumble a sweet Dai food, back to its roots.",
-   "line": "Honeybear | bun | greasy/sweet | ears_bear:greasy belly:cream drip:sweet | dot w | Fell asleep in the honey pot."
+   "hint": "Feed Dango a sweet Dai food, back to its roots.",
+   "line": "Honeybear | bun | greasy/sweet | ears_bear:greasy belly:cream drip:sweet | dot w | Fell asleep in the honey pot.",
+   "kind": "It's a horned-owl spirit."
   },
   "ramune": {
    "no": 44,
@@ -675,12 +718,13 @@
     "sour"
    ],
    "desc": "A marble soda. Fizzy and blue.",
-   "hint": "Feed Bumble a sour Dai food, even more sour.",
-   "line": "Ramune | bottle | sky | bubbles | gloss o | A marble soda. Fizzy and blue."
+   "hint": "Feed Dango a sour Dai food, even more sour.",
+   "line": "Ramune | bottle | sky | bubbles | gloss o | A marble soda. Fizzy and blue.",
+   "kind": "It's a ramune-bottle spirit."
   },
   "bruin": {
    "no": 45,
-   "name": "Bruin",
+   "name": "Tsukinowa",
    "stage": 3,
    "stage_name": "adult",
    "family": "sweet",
@@ -692,12 +736,13 @@
     "spicy"
    ],
    "desc": "A bear cub sticky with blue honey.",
-   "hint": "Feed Bumble any other Dai food: green, greasy or spicy.",
-   "line": "Bruin | ball | greasy/sweet | ears_bear:greasy drip:sweet | dot flat | A bear cub sticky with blue honey."
+   "hint": "Feed Dango any other Dai food: green, greasy or spicy.",
+   "line": "Bruin | ball | greasy/sweet | ears_bear:greasy drip:sweet | dot flat | A bear cub sticky with blue honey.",
+   "kind": "It's a moon bear (tsukinowaguma)."
   },
   "cocoa_9": {
    "no": 46,
-   "name": "Cocoa-9",
+   "name": "Moonwork",
    "stage": 4,
    "stage_name": "mutant",
    "family": "sweet",
@@ -708,11 +753,12 @@
    ],
    "desc": "A chocolate robot, model 9.",
    "hint": "Feed any grown-up (Dai) sweet pal some tech food.",
-   "line": "Cocoa-9 | kiss | metal/sweet | bolts | visor flat | A chocolate robot, model 9."
+   "line": "Cocoa-9 | kiss | metal/sweet | bolts | visor flat | A chocolate robot, model 9.",
+   "kind": "It's a wind-up spirit."
   },
   "kaguya": {
    "no": 47,
-   "name": "Kaguya",
+   "name": "Taketori",
    "stage": 4,
    "stage_name": "mutant",
    "family": "sweet",
@@ -723,11 +769,12 @@
    ],
    "desc": "A princess from the moon, inside a mochi.",
    "hint": "Feed any grown-up (Dai) sweet pal some cosmic food.",
-   "line": "Kaguya | ball | goo/white | stars halo | sleep none | A princess from the moon, inside a mochi."
+   "line": "Kaguya | ball | goo/white | stars halo | sleep none | A princess from the moon, inside a mochi.",
+   "kind": "It's a shining-bamboo spirit."
   },
   "tsukuyomi": {
    "no": 48,
-   "name": "Tsukuyomi",
+   "name": "Gyokuto",
    "stage": 5,
    "stage_name": "legend",
    "family": "sweet",
@@ -737,8 +784,9 @@
     "legend"
    ],
    "desc": "The moon rabbit god.",
-   "hint": "Feed Bonbon (the ULTRA sweet pal) the Stardust Sugar.",
-   "line": "Tsukuyomi | ball sx=1.1 | sweet/white | ears_bunny:white stars halo sparkles | sleep none | The moon rabbit god."
+   "hint": "Feed Kine (the ULTRA sweet pal) the Stardust Sugar.",
+   "line": "Tsukuyomi | ball sx=1.1 | sweet/white | ears_bunny:white stars halo sparkles | sleep none | The moon rabbit god.",
+   "kind": "It's the moon rabbit god."
   },
   "inari": {
    "no": 49,
@@ -753,11 +801,12 @@
    ],
    "desc": "A fried tofu pouch that foxes adore.",
    "hint": "Start a pal with a greasy Sho food.",
-   "line": "Inari | gum sy=.85 | crust | nubs:crust | lid flat | A fried tofu pouch that foxes adore."
+   "line": "Inari | gum sy=.85 | crust | nubs:crust | lid flat | A fried tofu pouch that foxes adore.",
+   "kind": "It's a fried-tofu pouch spirit (inari)."
   },
   "kitsune": {
    "no": 50,
-   "name": "Kitsune",
+   "name": "Gon",
    "stage": 2,
    "stage_name": "kid",
    "family": "greasy",
@@ -768,11 +817,12 @@
    ],
    "desc": "A fox who loves fried tofu.",
    "hint": "Feed Inari a green Chu food.",
-   "line": "Kitsune | egg | greasy/white | ears_fox tail_fluff belly:white | lid flat | A fox who loves fried tofu."
+   "line": "Kitsune | egg | greasy/white | ears_fox tail_fluff belly:white | lid flat | A fox who loves fried tofu.",
+   "kind": "It's a fox spirit."
   },
   "waffle": {
    "no": 51,
-   "name": "Waffle",
+   "name": "Clementine",
    "stage": 2,
    "stage_name": "kid",
    "family": "greasy",
@@ -783,11 +833,12 @@
    ],
    "desc": "A waffle with blue syrup.",
    "hint": "Feed Inari a sweet Chu food.",
-   "line": "Waffle | cube s=1.12 sx=1.1 | gold/sweet | checker:crust drip:sweet | gloss flat | A waffle with blue syrup."
+   "line": "Waffle | cube s=1.12 sx=1.1 | gold/sweet | checker:crust drip:sweet | gloss flat | A waffle with blue syrup.",
+   "kind": "It's a mikan spirit."
   },
   "fried_egg": {
    "no": 52,
-   "name": "Fried Egg",
+   "name": "Pon",
    "stage": 2,
    "stage_name": "kid",
    "family": "greasy",
@@ -798,11 +849,12 @@
    ],
    "desc": "Sunny side up, every day.",
    "hint": "Feed Inari a greasy Chu food.",
-   "line": "Fried Egg | fried | white/greasy | | dot flat | Sunny side up, every day."
+   "line": "Fried Egg | fried | white/greasy | | dot flat | Sunny side up, every day.",
+   "kind": "It's a tanuki pup."
   },
   "drumstick": {
    "no": 53,
-   "name": "Drumstick",
+   "name": "Bachi",
    "stage": 2,
    "stage_name": "kid",
    "family": "greasy",
@@ -813,11 +865,12 @@
    ],
    "desc": "All drumstick, no fear.",
    "hint": "Feed Inari a spicy Chu food.",
-   "line": "Drumstick | pear | crust | crust bone | stern flat | All drumstick, no fear."
+   "line": "Drumstick | pear | crust | crust bone | stern flat | All drumstick, no fear.",
+   "kind": "It's a festival-drum spirit."
   },
   "oden": {
    "no": 54,
-   "name": "Oden",
+   "name": "Kintsugi",
    "stage": 2,
    "stage_name": "kid",
    "family": "greasy",
@@ -828,11 +881,12 @@
    ],
    "desc": "Everything simmered, on one stick.",
    "hint": "Feed Inari a sour Chu food.",
-   "line": "Oden | dango | crust/rice/wood | | dot flat | Everything simmered, on one stick."
+   "line": "Oden | dango | crust/rice/wood | | dot flat | Everything simmered, on one stick.",
+   "kind": "It's a rice bowl come to life."
   },
   "kyubi": {
    "no": 55,
-   "name": "Kyubi",
+   "name": "Omen",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -842,12 +896,13 @@
     "greasy"
    ],
    "desc": "A fox with nine tails. Only shows one.",
-   "hint": "Feed Kitsune a greasy Dai food, back to its roots.",
-   "line": "Kyubi | gum | gold/white | ears_fox tails:gold belly:white mark:spicy | lid flat | A fox with nine tails. Only shows one."
+   "hint": "Feed Gon a greasy Dai food, back to its roots.",
+   "line": "Kyubi | gum | gold/white | ears_fox tails:gold belly:white mark:spicy | lid flat | A fox with nine tails. Only shows one.",
+   "kind": "It's a fox-mask spirit."
   },
   "konoha": {
    "no": 56,
-   "name": "Konoha",
+   "name": "Doron",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -857,12 +912,13 @@
     "green"
    ],
    "desc": "A fox with a leaf disguise.",
-   "hint": "Feed Kitsune a green Dai food, even more green.",
-   "line": "Konoha | egg | crust/green | ears_fox leafpin | lid flat | A fox with a leaf disguise."
+   "hint": "Feed Gon a green Dai food, even more green.",
+   "line": "Konoha | egg | crust/green | ears_fox leafpin | lid flat | A fox with a leaf disguise.",
+   "kind": "It's a shape-shifting fox."
   },
   "okonomi": {
    "no": 57,
-   "name": "Okonomi",
+   "name": "Yodare",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -874,12 +930,13 @@
     "sour"
    ],
    "desc": "Everything in the fridge, fried flat.",
-   "hint": "Feed Kitsune any other Dai food: sweet, spicy or sour.",
-   "line": "Okonomi | flat | crust/green | speckle:green drip:choc | lid flat | Everything in the fridge, fried flat."
+   "hint": "Feed Gon any other Dai food: sweet, spicy or sour.",
+   "line": "Okonomi | flat | crust/green | speckle:green drip:choc | lid flat | Everything in the fridge, fried flat.",
+   "kind": "It's a stone shrine fox."
   },
   "popcorn": {
    "no": 58,
-   "name": "Popcorn",
+   "name": "Ochiba",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -889,12 +946,13 @@
     "greasy"
    ],
    "desc": "Pops when it is surprised.",
-   "hint": "Feed Waffle a greasy Dai food, back to its roots.",
-   "line": "Popcorn | cloud | cream/lemon | dapple:lemon | dot o | Pops when it is surprised."
+   "hint": "Feed Clementine a greasy Dai food, back to its roots.",
+   "line": "Popcorn | cloud | cream/lemon | dapple:lemon | dot o | Pops when it is surprised.",
+   "kind": "It's a fallen-leaf spirit."
   },
   "daigaku_imo": {
    "no": 59,
-   "name": "Daigaku Imo",
+   "name": "Ishiyaki",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -904,12 +962,13 @@
     "sweet"
    ],
    "desc": "Candied sweet potato. A student favourite.",
-   "hint": "Feed Waffle a sweet Dai food, even more sweet.",
-   "line": "Daigaku Imo | pear | crust/plum | glaze:gold sesame | lid flat | Candied sweet potato. A student favourite."
+   "hint": "Feed Clementine a sweet Dai food, even more sweet.",
+   "line": "Daigaku Imo | pear | crust/plum | glaze:gold sesame | lid flat | Candied sweet potato. A student favourite.",
+   "kind": "It's a sweet-potato spirit."
   },
   "stroopwafel": {
    "no": 60,
-   "name": "Stroopwafel",
+   "name": "Tawara",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -921,12 +980,13 @@
     "sour"
    ],
    "desc": "Two waffles holding a secret.",
-   "hint": "Feed Waffle any other Dai food: green, spicy or sour.",
-   "line": "Stroopwafel | flat | crust/choc | grill:crust drip:choc | dot flat | Two waffles holding a secret."
+   "hint": "Feed Clementine any other Dai food: green, spicy or sour.",
+   "line": "Stroopwafel | flat | crust/choc | grill:crust drip:choc | dot flat | Two waffles holding a secret.",
+   "kind": "It's a rice-bale spirit."
   },
   "burger": {
    "no": 61,
-   "name": "Burger",
+   "name": "Poko",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -936,12 +996,13 @@
     "greasy"
    ],
    "desc": "Bun, lettuce, patty, bun. Classic.",
-   "hint": "Feed Fried Egg a greasy Dai food: greasy all the way.",
-   "line": "Burger | burger | gold/green/choc | sesame | dot flat | Bun, lettuce, patty, bun. Classic."
+   "hint": "Feed Pon a greasy Dai food: greasy all the way.",
+   "line": "Burger | burger | gold/green/choc | sesame | dot flat | Bun, lettuce, patty, bun. Classic.",
+   "kind": "It's a tanuki trickster."
   },
   "hot_dog": {
    "no": 62,
-   "name": "Hot Dog",
+   "name": "Bunbuku",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -952,12 +1013,13 @@
     "spicy"
    ],
    "desc": "A sausage in a bun. Mustard optional.",
-   "hint": "Feed Fried Egg a friend food: a sweet or spicy Dai food.",
-   "line": "Hot Dog | sausage | spicy/gold | base:gold drip:lemon | lid flat | A sausage in a bun. Mustard optional."
+   "hint": "Feed Pon a friend food: a sweet or spicy Dai food.",
+   "line": "Hot Dog | sausage | spicy/gold | base:gold drip:lemon | lid flat | A sausage in a bun. Mustard optional.",
+   "kind": "It's a teakettle tanuki."
   },
   "fish_taco": {
    "no": 63,
-   "name": "Fish Taco",
+   "name": "Kanpai",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -968,12 +1030,13 @@
     "sour"
    ],
    "desc": "A taco that swims.",
-   "hint": "Feed Fried Egg a rival food: a green or sour Dai food.",
-   "line": "Fish Taco | half | crust/green | cap:green | gloss o | A taco that swims."
+   "hint": "Feed Pon a rival food: a green or sour Dai food.",
+   "line": "Fish Taco | half | crust/green | cap:green | gloss o | A taco that swims.",
+   "kind": "It's a lucky tanuki statue."
   },
   "kushikatsu": {
    "no": 64,
-   "name": "Kushikatsu",
+   "name": "Odaiko",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -983,12 +1046,13 @@
     "greasy"
    ],
    "desc": "Dip it in the sauce only once.",
-   "hint": "Feed Drumstick a greasy Dai food, back to its roots.",
-   "line": "Kushikatsu | popsicle | crust | crust | lid flat | Dip it in the sauce only once."
+   "hint": "Feed Bachi a greasy Dai food, back to its roots.",
+   "line": "Kushikatsu | popsicle | crust | crust | lid flat | Dip it in the sauce only once.",
+   "kind": "It's a big taiko drum."
   },
   "kitsu": {
    "no": 65,
-   "name": "Kitsu",
+   "name": "Chochin",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -998,12 +1062,13 @@
     "spicy"
    ],
    "desc": "A fire fox with a white chest.",
-   "hint": "Feed Drumstick a spicy Dai food, even more spicy.",
-   "line": "Kitsu | egg | spicy/white | ears_fox tail_fluff:spicy belly:white | lid flat | A fire fox with a white chest."
+   "hint": "Feed Bachi a spicy Dai food, even more spicy.",
+   "line": "Kitsu | egg | spicy/white | ears_fox tail_fluff:spicy belly:white | lid flat | A fire fox with a white chest.",
+   "kind": "It's a festival-lantern spirit."
   },
   "hothog": {
    "no": 66,
-   "name": "Hothog",
+   "name": "Mino",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -1015,12 +1080,13 @@
     "sour"
    ],
    "desc": "A hedgehog with hot quills.",
-   "hint": "Feed Drumstick any other Dai food: green, sweet or sour.",
-   "line": "Hothog | squat | rust/greasy | quills:spicy | lid flat | A hedgehog with hot quills."
+   "hint": "Feed Bachi any other Dai food: green, sweet or sour.",
+   "line": "Hothog | squat | rust/greasy | quills:spicy | lid flat | A hedgehog with hot quills.",
+   "kind": "It's a straw-raincoat spirit."
   },
   "ebi_fry": {
    "no": 67,
-   "name": "Ebi Fry",
+   "name": "Bakezo",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -1030,12 +1096,13 @@
     "greasy"
    ],
    "desc": "A fried prawn, tail and all.",
-   "hint": "Feed Oden a greasy Dai food, back to its roots.",
-   "line": "Ebi Fry | chili lean=.2 | crust/coral | crust tail_fish:coral | lid flat | A fried prawn, tail and all."
+   "hint": "Feed Kintsugi a greasy Dai food, back to its roots.",
+   "line": "Ebi Fry | chili lean=.2 | crust/coral | crust tail_fish:coral | lid flat | A fried prawn, tail and all.",
+   "kind": "It's a sandal come to life."
   },
   "shiso_tempura": {
    "no": 68,
-   "name": "Shiso Tempura",
+   "name": "Okawari",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -1045,12 +1112,13 @@
     "sour"
    ],
    "desc": "A shiso leaf in a light batter.",
-   "hint": "Feed Oden a sour Dai food, even more sour.",
-   "line": "Shiso Tempura | lemon sy=1.2 | green/crust | crust:green leafveins:leaf | sleep none | A shiso leaf in a light batter."
+   "hint": "Feed Kintsugi a sour Dai food, even more sour.",
+   "line": "Shiso Tempura | lemon sy=1.2 | green/crust | crust:green leafveins:leaf | sleep none | A shiso leaf in a light batter.",
+   "kind": "It's a rice tub come to life."
   },
   "walrusk": {
    "no": 69,
-   "name": "Walrusk",
+   "name": "Okiku",
    "stage": 3,
    "stage_name": "adult",
    "family": "greasy",
@@ -1062,12 +1130,13 @@
     "spicy"
    ],
    "desc": "A walrus with a fine moustache.",
-   "hint": "Feed Oden any other Dai food: green, sweet or spicy.",
-   "line": "Walrusk | mochi | cream/greasy | tusks whiskers | lid flat stache | A walrus with a fine moustache."
+   "hint": "Feed Kintsugi any other Dai food: green, sweet or spicy.",
+   "line": "Walrusk | mochi | cream/greasy | tusks whiskers | lid flat stache | A walrus with a fine moustache.",
+   "kind": "It's a doll come to life."
   },
   "robobear": {
    "no": 70,
-   "name": "Robobear",
+   "name": "Tickitsune",
    "stage": 4,
    "stage_name": "mutant",
    "family": "greasy",
@@ -1078,11 +1147,12 @@
    ],
    "desc": "Hugs at exactly 12 newtons.",
    "hint": "Feed any grown-up (Dai) greasy pal some tech food.",
-   "line": "Robobear | ball | metal/greasy | ears_bear bolts | visor flat | Hugs at exactly 12 newtons."
+   "line": "Robobear | ball | metal/greasy | ears_bear bolts | visor flat | Hugs at exactly 12 newtons.",
+   "kind": "It's a wind-up fox."
   },
   "nebula_nug": {
    "no": 71,
-   "name": "Nebula Nug",
+   "name": "Foxfire",
    "stage": 4,
    "stage_name": "mutant",
    "family": "greasy",
@@ -1093,11 +1163,12 @@
    ],
    "desc": "A nugget from the Milky Way.",
    "hint": "Feed any grown-up (Dai) greasy pal some cosmic food.",
-   "line": "Nebula Nug | pebble | goo | crust:goo stars | three flat | A nugget from the Milky Way."
+   "line": "Nebula Nug | pebble | goo | crust:goo stars | three flat | A nugget from the Milky Way.",
+   "kind": "It's a foxfire orb."
   },
   "sunbear": {
    "no": 72,
-   "name": "Sunbear",
+   "name": "Ogon",
    "stage": 5,
    "stage_name": "legend",
    "family": "greasy",
@@ -1107,12 +1178,13 @@
     "legend"
    ],
    "desc": "The king of fried things.",
-   "hint": "Feed Burger (the ULTRA greasy pal) the Dragon Oil.",
-   "line": "Sunbear | mound sx=1.1 | gold/cream | ears_bear:gold belly:cream crown sparkles | lid flat | The king of fried things."
+   "hint": "Feed Poko (the ULTRA greasy pal) the Dragon Oil.",
+   "line": "Sunbear | mound sx=1.1 | gold/cream | ears_bear:gold belly:cream crown sparkles | lid flat | The king of fried things.",
+   "kind": "It's the great tanuki."
   },
   "ember": {
    "no": 73,
-   "name": "Ember",
+   "name": "Cinder",
    "stage": 1,
    "stage_name": "baby",
    "family": "spicy",
@@ -1123,11 +1195,12 @@
    ],
    "desc": "Hatched from something spicy. Always slightly warm to the touch.",
    "hint": "Start a pal with a spicy Sho food.",
-   "line": "Ember | =ember:gloss | spicy | | | The original Ember, calmer, no grin."
+   "line": "Ember | =ember:gloss | spicy | | | The original Ember, calmer, no grin.",
+   "kind": "It's a little ember."
   },
   "paprika": {
    "no": 74,
-   "name": "Paprika",
+   "name": "Bonbori",
    "stage": 2,
    "stage_name": "kid",
    "family": "spicy",
@@ -1137,12 +1210,13 @@
     "green"
    ],
    "desc": "A sweet pepper that is secretly hot.",
-   "hint": "Feed Ember a green Chu food.",
-   "line": "Paprika | pear | spicy | stem:green leaf | gloss flat | A sweet pepper that is secretly hot."
+   "hint": "Feed Cinder a green Chu food.",
+   "line": "Paprika | pear | spicy | stem:green leaf | gloss flat | A sweet pepper that is secretly hot.",
+   "kind": "It's a lantern-pod sprout (hōzuki)."
   },
   "daruma": {
    "no": 75,
-   "name": "Daruma",
+   "name": "Yaoki",
    "stage": 2,
    "stage_name": "kid",
    "family": "spicy",
@@ -1152,12 +1226,13 @@
     "sweet"
    ],
    "desc": "Falls down seven times, stands up eight.",
-   "hint": "Feed Ember a sweet Chu food.",
-   "line": "Daruma | daruma | spicy | darumaface:white | dot flat | Falls down seven times, stands up eight."
+   "hint": "Feed Cinder a sweet Chu food.",
+   "line": "Daruma | daruma | spicy | darumaface:white | dot flat | Falls down seven times, stands up eight.",
+   "kind": "It's a daruma doll."
   },
   "nacho": {
    "no": 76,
-   "name": "Nacho",
+   "name": "Hyaku",
    "stage": 2,
    "stage_name": "kid",
    "family": "spicy",
@@ -1167,12 +1242,13 @@
     "greasy"
    ],
    "desc": "A nacho with a cheese cape.",
-   "hint": "Feed Ember a greasy Chu food.",
-   "line": "Nacho | tri | gold/spicy | drip:greasy speckle:spicy | glance smirk | A nacho with a cheese cape."
+   "hint": "Feed Cinder a greasy Chu food.",
+   "line": "Nacho | tri | gold/spicy | drip:greasy speckle:spicy | glance smirk | A nacho with a cheese cape.",
+   "kind": "It's a candle spirit."
   },
   "dotty": {
    "no": 77,
-   "name": "Dotty",
+   "name": "Shinka",
    "stage": 2,
    "stage_name": "kid",
    "family": "spicy",
@@ -1182,12 +1258,13 @@
     "spicy"
    ],
    "desc": "A ladybird with blue spots.",
-   "hint": "Feed Ember a spicy Chu food.",
-   "line": "Dotty | mound | spicy/sweet | spots:sweet antennae | dot flat | A ladybird with blue spots."
+   "hint": "Feed Cinder a spicy Chu food.",
+   "line": "Dotty | mound | spicy/sweet | spots:sweet antennae | dot flat | A ladybird with blue spots.",
+   "kind": "It's a sacred flame."
   },
   "kimchi": {
    "no": 78,
-   "name": "Kimchi",
+   "name": "Tsuno",
    "stage": 2,
    "stage_name": "kid",
    "family": "spicy",
@@ -1197,12 +1274,13 @@
     "sour"
    ],
    "desc": "Fermented with patience.",
-   "hint": "Feed Ember a sour Chu food.",
-   "line": "Kimchi | cloud | spicy/cream | stripes:cream | lid flat | Fermented with patience."
+   "hint": "Feed Cinder a sour Chu food.",
+   "line": "Kimchi | cloud | spicy/cream | stripes:cream | lid flat | Fermented with patience.",
+   "kind": "It's a little oni."
   },
   "hoozuki": {
    "no": 79,
-   "name": "Hoozuki",
+   "name": "Obon",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1212,12 +1290,13 @@
     "spicy"
    ],
    "desc": "A lantern plant. Lights the way for spirits.",
-   "hint": "Feed Paprika a spicy Dai food, back to its roots.",
-   "line": "Hoozuki | gourd | orange/spicy | leafveins | sleep none | A lantern plant. Lights the way for spirits."
+   "hint": "Feed Bonbori a spicy Dai food, back to its roots.",
+   "line": "Hoozuki | gourd | orange/spicy | leafveins | sleep none | A lantern plant. Lights the way for spirits.",
+   "kind": "It's a lantern-plant spirit (hōzuki)."
   },
   "pepper_plant": {
    "no": 80,
-   "name": "Pepper Plant",
+   "name": "Karami",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1227,12 +1306,13 @@
     "green"
    ],
    "desc": "Grows its own snacks.",
-   "hint": "Feed Paprika a green Dai food, even more green.",
-   "line": "Pepper Plant | cloud | green/spicy | leaf2 spots:spicy | sleep none | Grows its own snacks."
+   "hint": "Feed Bonbori a green Dai food, even more green.",
+   "line": "Pepper Plant | cloud | green/spicy | leaf2 spots:spicy | sleep none | Grows its own snacks.",
+   "kind": "It's a chili spirit."
   },
   "chameleon": {
    "no": 81,
-   "name": "Chameleon",
+   "name": "Shichimi",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1244,12 +1324,13 @@
     "sour"
    ],
    "desc": "Cannot decide on a colour.",
-   "hint": "Feed Paprika any other Dai food: sweet, greasy or sour.",
-   "line": "Chameleon | egg | spicy/green | tail_curl:green half:green | glance flat | Cannot decide on a colour."
+   "hint": "Feed Bonbori any other Dai food: sweet, greasy or sour.",
+   "line": "Chameleon | egg | spicy/green | tail_curl:green half:green | glance flat | Cannot decide on a colour.",
+   "kind": "It's a spice-gourd spirit."
   },
   "oo_daruma": {
    "no": 82,
-   "name": "Oo Daruma",
+   "name": "Kaigan",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1259,12 +1340,13 @@
     "spicy"
    ],
    "desc": "A big daruma. Wishes granted: one.",
-   "hint": "Feed Daruma a spicy Dai food, back to its roots.",
-   "line": "Oo Daruma | daruma sx=1.15 | spicy/gold | darumaface:white | stern flat stache | A big daruma. Wishes granted: one."
+   "hint": "Feed Yaoki a spicy Dai food, back to its roots.",
+   "line": "Oo Daruma | daruma sx=1.15 | spicy/gold | darumaface:white | stern flat stache | A big daruma. Wishes granted: one.",
+   "kind": "It's a daruma with its wish granted."
   },
   "maneki": {
    "no": 83,
-   "name": "Maneki",
+   "name": "Himeko",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1274,12 +1356,13 @@
     "sweet"
    ],
    "desc": "Waves you in. Business is good.",
-   "hint": "Feed Daruma a sweet Dai food, even more sweet.",
-   "line": "Maneki | gum | white/sweet | ears_cat pawup collar:sweet | sleep w | Waves you in. Business is good."
+   "hint": "Feed Yaoki a sweet Dai food, even more sweet.",
+   "line": "Maneki | gum | white/sweet | ears_cat pawup collar:sweet | sleep w | Waves you in. Business is good.",
+   "kind": "It's a princess daruma."
   },
   "spicecake": {
    "no": 84,
-   "name": "Spicecake",
+   "name": "Kagami",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1291,12 +1374,13 @@
     "sour"
    ],
    "desc": "A chocolate cupcake with a chilli on top.",
-   "hint": "Feed Daruma any other Dai food: green, greasy or sour.",
-   "line": "Spicecake | bell | choc/spicy | cap:spicy stem:green | dot flat | A chocolate cupcake with a chilli on top."
+   "hint": "Feed Yaoki any other Dai food: green, greasy or sour.",
+   "line": "Spicecake | bell | choc/spicy | cap:spicy stem:green | dot flat | A chocolate cupcake with a chilli on top.",
+   "kind": "It's a New Year mochi (kagami mochi)."
   },
   "popper": {
    "no": 85,
-   "name": "Popper",
+   "name": "Hitotsume",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1306,12 +1390,13 @@
     "spicy"
    ],
    "desc": "Hot inside, crunchy outside.",
-   "hint": "Feed Nacho a spicy Dai food, back to its roots.",
-   "line": "Popper | chili | spicy/greasy | crust:spicy drip:greasy | lid flat | Hot inside, crunchy outside."
+   "hint": "Feed Hyaku a spicy Dai food, back to its roots.",
+   "line": "Popper | chili | spicy/greasy | crust:spicy drip:greasy | lid flat | Hot inside, crunchy outside.",
+   "kind": "It's a lantern ghost (chōchin-obake)."
   },
   "quesadilla": {
    "no": 86,
-   "name": "Quesadilla",
+   "name": "Abura",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1321,12 +1406,13 @@
     "greasy"
    ],
    "desc": "Folded, toasted, oozing.",
-   "hint": "Feed Nacho a greasy Dai food, even more greasy.",
-   "line": "Quesadilla | half | gold/greasy | drip:greasy grill:crust | heavy flat | Folded, toasted, oozing."
+   "hint": "Feed Hyaku a greasy Dai food, even more greasy.",
+   "line": "Quesadilla | half | gold/greasy | drip:greasy grill:crust | heavy flat | Folded, toasted, oozing.",
+   "kind": "It's a paper-lamp spirit (andon)."
   },
   "burrito": {
    "no": 87,
-   "name": "Burrito",
+   "name": "Kayari",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1338,12 +1424,13 @@
     "sour"
    ],
    "desc": "Wrapped up tight like a sleeping bag.",
-   "hint": "Feed Nacho any other Dai food: green, sweet or sour.",
-   "line": "Burrito | sausage | cream/spicy | base:spicy | sleep none | Wrapped up tight like a sleeping bag."
+   "hint": "Feed Hyaku any other Dai food: green, sweet or sour.",
+   "line": "Burrito | sausage | cream/spicy | base:spicy | sleep none | Wrapped up tight like a sleeping bag.",
+   "kind": "It's a mosquito-coil pig."
   },
   "firebug": {
    "no": 88,
-   "name": "Firebug",
+   "name": "Raika",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1353,12 +1440,13 @@
     "spicy"
    ],
    "desc": "Warm to the touch, like a radiator.",
-   "hint": "Feed Dotty a spicy Dai food: spicy all the way.",
-   "line": "Firebug | egg | spicy/char | half:char antennae | line flat | Warm to the touch, like a radiator."
+   "hint": "Feed Shinka a spicy Dai food: spicy all the way.",
+   "line": "Firebug | egg | spicy/char | half:char antennae | line flat | Warm to the touch, like a radiator.",
+   "kind": "It's a lightning wildfire."
   },
   "salamander": {
    "no": 89,
-   "name": "Salamander",
+   "name": "Aobi",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1369,12 +1457,13 @@
     "sour"
    ],
    "desc": "Lives in the fire, naps in the fire.",
-   "hint": "Feed Dotty a friend food: a greasy or sour Dai food.",
-   "line": "Salamander | bean | orange/spicy | tail_lizard spots:greasy feet:p | lid flat | Lives in the fire, naps in the fire."
+   "hint": "Feed Shinka a friend food: a greasy or sour Dai food.",
+   "line": "Salamander | bean | orange/spicy | tail_lizard spots:greasy feet:p | lid flat | Lives in the fire, naps in the fire.",
+   "kind": "It's a calm ghost-flame (onibi)."
   },
   "ladyluck": {
    "no": 90,
-   "name": "Ladyluck",
+   "name": "Goro",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1385,12 +1474,13 @@
     "sweet"
    ],
    "desc": "A lucky ladybird. Blue for luck.",
-   "hint": "Feed Dotty a rival food: a green or sweet Dai food.",
-   "line": "Ladyluck | squat | sweet/spicy | spots:spicy wings_bug | gloss flat | A lucky ladybird. Blue for luck."
+   "hint": "Feed Shinka a rival food: a green or sweet Dai food.",
+   "line": "Ladyluck | squat | sweet/spicy | spots:spicy wings_bug | gloss flat | A lucky ladybird. Blue for luck.",
+   "kind": "It's a thunder cloud (raijū)."
   },
   "gochujang": {
    "no": 91,
-   "name": "Gochujang",
+   "name": "Kanabo",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1400,12 +1490,13 @@
     "spicy"
    ],
    "desc": "Thick red paste. Sweet, then hot.",
-   "hint": "Feed Kimchi a spicy Dai food, back to its roots.",
-   "line": "Gochujang | cube | spicy/rust | glaze:spicy | lid flat | Thick red paste. Sweet, then hot."
+   "hint": "Feed Tsuno a spicy Dai food, back to its roots.",
+   "line": "Gochujang | cube | spicy/rust | glaze:spicy | lid flat | Thick red paste. Sweet, then hot.",
+   "kind": "It's a rope-crowned oni."
   },
   "ceviche": {
    "no": 92,
-   "name": "Ceviche",
+   "name": "Soto",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1415,12 +1506,13 @@
     "sour"
    ],
    "desc": "Cooked in lime, not fire.",
-   "hint": "Feed Kimchi a sour Dai food, even more sour.",
-   "line": "Ceviche | bowl | cream/lime | broth:lime | dot o | Cooked in lime, not fire."
+   "hint": "Feed Tsuno a sour Dai food, even more sour.",
+   "line": "Ceviche | bowl | cream/lime | broth:lime | dot o | Cooked in lime, not fire.",
+   "kind": "It's an oni pelted with lucky beans."
   },
   "takoyaki": {
    "no": 93,
-   "name": "Takoyaki",
+   "name": "Shiraga",
    "stage": 3,
    "stage_name": "adult",
    "family": "spicy",
@@ -1432,12 +1524,13 @@
     "greasy"
    ],
    "desc": "Ball outside, octopus inside.",
-   "hint": "Feed Kimchi any other Dai food: green, sweet or greasy.",
-   "line": "Takoyaki | ball | crust/choc | drip:choc | gloss o | Ball outside, octopus inside."
+   "hint": "Feed Tsuno any other Dai food: green, sweet or greasy.",
+   "line": "Takoyaki | ball | crust/choc | drip:choc | gloss o | Ball outside, octopus inside.",
+   "kind": "It's a white-maned oni."
   },
   "mecha_oni": {
    "no": 94,
-   "name": "Mecha Oni",
+   "name": "Onimatic",
    "stage": 4,
    "stage_name": "mutant",
    "family": "spicy",
@@ -1448,11 +1541,12 @@
    ],
    "desc": "An ogre robot. Still loud.",
    "hint": "Feed any grown-up (Dai) spicy pal some tech food.",
-   "line": "Mecha Oni | tear | metal/spicy | horns:spicy bolts | visor fang | An ogre robot. Still loud."
+   "line": "Mecha Oni | tear | metal/spicy | horns:spicy bolts | visor fang | An ogre robot. Still loud.",
+   "kind": "It's a wind-up oni."
   },
   "comet_chili": {
    "no": 95,
-   "name": "Comet Chili",
+   "name": "Senko",
    "stage": 4,
    "stage_name": "mutant",
    "family": "spicy",
@@ -1463,11 +1557,12 @@
    ],
    "desc": "Hot, from very far away.",
    "hint": "Feed any grown-up (Dai) spicy pal some cosmic food.",
-   "line": "Comet Chili | chili | goo/spicy | flames | three fang | Hot, from very far away."
+   "line": "Comet Chili | chili | goo/spicy | flames | three fang | Hot, from very far away.",
+   "kind": "It's a soot ball with a star spark."
   },
   "hou_ou": {
    "no": 96,
-   "name": "Hou-ou",
+   "name": "Byodo",
    "stage": 5,
    "stage_name": "legend",
    "family": "spicy",
@@ -1477,12 +1572,13 @@
     "legend"
    ],
    "desc": "The phoenix. Rises from hot sauce.",
-   "hint": "Feed Firebug (the ULTRA spicy pal) the Phoenix Pepper.",
-   "line": "Hou-ou | bird | gold/spicy | wings:spicy tail_fluff:flame crest:spicy crown sparkles | star flat | The phoenix. Rises from hot sauce."
+   "hint": "Feed Raika (the ULTRA spicy pal) the Phoenix Pepper.",
+   "line": "Hou-ou | bird | gold/spicy | wings:spicy tail_fluff:flame crest:spicy crown sparkles | star flat | The phoenix. Rises from hot sauce.",
+   "kind": "It's the phoenix (hōō)."
   },
   "picklet": {
    "no": 97,
-   "name": "Picklet",
+   "name": "Otama",
    "stage": 1,
    "stage_name": "baby",
    "family": "sour",
@@ -1493,11 +1589,12 @@
    ],
    "desc": "Hatched from something sour. Permanently unimpressed.",
    "hint": "Start a pal with a sour Sho food.",
-   "line": "Picklet | =picklet | sour | | | Kept exactly as it is."
+   "line": "Picklet | =picklet | sour | | | Kept exactly as it is.",
+   "kind": "It's a drop of pond water."
   },
   "kappa_maki": {
    "no": 98,
-   "name": "Kappa Maki",
+   "name": "Brolly",
    "stage": 2,
    "stage_name": "kid",
    "family": "sour",
@@ -1507,12 +1604,13 @@
     "green"
    ],
    "desc": "A cucumber roll with a calm mind.",
-   "hint": "Feed Picklet a green Chu food.",
-   "line": "Kappa Maki | cube sy=.9 | nori/rice | cap:rice face_patch:rice | dot w | A cucumber roll with a calm mind."
+   "hint": "Feed Otama a green Chu food.",
+   "line": "Kappa Maki | cube sy=.9 | nori/rice | cap:rice face_patch:rice | dot w | A cucumber roll with a calm mind.",
+   "kind": "It's a frog with a leaf umbrella."
   },
   "sourpatch": {
    "no": 99,
-   "name": "Sourpatch",
+   "name": "Kinako",
    "stage": 2,
    "stage_name": "kid",
    "family": "sour",
@@ -1522,12 +1620,13 @@
     "sweet"
    ],
    "desc": "Sour, then sweet, then gone.",
-   "hint": "Feed Picklet a sweet Chu food.",
-   "line": "Sourpatch | gum | lime/sweet | sugar half:sweet | lid flat | Sour, then sweet, then gone."
+   "hint": "Feed Otama a sweet Chu food.",
+   "line": "Sourpatch | gum | lime/sweet | sugar half:sweet | lid flat | Sour, then sweet, then gone.",
+   "kind": "It's a warbler mochi (uguisu-mochi)."
   },
   "hermit": {
    "no": 100,
-   "name": "Hermit",
+   "name": "Plink",
    "stage": 2,
    "stage_name": "kid",
    "family": "sour",
@@ -1537,12 +1636,13 @@
     "greasy"
    ],
    "desc": "A hermit crab living in half a lemon.",
-   "hint": "Feed Picklet a greasy Chu food.",
-   "line": "Hermit | mound | coral/lemon | cap:lemon claws:coral | glance flat | A hermit crab living in half a lemon."
+   "hint": "Feed Otama a greasy Chu food.",
+   "line": "Hermit | mound | coral/lemon | cap:lemon claws:coral | glance flat | A hermit crab living in half a lemon.",
+   "kind": "It's a water-drop spirit."
   },
   "buzz": {
    "no": 101,
-   "name": "Buzz",
+   "name": "Sazare",
    "stage": 2,
    "stage_name": "kid",
    "family": "sour",
@@ -1552,12 +1652,13 @@
     "spicy"
    ],
    "desc": "A sour wasp that never stings.",
-   "hint": "Feed Picklet a spicy Chu food.",
-   "line": "Buzz | egg | sour/char | hstripes:char wings_bug antennae | gloss flat | A sour wasp that never stings."
+   "hint": "Feed Otama a spicy Chu food.",
+   "line": "Buzz | egg | sour/char | hstripes:char wings_bug antennae | gloss flat | A sour wasp that never stings.",
+   "kind": "It's a river-pebble spirit."
   },
   "teru_teru": {
    "no": 102,
-   "name": "Teru Teru",
+   "name": "Sunny",
    "stage": 2,
    "stage_name": "kid",
    "family": "sour",
@@ -1567,12 +1668,13 @@
     "sour"
    ],
    "desc": "Hang it up to stop the rain.",
-   "hint": "Feed Picklet a sour Chu food.",
-   "line": "Teru Teru | ghost | white/lime | skirt:white collar:lime | dot flat | Hang it up to stop the rain."
+   "hint": "Feed Otama a sour Chu food.",
+   "line": "Teru Teru | ghost | white/lime | skirt:white collar:lime | dot flat | Hang it up to stop the rain.",
+   "kind": "It's a sunshine doll (teru-teru bōzu)."
   },
   "ume_onigiri": {
    "no": 103,
-   "name": "Ume Onigiri",
+   "name": "Sara",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1582,12 +1684,13 @@
     "sour"
    ],
    "desc": "A rice ball with a sour plum on top.",
-   "hint": "Feed Kappa Maki a sour Dai food, back to its roots.",
-   "line": "Ume Onigiri | tri | rice/nori | nori topknot:berry | dot w | A rice ball with a sour plum on top."
+   "hint": "Feed Brolly a sour Dai food, back to its roots.",
+   "line": "Ume Onigiri | tri | rice/nori | nori topknot:berry | dot w | A rice ball with a sour plum on top.",
+   "kind": "It's a kappa."
   },
   "granny": {
    "no": 104,
-   "name": "Granny",
+   "name": "Kawazu",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1597,12 +1700,13 @@
     "green"
    ],
    "desc": "A green apple. Crunchy and sour.",
-   "hint": "Feed Kappa Maki a green Dai food, even more green.",
-   "line": "Granny | ball | lime/green | stem leaf | glance smirk | A green apple. Crunchy and sour."
+   "hint": "Feed Brolly a green Dai food, even more green.",
+   "line": "Granny | ball | lime/green | stem leaf | glance smirk | A green apple. Crunchy and sour.",
+   "kind": "It's a lily-pad frog."
   },
   "hoot": {
    "no": 105,
-   "name": "Hoot",
+   "name": "Denden",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1614,12 +1718,13 @@
     "spicy"
    ],
    "desc": "Turns its head all the way round.",
-   "hint": "Feed Kappa Maki any other Dai food: sweet, greasy or spicy.",
-   "line": "Hoot | egg | sour/cream | ears:p beak_f | wide none | Turns its head all the way round."
+   "hint": "Feed Brolly any other Dai food: sweet, greasy or spicy.",
+   "line": "Hoot | egg | sour/cream | ears:p beak_f | wide none | Turns its head all the way round.",
+   "kind": "It's a snail-shell frog."
   },
   "lemon_sweet": {
    "no": 106,
-   "name": "Lemon Sweet",
+   "name": "Nanten",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1629,12 +1734,13 @@
     "sour"
    ],
    "desc": "A sour candy, still in its wrapper.",
-   "hint": "Feed Sourpatch a sour Dai food, back to its roots.",
-   "line": "Lemon Sweet | ball | lemon | wrapper:cream sugar | squint pout | A sour candy, still in its wrapper."
+   "hint": "Feed Kinako a sour Dai food, back to its roots.",
+   "line": "Lemon Sweet | ball | lemon | wrapper:cream sugar | squint pout | A sour candy, still in its wrapper.",
+   "kind": "It's a berry-crowned mochi."
   },
   "cream_soda": {
    "no": 107,
-   "name": "Cream Soda",
+   "name": "Kissa",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1644,12 +1750,13 @@
     "sweet"
    ],
    "desc": "Melon soda with a scoop on top.",
-   "hint": "Feed Sourpatch a sweet Dai food, even more sweet.",
-   "line": "Cream Soda | cube sx=.85 sy=1.2 | lime/white | cap:white cherry bubbles | gloss v | Melon soda with a scoop on top."
+   "hint": "Feed Kinako a sweet Dai food, even more sweet.",
+   "line": "Cream Soda | cube sx=.85 sy=1.2 | lime/white | cap:white cherry bubbles | gloss v | Melon soda with a scoop on top.",
+   "kind": "It's a melon cream soda."
   },
   "lime": {
    "no": 108,
-   "name": "Lime",
+   "name": "Uzu",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1661,12 +1768,13 @@
     "spicy"
    ],
    "desc": "Juicy, friendly, a bit sharp.",
-   "hint": "Feed Sourpatch any other Dai food: green, greasy or spicy.",
-   "line": "Lime | ball | lime | leaf | gloss flat | Juicy, friendly, a bit sharp."
+   "hint": "Feed Kinako any other Dai food: green, greasy or spicy.",
+   "line": "Lime | ball | lime | leaf | gloss flat | Juicy, friendly, a bit sharp.",
+   "kind": "It's a whirlpool spirit."
   },
   "anemone": {
    "no": 109,
-   "name": "Anemone",
+   "name": "Medusa",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1676,12 +1784,13 @@
     "sour"
    ],
    "desc": "Waves at fish all day.",
-   "hint": "Feed Hermit a sour Dai food, back to its roots.",
-   "line": "Anemone | gum | sour/coral | tentacles:coral | sleep none | Waves at fish all day."
+   "hint": "Feed Plink a sour Dai food, back to its roots.",
+   "line": "Anemone | gum | sour/coral | tentacles:coral | sleep none | Waves at fish all day.",
+   "kind": "It's a jellyfish spirit."
   },
   "calamari": {
    "no": 110,
-   "name": "Calamari",
+   "name": "Ranchu",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1691,12 +1800,13 @@
     "greasy"
    ],
    "desc": "A squid ring. Crunchy, a bit chewy.",
-   "hint": "Feed Hermit a greasy Dai food, even more greasy.",
-   "line": "Calamari | ring | crust/cream | crust | glance flat | A squid ring. Crunchy, a bit chewy."
+   "hint": "Feed Plink a greasy Dai food, even more greasy.",
+   "line": "Calamari | ring | crust/cream | crust | glance flat | A squid ring. Crunchy, a bit chewy.",
+   "kind": "It's a festival goldfish."
   },
   "octopepper": {
    "no": 111,
-   "name": "Octopepper",
+   "name": "Takosuke",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1708,12 +1818,13 @@
     "spicy"
    ],
    "desc": "Eight spicy legs, one calm mind.",
-   "hint": "Feed Hermit any other Dai food: green, sweet or spicy.",
-   "line": "Octopepper | mound | spicy | tentacles | sleep none | Eight spicy legs, one calm mind."
+   "hint": "Feed Plink any other Dai food: green, sweet or spicy.",
+   "line": "Octopepper | mound | spicy | tentacles | sleep none | Eight spicy legs, one calm mind.",
+   "kind": "It's an octopus in a headband."
   },
   "lemon_ant": {
    "no": 112,
-   "name": "Lemon Ant",
+   "name": "Iwao",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1723,12 +1834,13 @@
     "sour"
    ],
    "desc": "A lemon ant. It really tastes of citrus.",
-   "hint": "Feed Buzz a sour Dai food, back to its roots.",
-   "line": "Lemon Ant | bean | lemon/char | antennae legs:char | dot flat | A lemon ant. It really tastes of citrus."
+   "hint": "Feed Sazare a sour Dai food, back to its roots.",
+   "line": "Lemon Ant | bean | lemon/char | antennae legs:char | dot flat | A lemon ant. It really tastes of citrus.",
+   "kind": "It's a mossy boulder with a fossil."
   },
   "shichimi": {
    "no": 113,
-   "name": "Shichimi",
+   "name": "Prism",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1738,12 +1850,13 @@
     "spicy"
    ],
    "desc": "Seven spices in one little bottle.",
-   "hint": "Feed Buzz a spicy Dai food, even more spicy.",
-   "line": "Shichimi | bottle | spicy/wood | hat:wood speckle:lemon | glance flat | Seven spices in one little bottle."
+   "hint": "Feed Sazare a spicy Dai food, even more spicy.",
+   "line": "Shichimi | bottle | spicy/wood | hat:wood speckle:lemon | glance flat | Seven spices in one little bottle.",
+   "kind": "It's an amabie, the mermaid who wards off sickness."
   },
   "axel": {
    "no": 114,
-   "name": "Axel",
+   "name": "Axolittle",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1755,12 +1868,13 @@
     "greasy"
    ],
    "desc": "Smiles on the inside.",
-   "hint": "Feed Buzz any other Dai food: green, sweet or greasy.",
-   "line": "Axel | bean | pink | frills:pink | gloss v | Smiles on the inside."
+   "hint": "Feed Sazare any other Dai food: green, sweet or greasy.",
+   "line": "Axel | bean | pink | frills:pink | gloss v | Smiles on the inside.",
+   "kind": "It's an axolotl spirit."
   },
   "omamori": {
    "no": 115,
-   "name": "Omamori",
+   "name": "Mamoru",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1770,12 +1884,13 @@
     "sour"
    ],
    "desc": "A lucky charm pouch. Keeps the gut safe.",
-   "hint": "Feed Teru Teru a sour Dai food: sour all the way.",
-   "line": "Omamori | cube sx=.85 sy=1.15 | lime/gold | topknot:gold band:gold kanji | stern flat | A lucky charm pouch. Keeps the gut safe."
+   "hint": "Feed Sunny a sour Dai food: sour all the way.",
+   "line": "Omamori | cube sx=.85 sy=1.15 | lime/gold | topknot:gold band:gold kanji | stern flat | A lucky charm pouch. Keeps the gut safe.",
+   "kind": "It's a lucky charm (omamori)."
   },
   "kokeshi": {
    "no": 116,
-   "name": "Kokeshi",
+   "name": "Mizuki",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1786,12 +1901,13 @@
     "green"
    ],
    "desc": "A wooden doll. Watches over the room.",
-   "hint": "Feed Teru Teru a friend food: a spicy or green Dai food.",
-   "line": "Kokeshi | doll | cream/sour | bangs:char band:spicy | dot flat | A wooden doll. Watches over the room."
+   "hint": "Feed Sunny a friend food: a spicy or green Dai food.",
+   "line": "Kokeshi | doll | cream/sour | bangs:char band:spicy | dot flat | A wooden doll. Watches over the room.",
+   "kind": "It's a kokeshi doll."
   },
   "karakasa": {
    "no": 117,
-   "name": "Karakasa",
+   "name": "Pogo",
    "stage": 3,
    "stage_name": "adult",
    "family": "sour",
@@ -1802,12 +1918,13 @@
     "greasy"
    ],
    "desc": "An old umbrella that came alive.",
-   "hint": "Feed Teru Teru a rival food: a sweet or greasy Dai food.",
-   "line": "Karakasa | kiss sy=1.25 | spicy/wood | leg | one tongue | An old umbrella that came alive."
+   "hint": "Feed Sunny a rival food: a sweet or greasy Dai food.",
+   "line": "Karakasa | kiss sy=1.25 | spicy/wood | leg | one tongue | An old umbrella that came alive.",
+   "kind": "It's an umbrella ghost (kasa-obake)."
   },
   "robofrog": {
    "no": 118,
-   "name": "Robofrog",
+   "name": "Croakwork",
    "stage": 4,
    "stage_name": "mutant",
    "family": "sour",
@@ -1818,11 +1935,12 @@
    ],
    "desc": "Croaks in binary.",
    "hint": "Feed any grown-up (Dai) sour pal some tech food.",
-   "line": "Robofrog | squat | metal/sour | feet chip | visor flat | Croaks in binary."
+   "line": "Robofrog | squat | metal/sour | feet chip | visor flat | Croaks in binary.",
+   "kind": "It's a wind-up frog."
   },
   "ningyo": {
    "no": 119,
-   "name": "Ningyo",
+   "name": "Sirena",
    "stage": 4,
    "stage_name": "mutant",
    "family": "sour",
@@ -1833,11 +1951,12 @@
    ],
    "desc": "A mermaid from outer space.",
    "hint": "Feed any grown-up (Dai) sour pal some cosmic food.",
-   "line": "Ningyo | fish | slime | tail_fish | one o | A mermaid from outer space."
+   "line": "Ningyo | fish | slime | tail_fish | one o | A mermaid from outer space.",
+   "kind": "It's a mermaid from the stars (ningyo)."
   },
   "frog_king": {
    "no": 120,
-   "name": "Frog King",
+   "name": "Tonosama",
    "stage": 5,
    "stage_name": "legend",
    "family": "sour",
@@ -1847,8 +1966,9 @@
     "legend"
    ],
    "desc": "The sour king of every pond.",
-   "hint": "Feed Omamori (the ULTRA sour pal) the Kraken Brine.",
-   "line": "Frog King | mochi sx=1.2 | lime/gold | feet:lime crown sparkles | heavy flat stache | The sour king of every pond."
+   "hint": "Feed Mamoru (the ULTRA sour pal) the Kraken Brine.",
+   "line": "Frog King | mochi sx=1.2 | lime/gold | feet:lime crown sparkles | heavy flat stache | The sour king of every pond.",
+   "kind": "It's the frog king."
   }
  },
  "starters": {

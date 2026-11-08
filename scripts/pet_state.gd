@@ -39,10 +39,26 @@ func _load_tree() -> void:
 	for id in FORMS:
 		FORMS[id]["no"] = int(FORMS[id]["no"])
 		FORMS[id]["stage"] = int(FORMS[id]["stage"])
-		FORMS[id]["frames"] = ["res://textures/pet/forms/%s-1.png" % id, "res://textures/pet/forms/%s-2.png" % id]
+	apply_art()
 	STARTERS = data["starters"]
 	NEXT = data["next"]
 	LEGENDS = data["legend"]
+
+## Which pictures the pals use (2026-11-07): the new spirits (textures/spirits/forms/, from
+## tools/art/spirits_install.py, in the old pictures' format so every screen and game takes them
+## as they are) or the old food pals (textures/pet/forms/): the dev launcher's SPIRITS switch
+## (DevLaunch.new_spirits). The pet screen plays the new spirits' animation (poop.gd, spirit_anim.gd).
+func apply_art() -> void:
+	for id in FORMS:
+		var new_one := "res://textures/spirits/forms/%s-1.png" % id
+		if DevLaunch.new_spirits and ResourceLoader.exists(new_one):
+			FORMS[id]["frames"] = [new_one, "res://textures/spirits/forms/%s-2.png" % id]
+		else:
+			FORMS[id]["frames"] = ["res://textures/pet/forms/%s-1.png" % id, "res://textures/pet/forms/%s-2.png" % id]
+
+## The new spirit's animation is there for this form (and the new art is on)
+func has_spirit_anim(id: String = form_id) -> bool:
+	return DevLaunch.new_spirits and ResourceLoader.exists("res://textures/spirits/%s/base.png" % id)
 
 ## Pedia order (by number)
 func pedia_order() -> Array:

@@ -10,7 +10,7 @@ class_name DevLaunch
 ##                      the Pal Pedia, every food and drink level, special foods in the pantry, every
 ##                      dress-up item, home decor, background, sticker and case (to put on: flip the
 ##                      device), the whole Shop to look through and 999 coins (no meal / drink wait
-##                      either). In a shrine home: Picklet on the pet screen (the user: always the sour
+##                      either). In a shrine home: Otama (was Picklet) on the pet screen (the user: always the sour
 ##                      baby, to feed and evolve it every time); in the gut: a random pal, the Games menu
 ##   BOOT + PROGRESSION the real game as a player gets it, from the very start, KEPT between
 ##                      launches (its own save, user://progress/, see SaveSlot): every testing switch
@@ -40,6 +40,9 @@ const HOME_LABELS := { "hokora": "HOME: HOKORA", "first": "HOME: FIRST HOKORA", 
 static var home := "hokora"
 ## The spirit in a shrine (either hokora) instead of the gut (set from `home`: set_home)
 static var shrine := true
+## The new spirits (2026-11-07: their art everywhere, their animation on the pet screen) or the old
+## food pals: SPIRITS: NEW / OLD on the launcher (PetState.apply_art)
+static var new_spirits := true
 ## The forest hokora: its separate pale forest-frame art and its fit-to-screen scale
 static var new_shrine := true
 
@@ -89,6 +92,7 @@ func _ready() -> void:
 	_rc_grade_toggle(font)
 	_rc_fx_toggle(font)
 	_rc_rings_toggle(font)
+	_spirits_toggle(font)
 
 ## (HOME: the hokora, the first hokora or the gut, for every start; a tap cycles it)
 var _unlocked_sub: Label
@@ -119,7 +123,7 @@ func _home_toggle(font: Font, y: float) -> void:
 
 func _refresh_unlocked_sub() -> void:
 	if _unlocked_sub:
-		_unlocked_sub.text = "all open · Picklet, pet screen" if shrine else "all open · a random pal, games"
+		_unlocked_sub.text = "all open · Otama, pet screen" if shrine else "all open · a random pal, games"
 
 ## (RC Prix's Garden: the code's art or the designer's new pieces, a tap switches it)
 func _rc_art_toggle(font: Font) -> void:
@@ -180,6 +184,23 @@ func _rc_rings_toggle(font: Font) -> void:
 	b.pressed.connect(func():
 		rc_gold_pass = not rc_gold_pass
 		b.text = "RINGS: GOLD PASS" if rc_gold_pass else "RINGS: GOLD NEXT"
+		_save_choice(_last_choice()))
+	add_child(b)
+
+## (the new spirits or the old food pals, everywhere: a tap switches it)
+func _spirits_toggle(font: Font) -> void:
+	new_spirits = _prefs().get("new_spirits", true)
+	PetState.apply_art()
+	var b := Button.new()
+	b.text = "SPIRITS: NEW" if new_spirits else "SPIRITS: OLD"
+	b.position = Vector2(740, 310)
+	b.size = Vector2(300, 70)
+	b.add_theme_font_override("font", font)
+	b.add_theme_font_size_override("font_size", 30)
+	b.pressed.connect(func():
+		new_spirits = not new_spirits
+		PetState.apply_art()
+		b.text = "SPIRITS: NEW" if new_spirits else "SPIRITS: OLD"
 		_save_choice(_last_choice()))
 	add_child(b)
 
@@ -368,4 +389,4 @@ func _prefs() -> Dictionary:
 func _save_choice(choice: String) -> void:
 	var f := FileAccess.open(PREFS, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({ "choice": choice, "home": home, "rc_new_art": rc_new_art, "rc_grade_scenery": rc_grade, "rc_fx": rc_fx, "rc_gold_pass": rc_gold_pass }))
+		f.store_string(JSON.stringify({ "choice": choice, "home": home, "rc_new_art": rc_new_art, "rc_grade_scenery": rc_grade, "rc_fx": rc_fx, "rc_gold_pass": rc_gold_pass, "new_spirits": new_spirits }))
