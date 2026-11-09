@@ -51,6 +51,11 @@ var glass_over: Sprite2D
 ## (the Capsule's side windows' grey inner walls, cut out of its front by tools/art/capsule_recess.py:
 ## behind its shelf objects and lanterns, its white frame (front_frame.png) over them)
 var recess: Sprite2D
+## (and the tilt goes into the pod, the user 2026-11-09: "the lanterns should show from behind the door
+## when tilting past it": a home's HOMES "inner_depth" puts its lanterns and inner walls deeper than its
+## front, its window trays deeper still, so turning the phone slides them behind the frame's edge)
+var _inner_d := NAN
+const INNER_TRAYS := 20.0             # (the window trays: this much deeper than the inner walls)
 const GLASS_UNDER := 0.6
 const GLASS_OVER := 0.48
 var _rope_at := Vector2(11, 30)       # (NEW_ROPE_AT, or the home's)
@@ -93,9 +98,10 @@ const OFFER_AT := Vector2(55.5, 76.0)
 ## A home's own table (the user, 2026-11-08: nothing floating): the offering stands on the middle of
 ## its top (found in table.png, TABLE_INSET px into its top edge, so the edge hides its foot), and the
 ## spirit stands right behind it, centred on it, its feet FEET_BELOW px below that top (picture px,
-## the 925 grid: hidden by the table's edge, its face clear of the food)
+## the 925 grid; negative: above it, the user 2026-11-09: "a bit more up", 3 art px, its face higher
+## over the food, its feet still behind the offering)
 const TABLE_INSET := 5.0
-const FEET_BELOW := 2.0
+const FEET_BELOW := -13.0
 const PAL_FLOOR := 60.0               # the pal's floor below its node's middle (texels: poop.gd OLD_BASELINE)
 var _offer_px := Vector2.ZERO         # where the offering's foot stands (this node's space)
 var _pal_at0 := Vector2(NAN, NAN)     # the spirit's place as first set (the old forest's)
@@ -516,6 +522,7 @@ func _apply_home() -> void:
 	# a home whose lanterns hang from behind its front (HOMES "lanterns_behind": the Food Stall's, from
 	# under its awning, the user 2026-11-02): their hooks hidden by it
 	var behind: bool = h.get("lanterns_behind", false)
+	_inner_d = float(h.get("inner_depth", NAN))
 	for l in [lantern_left_glow, lantern_left, lantern_glow, lantern]:
 		l.z_index = 1 if behind else 2
 		if behind:
@@ -714,8 +721,8 @@ func _process(delta: float) -> void:
 	hanging.position = front.position
 	glass.position = front.position
 	glass_over.position = front.position
-	recess.position = front.position
-	window_trays.position = front.position
+	recess.position = _inner_shift()
+	window_trays.position = front.position if is_nan(_inner_d) else (tilt * (_inner_d - INNER_TRAYS)).round()
 	wheels.position = front.position
 	for part in _mud_parts:
 		part.position = (tilt * float(_mud_parts[part])).round()
@@ -1582,9 +1589,13 @@ func _real_down(dt: float) -> Vector2:
 	_down = _down.slerp(want, clampf(dt * 8.0, 0.0, 1.0)).normalized()
 	return _down
 
+## Where the lanterns' hooks and a home's inner walls are in the tilt: with the front, or at its inner_depth
+func _inner_shift() -> Vector2:
+	return front.position if is_nan(_inner_d) else (tilt * _inner_d).round()
+
 func _lantern_step(dt: float, down: Vector2, breeze: Vector2) -> void:
 	var lantern_at := _lantern_at if DevLaunch.new_shrine else LANTERN_AT
-	var top := _g(lantern_at.x, lantern_at.y) + front.position
+	var top := _g(lantern_at.x, lantern_at.y) + _inner_shift()
 	var v := _lp - _lq
 	_lq = _lp
 	_lp += v * 0.975 + (down * ROPE_G + breeze) * dt * dt               # (as the rope's beads)
@@ -1604,7 +1615,7 @@ func _lantern_step(dt: float, down: Vector2, breeze: Vector2) -> void:
 	var warm := 1.0 + 0.12 * f * lerpf(0.7, 1.0, _night)     # (the candle through the paper)
 	lantern.modulate = Color(warm, warm * 0.97, 1.0)
 	if DevLaunch.new_shrine:
-		var left_top := _g(_left_lantern_at.x, _left_lantern_at.y) + front.position
+		var left_top := _g(_left_lantern_at.x, _left_lantern_at.y) + _inner_shift()
 		var left_velocity := _lp_left - _lq_left
 		_lq_left = _lp_left
 		_lp_left += left_velocity * 0.975 + (down * ROPE_G + breeze) * dt * dt
