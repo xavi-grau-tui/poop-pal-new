@@ -78,3 +78,64 @@ seen it.
 - Kitsune mask, supports, forest table: cut and installed, checked in the game first.
 - Ornament frames: into `textures/pet/shrine_new/decor/` as `<id>_N.png`. `Hokora.frames()` already
   plays them (`_decor_frames`), so only the files are needed. The pace may need tuning per piece.
+
+## Feedback on the delivery (2026-11-09)
+
+Review page: https://claude.ai/artifact/JaAicgcgs3KJpfDHHiodP9 (every loop at game pace). The user:
+"we are on the right way"; the desk fan and the left neon cat are the weakest. The fox mask sits too
+high at the side: we fit it lower and further over the head ourselves (head items are placed by code).
+
+Approved: firefly jar, goldfish, sleeping squirrel, shishi-odoshi (we clean a stray line), kitsune
+mask, Tree Hollow trunk (we tuck it under the stump top), Golden step, forest table.
+Back: pinwheel frame 1, desk fan, claw machine, the four lucky cats, both koma tops. Why: they were
+pixel edits on the old art (smears, stray strokes, half-moved parts); the good ones were repainted.
+
+The message, ready to send:
+
+```
+ROUND 9 NOV – FEEDBACK. Good progress, thank you!
+
+APPROVED, going into the game:
+- firefly jar, goldfish, sleeping squirrel, shishi-odoshi (we clean the small stray line
+  ourselves), kitsune mask, Tree Hollow trunk, Golden Temple step, forest table.
+
+FIVE GO ROUND ONCE MORE. The frames that worked were the ones where the moving part was
+repainted whole. The others were pixel edits on the old art, and that left smears, stray
+strokes and half-moved parts. So for these:
+- Repaint the moving part as a complete, clean shape in each frame (its own outline, its
+  own shading), as if each frame were a still you'd approve on its own.
+- No motion lines, streaks, smears or ghost pixels. The movement comes from the frames
+  alone.
+- Make the movement big enough to read at game size (a few pixels at least), with clear
+  key poses.
+- Frame 0 = today's picture, exactly. Everything that doesn't move stays pixel-identical.
+- Check each loop at game size, playing at 0.3 s a frame (a GIF), before sending.
+
+1. PINWHEEL FRAME 1: take frame 2 and turn its blades 45 degrees. The same fat pointed
+   blades, the same length, the same amount of colour, the same hub. Today's frame 1 is
+   thin strokes with outline tails, so the spin flickers between a thin X and a fat cross.
+   Quick check: frame 1 and frame 2 should have about the same number of vermilion and
+   cream pixels.
+
+2. DESK FAN: keep the fan body and the cage exactly as today. Only the blades turn. Draw
+   the same four pink blades round the mint hub in three positions (0, 30 and 60 degrees),
+   each a clean blade shape with its outline, seen through the cage bars. No black or white
+   streaks.
+
+3. CLAW MACHINE: the claw goes clearly down towards the prizes and back up (4 frames). The
+   cable gets longer, the claw stays the same clean shape (open going down, closed coming
+   up if you like). No dark streaks beside it.
+
+4. LUCKY CATS (maneki + left, neon + left): a real wave. Redraw the whole raised arm in each
+   frame: up (today), bent forward at the wrist, and back. The paw moves several pixels.
+   Nothing else on the cat changes, and no strokes or marks round the paw. The left neon cat
+   is the weakest: start that one from its own frame 0 and repaint the arm cleanly.
+
+5. KOMA TOPS (+ left): a top spinning fast looks still. Keep it upright and in place (no
+   tilt or wobble), and make the spin show by moving its bands and flowers sideways round
+   the body, frame to frame. The stick and the stand don't move. No stray pixels round it.
+
+Same folders as before (docs/mockups/hokora_decor/anim/<id>/ and
+docs/mockups/spirits/dressup_pixel/), new files with _v2, old ones kept. Don't touch
+textures/, scenes/, scripts/ or data/.
+```
