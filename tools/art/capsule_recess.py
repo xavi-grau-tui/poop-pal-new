@@ -12,6 +12,9 @@ How: from the middle of each side window's hole, a fill over the clear and mid-g
 lines inside the window (not the white frame's light shades nor its own edge line, the dark pixels
 touching it), kept inside a box round the window; the islands it
 surrounds (the hook rings and their outlines) join it.
+The left window's hook ring is painted out of the recess (RING: its box, filled from the same rows
+RING_FROM px to the right; the right window never had one), so the lanterns hang by their own loops
+from the top of the windows (the user, 2026-11-09: "higher, getting to the top of the glass").
 front.png stays as it is (the cards and homes_install.py use it). Rerun after homes_install.py.
 
     .venv/bin/python tools/art/capsule_recess.py
@@ -28,6 +31,8 @@ SEEDS = [(185, 400), (740, 400)]       # (x, y) in each side window's hole
 BOXES = [(90, 170, 300, 700), (625, 170, 835, 700)]   # (x0, y0, x1, y1): each side window, the fill kept inside
 OUTLINE_LUM = 80                       # darker than this (and opaque): the outline, where the fill stops
 FRAME_LINE = 5                         # an outline this close to the white frame is its edge; others are the walls'
+RING = (165, 241, 206, 290)             # (x0, y0, x1, y1): the left window's hook ring and its outline
+RING_FROM = 45                         # filled from the ceiling this far right of it, row by row
 WALL_LUM = 180                         # the inner walls' greys are darker than this; the white frame's shades lighter
 
 
@@ -48,6 +53,10 @@ def main():
     recess = region & (f[..., 3] > 0)
     back = f.copy()
     back[~recess] = 0
+    x0, y0, x1, y1 = RING
+    keep = recess[y0:y1, x0:x1].copy()
+    back[y0:y1, x0:x1] = back[y0:y1, x0 + RING_FROM:x1 + RING_FROM]
+    back[y0:y1, x0:x1][~keep] = 0
     frame = f.copy()
     frame[recess] = 0
     Image.fromarray(back).save(D / "recess.png")
