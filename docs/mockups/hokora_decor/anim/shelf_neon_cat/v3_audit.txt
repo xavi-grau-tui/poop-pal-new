@@ -1,0 +1,7 @@
+frame0_exact=True
+frame1_changed_bbox=(16, 24, 68, 101)
+frame1_detached_components_under_10px=[]
+gif_durations_ms=[300, 300, 300]
+frame2_changed_bbox=(16, 24, 70, 101)
+frame2_detached_components_under_10px=[]
+gif_durations_ms=[300, 300, 300]

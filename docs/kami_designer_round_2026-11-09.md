@@ -178,3 +178,10 @@ arms. The arm has to be replaced, not added:
 Files: docs/mockups/hokora_decor/anim/shelf_neon_cat/shelf_neon_cat_N_v3.png and a GIF at
 0.3 s. Don't touch textures/, scenes/, scripts/ or data/.
 ```
+
+## Third pass (v3, the right neon cat, reviewed 2026-11-11)
+
+The old arm is painted out (one arm in every frame), frame 0 pixel-identical, 300 ms (the designer's
+`v3_audit.txt`). Two things left, done by us in `tools/art/ornament_cleanup.py` (TRIM): a thin dark line
+above the paw, and the border round the arm drawn as a box with square corners, cut back to the
+cat's round 8 px border. Result: `shelf_neon_cat_N_ours.png`. Nothing goes back: the round is complete.
