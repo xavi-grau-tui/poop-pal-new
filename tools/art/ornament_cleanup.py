@@ -2,7 +2,8 @@
 everything as polished as possible"), before they go into the game. The originals stay as they are;
 the results are written next to them as <id>_N_ours.png.
 
-  lucky cats (shelf_maneki, shelf_maneki_left, shelf_neon_cat_left)
+  lucky cats (shelf_maneki, shelf_maneki_left, shelf_neon_cat_left), and the shishi-odoshi from
+  the first pass (its frames 1-3 have the same stray lines above the bamboo)
       Around the new arm the thick dark sticker border (8 px, #1F0A1B) was cut away, leaving a notch,
       and lines of the old border stuck out. Here: the thin lines go (whatever the opaque mask loses
       to an opening, in pieces of 3+ px), then the border is grown back round the arm and the body
@@ -23,7 +24,8 @@ from scipy import ndimage
 
 ROOT = Path(__file__).resolve().parents[2]
 A = ROOT / "docs/mockups/hokora_decor/anim"
-CATS = ["shelf_maneki", "shelf_maneki_left", "shelf_neon_cat_left"]
+CATS = {"shelf_maneki": "_v2", "shelf_maneki_left": "_v2", "shelf_neon_cat_left": "_v2",
+        "shelf_shishi_odoshi": ""}          # (id: the delivery's file suffix)
 TOPS = ["shelf_koma", "shelf_koma_left"]
 BORDER = 8
 BORDER_RGB = (31, 10, 27)
@@ -40,20 +42,20 @@ def disk(r):
     return x * x + y * y <= r * r + 0.5
 
 
-def load(d, i):
-    return np.array(Image.open(A / d / f"{d}_{i}_v2.png").convert("RGBA")).astype(int)
+def load(d, i, v="_v2"):
+    return np.array(Image.open(A / d / f"{d}_{i}{v}.png").convert("RGBA")).astype(int)
 
 
 def save(img, d, i):
     Image.fromarray(img.astype(np.uint8)).save(A / d / f"{d}_{i}_ours.png")
 
 
-def cat(d):
-    f0 = load(d, 0)
+def cat(d, v):
+    f0 = load(d, 0, v)
     frames = [f0]
     i = 1
-    while (A / d / f"{d}_{i}_v2.png").exists():
-        frames.append(load(d, i)); i += 1
+    while (A / d / f"{d}_{i}{v}.png").exists():
+        frames.append(load(d, i, v)); i += 1
     save(f0, d, 0)
     for i, f in enumerate(frames[1:], 1):
         near = ndimage.binary_dilation((f != f0).any(-1), disk(NEAR))
@@ -89,7 +91,7 @@ def top(d):
 
 
 if __name__ == "__main__":
-    for d in CATS:
-        cat(d)
+    for d, v in CATS.items():
+        cat(d, v)
     for d in TOPS:
         top(d)
