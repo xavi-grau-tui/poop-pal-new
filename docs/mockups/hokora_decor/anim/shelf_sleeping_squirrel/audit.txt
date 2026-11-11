@@ -1,0 +1,5 @@
+Frame 0 is byte-identical to anim_brief/shelf_sleeping_squirrel.png.
+Canvas: (156, 136)
+Frame 0: 0 changed RGB pixels, bbox None
+Frame 1: 4002 changed RGB pixels, bbox (0, 1, 156, 94)
+Frame 2: 3896 changed RGB pixels, bbox (0, 0, 156, 93)

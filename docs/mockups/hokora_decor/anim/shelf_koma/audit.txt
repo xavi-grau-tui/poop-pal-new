@@ -1,0 +1,5 @@
+Frame 0 is byte-identical to anim_brief/shelf_koma.png.
+Canvas: (156, 162)
+Frame 0: 0 changed RGB pixels, bbox None
+Frame 1: 10243 changed RGB pixels, bbox (7, 8, 145, 119)
+Frame 2: 10185 changed RGB pixels, bbox (7, 7, 146, 119)

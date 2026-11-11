@@ -1,0 +1,6 @@
+Frame 0 is byte-identical to anim_brief/shelf_shishi_odoshi.png.
+Canvas: (156, 164)
+Frame 0: 0 changed RGB pixels, bbox None
+Frame 1: 4085 changed RGB pixels, bbox (39, 10, 144, 79)
+Frame 2: 4980 changed RGB pixels, bbox (38, 10, 144, 91)
+Frame 3: 3827 changed RGB pixels, bbox (40, 10, 144, 76)

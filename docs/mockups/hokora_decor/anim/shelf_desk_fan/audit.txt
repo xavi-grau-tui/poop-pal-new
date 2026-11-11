@@ -1,0 +1,5 @@
+Frame 0 is byte-identical to anim_brief/shelf_desk_fan.png.
+Canvas: (156, 172)
+Frame 0: 0 changed RGB pixels, bbox None
+Frame 1: 2677 changed RGB pixels, bbox (69, 35, 130, 96)
+Frame 2: 2679 changed RGB pixels, bbox (69, 35, 130, 96)

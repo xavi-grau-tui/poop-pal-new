@@ -1,0 +1,6 @@
+Frame 0 is byte-identical to anim_brief/shelf_claw_toy.png.
+Canvas: (144, 176)
+Frame 0: 0 changed RGB pixels, bbox None
+Frame 1: 1296 changed RGB pixels, bbox (39, 59, 69, 111)
+Frame 2: 1456 changed RGB pixels, bbox (39, 59, 69, 116)
+Frame 3: 1263 changed RGB pixels, bbox (39, 59, 69, 110)

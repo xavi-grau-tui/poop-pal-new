@@ -1,0 +1,5 @@
+Frame 0 is byte-identical to anim_brief/lantern_firefly_jar.png.
+Canvas: (96, 176)
+Frame 0: 0 changed RGB pixels, bbox None
+Frame 1: 70 changed RGB pixels, bbox (36, 102, 68, 138)
+Frame 2: 66 changed RGB pixels, bbox (36, 104, 69, 138)

@@ -1,0 +1,5 @@
+Frame 0 closely matches the approved fishbowl; the water behind the moving fish is repainted once with the saved ImageGen clean-water plate and stays byte-identical in all four frames. The original bowl glass, rim, outline, foot and canvas are unchanged.
+Frame 0: 0 changed RGB pixels vs frame 0, bbox None
+Frame 1: 3238 changed RGB pixels vs frame 0, bbox (35, 57, 118, 115)
+Frame 2: 3587 changed RGB pixels vs frame 0, bbox (35, 58, 123, 117)
+Frame 3: 3083 changed RGB pixels vs frame 0, bbox (32, 58, 113, 116)

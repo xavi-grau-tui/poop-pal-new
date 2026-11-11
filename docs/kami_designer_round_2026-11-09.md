@@ -139,3 +139,42 @@ Same folders as before (docs/mockups/hokora_decor/anim/<id>/ and
 docs/mockups/spirits/dressup_pixel/), new files with _v2, old ones kept. Don't touch
 textures/, scenes/, scripts/ or data/.
 ```
+
+## Second pass (v2, reviewed 2026-11-11)
+
+Review page (same link, version 2): https://claude.ai/artifact/JaAicgcgs3KJpfDHHiodP9.
+
+- Ready as delivered: pinwheel frame 1 (46/36 vermilion/cream pixels against frame 2's 39/32), claw
+  machine.
+- Ready after our finishing pass (the user, 2026-11-11: "leave everything as polished as possible"):
+  - Desk fan: v2 still mixed today's still (grey quadrants, a ghost blade) with dark frames and jagged
+    blades. Rebuilt with `tools/art/fan_spin.py` from the designer's `rotor_imagegen_v2.png`, turned
+    0/30/60 degrees behind the cage of `shelf_desk_fan_1_v2.png`. The still becomes frame 0 of that.
+  - Both maneki and the left neon cat: the 8 px dark sticker border had been cut away round the new
+    arm, with lines of the old one left. `tools/art/ornament_cleanup.py` takes the lines off and grows
+    the border back.
+  - Both koma tops: frame 0 (tilted) and frames 1-2 (upright) were different drawings. Frames 1-2
+    become the loop (and the new still), with their stray dash and dots filled (same script).
+  - Results: `<id>_N_ours.png` next to the designer's files.
+- Back: the right neon cat. The new arm is drawn next to the old one, so frames 1-2 show two arms.
+
+The message, ready to send:
+
+```
+ROUND 9 NOV – V2. Thank you, almost everything is in!
+
+GOING INTO THE GAME: pinwheel frame 1, claw machine, desk fan, both maneki, the left neon
+cat, both koma tops. (We did small finishing touches ourselves: the dark border round the
+moving arms, a couple of stray marks, and the fan built from your blade painting.)
+
+ONE LEFT – NEON LUCKY CAT (right, shelf_neon_cat):
+In frames 1 and 2 the old raised arm is still there, behind the new one, so the cat has two
+arms. The arm has to be replaced, not added:
+- In each frame, paint out the old arm completely and paint what is under it (the side of
+  the head, the cheek, the shoulder and body), the way the left neon cat does it.
+- Then the new arm on top, with the same thick dark border as the rest of the cat (about
+  8 px at this size), all the way round the arm. No gaps or notches in that border.
+- Frame 0 stays today's picture. Same 3 poses as your v2 (they're good).
+Files: docs/mockups/hokora_decor/anim/shelf_neon_cat/shelf_neon_cat_N_v3.png and a GIF at
+0.3 s. Don't touch textures/, scenes/, scripts/ or data/.
+```

@@ -1,0 +1,5 @@
+Frame 0 is byte-identical to anim_brief/shelf_neon_cat.png.
+Canvas: (156, 168)
+Frame 0: 0 changed RGB pixels, bbox None
+Frame 1: 1903 changed RGB pixels, bbox (22, 31, 66, 95)
+Frame 2: 1832 changed RGB pixels, bbox (22, 29, 66, 92)

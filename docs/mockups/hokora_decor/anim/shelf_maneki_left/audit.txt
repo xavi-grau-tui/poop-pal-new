@@ -1,0 +1,5 @@
+Frame 0 is byte-identical to anim_brief/shelf_maneki_left.png.
+Canvas: (150, 176)
+Frame 0: 0 changed RGB pixels, bbox None
+Frame 1: 872 changed RGB pixels, bbox (1, 79, 38, 121)
+Frame 2: 843 changed RGB pixels, bbox (1, 77, 38, 122)

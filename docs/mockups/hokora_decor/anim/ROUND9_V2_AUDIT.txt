@@ -1,0 +1,10 @@
+shelf_desk_fan: frame0_exact=True; size_ok=True; gif=[300, 300, 300]; changed=[((63, 22, 139, 108), 0), ((63, 22, 139, 108), 0)]
+shelf_claw_toy: frame0_exact=True; size_ok=True; gif=[300, 300, 300, 300]; changed=[((39, 59, 69, 100), 659), ((39, 59, 69, 109), 681), ((39, 59, 69, 101), 638)]
+shelf_maneki: frame0_exact=True; size_ok=True; gif=[300, 300, 300]; changed=[((112, 87, 149, 127), 533), ((115, 86, 149, 127), 523)]
+shelf_maneki_left: frame0_exact=True; size_ok=True; gif=[300, 300, 300]; changed=[((0, 87, 38, 127), 596), ((0, 86, 36, 127), 609)]
+shelf_neon_cat: frame0_exact=True; size_ok=True; gif=[300, 300, 300]; changed=[((2, 25, 48, 99), 997), ((2, 23, 46, 99), 612)]
+shelf_neon_cat_left: frame0_exact=True; size_ok=True; gif=[300, 300, 300]; changed=[((0, 25, 44, 102), 1284), ((0, 25, 42, 99), 830)]
+shelf_koma: frame0_exact=True; size_ok=True; gif=[300, 300, 300]; changed=[((17, 32, 137, 111), 0), ((17, 32, 137, 111), 0)]
+shelf_koma_left: frame0_exact=True; size_ok=True; gif=[300, 300, 300]; changed=[((18, 32, 139, 111), 0), ((18, 32, 139, 111), 0)]
+pinwheel v2_frame1: size=(16, 16), red=46, cream=36
+pinwheel approved_frame2: size=(16, 16), red=39, cream=32
