@@ -88,10 +88,18 @@ great at the games, and today's chance.
 | Since the last meal | The spirit | What it costs |
 |---|---|---|
 | 0-2 h | fed (its happy face) | nothing |
-| 2-8 h | hungry (its 2nd face); the notification "your spirit is hungry" at 2 h | nothing yet |
+| 2-8 h | hungry (its 2nd face); it asks for food at 2 h (below) | nothing yet |
 | 8 h+ | very hungry (its 3rd face): **it won't drink until it has eaten**, so no power; the daily request waits for the meal | the games are harder until you feed it (one tap) |
 | 24 h+ | the hokora goes dark: the lanterns out, the spirit asleep on the slab; the first offering wakes it and the lanterns light one by one | the streak resets (below) |
 
+- **The spirit asks, with an icon, never a sentence** (the user, 2026-11-11: "no need to say 'hungry
+  spirit', an icon said by the spirit could be enough"). On the pet screen a small speech bubble
+  over the spirit with an offering on a tray, from 2 h; from 8 h the bubble also shows the drink cup
+  crossed out, so the won't-drink rule explains itself; at 24 h the dark hokora says it without a
+  bubble. Calm (pillar 5): the bubble shows when the screen opens and when the spirit is poked, then
+  fades; the LCD's blinking meal digits stay the second cue. The push notification (text only on the
+  phone) is the spirit's name and one glyph ("Picklet 🍙"), no sentence. With the touch screen (the
+  roadmap's idea) a tap on the bubble opens the food menu on that offering.
 - **The streak (new).** Every day you feed the spirit counts. 3, 7, 14 and 30 days in a row give a
   **Lucky Pinch token** (a free go at the claw: its exclusives, then coin capsules). A missed day
   resets it to 0. That's the only thing that can be "lost", and it's a chance, not a possession.
@@ -195,7 +203,7 @@ table is not a cycle of the game.
 | Cycle | Clock / trigger | Gives | Rules | Status |
 |---|---|---|---|---|
 | The meal | after a NEW spirit: Sho 3 min, Chu 10, Dai / mutant / legend 30; a known step 0 | the next offering; the collection's pace | progression.md 3 | BUILT (`pet_state.gd` WAIT_NEW) |
-| Hunger | 2 h hungry, 8 h very hungry, 24 h the dark hokora | the nudge back; the won't-drink rule; the streak reset | here, 3 | the faces BUILT; the consequences and the 2 h notification (none exists yet) PROPOSED |
+| Hunger | 2 h hungry, 8 h very hungry, 24 h the dark hokora | the nudge back; the won't-drink rule; the streak reset | here, 3 | the faces BUILT; the consequences, the speech bubble and the notification (none exists yet) PROPOSED |
 | The snack | any time | feeding without evolving (keep a spirit) | here, 3 | PROPOSED |
 | Food packs | coins (Sho 10, Chu 15, Dai 20; shown when a size is about to be needed) | the tree's other branches | progression.md 3 | BUILT |
 | Special foods | found first in a game (a vault = now a route for the game's power; a finale), then the daily shelf (one of each kind a day, 15 / 40), or from 350 / 450 stars; a spare one turns into coins; the shrine blessing (a home's full set: its special) | the mutants and the legends | progression.md 3 | BUILT, the blessing PROPOSED; the routes remap with the powers |
