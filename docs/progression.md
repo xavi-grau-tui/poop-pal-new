@@ -1,7 +1,10 @@
 # KamiTomo: the skeleton (progression foundation)
 
 **PILLAR (2026-10-31): the economy and the progression loop are gathered in `docs/economy_pillar.md`.
-The user: very important, to be thought through very carefully as one system before building.**
+The user: very important, to be thought through very carefully as one system before building.
+2026-11-11: the proposal, `docs/loop_v2.md`: drinks = each game's timed power, the care ladder,
+the catalogue budget, generations. Where it differs from sections 3-6 and 8 here, it wins once the
+user has decided.**
 
 DECIDED with the user 2026-10-16 (the open points are in section 8). The one place that says how the whole game fits together: the
 games and their difficulty, the pals and the meal clock, drinks and boosts, special foods, coins,

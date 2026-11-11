@@ -6,6 +6,10 @@ as ONE system, with the user, check it in the model (`tools/design/pacing.py`), 
 the code. The current numbers and rules are in `docs/progression.md` (sections 3-6 and 8), the
 notes this page gathers are in its "OPEN QUESTIONS".
 
+**2026-11-11: the proposal that resolves all of it into one system is `docs/loop_v2.md`** (the
+decisions for the user marked DECIDE; the model is v4, `python3 tools/design/pacing.py`, `old` for
+the October rules). This page stays as the record of the direction.
+
 ## The loop in one picture
 
 ```

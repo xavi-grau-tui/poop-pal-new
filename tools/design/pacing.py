@@ -11,6 +11,7 @@ a first clear): replace them then.
   python3 tools/design/pacing.py regular      one player's timeline (casual / regular / keen)
   python3 tools/design/pacing.py levels       the difficulty curve: every game's worlds, measured
   python3 tools/design/pacing.py days         day by day, the three players
+  ... old                                     any of these with the v3 rules (before the powers)
 
 Keep in step with the game: GAMES (scripts/game_data.gd GAME_PRICE, GameMenuSwitcher.ORDER), the
 food packs and special foods (scripts/shop.gd), the countdowns (scripts/lcd_screen.gd), Tilt
@@ -89,7 +90,18 @@ SPECIAL_STOCK = {'tech': 1, 'cosmic': 1, 'legend': 1}         # the Shop's speci
 HOME_STALL = [20, 20, 25, 25, 15, 30, 30, 20, 20, 20, 40, 40]
 COSMETICS = sorted([8] * 20 + [40] * 4 + HOME_STALL)
 DRINK_PRICE = {2: 10, 3: 20}                      # a drink type's level 2 / level 3 (scripts/shop.gd)
-DRINK_TYPES = ['watery', 'fizzy', 'caffeinated', 'milky', 'fruity']   # one more with each game owned
+DRINK_TYPES = ['watery', 'fizzy', 'caffeinated', 'milky', 'fruity']   # one more with each game owned (v3)
+
+# --- v4 (2026-11-11, the economy pillar, docs/loop_v2.md): each game's drink is its POWER.
+# A drink arrives with ITS game (the 6th type is new). Its power lasts POWER_MIN minutes of play in
+# that game, from the first level played after drinking (never wasted on a visit to feed), longer
+# with the drink's level. The 3rd star of a level is tuned so it needs the power: without it the
+# replays towards it pay THIRD_WITHOUT of what they pay with it. A world's secret is a route that
+# only the power reaches (the gate level by tier, as before: worlds 1-2 level 1, 3-4 2, 5-6 3).
+POWERS = True
+DRINK_OF = {0: 'watery', 1: 'fizzy', 2: 'spicy', 3: 'milky', 4: 'fruity', 5: 'caffeinated'}
+POWER_MIN = {1: 5, 2: 8, 3: 12}
+THIRD_WITHOUT = 0.25
 DAILY = 2                                         # the pal's daily request (from day 2, on a day you play)
 GIFTS_AT = [5, 15, 30, 60, 100]                   # each game's gift track (its star total)
 PEDIA_GIFT_EVERY = 10                             # a gift every 10 pals found
@@ -184,6 +196,8 @@ def secrets_list():
     for g, types in SMALL_GATES.items():
         for w, typ in enumerate(types):                 # worlds 1..6, their 3rd level
             out.append((g, w * LEVELS + 3, typ, GATE_LEVEL[w], SMALL_PRIZES[w]))
+    if POWERS:                                          # v4: every secret wants its game's own power
+        out = [(g, lvl, DRINK_OF[g], need, prize) for g, lvl, typ, need, prize in out]
     return out
 
 
@@ -205,6 +219,8 @@ class Player:
         self.foods = {k: list(v) for k, v in START_FOODS.items()}
         self.drink_lvl = {'watery': 1}
         self.boost = None               # (type, level)
+        self.power = None               # v4: (game, minutes of play left, level)
+        self.powered = 0.0              # minutes played with a power on (v4)
         self.next_drink = 0.0           # (real clock)
         self.next_meal = 0.0
         self.secrets = secrets_list()
@@ -432,7 +448,10 @@ class Player:
     def buy_game(self, g):
         self.owned.append(g)
         extra = ''
-        if len(self.owned) <= len(DRINK_TYPES):
+        if POWERS:
+            self.drink_lvl[DRINK_OF[g]] = 1
+            extra = f' (+ {DRINK_OF[g]} drinks)'
+        elif len(self.owned) <= len(DRINK_TYPES):
             typ = DRINK_TYPES[len(self.owned) - 1]
             self.drink_lvl[typ] = 1
             extra = f' (+ {typ} drinks)'
@@ -440,7 +459,21 @@ class Player:
 
     # --- drinks and secrets
     def drink(self):
-        """at a drink: the type (and level) the next secret within reach needs"""
+        """at a drink: the type (and level) the next secret within reach needs; v4: the drink of
+        the game you're about to play (a secret within reach, else the most 3rd stars to win,
+        else the newest game: its levels are the ones being cleared)"""
+        if POWERS:
+            for g, lvl, typ, need, _ in self.open_secrets():
+                if self.drink_lvl.get(typ, 0) >= need:
+                    self.power = (g, POWER_MIN[self.drink_lvl[typ]], self.drink_lvl[typ])
+                    return
+            nl = self.next_level()
+            if nl and nl[2] == 'first':
+                g = nl[0]
+            else:
+                g = max(self.owned, key=lambda g: sum(1 for i in range(self.nlev[g]) if 2 <= self.stars[g][i] < 2.95))
+            self.power = (g, POWER_MIN[self.drink_lvl[DRINK_OF[g]]], self.drink_lvl[DRINK_OF[g]])
+            return
         for g, lvl, typ, need, _ in self.open_secrets():
             if self.drink_lvl.get(typ, 0) >= need:
                 self.boost = (typ, self.drink_lvl[typ])
@@ -448,7 +481,26 @@ class Player:
         if not self.boost:
             self.boost = ('watery', self.drink_lvl['watery'])
 
+    def powered_for(self, g):
+        return bool(self.power) and self.power[0] == g
+
+    def spend_power(self, g, m):
+        """v4: the power runs while its game is played"""
+        self.t += m
+        self.clock += m
+        if self.powered_for(g):
+            self.powered += min(m, self.power[1])
+            left = self.power[1] - m
+            self.power = (g, left, self.power[2]) if left > 0 else None
+
     def secret_to_open(self):
+        if POWERS:
+            if not self.power:
+                return None
+            for s in self.open_secrets():
+                if s[0] == self.power[0] and self.power[2] >= s[3]:
+                    return s
+            return None
         if not self.boost:
             return None
         for s in self.open_secrets():
@@ -458,10 +510,13 @@ class Player:
 
     def open_secret(self, s):
         g, lvl, typ, need, prize = s
-        self.t += try_min(g, difficulty(g, lvl - 1))
-        self.clock += try_min(g, difficulty(g, lvl - 1))
+        if POWERS:
+            self.spend_power(g, try_min(g, difficulty(g, lvl - 1)))
+        else:
+            self.t += try_min(g, difficulty(g, lvl - 1))
+            self.clock += try_min(g, difficulty(g, lvl - 1))
+            self.boost = None
         self.opened.add(s)
-        self.boost = None
         if prize.startswith('coins'):
             self.earn(int(prize[5:]))
         elif prize != 'sticker':
@@ -482,12 +537,19 @@ class Player:
                     break
         if best:
             return best
-        cand = [(replay_stars(difficulty(g, i)) / try_min(g, difficulty(g, i)), g, i)
+        cand = [(self.replay_rate(g, i) / try_min(g, difficulty(g, i)), g, i)
                 for g in self.owned for i in range(self.nlev[g]) if self.stars[g][i] < 2.95]
         if not cand:
             return None
         _, g, i = max(cand)
         return (g, i, 'replay')
+
+    def replay_rate(self, g, i):
+        """stars per try going back for a level's missing stars; v4: the 3rd needs the power"""
+        r = replay_stars(difficulty(g, i))
+        if POWERS and self.stars[g][i] >= 2 and not self.powered_for(g):
+            r *= THIRD_WITHOUT
+        return r
 
     def play_once(self):
         s = self.secret_to_open()
@@ -512,9 +574,12 @@ class Player:
                     self.new(f'wins {food} in {GAMES[g][0]} {i // LEVELS + 1}-{i % LEVELS + 1}')
         else:
             m = try_min(g, d)
-            got = min(replay_stars(d), 3 - self.stars[g][i])
-        self.t += m
-        self.clock += m
+            got = min(self.replay_rate(g, i), 3 - self.stars[g][i])
+        if POWERS:
+            self.spend_power(g, m)
+        else:
+            self.t += m
+            self.clock += m
         self.stars[g][i] += got
         self.earn(got)
         tot = sum(self.stars[g])
@@ -615,6 +680,10 @@ def days_table():
 
 
 def main():
+    global POWERS
+    if 'old' in sys.argv:                 # the v3 rules (one-shot boosts, a drink type per Nth game)
+        POWERS = False
+        sys.argv.remove('old')
     if len(sys.argv) > 1 and sys.argv[1] == 'levels':
         return levels()
     if len(sys.argv) > 1 and sys.argv[1] == 'days':
@@ -638,10 +707,21 @@ def main():
     print(f'{"":20}' + ''.join(f'{n:>22}' for n in ps))
     for label, key in rows:
         print(f'{label:20}' + ''.join(f'{fmt(p.when(key)):>22}' for p in ps.values()))
-    for label, frac in [('50% of the stars', 0.5), ('90% of the stars', 0.9)]:
+    for label, frac in [('50% of the stars', 0.5), ('90% of the stars', 0.9), ('every star', 0.999)]:
         print(f'{label:20}' + ''.join(f'{"day " + str(p.day_when(lambda s: s[1] >= frac * max_stars)) if p.day_when(lambda s: s[1] >= frac * max_stars) else "-":>22}' for p in ps.values()))
     print(f'{"coins: earned/left":20}' + ''.join(f'{p.earned:>15.0f} / {p.coins:<4.0f}' for p in ps.values()))
     print(f'{"most coins unspent":20}' + ''.join(f'{p.max_unspent:>22.0f}' for p in ps.values()))
+    if POWERS:
+        print(f'{"play with a power on":20}' + ''.join(f'{p.powered / p.t * 100:>21.0f}%' for p in ps.values()))
+    # the catalogue (the pillar's rule 4): everything sold, against the coins a regular earns from
+    # every star and the small sources
+    n_drinks = len(DRINK_OF) if POWERS else len(DRINK_TYPES)
+    catalogue = {'games': sum(g[1] for g in GAMES), 'food packs': 2 * 10 + 3 * 15 + 4 * 20,
+                 'drink levels': n_drinks * sum(DRINK_PRICE.values()), 'special foods (bought, regular)': round(ps['regular'].spent.get('special foods', 0)),
+                 'stickers, cases, the HOME stall': sum(COSMETICS)}
+    all_stars = sum(GAMES[g][2] * LEVELS * 3 for g in range(len(GAMES)))
+    print(f'\nthe catalogue: {sum(catalogue.values())} coins', catalogue)
+    print(f'coins from every star: {all_stars}; a regular earns {ps["regular"].earned:.0f} in {DAYS} days')
     print()
     r = ps['regular']
 
