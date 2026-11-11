@@ -221,7 +221,7 @@ class Player:
         self.boost = None               # (type, level)
         self.power = None               # v4: (game, minutes of play left, level)
         self.powered = 0.0              # minutes played with a power on (v4)
-        self.next_drink = 0.0           # (real clock)
+        self.next_drink = float('inf')  # (real clock; the first meal starts the countdown: LcdScreen)
         self.next_meal = 0.0
         self.secrets = secrets_list()
         self.opened = set()
@@ -366,6 +366,8 @@ class Player:
         if to in self.found:
             self.next_meal = self.clock + WAIT_KNOWN
             return True
+        if not self.found:
+            self.next_drink = self.clock + DRINK_EVERY     # the first meal starts the drink countdown
         self.found.add(to)
         self.session_new = True
         st = self.stage(to)
@@ -592,7 +594,8 @@ class Player:
         end = self.t + minutes
         self.session_new = False
         self.next_meal = min(self.next_meal, self.clock)       # hours away: the pal is hungry
-        self.next_drink = min(self.next_drink, self.clock)
+        if self.found:
+            self.next_drink = min(self.next_drink, self.clock)
         idle = 0
         while self.t < end:
             if self.clock >= self.next_meal and self.meal():

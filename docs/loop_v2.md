@@ -69,6 +69,16 @@ instantly, and FOCUS on a rhythm game is the natural word.
 **DECIDE B.** Drink levels make the power LONGER (5 / 8 / 12 min), not stronger. Stronger would mean
 retuning every 3rd star three times. Longer keeps one tuning and still sells (plus the gates).
 
+**Keep three tiers? Yes** (the user asked, 2026-11-11). The three levels are three NAMED drinks, each
+with its own icon (Shrine Water, Barley Tea, Coconut Water; Cola, Ramune, Cream Soda...), so the
+drink menu's line-up is content a player collects, not a number. The three tiers match the three
+tiers of worlds (1-2 / 3-4 / 5-6), so a tier-2 route's sign ("needs Ramune") says which drink to
+buy. And the levels are 180 of the catalogue's coins, bought on days 4-10 in the model: the weeks
+when the Shop most needs something worth saving for. What changes is only their meaning: a higher
+drink = a longer power (its minutes shown on the LCD, so the upgrade is visible) + the tier's routes.
+The fallback, if the drink menu feels cluttered on the phone with 6 x 3: two tiers at 10 / 30 (the
+sink kept), the level-3 names dropped.
+
 ## 3. Care: what not feeding costs (the penalties)
 
 **The principle: care gates the powers, never the collection.** Nothing a player owns is ever lost: no
@@ -176,7 +186,39 @@ assist removed from the other games.
 - `tools/design/pacing.py`: DONE (v4: `POWERS`, `DRINK_OF`, `POWER_MIN`, `THIRD_WITHOUT`, the
   catalogue check). Still to add once decided: the streak tokens, the snack, the sold/earned homes.
 
-## 9. To measure on the phone (TestFlight), replacing the model's assumptions
+## 9. Every cycle, in one place (the checklist, to check against later)
+
+The user (2026-11-11): "are you sure we are covering all the cycles?" Every loop the game has, with
+its clock, what it gives, where its rules are written and whether it's built. Anything not in this
+table is not a cycle of the game.
+
+| Cycle | Clock / trigger | Gives | Rules | Status |
+|---|---|---|---|---|
+| The meal | after a NEW spirit: Sho 3 min, Chu 10, Dai / mutant / legend 30; a known step 0 | the next offering; the collection's pace | progression.md 3 | BUILT (`pet_state.gd` WAIT_NEW) |
+| Hunger | 2 h hungry, 8 h very hungry, 24 h the dark hokora | the nudge back; the won't-drink rule; the streak reset | here, 3 | the faces BUILT; the consequences and the 2 h notification (none exists yet) PROPOSED |
+| The snack | any time | feeding without evolving (keep a spirit) | here, 3 | PROPOSED |
+| Food packs | coins (Sho 10, Chu 15, Dai 20; shown when a size is about to be needed) | the tree's other branches | progression.md 3 | BUILT |
+| Special foods | found first in a game (a vault = now a route for the game's power; a finale), then the daily shelf (one of each kind a day, 15 / 40), or from 350 / 450 stars; a spare one turns into coins; the shrine blessing (a home's full set: its special) | the mutants and the legends | progression.md 3 | BUILT, the blessing PROPOSED; the routes remap with the powers |
+| The drink | one every 15 min; the first meal starts it | a power | here, 2; `lcd_screen.gd` | the countdown BUILT; the power PROPOSED (today: a one-shot boost) |
+| Drink types | one per game, arriving with it; the 6th (Spicy) new | the powers | here, 2 | PROPOSED (today: the Nth game gives the Nth type) |
+| Drink levels | bought, 10 / 20 per type | a longer power; the tier-2 / 3 routes | here, 2 | BUILT in the Shop; the meaning PROPOSED |
+| Secrets (3-6-9) | each world's 3rd level a small pickup, its 6th the secret, its 9th the finale | coins and stickers; hokora pieces, specials, dress-ups; cases, legends | progression.md 4b | BUILT with drink-type gates; to remap to the game's own power |
+| Stars and coins | 1 coin per new star; the daily request +2 | the catalogue | progression.md 5; here, 4 | BUILT |
+| Gift tracks | 5 / 15 / 30 / 60 / 100 / 150 stars per game | a drift, a hanging piece, a dress-up, a shelf pair, a sky, the gold sticker | progression.md 5b | BUILT |
+| The Tomopedia | every 10 spirits; 10 of a realm | a grand piece; the realm's colour | progression.md 5b | BUILT |
+| Lucky Pinch | every 4th new spirit; the streak's tokens | 8 exclusives, then +3 coins | progression.md 3; here, 3 | BUILT; the tokens PROPOSED |
+| The streak | days in a row with a meal: 3 / 7 / 14 / 30 | Lucky Pinch tokens | here, 3 | PROPOSED |
+| The Shop | games, packs, drink levels, the daily specials, the HOME stall, stickers, plain cases; sections open as they become relevant | choice, never prestige | progression.md 5, 5b; here, 4 | BUILT; "nothing prestige sold" PROPOSED |
+| The homes | 60 / 90 / 120 spirits, a finale, the four seasons, the streak | the hokoras | kami_future_hokoras.md; here, 4 | PROPOSED |
+| The send-off | the player's choice on a grown spirit | the generation mark; blessed spirits (an update) | here, 6 | PROPOSED |
+| Away | nothing happens while away, on purpose (no loss); the only away event is the dark hokora at 24 h | the return moment | here, 3 | PROPOSED |
+
+Two things this audit found and fixed (2026-11-11): the model drank at minute 0 while the game's
+first drink is at minute 15 (now the first meal starts the model's countdown too: the first secret
+is at 16 min again); and the special foods' obtention wasn't restated with the powers (above: a
+vault is a route for the game's own power, at the tier's drink level).
+
+## 10. To measure on the phone (TestFlight), replacing the model's assumptions
 
 The minutes per try and the fail rates per difficulty · the 3rd-star rate with and without the power
 · whether 15 min between drinks feels right (10 is the fallback) · how many players come back after
