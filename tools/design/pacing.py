@@ -89,7 +89,7 @@ SPECIAL_STOCK = {'tech': 1, 'cosmic': 1, 'legend': 1}         # the Shop's speci
 # (scripts/hokora_catalog.gd "price"); bought after every game, cheapest first
 HOME_STALL = [20, 20, 25, 25, 15, 30, 30, 20, 20, 20, 40, 40]
 COSMETICS = sorted([8] * 20 + [40] * 4 + HOME_STALL)
-DRINK_PRICE = {2: 10, 3: 20}                      # a drink type's level 2 / level 3 (scripts/shop.gd)
+DRINK_PRICE = {2: 30}                             # the better drink of a type (two tiers; scripts/shop.gd still sells 10 / 20 for three)
 DRINK_TYPES = ['watery', 'fizzy', 'caffeinated', 'milky', 'fruity']   # one more with each game owned (v3)
 
 # --- v4 (2026-11-11, the economy pillar, docs/loop_v2.md): each game's drink is its POWER.
@@ -100,7 +100,7 @@ DRINK_TYPES = ['watery', 'fizzy', 'caffeinated', 'milky', 'fruity']   # one more
 # only the power reaches (the gate level by tier, as before: worlds 1-2 level 1, 3-4 2, 5-6 3).
 POWERS = True
 DRINK_OF = {0: 'watery', 1: 'fizzy', 2: 'spicy', 3: 'milky', 4: 'fruity', 5: 'caffeinated'}
-POWER_MIN = {1: 5, 2: 8, 3: 12}
+POWER_MIN = {1: 5, 2: 10}                         # two tiers (the user, 2026-11-11): the plain drink, the better one
 THIRD_WITHOUT = 0.25
 DAILY = 2                                         # the pal's daily request (from day 2, on a day you play)
 GIFTS_AT = [5, 15, 30, 60, 100]                   # each game's gift track (its star total)
@@ -118,7 +118,7 @@ LEGEND_OF = {'Golden Seed': 'green', 'Stardust Sugar': 'sweet', 'Dragon Oil': 'g
 # it. Tilt Maze: its vaults (2 gated per world; today all fizz, the plan gives each boost its
 # own kind). The other games: one per world from world 2, on its 6th level. Gate level: worlds
 # 1-2 = 1, 3-4 = 2, 5-6 = 3 (6 worlds = three tiers of two).
-GATE_LEVEL = [1, 1, 2, 2, 3, 3]
+GATE_LEVEL = [1, 1, 1, 2, 2, 2]                   # two tiers: worlds 1-3 the plain drink, 4-6 the better one (was [1, 1, 2, 2, 3, 3])
 GATE_TYPES = {
     0: ['fizzy', 'fruity', 'fizzy', 'fruity', 'fizzy'],                       # Splash Hoops: a high golden hoop / a chest on the sand
     2: ['fizzy', 'milky', 'fruity', 'milky', 'fizzy'],                        # Pal Prix: a ramp off the road / no slip / a gift box

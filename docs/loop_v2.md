@@ -66,18 +66,27 @@ for Tummy Tunes (timing). The alternative: Caffeinated stays the races' (slow-mo
 as built) and the new drink is Tummy Tunes'. Spicy is the recommendation: heat on a race track reads
 instantly, and FOCUS on a rhythm game is the natural word.
 
-**DECIDE B.** Drink levels make the power LONGER (5 / 8 / 12 min), not stronger. Stronger would mean
-retuning every 3rd star three times. Longer keeps one tuning and still sells (plus the gates).
+**DECIDE B.** Drink tiers make the power LONGER, not stronger. Stronger would mean retuning every
+3rd star per tier. Longer keeps one tuning and still sells (plus the routes).
 
-**Keep three tiers? Yes** (the user asked, 2026-11-11). The three levels are three NAMED drinks, each
-with its own icon (Shrine Water, Barley Tea, Coconut Water; Cola, Ramune, Cream Soda...), so the
-drink menu's line-up is content a player collects, not a number. The three tiers match the three
-tiers of worlds (1-2 / 3-4 / 5-6), so a tier-2 route's sign ("needs Ramune") says which drink to
-buy. And the levels are 180 of the catalogue's coins, bought on days 4-10 in the model: the weeks
-when the Shop most needs something worth saving for. What changes is only their meaning: a higher
-drink = a longer power (its minutes shown on the LCD, so the upgrade is visible) + the tier's routes.
-The fallback, if the drink menu feels cluttered on the phone with 6 x 3: two tiers at 10 / 30 (the
-sink kept), the level-3 names dropped.
+**Two tiers, keeping the icons** (the user, 2026-11-11: "I like the 2 tier approach, the right one not
+to overwhelm the user"; agreed). First answer that day was three (three named drinks each, the three
+world tiers, the 180-coin sink); two does the same job with less to read: 12 entries in the drink
+menu instead of 18, and "the plain one / the better one" instead of a level number. Tier 1 = 5 min of
+power, tier 2 = 10 min + the routes of worlds 4-6 (worlds 1-3 want tier 1); tier 2 costs 30 per type
+(6 x 30 = 180: the sink unchanged). The icons we have are enough (16 drawn for 12 slots): Shrine Water
+-> Coconut Water, Cola -> Ramune, Green Tea -> Coffee, Milk -> Bubble Tea, Mikan Juice -> Smoothie,
+and the new type Ginger Ale -> Energy Drink (one new icon; Energy Drink leaves the caffeinated line).
+The spares (Barley Tea, Cream Soda, Peach Juice, Milkshake, Lemonade) wait for seasonal or event
+drinks. The model with two tiers: nothing moves for the regular and keen players (90% of the stars
+day 59 / 24, the first tier-2 bought day 6 / 4) except the casual player's 5th game, day 48 instead of
+31, because the model buys a 30-coin drink before Top Spin: the guide cards nudge "the next game
+first", and the first tier-2 purchase can wait for world 4. `pacing.py` runs with two tiers now.
+
+**The decisions page** (2026-11-11): https://claude.ai/artifact/4iUmvQ1teqnUBSmCE4kgdF explains the
+whole loop and holds the user's choices and notes for decisions A-G in its own store (read them with
+the ArtifactData tool, collection `decisions`, and `notes/general`). G (the spirit asks with an icon)
+is already recorded there.
 
 ## 3. Care: what not feeding costs (the penalties)
 
