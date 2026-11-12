@@ -31,7 +31,8 @@ import soundfile as sf
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 SR, HOP, NF = 22050, 128, 1024
 FPS = SR / HOP
-BACKING_UNDER = 4.0        # dB: how far under the lead the band sits in the game, as a phone speaker hears it
+BACKING_UNDER = 8.0        # dB under the lead, as a phone speaker hears it: the target
+MAX_HARMONICS = 10.0       # the most of the bass's 2nd / 3rd harmonics that may be added to reach it
 NAMES = 'C C# D D# E F F# G G# A A# B'.split()
 
 
@@ -157,47 +158,35 @@ def phone_loud(x, sr=44100):
 
 
 def balance(lead, back, mix, beats, sr=44100):
-    """The band must carry the song alone when the lead is silent, on a phone (the user, 2026-11-12: "barely
-    hearable", then: "equalized to sound only where it should"). Suno's backing stem is bass and kick: 99% of it under
-    250 Hz, which a phone speaker hardly plays, and the split loses the drums' snap. So the band is rebuilt:
-      1. the backing's bass driven into gentle harmonics (200-800 Hz) so it is heard on a phone;
-      2. the drums' snap from the full song above 1.8 kHz, taken only around the beats (between them the full song
-         carries some xylophone, which must stay silent on a miss);
-      3. the band dipped where the xylophone lives (its own register from the chart), so each has its own space;
-      4. the band set BACKING_UNDER dB under the lead as a phone hears it; the peaks softly limited."""
+    """The band must carry the song alone when the lead is silent, on a phone. Suno's backing stem can be all bass
+    and kick (1A: 99% under 250 Hz), which a phone speaker hardly plays.
+    v1 (2026-11-12) rebuilt it hard: a driven bass, the full song's top band gated to the beats and raised 11 times,
+    a soft limiter. On the phone it hissed and sounded clipped (the user). v2 is gentle and adds nothing but the
+    bass's own 2nd and 3rd harmonics (250-900 Hz), clean, so the bass line is heard on a phone: no noise source, no
+    limiter, no gating; both files then come down together until their sum has headroom. A thin band is fixed at the
+    source: the prompt now asks for present drums (suno_prompts.py)."""
     from scipy import signal
     sos = lambda *a, **k: signal.butter(*a, fs=sr, output='sos', **k)
-    lows, highs = np.zeros_like(back), np.zeros_like(back)
-    gate = np.zeros(len(back))                                             # 1 around each beat, 0 between
-    for b in beats:
-        a, e = int((b - 0.015) * sr), int((b + 0.09) * sr)
-        if 0 <= a and e < len(gate):
-            gate[a:e] = np.maximum(gate[a:e], np.hanning(e - a))
+    dry, harm = np.zeros_like(back), np.zeros_like(back)
     for c in range(back.shape[1]):
         x = signal.sosfilt(sos(2, 35, 'hp'), back[:, c])
-        low = signal.sosfilt(sos(4, 220, 'lp'), x)
-        drive = 4.0 / (np.abs(low).max() + 1e-9)
-        harm = signal.sosfilt(sos(4, [260, 1000], 'bp'), np.tanh(low * drive) / drive - low)
-        snap = signal.sosfilt(sos(4, [1800, 9000], 'bp'), mix[:, c]) * gate * 2.0       # (the drums' snap: the loudest audible part)
-        low = x - signal.sosfilt(sos(4, 300, 'hp'), x)                    # (everything a phone can't play)
-        rest = signal.sosfilt(sos(4, 300, 'hp'), x) + snap
-        rest -= 0.5 * signal.sosfilt(sos(2, [600, 1500], 'bp'), rest)      # the dip: the xylophone's space
-        hi = rest + 2.5 * harm
-        lows[:, c], highs[:, c] = low, hi
-    # only the part a phone can play is raised; the sub-bass stays as Suno made it (headphones still get it). The
-    # band is soft-limited (its kick peaks bend) so the whole thing can stay loud; the gain is found again after it.
-    lead = lead * (0.8 / float(np.abs(lead).max()))
-    limit = lambda y: np.where(np.abs(y) > 0.5, np.sign(y) * (0.5 + 0.3 * np.tanh((np.abs(y) - 0.5) / 0.3)), y)
+        low = signal.sosfilt(sos(4, 250, 'lp'), x)
+        pk = float(np.abs(low).max()) + 1e-9
+        n = low / pk
+        dry[:, c] = x - 0.6 * signal.sosfilt(sos(2, 110, 'lp'), x)         # the sub-bass down 8 dB: a phone can't play it and it eats the headroom
+        harm[:, c] = signal.sosfilt(sos(4, [250, 900], 'bp'), (2 * n * n - 1) + 0.5 * (4 * n ** 3 - 3 * n)) * pk
     want = phone_loud(lead) * 10 ** (-BACKING_UNDER / 20)
-    g, lg = want / phone_loud(highs), 1.0
-    for _ in range(6):
-        out = limit(lg * lows + g * highs)
-        g *= want / phone_loud(out)
-        lg = min(1.0, 0.6 / (float(np.abs(lows).max()) + 1e-9))
-    out = limit(lg * lows + g * highs)
-    print(f'  (band gain {g:.1f}, lows {lg:.2f}, peak {float(np.abs(out).max()):.2f})')
-    rep = (f'rebuilt (bass harmonics, the beat-gated drum snap, a dip for the lead), {20 * np.log10(phone_loud(lead) / phone_loud(out)):.1f} dB '
-           f'under the lead on a phone speaker (was {20 * np.log10(phone_loud(lead) / phone_loud(back)):.0f} dB)')
+    g = 0.0                                                                # the harmonics' share: as much as the target needs
+    for h in np.arange(0.0, MAX_HARMONICS + 0.01, 0.25):
+        g = h
+        if phone_loud(dry + h * harm) >= want:
+            break
+    out = dry + g * harm
+    top = float(np.abs(out + lead).max()) / 0.89                           # the two play together: headroom for the sum
+    if top > 1.0:
+        out, lead = out / top, lead / top
+    rep = (f'the bass harmonics added x{g:.2f}: {20 * np.log10(phone_loud(lead) / phone_loud(out)):.1f} dB under the lead '
+           f'on a phone speaker (the stem as Suno gave it: {20 * np.log10(phone_loud(lead) / phone_loud(back)):.0f}); peak of the two together {float(np.abs(out + lead).max()):.2f}')
     return lead, out, rep
 
 
