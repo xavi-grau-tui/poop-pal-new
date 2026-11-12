@@ -1,14 +1,87 @@
 # KamiTomo: roadmap and design notes
 
-Living document (started 2026-10-01, last big update 2026-10-11). It holds the aim, the decisions
-made, and what's still missing, so any new conversation can pick the work up from here.
-When asked "what could we implement next?", answer from **What to implement next** below.
-THE SKELETON (2026-10-16, PROPOSED): docs/progression.md says how the whole game fits together
-(game order and difficulty, the meal clock, boosts, special foods, coins, the calendar), with the
-numbers from tools/design/pacing.py v3. Where it differs from the sections below, it wins once
-confirmed; its section 7 is the build order.
+**This is the main file. Start here.** Living document (started 2026-10-01). The first section is the
+current picture: what the game is, what is decided, what is built, what comes next, and which file
+holds what. Everything under "Older notes" is the record of how we got here: still true where it
+doesn't contradict the top, and the place to look for the detail of a game or a system.
+When asked "what could we implement next?", answer from **Next, in order** below.
 
-## The aim, in one paragraph
+## THE CURRENT PICTURE (2026-11-12)
+
+### The game in one paragraph
+A virtual-pet handheld in a phone. A spirit grows in a small wooden shrine (the hokora) from what you
+offer it, along food-driven paths, into 130 spirits to collect in the Tomopedia (5 realms of 26).
+Its drinks are the powers that make you great at the festival's toy games. The games (digital
+versions of real toys, six of them, each 6 worlds of 9 levels) pay the stars and coins for
+everything the shrine can become. Light, playful, icons over text, learn by doing. Japan first.
+
+### The loop, decided (the user, 2026-11-12; the full text: `docs/loop_v2.md`)
+| | Decided |
+|---|---|
+| Drinks | One drink per game, and it is that game's POWER: 5 minutes of play, starting at the first level played. The 3rd star is made for the power, the secrets are routes only it reaches. A drink does nothing in another game |
+| The six | Splash Hoops Watery TIDE · Tilt Maze Fizzy HOP · Pal Prix and 2177 Spicy HEAT (the new drink: Ginger Ale) · Paper Sumo Milky STURDY · Top Spin Fruity ZEST · Tomo Tunes Caffeinated FOCUS |
+| Tiers | Two, keeping today's icons: the plain drink, then the better one (30 coins): 10 minutes and the routes of worlds 4-6. The first better drink is met at the first world-4 gate, the others reach the Shop once every game is owned |
+| Care | Never punished in the collection. Hungry at 2 h (the spirit asks with an ICON in a bubble, never a sentence), won't drink from 8 h (no power), the hokora dark and the streak reset at 24 h. Sad and asleep faces with it; angry only as a reaction |
+| Snack | Food of the spirit's own size feeds it without evolving it |
+| Streak | Days in a row with a meal: 3 / 7 / 14 / 30 give Lucky Pinch tokens |
+| Coins | 1 per new star. The catalogue (1325) is as big as what a regular player earns (1285): anything new that is sold needs new coins in |
+| Homes | 12 in all, 11 to get: most EARNED, the first ones easily and then harder, maybe one sold. A draft ladder is in loop v2, section 11: to refine |
+| Fourth stage | Each exotic food its own mutant: 4 per realm (2 tech, 2 cosmic), 20 in all, 130 spirits. About 6 more exotic foods hidden in the games as secret prizes |
+| Starting over | The send-off as a ceremony and a generation mark on the Tomopedia card at launch; blessed spirits (a palette variant, 1 in 4 from generation 2) as the first update |
+| Cases, stickers | Rewards and the last coin sink, never power |
+| Stars | One contract for every level of every game: 1 = cleared, 2 = well, 3 = gold, in 2-3 tries with the power and about 1 in 8 without (`docs/games_pass.md`) |
+| Tomo Tunes | You play the world's instrument over a Suno song split in two; a miss silences it (`docs/tomo_tunes.md`) |
+
+### Where things stand
+- **Built and playable:** the shrine and its 12 homes, feeding, drinks as one-shot boosts (the OLD
+  rule), the 120-spirit tree, the Tomopedia, the Shop, Lucky Pinch, coins and stars, five games at
+  6 worlds x 9 levels (Splash Hoops, Tilt Maze, Pal Prix, Paper Sumo, Top Spin) and Pal Prix 2177.
+- **Decided, not built:** everything in the table above. The first code of the new loop waits for
+  the user's go.
+- **In the pilot:** Tomo Tunes. One song (1A) plays the new way on the phone; the user: "the
+  approach works very well". Its band's sound is being tuned; levels, stars, holds and its look are
+  to build; 23 songs to make.
+- **In art (with the designer):** the spirits' redesign from the October sheets (Fire laid out at
+  24 slots: now 26 per realm), the hokora's ornaments and their animation loops (approved, to
+  install), the RC Prix art kit (Night Race next), the menu slides.
+- **To brief:** the nine special food icons redrawn in the current food style, the Ginger Ale icon,
+  the hungry bubble's icons, 10 new mutants (2 per realm).
+
+### Next, in order
+1. **Tomo Tunes pilot** (S): the user's verdict on 1A's sound; then song 1B from the new prompt
+   (present drums) to confirm the recipe before the other 22.
+2. **The shared work of the new loop** (M, needs the user's go): the power in `pet_state.gd`, six
+   drinks in two tiers, the HUD's power icon, the 3rd star wearing its drink, gates by the game's
+   own drink, the Shop's rule for the better drinks, the model in step.
+3. **Splash Hoops as the pilot of the games pass** (M): its look, TIDE, its marks, the golden hoop
+   on 1-3. The user's verdict on the phone before the other games.
+4. **The other games' pass** (L): Tilt Maze, Pal Prix with 2177, Paper Sumo, Top Spin; Tomo Tunes
+   on its own plan.
+5. **Care** (M): the hungry bubble, the won't-drink rule, the dark hokora, the streak, the snack.
+6. **The tree to 130** (M, with the art): the second tech and cosmic mutant per realm, the extra
+   exotic foods as secret prizes, the Tomopedia's specials page for five.
+7. **The homes' ladder** (S to decide, M to build) and **the send-off's ceremony and mark** (M).
+8. **Smaller, any time:** install the approved ornament loops; the tables' revision; the tutorials
+   and guide cards; the designer briefs above.
+9. **Before release:** measure on the phone what the model assumes (loop v2, section 10), the
+   booklet, Japanese, the release build.
+
+### Which file holds what
+| File | What it is |
+|---|---|
+| `docs/ideas_roadmap.md` (this) | the current picture, then every older note and each game's detail |
+| `docs/loop_v2.md` | the loop as decided: clocks, drinks as powers, care, coins, generations, every cycle in one checklist, the decisions and the review |
+| `docs/games_pass.md` | the stars and powers contract for the six games and the order of the pass |
+| `docs/tomo_tunes.md`, `docs/tomo_tunes_prompts.md` | the music game: the approach, the worlds, the workflow per song; the 24 Suno prompts |
+| `docs/progression.md` | the October skeleton: the numbers AS BUILT. Loop v2 wins where they differ |
+| `docs/economy_pillar.md` | history: the user's direction of 31 October |
+| `docs/yokai_migration.md`, `docs/kami_*.md`, `docs/spirits_roster_*.md` | the shrine, the art briefs and the designer's rounds, the spirits |
+| `tools/design/pacing.py`, `whatif.py` | the pacing model and its what-ifs. Rerun after any rule or price change |
+| The decisions page | https://claude.ai/artifact/4iUmvQ1teqnUBSmCE4kgdF : the loop explained, the user's ticks and notes |
+
+# Older notes (the record; the top wins where they differ)
+
+## The aim, in one paragraph (October: poop pals in a gut; see the top for today's)
 A virtual-pet handheld in a phone: you feed a cute poop pal and it evolves along food-driven paths
 into 120+ different pals (collect them all in the Pal Pedia). Drinks give one-shot boosts for the
 minigames. The minigames are digital versions of real physical toys living inside the handheld
@@ -16,7 +89,7 @@ minigames. The minigames are digital versions of real physical toys living insid
 come back to, and each feeding the rest (rewards, foods, drinks, secrets). Everything must feel
 light, playful and visually intuitive: icons over text, learn by doing. Asia first (Japan above all).
 
-## Where things stand (2026-10-16, late)
+## Where things stood (2026-10-16 to 2026-11-11)
 - 2026-10-19: Pal Prix 2177 (the Turbo League) built on branch `pal-prix-2`, for the user to try:
   see "PAL PRIX 2177" under "To build" (what's in it, what's still to do).
 - 2026-10-19 (later): THE GAMES' LOOK, one suite (branch `suite-look`, NOT merged): Top Spin redone
@@ -72,7 +145,9 @@ light, playful and visually intuitive: icons over text, learn by doing. Asia fir
   or STRAIGHT TO GAMES (Picklet as the pal, Games menu open). scripts/dev_launch.gd, started via
   `run/main_scene.debug` in project.godot; release builds start the real main scene and never see it.
 
-## Open questions & pending (one list; keep it updated, details in the sections below)
+## Open questions & pending (one list; details in the sections below)
+Settled on 2026-11-12 by loop v2 (see the top): the economy and progression loop, HUNGER, the review of
+the drink boosts, coins vs won items, the special foods and the legends. The rest is still open.
 
 - **IMPORTANT TO REVISIT (the user, 2026-10-31):**
   - **The economy and progression loop**, a pillar: docs/economy_pillar.md.
@@ -388,7 +463,8 @@ glowing capsule (or a festival omikuji slip) drops onto the offering stand in fr
 the LCD says BONUS! and the Games button blinks, as now. The claw stays the game itself (a festival
 stall, like the other games); the claw coming into a shrine would not fit. Proposed, to confirm.
 
-## What to implement next (pick a few to offer)
+## What to implement next: THE OCTOBER MENU (superseded 2026-11-12 by "Next, in order" at the top)
+Kept for its smaller items; several are built (foods that grow up, the level menus, the pal art pass).
 Sizes: S = a session, M = a few sessions, L = a big block. "Needs" = do that first.
 Once the skeleton is confirmed, its build order (docs/progression.md, section 7) comes first: the
 meal clock by what the meal did, the food sparkle, coins on the LCD, Pal Prix worlds 3-5...

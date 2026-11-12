@@ -61,12 +61,13 @@ level did not help. Two fixes:
 - **The prompt** now asks for a band that is present: a punchy kick, a crisp snare on 2 and 4, a
   bright shaker on every eighth (all things a phone speaker plays). To check on the next song: the
   lead must still be the only melody.
-- **The tool rebuilds the band** (`balance()` in `tune_chart.py`): the bass driven into gentle
-  harmonics a phone can play; the drums' snap taken from the full song above 1.8 kHz, only around
-  the beats (between the beats the full song carries some xylophone, which must stay silent on a
-  miss); a dip in the band where the xylophone lives, so each has its own space; only the audible
-  part raised, to 4 dB under the lead as a phone speaker hears it; the peaks softly limited. 1A's
-  band went from 31 dB under the lead on a phone to 4. The constant to turn: `BACKING_UNDER`.
+- **The tool helps the band, gently** (`balance()` in `tune_chart.py`). The first try rebuilt it
+  hard (a driven bass, the full song's top band gated to the beats and raised 11 times, a limiter):
+  on the phone it hissed and sounded clipped (the user). Now it only adds the bass's own 2nd and
+  3rd harmonics, clean, so the bass line is heard on a phone, turns the sub-bass down, and brings
+  both files down together until their sum has headroom: no noise, no limiter. 1A's band sits
+  10 dB under the lead on a phone (Suno's stem: 20). The real fix is the prompt above; a song
+  whose band is still thin after it should be made again, not repaired.
 
 **The ear check for a take** (30 seconds, before spending a split):
 - The beat is steady from the first second to the last. Tap along: you never have to adjust.

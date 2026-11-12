@@ -1,5 +1,8 @@
 # PILLAR: the economy and the progression loop
 
+**HISTORY (2026-11-12): the user's direction of 31 October, kept as the record of why. It is answered
+and decided in `docs/loop_v2.md`; the current picture is at the top of `docs/ideas_roadmap.md`.**
+
 **The user, 2026-10-31: this is a pillar of the game. It balances a whole part of it, so it has to
 be thought through very carefully before anything is built.** Nothing here is built yet. Decide it
 as ONE system, with the user, check it in the model (`tools/design/pacing.py`), and only then change

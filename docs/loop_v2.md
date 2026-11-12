@@ -1,11 +1,14 @@
-# The loop, v2: one consistent system (proposal, 2026-11-11)
+# The loop, v2: one consistent system (DECIDED 2026-11-12; nothing built yet)
 
 The user (2026-11-11): "what concerns me the most is the gameplay progression: the eating timings,
 the dopamine cycle, the penalisation of not eating/playing... we need something consistent." This
 page is the answer: the October skeleton (`docs/progression.md`) and the 31 October direction
 (`docs/economy_pillar.md`) resolved into one system, checked in the model (`tools/design/pacing.py`,
-now v4: run it plain for these rules, `old` for the October ones). Nothing here is built. The
-decisions the user has to take are marked **DECIDE**; everything else is the recommendation.
+now v4: run it plain for these rules, `old` for the October ones). Nothing here is built.
+
+**Status: the user decided A-H on 12 November 2026** (the table and the review are in section 11;
+the short version and what comes next are at the top of `docs/ideas_roadmap.md`). Sections 0-10
+are the proposal as written, with each decision marked where it was taken.
 
 ## 0. The promise, in one sentence
 
@@ -61,12 +64,12 @@ and a drink is a decision: "which game do I want to be great at now?"
 - The first drink (minute 15) is Watery: the TIDE reaches the golden hoop in Splash Hoops 1-3, so
   the first secret is in the free game with the first drink (it used to need Tilt Maze's Fizzy).
 
-**DECIDE A.** The 6th drink: Spicy for the races (HEAT: the roadmap's "spicy = fast"), Caffeinated
+**DECIDED A (2026-11-12: Spicy for the races).** The 6th drink: Spicy for the races (HEAT: the roadmap's "spicy = fast"), Caffeinated
 for Tummy Tunes (timing). The alternative: Caffeinated stays the races' (slow-motion before a crash,
 as built) and the new drink is Tummy Tunes'. Spicy is the recommendation: heat on a race track reads
 instantly, and FOCUS on a rhythm game is the natural word.
 
-**DECIDE B.** Drink tiers make the power LONGER, not stronger. Stronger would mean retuning every
+**DECIDED B (2026-11-12: two tiers, below).** Drink tiers make the power LONGER, not stronger. Stronger would mean retuning every
 3rd star per tier. Longer keeps one tuning and still sells (plus the routes).
 
 **Two tiers, keeping the icons** (the user, 2026-11-11: "I like the 2 tier approach, the right one not
@@ -118,7 +121,7 @@ great at the games, and today's chance.
 - **Not playing** costs nothing beyond its own result: no stars, no coins, the powers unused. The
   power waits for the first level, so a drink taken on a feeding visit is still there tonight.
 
-**DECIDE C.** This ladder (won't drink at 8 h, the dark hokora and the streak at 24 h; never sickness
+**DECIDED C (2026-11-12: this ladder; sad and asleep faces with it, angry only as a reaction).** This ladder (won't drink at 8 h, the dark hokora and the streak at 24 h; never sickness
 or regression) against the older harsher one in the roadmap (grumpy 12 h, sick 24 h, back a stage
 48 h). The recommendation is this one: the audience is casual, and the games already carry the
 stakes. If TestFlight shows people don't come back, the next lever is the drink countdown
@@ -137,7 +140,8 @@ games). Without the bought specials it's 1205: 80 spare. **So the budget is full
 thing (a sold home, a sold set, more stall pieces) needs more coins in: a 7th world per game (+162
 stars) or a new small source.
 
-**DECIDE D. Nothing prestige is ever sold.** The homes are all earned (the Moon at 60 spirits, the
+**DECIDED D (2026-11-12, by the user's note: most homes earned, the first easily and then harder, maybe one
+sold; the ladder is drafted in section 11). The proposal was: nothing prestige is ever sold.** The homes are all earned (the Moon at 60 spirits, the
 Tree at 90, the Golden Temple at 120, the Cyber Shrine from RC Prix 2177's finale, the Ruined Night
 from Paper Sumo's seasons); the Food Stall, which was going to be the Shop's one expensive item,
 becomes a reward too (the 30-day streak, or the first full gift track: to pick). The Shop sells

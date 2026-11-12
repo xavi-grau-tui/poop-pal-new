@@ -1,5 +1,11 @@
 # KamiTomo: the skeleton (progression foundation)
 
+**READ FIRST (2026-11-12): this is the October skeleton, kept for its numbers AS BUILT (the meal clock,
+the games' worlds and difficulty, the secrets, the catalogue, where every prize comes from). The loop
+on top of it changed and is decided: `docs/loop_v2.md`. Where the two differ (drinks and boosts, care,
+what the Shop sells, the fourth stage), loop v2 wins. The current picture: the top of
+`docs/ideas_roadmap.md`.**
+
 **PILLAR (2026-10-31): the economy and the progression loop are gathered in `docs/economy_pillar.md`.
 The user: very important, to be thought through very carefully as one system before building.
 2026-11-11: the proposal, `docs/loop_v2.md`: drinks = each game's timed power, the care ladder,
