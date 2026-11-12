@@ -65,9 +65,9 @@ the bubble, the won't-drink rule, the dark hokora, the streak, the snack · 4 mu
 the homes' ladder · the send-off's ceremony and the generation mark · the stars' contract in the games.
 
 **Git, as it is**
-`spirits-in-game` holds everything above: 141 commits ahead of `main` (last touched 19 October) and 32 ahead of
-`yokai-migration`. GitHub has `main` and `yokai-migration` up to 4 November; **`spirits-in-game` is not on GitHub**,
-so the work since then exists only on this Mac.
+Everything above is on `yokai-migration` and on GitHub (merged and pushed 2026-11-12, the user's call;
+`spirits-in-game` is the same commit). `main` is far behind (last touched 19 October, 140+ commits): merging to
+it is the user's decision.
 
 ### The objectives still to fulfil (the user's list, 2026-11-12, plus two)
 1. **The progression and gameplay logic**: build the decided loop bit by bit and refine it on the phone.
