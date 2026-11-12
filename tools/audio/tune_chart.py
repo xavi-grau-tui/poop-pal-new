@@ -31,6 +31,7 @@ import soundfile as sf
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 SR, HOP, NF = 22050, 128, 1024
 FPS = SR / HOP
+BACKING_UNDER = 3.0        # dB: how far under the lead the band sits in the game
 NAMES = 'C C# D D# E F F# G G# A A# B'.split()
 
 
@@ -192,8 +193,18 @@ def main():
     out = {'id': sid, 'title': title, 'bpm': round(bpm, 2), 'offset': beats[0], 'length': round(length, 2), 'beats': beats, 'charts': charts}
     with open(os.path.join(ROOT, 'data', 'charts', f'tunes_{sid}.json'), 'w') as f:
         json.dump(out, f)
-    for name, src in (('lead', f_lead), ('backing', f_back)):
-        write_ogg(os.path.join(ROOT, 'sounds', 'tunes', sid, name + '.ogg'), decode(src, 44100, 2)[:int(length * 44100)], 44100)
+    # the band has to stand on its own when the lead is silent (the user, 2026-11-12: "barely hearable"): Suno mixes
+    # it far under the lead (1A: 10 dB), so it is raised to BACKING_UNDER dB below the lead, short of clipping
+    st = {name: decode(src, 44100, 2)[:int(length * 44100)] for name, src in (('lead', f_lead), ('backing', f_back))}
+    rms = lambda x: float(np.sqrt((x ** 2).mean()))
+    gain = min(rms(st['lead']) * 10 ** (-BACKING_UNDER / 20) / rms(st['backing']), 0.97 / float(np.abs(st['backing']).max()))
+    st['backing'] = st['backing'] * max(1.0, gain)
+    short = rms(st['lead']) * 10 ** (-BACKING_UNDER / 20) / rms(st['backing'])       # (clipping stopped the raise: the lead comes down the rest)
+    if short > 1.0:
+        st['lead'] = st['lead'] / short
+    for name, x in st.items():
+        write_ogg(os.path.join(ROOT, 'sounds', 'tunes', sid, name + '.ogg'), x, 44100)
+    print(f'  the backing raised {20 * np.log10(max(1.0, gain)):.1f} dB: now {20 * np.log10(rms(st["lead"]) / rms(st["backing"])):.1f} dB under the lead')
     for name in charts:
         click_file(os.path.join(folder, f'check_{name}.wav'), mix, charts[name])
 
