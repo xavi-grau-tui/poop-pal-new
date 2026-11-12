@@ -12,8 +12,15 @@ extends BaseMinigame
 ## Charts come from tools/design/rhythm_chart.py (made from the song's audio, no MIDI).
 ## Sync: notes follow the song's real playback position (corrected for output latency).
 
-const SONG := "res://sounds/music/Retro Game Console.mp3"
-const CHART := "res://data/charts/retro_game_console.json"
+## The pilot (docs/tomo_tunes.md, 2026-11-12): a Suno song split in two by tools/audio/tune_chart.py. The lead (the
+## toy instrument you play) and the backing play as ONE synchronized stream; a miss silences the lead until the next
+## hit, the band plays on. The chart is the lead's own notes, lanes by pitch (low / middle / high).
+## (The first prototype's song: "res://sounds/music/Retro Game Console.mp3" + data/charts/retro_game_console.json.)
+const TUNE := "1A"
+const SONG_LEAD := "res://sounds/tunes/%s/lead.ogg"
+const SONG_BACKING := "res://sounds/tunes/%s/backing.ogg"
+const CHART := "res://data/charts/tunes_%s.json"
+const LEAD_MUTED_DB := -60.0
 const DIFFICULTY := "normal"
 const LEAD_IN := 2.0                  # silence before the song starts (count-in)
 const FALL_TIME := 1.5                # seconds a note takes from the top to the line
@@ -42,6 +49,8 @@ var notes: Array = []                 # [time, lane]
 var next_spawn := 0
 var live: Array[Dictionary] = []      # { t, lane, node }
 var song: AudioStreamPlayer
+var sync: AudioStreamSynchronized     # 0 = the backing, 1 = the lead
+var song_length := 0.0
 var song_started := false
 var clock := -LEAD_IN                 # song time (negative during the count-in)
 var finished := false
@@ -72,19 +81,24 @@ func _ready() -> void:
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	for c in ["pink", "yellow", "mint"]:
 		note_tex.append(load("res://textures/minigames/splash/ball_%s.png" % c))
-	var f := FileAccess.open(CHART, FileAccess.READ)
+	var f := FileAccess.open(CHART % TUNE, FileAccess.READ)
 	if f:
 		var data = JSON.parse_string(f.get_as_text())
 		if data is Dictionary:
 			notes = data["charts"][DIFFICULTY]
 			bpm = data["bpm"]
 			beat_offset = data["offset"]
+			song_length = data["length"]
 	# the pet screen's music stops; this game plays its own song in sync
 	var mc = get_node_or_null("/root/PoopPal/MusicController")
 	if mc:
 		mc.stop()
 	song = AudioStreamPlayer.new()
-	song.stream = load(SONG)
+	sync = AudioStreamSynchronized.new()
+	sync.stream_count = 2
+	sync.set_sync_stream(0, load(SONG_BACKING % TUNE))
+	sync.set_sync_stream(1, load(SONG_LEAD % TUNE))
+	song.stream = sync
 	song.finished.connect(_on_song_finished)
 	add_child(song)
 	_create_static_nodes()
@@ -92,6 +106,8 @@ func _ready() -> void:
 
 func start_game() -> void:
 	super.start_game()
+	if sync:
+		sync.set_sync_stream_volume(1, 0.0)
 	_show_banner("Get ready!", 1.4)
 
 # ================================================================== CLOCK / NOTES
@@ -113,6 +129,8 @@ func _process(delta: float) -> void:
 			song_started = true
 			song.play()
 	var t := _song_time()
+	if song_started and not finished and song_length > 0.0 and t > song_length + 0.3:
+		_on_song_finished()                          # (a synchronized stream's own end isn't relied on)
 	# spawn notes FALL_TIME before they're due
 	while next_spawn < notes.size() and notes[next_spawn][0] - t <= FALL_TIME:
 		_spawn(notes[next_spawn][0], int(notes[next_spawn][1]))
@@ -182,6 +200,8 @@ func _judge(kind: String, lane: int) -> void:
 		combo_label.text = ""
 		return
 	counts[kind] += 1
+	if sync:                                         # a miss: the instrument goes silent until the next hit
+		sync.set_sync_stream_volume(1, LEAD_MUTED_DB if kind == "miss" else 0.0)
 	_add_groove(GROOVE_GAIN[kind])
 	if kind == "miss":
 		combo = 0

@@ -141,6 +141,20 @@ Four songs per world: A, B, C and the showpiece D. 24 songs.
 The songs are the long pole, and they are yours to generate, so the pilot can start now, in
 parallel with the other games' pass.
 
+## 6b. The pilot, 12 November 2026: song 1A is through
+
+- The prompts had to change twice before the xylophone led: short, tags, the instrument first, a band of three, "no
+  new instruments" (`tools/audio/suno_prompts.py` has the story). The take is 70 s, so nothing is cut.
+- Split from Mix gave a clean pair: the two files line up to the sample and the xylophone stem holds 186 notes in
+  G major pentatonic, 94% of them on the eighth-note grid, the kick 4.7 times stronger on the beats.
+- **Suno's timing wanders**: steady inside a phrase (6 ms), but tens of ms between phrases, so one fixed grid does
+  not fit. `tools/audio/tune_chart.py` follows the grid note by note and a note's time in the chart is its real time
+  in the audio. Charts: easy 97 notes (1.4 a second), normal 174 (2.5), hard 186.
+- In the game (`tummy_tunes.gd`, TUNE = "1A", the normal chart): the pair plays as one `AudioStreamSynchronized`, a
+  miss turns the lead down until the next hit. Checked by a 5 s run on the Mac, NOT yet by ear or on the phone.
+- Still to build: levels and stars, holds and chords, the lanes' look, FOCUS. No holds were found in 1A (a
+  xylophone's notes are short), as expected.
+
 ## 7. Open points
 
 - **The six instruments** (section 3): the Ocarina at 3 and the Taiko at 6, to confirm by ear on
