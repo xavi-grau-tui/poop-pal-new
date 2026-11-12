@@ -1,0 +1,164 @@
+# Tomo Tunes: the plan (12 November 2026)
+
+PROPOSED. The music game (the code's `tummy_tunes.gd`), the sixth game, Caffeinated's FOCUS. This
+is how it plays, the six worlds, the songs, how a Suno song becomes a level, and the build order.
+The prompts are in `docs/tomo_tunes_prompts.md` (made by `tools/audio/suno_prompts.py`).
+
+## 0. The one idea
+
+**You play the world's toy instrument, and the band plays on.** Every note that falls is a note
+that instrument plays in the song. Hit it and you hear it. Miss it and the instrument goes silent
+until your next hit, while the bass and the drums carry on. That is what makes a "guitar hero"
+game make sense, and everything below serves it:
+
+1. **The notes are the lead's notes**, never the bass or the drums behind it.
+2. **The lanes are pitch**: left = low, middle = mid, right = high. The thumbs draw the tune. (The
+   Taiko world: left = the deep drum, middle = the rim, right = the small drum.)
+3. **A miss is heard**, not just scored: the instrument drops out.
+4. **The same phrase is the same pattern** every time it returns, so a song can be learnt.
+5. **Easy, normal and hard are the same tune**, thinned: easy plays its notes on the beat, normal
+   adds the ones between, hard is everything. What you don't play, the instrument plays for you
+   while you're hitting.
+
+## 1. What exists today
+
+A working prototype with one song: three lanes under the device's three buttons, notes falling to
+a line, PERFECT within 60 ms and GOOD within 130, a groove meter that fails the song when empty,
+a combo, and sync to the song's real playback position. Its chart comes from
+`tools/design/rhythm_chart.py`, which finds where sounds start in three bands of the WHOLE mix
+(low, mid, high) and makes those the lanes. So today you press on the kick and the bass as much
+as on the tune, and nothing changes in the sound when you miss. No levels, no stars, no holds.
+
+## 2. How a Suno song becomes a level
+
+Suno can now pull one instrument out of a finished song and give back that instrument plus
+"everything else" as two files (Get Stems, **Split from Mix**; Pro plan, 10 credits). That is
+exactly the pair this game needs.
+
+| Step | Who | What |
+|---|---|---|
+| 1 | you | Generate the song from its prompt (Instrumental on). Keep the take that passes the ear check below. |
+| 2 | you | Get Stems, Split from Mix, ask for the world's instrument. Download the stem, the "everything else" file and the full song. |
+| 3 | you | Drop the three files in `sounds/tunes/incoming/<world><letter>/` (e.g. `1A/`). |
+| 4 | me | `tools/audio/tune_chart.py` (to write, on `rhythm_chart.py` and `loop_track.py`): measures the tempo and the bar lines from the backing, finds every note of the lead stem (its start, its pitch, its length), snaps them to the grid, cuts the best 60-75 s on bar lines, and writes `lead.ogg`, `backing.ogg` and the chart (easy / normal / hard). |
+| 5 | me | The tool also renders a check file: the song with a click on every charted note. If the clicks sit on the tune, the level is right before it is ever played. |
+| 6 | game | Plays the two files as one synchronized stream (Godot's `AudioStreamSynchronized`, in 4.3+; we're on 4.4) and turns the lead's volume down on a miss. |
+
+**Assumed: a Pro plan** (Split from Mix). With Premier there is a cleaner route to try if the
+splits bleed: generate the backing alone, then add the lead as its own stem in Studio, in the
+song's tempo and key. Without usable stems the fallback is one file: the chart is still read from
+the lead's register, and a miss ducks the whole song and plays a dull clack.
+
+**The ear check for a take** (30 seconds, before spending a split):
+- The beat is steady from the first second to the last. Tap along: you never have to adjust.
+- Exactly one instrument plays the tune, and you can sing it back.
+- The lead is dry: no echo trailing after its notes.
+- Nothing stops: no break, no drop, no long intro. At least 75 s of the same music.
+
+**What the tool then reports** (so a bad take is refused by numbers, not by feel): the measured
+BPM and its drift, the share of the lead's notes that sit on the grid (wanted: 95% or more), the
+notes per second of each chart, the lead's lowest and highest note, any silence longer than two
+bars.
+
+**The pilot.** One song first: 1A, Wooden Steps. Its stems decide what changes in the other 23
+prompts (does Suno isolate a toy xylophone cleanly, is the lead dry enough, does it hold its
+tempo). Nothing else is generated until 1A has been played on the phone.
+
+## 3. The six worlds: an instrument and one new thing each
+
+| # | World | The new thing | BPM | What the player does |
+|---|---|---|---|---|
+| 1 | Toy Xylophone | single notes on the beat | 92-104 | learns that the lanes are low, middle, high |
+| 2 | Toy Piano | chords | 100-110 | two buttons at once on the accents |
+| 3 | Toy Trumpet | long notes | 96-108 | holds the button for as long as the note sounds: a breath |
+| 4 | Music Box | off-beats | 88-100 | plays between the beats (slower, because it is the hard one to feel) |
+| 5 | Star Stage (the pixel synth, the toy band behind it) | everything, faster | 112-124 | the finale is the Star Song: Stardust Sugar |
+| 6 | Festival Taiko | rolls and speed | 120-132 | the masters' world: the three drums are the three buttons; the finale gives the Taiko case |
+
+**One change from the October skeleton, to confirm.** It had Toy Drums as world 3 ("holds and
+rolls") and left world 6 open (Toy Trumpet or The Tummy). Here the Trumpet moves to 3 and the
+drums become world 6 as the Festival Taiko. The reasons: a held note is a breath, so it belongs
+to a wind instrument; rolls and speed are the hardest thing and belong to the masters' world; the
+Taiko case and the taiko headband are already the game's planned prizes; and a drum lead is the
+stem Suno separates best. The Tummy (the spirit's own voice as the lead) stays as an idea for the
+encores.
+
+The games' rule holds: levels 7-8 of a world mix in the world before's thing (world 3's hard
+charts have chords, and so on), so by the Star Stage nothing is new, only together.
+
+**The look** (the suite's rules, for its own pass): the instrument is the toy and the playfield.
+The three targets are the xylophone's three bars, three piano keys, the trumpet's three valves,
+the music box's comb, three stage pads, the three drums. One place per world with its light, the
+spirit dead centre with its headphones, bar lines falling with the notes so the beat is seen.
+
+## 4. A world's nine levels
+
+Four songs per world: A, B, C and the showpiece D. 24 songs.
+
+| Level | Song, chart | The 3-6-9 rhythm |
+|---|---|---|
+| 1, 2, 3 | A, B, C on easy | 3: the golden note (a small secret) |
+| 4, 5, 6 | A, B, C on normal | 6: the encore (the world's secret) |
+| 7, 8 | A, B on hard, with the world before's thing | |
+| 9 | D, the showpiece | the finale: its prize on the first clear |
+
+- **Stars.** 1 = the song finished with the groove alive. 2 = 85% of the notes. 3 = 95%.
+- **FOCUS** (the Caffeinated drink's power): the timing windows grow by a third (PERFECT 60 to
+  80 ms, GOOD 130 to 170) and a stray press costs no groove. Tuned so that 95% takes a regular
+  player 2-3 tries with it and about 1 try in 8 without (`docs/games_pass.md`).
+- **The golden note** shows only while FOCUS is on: one glowing note in level 3. Hit it: coins or
+  a sticker. **The encore**: level 6 has five golden notes; all five and the band plays eight more
+  bars with the world's secret prize at the end. Worlds 1-3 want the plain drink, 4-6 the better.
+- **Failing** stays as built: the groove empty stops the song. Retry is one press.
+- A level is 60-75 s. Notes per second: easy 1.5-2.2 (the beat), normal up to 3-4, hard up to 6.
+
+## 5. The charts: from the lead's notes to the three buttons
+
+- **Lane = pitch.** The song's notes are split in three equal groups by pitch: the low third is
+  the left lane, the middle third the middle, the high third the right. One pitch is always one
+  lane. Fast runs inside one group are spread to the neighbour lane in the direction the tune
+  moves, so no thumb has to hammer one button at speed.
+- **A long note** (a beat or more in the stem) is a hold: a ribbon behind the note. The start is
+  judged like any note; letting go early loses the rest of the ribbon, not the note.
+- **A chord**: the lead's loudest accents on a strong beat become two lanes at once (the low and
+  the high one), from world 2 on.
+- **A roll** (world 6): a burst of fast hits on one drum is a hold that the game plays as a roll.
+- **Easy / normal / hard**: the notes on the beats; plus the eighths; plus everything.
+- Every chart is checked by ear with the click file before it goes in (step 5 above).
+
+## 6. Build order
+
+| # | Step | Size | Needs |
+|---|---|---|---|
+| 1 | The pilot song through the pipeline: `tune_chart.py`, the click file | M | the 1A stems |
+| 2 | The engine: two synchronized files, the lead muted on a miss, the chart with lengths, holds, chords | M | step 1 |
+| 3 | Levels: the level menu, the 9-level table, stars, the best accuracy, FOCUS and its HUD icon | S | the games pass's shared work (the power) |
+| 4 | World 1 whole, with its look, on the phone: your verdict | M | songs 1A-1D |
+| 5 | Worlds 2-6: each its songs, its new thing, its look | L | the other 20 songs |
+| 6 | The golden note and the encore, the tutorial, a tap-to-the-beat calibration for Bluetooth headphones | M | |
+
+The songs are the long pole, and they are yours to generate, so the pilot can start now, in
+parallel with the other games' pass.
+
+## 7. Open points
+
+- **The six instruments** (section 3): confirm the Trumpet at 3 and the Taiko at 6, or keep the
+  skeleton's drums at 3.
+- **Your Suno plan**: Pro is assumed. Premier opens the Studio route.
+- **The tempos.** The build's background tracks sit at 82-107 BPM and 118 felt too fast there. A
+  rhythm game's tempo is its difficulty, so worlds 5 and 6 go to 112-132. If that breaks the
+  soundtrack's feel, the alternative is to stay under 112 and get the difficulty from denser charts.
+- **Suno misses the asked tempo** (known from the build's tracks): the tool measures it; the
+  prompt's number is only a target.
+- **A split is regenerated, not cut out** (Suno's note): the stem and "everything else" may not
+  add up exactly to the original song. The game plays the pair, so that is what gets checked.
+- **Latency.** Wired and the phone's speaker are covered by the engine's own latency figure.
+  Bluetooth headphones need the calibration of step 6.
+
+## 8. Where Suno's features are described
+
+- Split from Mix and the plans: https://help.suno.com/en/articles/13925185 and
+  https://help.suno.com/en/articles/12702337
+- The stem separation update (stems are regenerated): https://about.suno.com/blog/stem-separation-updates
+- Studio, adding an instrument to a song: https://help.suno.com/en/articles/7940161
+- Exporting from Studio (MIDI per stem, Premier, a rough transcription): https://help.suno.com/en/articles/8128193

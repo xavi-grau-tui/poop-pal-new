@@ -33,8 +33,8 @@ the LCD, and every day has one thing you can only get today.
 
 **The rule.** Each game has ONE power and ONE drink gives it. The drink arrives with its game. Drinking
 starts nothing by itself: the power starts at the first level you play in its game after drinking,
-runs only while you're inside a level of that game, and lasts 5 minutes (level 2 drinks: 8, level 3:
-12). One power at a time: drinking again replaces it. So a drink is never wasted on a visit to feed,
+runs only while you're inside a level of that game, and lasts 5 minutes (the better drink: 10; two
+tiers, below). One power at a time: drinking again replaces it. So a drink is never wasted on a visit to feed,
 and a drink is a decision: "which game do I want to be great at now?"
 
 | Game | Drink | Its power | The 3rd star it makes reachable | The secret route it reaches |
@@ -50,8 +50,8 @@ and a drink is a decision: "which game do I want to be great at now?"
   with the power a regular player gets the 3rd star in 2-3 tries; without it about 1 try in 8. Never
   impossible: the best players can. The 1st and 2nd stars never need a drink.
 - **The secret is a route, not a box.** The level's hidden prize sits where only the power reaches,
-  built into the course. The gate level stays by tier (worlds 1-2 need the drink at level 1, 3-4 level
-  2, 5-6 level 3), so drink levels still buy something besides minutes.
+  built into the course. The gate stays by tier (worlds 1-3 open with the plain drink, 4-6 want the
+  better one), so the better drink buys something besides minutes.
 - **A drink does nothing in another game.** One word per drink, everywhere. The old table (Splash a
   second chance in every game, Fizz in four games...) goes; the hearts stay as the lives.
 - **Why 15 min / 5 min:** in a 15-minute session you get one power: 3-5 levels, one or two 3rd stars.
@@ -257,6 +257,7 @@ minutes without something new).
 | E | The ceremony and the generation mark in v1, blessed spirits as the first update | decided in chat after the explanation |
 | F | The snack is in (the spirit's own size feeds without evolving) | |
 | G | The spirit asks with an icon in a bubble, never a sentence | decided in chat, 2026-11-11 |
+| H | The fourth stage: each exotic food its own mutant, 4 per realm, 130 spirits | "maybe we can have 2 per type for visual variety": two tech and two cosmic per realm, which is this option |
 
 "Keep the rest as specified in the form and eventually change something at the final refinement."
 
@@ -271,7 +272,7 @@ collection, and one offering repairs it.
 
 What is still open, in the order it matters (`tools/design/whatif.py` gives the numbers):
 
-**1. The fourth stage is the thin one (DECIDE H, the user's point, 2026-11-12).** All 15 grown
+**1. The fourth stage is the thin one (DECIDED H, the user, 2026-11-12: four per realm, two per type).** All 15 grown
 spirits of a realm turn into the same two mutants, so the path stops mattering exactly where the
 foods get strange; and of the four exotic foods two are duplicates (the Battery does what the
 Microchip does, the Moon Rock what the Alien Goo does). 15 of 120 spirits come from special foods.
@@ -339,4 +340,43 @@ use, a poke, a lost bout), which is the dynamism asked for. For the animations' 
 
 **6. Nothing of loop v2 is built, and the model's players are assumed** (minutes per session,
 skill). The balance above is a model's; section 10 lists what the phone has to confirm.
+
+### After the decisions (the same day): the special foods' icons, the cases and stickers, what's next
+
+**The special foods' icons.** All nine exist as 32 px icons (Microchip, Battery, Alien Goo, Moon
+Rock; Golden Seed, Stardust Sugar, Dragon Oil, Phoenix Pepper, Kraken Brine) and none is missing
+for H: two tech foods and two cosmic foods are exactly the four mutants per realm. They date from
+3 October, before the food set was redrawn: a hard dark outline and flat fills beside the recent
+foods' soft outlines and texture. So the work is a REDRAW of the nine in the current food style
+(a designer round, to brief), and with H each exotic food now has to announce a look, since it
+opens one kind of mutant in every realm:
+
+| Food | Its five mutants | Status |
+|---|---|---|
+| Battery | the wind-up kind (brass, a key, gears): today's tech mutants | drawn in the old style; redone with the realms |
+| Microchip | the circuit kind (LED eyes, traces, a pixel glow) | NEW, 5 designs |
+| Moon Rock | the star-and-moon kind: today's cosmic mutants | drawn in the old style; redone with the realms |
+| Alien Goo | the alien kind (goo, antennae, a UFO glow) | NEW, 5 designs |
+
+An option for the redraw: the Battery becomes a Wind-up Key, which says "clockwork" better in a
+shrine. What IS missing elsewhere: the Ginger Ale icon (the 6th drink) and the 10 new mutants.
+
+**Cases and stickers: yes, they are in the loop, as rewards and as the last sink, never as
+power.** Stickers: 18 themed ones are prizes (the small secret on a world's 3rd level, each
+game's gold sticker at 150 stars, some first clears) and 30 are spirit stickers sold for a few
+coins, only of spirits already met. Cases: 11 today, the themed ones won on finales (each game's
+world 6), four plain ones sold at 40; planned ones at 250 and 500 stars and at every star. In the
+model they are 320 of the catalogue's 1325 coins and are bought last, after every game and food
+pack, so they never slow the progression. With loop v2 a world's small secret becomes a route
+for its game's power, so the themed stickers now come from powered play. Their Shop sections open
+when the first one is won.
+
+**What's next, written down:**
+- `docs/games_pass.md`: the stars, the powers and the difficulty as one contract for the six
+  games, how each level's marks are set, and the order (the shared work, then Splash Hoops as the
+  pilot).
+- `docs/tomo_tunes.md`: the music game's plan (you play the world's instrument and the band plays
+  on; six worlds, 24 songs; a Suno song split into the lead and the rest; the build order), and
+  `docs/tomo_tunes_prompts.md`: the 24 Suno prompts, from `tools/audio/suno_prompts.py`. The pilot
+  song (1A) comes first.
 

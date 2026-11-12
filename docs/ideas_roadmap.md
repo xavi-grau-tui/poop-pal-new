@@ -1499,6 +1499,11 @@ action games. Each pays one of the new homes as its finale (`docs/kami_future_ho
   shadows on the panel, bubbles and glitter (GameFx.Ambience), bursts for a basket filled.
 
 ## Tummy Tunes (the music game)
+- 2026-11-12: THE PLAN is `docs/tomo_tunes.md` (you play the world's instrument and the band plays on:
+  the lead split from the song as its own file, lanes by pitch, a miss mutes the instrument; six
+  worlds, 24 songs, the build order) with the 24 Suno prompts in `docs/tomo_tunes_prompts.md`
+  (`tools/audio/suno_prompts.py`). The pilot song 1A first. The stars and powers of all six games:
+  `docs/games_pass.md`.
 - Each WORLD a different toy instrument (2026-10-10): a toy xylophone, then a toy piano, then a toy
   drum kit (percussion)..., each with its own feel and songs, three notes under the device's three
   buttons. Different paths / levels per instrument. Songs played on the pal's tummy (gurgles,
