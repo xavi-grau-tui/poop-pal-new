@@ -32,23 +32,52 @@ everything the shrine can become. Light, playful, icons over text, learn by doin
 | Stars | One contract for every level of every game: 1 = cleared, 2 = well, 3 = gold, in 2-3 tries with the power and about 1 in 8 without (`docs/games_pass.md`) |
 | Tomo Tunes | You play the world's instrument over a Suno song split in two; a miss silences it (`docs/tomo_tunes.md`) |
 
-### Where things stand
-- **Built and playable:** the shrine and its 12 homes, feeding, drinks as one-shot boosts (the OLD
-  rule), the 120-spirit tree, the Tomopedia, the Shop, Lucky Pinch, coins and stars, five games at
-  6 worlds x 9 levels (Splash Hoops, Tilt Maze, Pal Prix, Paper Sumo, Top Spin) and Pal Prix 2177.
-- **Decided, not built:** everything in the table above. The first code of the new loop waits for
-  the user's go.
-- **In the pilot:** Tomo Tunes. One song (1A) plays the new way on the phone; the user: "the
-  approach works very well". Its band's sound is being tuned; levels, stars, holds and its look are
-  to build; 23 songs to make.
-- **The spirits' new art is DONE** (2026-11-07): all 120 in the October style, animated on one rig, in the game
-  behind the launcher's SPIRITS: NEW switch, with the Tomopedia, balls and games using them. Left on them: food,
-  sad and angry faces, the dress-ups' fit, the names.
-- **In art (with the designer):** the hokora's ornaments and their animation loops (approved, to install), the
-  games' art (the RC Prix kit: Garden, Lagoon and Sky done, Night Race next; the other games to redo), the menu
-  slides.
-- **To brief:** the nine special food icons redrawn in the current food style, the Ginger Ale icon,
-  the hungry bubble's icons, 10 new mutants (2 per realm).
+### Where things stand: CHECKED IN THE CODE on 2026-11-12 (branch `spirits-in-game`)
+**The rule for this section (the user, 2026-11-12: "let's not get confused with old notes"):** every line here
+was read from the code or git on the date above, not from a note. When something ships or is found different,
+this section is corrected first. A note anywhere else that disagrees with it is old.
+
+**Done and in the game**
+| What | The state, as the code has it |
+|---|---|
+| The spirits | all 120 in the new art, animated on one rig (blink, eat, happy, sleep, poke; sad and angry faces drawn), on by default |
+| The shrine | the hokora is the pet screen; 12 homes' art is in the game |
+| The tree and the food | 120 spirits in 5 realms of 24; 45 foods in three sizes; 9 special foods; 15 drinks (5 types x 3 levels, the OLD one-shot boosts) |
+| The collection | the Tomopedia; 151 hokora pieces in the catalogue; 11 cases, 18 themed stickers, 15 dress-ups |
+| The economy | stars and coins, the Shop (food packs, the daily special shelf, drink levels, stickers, cases, the HOME stall), Lucky Pinch, gift tracks |
+| The games | six with 6 worlds x 9 levels each, with the level menu, stars, secrets and finale prizes: Splash Hoops, Tilt Maze, Pal Prix, Paper Sumo, Top Spin, Pal Prix 2177 |
+| The racer's new art | Garden, Lagoon and Sky, behind the launcher's RC ART switch |
+| Ornament loops | 4 animated in the game (firefly jar, goldfish, shishi-odoshi, sleeping squirrel) |
+| Saving | works in the launcher's BOOT + PROGRESSION mode only |
+
+**Started, not finished**
+| What | Where it is |
+|---|---|
+| Tomo Tunes | one song (1A) plays the new way; no levels, stars, holds or chords, the old look; 23 songs to make |
+| Ornament loops | 8 more approved and waiting to be installed (claw toy, desk fan, both koma, both maneki, both neon cats) |
+| The homes | 11 of the 12 say "Coming soon": none can be earned yet. 54 other hokora pieces have no source either |
+| Tutorials | Paper Sumo and Top Spin have one; the other games don't |
+| The games' art | the racer's is partly redone (above); the others are not started |
+
+**Decided on 2026-11-12, nothing of it in the code** (the table "The loop, decided" above)
+Drinks as each game's power, the 6th drink, two tiers · hunger of any kind (the game has no hungry state today),
+the bubble, the won't-drink rule, the dark hokora, the streak, the snack · 4 mutants per realm (10 new spirits) ·
+the homes' ladder · the send-off's ceremony and the generation mark · the stars' contract in the games.
+
+**Git, as it is**
+`spirits-in-game` holds everything above: 141 commits ahead of `main` (last touched 19 October) and 32 ahead of
+`yokai-migration`. GitHub has `main` and `yokai-migration` up to 4 November; **`spirits-in-game` is not on GitHub**,
+so the work since then exists only on this Mac.
+
+### The objectives still to fulfil (the user's list, 2026-11-12, plus two)
+1. **The progression and gameplay logic**: build the decided loop bit by bit and refine it on the phone.
+2. **The games' art**: redo it, game by game.
+3. **The items' art and animations**: the ornament loops, the special food icons, the new drink icon, the
+   spirits' extra faces in use, the dress-ups' fit.
+4. **The new special spirits**: 10 mutants, two per realm, on the existing rig.
+5. **Tomo Tunes**: from one song to a game.
+6. **Real saving** in the normal game.
+Then what a release needs around them ("Not on the list above yet", below).
 
 ### Next, in order
 1. **Tomo Tunes pilot** (S): the user's verdict on 1A's sound; then song 1B from the new prompt
