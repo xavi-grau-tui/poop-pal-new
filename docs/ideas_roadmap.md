@@ -66,6 +66,13 @@ everything the shrine can become. Light, playful, icons over text, learn by doin
 9. **Before release:** measure on the phone what the model assumes (loop v2, section 10), the
    booklet, Japanese, the release build.
 
+### Ideas for later (not planned)
+- **The app icon shows your spirit** (the user, 2026-11-12). iOS allows it only with icons shipped inside the app
+  (one per spirit, chosen at run time through a small native plugin like the scene one we have), and it shows a
+  system alert at every change. So: not at every evolution, but as a choice ("set as my icon" on a Tomopedia card,
+  or the spirit of the last send-off). A Home Screen widget showing the live spirit and its hunger is the closer
+  fit to the idea, and more work (a native widget extension). Android: possible, clumsier.
+
 ### Which file holds what
 | File | What it is |
 |---|---|
