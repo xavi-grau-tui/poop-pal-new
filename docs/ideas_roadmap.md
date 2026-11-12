@@ -64,10 +64,14 @@ Drinks as each game's power, the 6th drink, two tiers · hunger of any kind (the
 the bubble, the won't-drink rule, the dark hokora, the streak, the snack · 4 mutants per realm (10 new spirits) ·
 the homes' ladder · the send-off's ceremony and the generation mark · the stars' contract in the games.
 
-**Git, as it is**
-Everything above is on `yokai-migration` and on GitHub (merged and pushed 2026-11-12, the user's call;
-`spirits-in-game` is the same commit). `main` is far behind (last touched 19 October, 140+ commits): merging to
-it is the user's decision.
+**Git, as it is, and the plan for the repository (the user, 2026-11-12)**
+- Work continues on `yokai-migration`, which is on GitHub (`spirits-in-game` was merged into it and is the same
+  history). `main` stays where it was, at 19 October, and that state is tagged `gut-era-2026-10-19`.
+- **This repository is the history and is kept whole**: every earlier art version, mock-up, designer round and
+  old game stays in it, for the user to keep. Nothing is cleaned out of it.
+- **Later: a new, clean repository.** Cloned from this one, then deeply cleaned and optimised (unused art, old
+  games and switches, the app's size), with one condition: the game it builds is exactly the live app, nothing
+  changed. To do once the live app is where we want it; to check by comparing the two builds side by side.
 
 ### The objectives still to fulfil (the user's list, 2026-11-12, plus two)
 1. **The progression and gameplay logic**: build the decided loop bit by bit and refine it on the phone.
