@@ -41,9 +41,12 @@ everything the shrine can become. Light, playful, icons over text, learn by doin
 - **In the pilot:** Tomo Tunes. One song (1A) plays the new way on the phone; the user: "the
   approach works very well". Its band's sound is being tuned; levels, stars, holds and its look are
   to build; 23 songs to make.
-- **In art (with the designer):** the spirits' redesign from the October sheets (Fire laid out at
-  24 slots: now 26 per realm), the hokora's ornaments and their animation loops (approved, to
-  install), the RC Prix art kit (Night Race next), the menu slides.
+- **The spirits' new art is DONE** (2026-11-07): all 120 in the October style, animated on one rig, in the game
+  behind the launcher's SPIRITS: NEW switch, with the Tomopedia, balls and games using them. Left on them: food,
+  sad and angry faces, the dress-ups' fit, the names.
+- **In art (with the designer):** the hokora's ornaments and their animation loops (approved, to install), the
+  games' art (the RC Prix kit: Garden, Lagoon and Sky done, Night Race next; the other games to redo), the menu
+  slides.
 - **To brief:** the nine special food icons redrawn in the current food style, the Ginger Ale icon,
   the hungry bubble's icons, 10 new mutants (2 per realm).
 
@@ -75,8 +78,9 @@ everything the shrine can become. Light, playful, icons over text, learn by doin
 ### Not on the list above yet (found checking the roadmap, 2026-11-12)
 The loop will be built bit by bit (the user, 2026-11-12: it stays on paper for now). These are the things
 "Next, in order" did not name:
-- **The spirits' art is the long pole**: 130 designs in the October style, each with its faces and its fit to the
-  rig. One realm (Fire) is laid out; four are not started.
+- **The main work, as the user put it (2026-11-12):** refine and build the progression and gameplay logic (the
+  loop above), redo the games' art (some started), refine the items' art and animations, and add the new special
+  spirits (10 mutants, on the existing rig). The rest of this list is what a release needs around that.
 - **Real saving in the normal game**: the testing switches are still on (`PetState.FRESH_START_ON_LAUNCH`,
   `Shop.RESET_ON_LAUNCH`); only the dev launcher's BOOT + PROGRESSION keeps a save. A release needs them off and a
   save that survives updates.
