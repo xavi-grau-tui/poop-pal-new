@@ -4,8 +4,7 @@
     python3 tools/audio/suno_prompts.py            writes docs/tomo_tunes_prompts.md
     python3 tools/audio/suno_prompts.py check      only checks the lengths
 
-Every prompt is the recipe that worked for the build's game music (docs/ideas_roadmap.md, "Music
-prompts") bent to what a rhythm game needs: ONE lead instrument that Suno can split out as a stem
+Every prompt is short and built for what a rhythm game needs: ONE lead instrument that Suno can split out as a stem
 (the notes the player plays), dry and on the grid, over a backing that never changes tempo.
 """
 import os
@@ -14,33 +13,19 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LIMIT = 1000          # the Style field (v4.5 and later; the pilot song confirms it)
 
-STYLE = ("{Lead} solo instrumental: the {short} plays the tune, loud and up front, and it is the only melodic "
-         "instrument. Cute toy-instrument rhythm game music in {key}, {mood}. The {short} is dry and close with no "
-         "reverb and no echo, playing one clear melody {part} {beats} The melody is a simple singable 4-bar phrase "
-         "that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. "
-         "Backing, quiet and low in the mix: {backing}. Constant {bpm} BPM in 4/4 with no tempo changes, straight even "
-         "timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm "
-         "rounded mix, clean ending on a bar.")
-# (2026-11-12: the first 1A takes opened with "Soft pixel chiptune..." and Suno gave the tune to a synth. The lead
-# now comes first, the word chiptune is gone outside the Star Stage, and synth leads are in the Exclude.)
-ON_BEAT = "The strongest notes fall on the beats."
-OFF_BEAT = "The kick marks every beat, so the notes between the beats are easy to hear."      # the Music Box, and the Star Stage's off-beat songs
-BACKING = "a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords"
-BACKING_STAGE = "a round sine bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, warm pad chords"
-EXCLUDE = ("vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, "
-           "heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument")
-NO_SYNTH = "synth lead, square wave lead, chiptune melody, 8-bit lead, "       # every world but the Star Stage
-
-# the taiko world: the drums ARE the lead, so the backing has no drum kit
-STYLE_TAIKO = ("Soft pixel chiptune festival rhythm game instrumental in {key}, {mood}. The lead is a solo set of taiko "
-               "drums, dry and close with no reverb: a deep low drum, sharp rim clicks and a small high drum, playing "
-               "{part} The pattern is a clear 4-bar phrase that repeats with small variations and starts on the first "
-               "beat. The taiko is the only percussion: no drum kit, no kick, no snare, no hi-hat. Backing: soft "
-               "pulse-wave bass on every beat, a quiet bamboo flute melody low in the mix, quiet warm pad chords. "
-               "Constant {bpm} BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the "
-               "arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.")
-EXCLUDE_TAIKO = ("vocals, choir, shouts, vocal chops, drum kit, kick drum, snare, hi-hat, cymbals, swing, shuffle, "
-                 "triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, guitar, strings")
+# 2026-11-12, after three tries on 1A: a long prose prompt opening with "chiptune" gave the tune to a synth, and a
+# full band let Suno pass the lead around. What worked (the user: "now it's pure xylophone lead"): SHORT, tags, the
+# instrument first, a band of three, "no new instruments", and every other lead in the Exclude.
+STYLE = ("solo {lead}, {short} trio, only three instruments: {short}, soft bass, soft drums. dry, close, no reverb. "
+         "simple cute melody {part} {key}, {mood}. minimal, sparse, same instruments from start to end, no new "
+         "instruments, no build, no arrangement changes. steady kick on every beat, {bpm} BPM, 4/4, straight timing, loopable")
+STYLE_TAIKO = ("solo taiko drums, only three instruments: taiko, soft bass, quiet bamboo flute. dry, close, no reverb: a "
+               "deep low drum, sharp rim clicks, a small high drum. {part} {key}, {mood}. the taiko is the only "
+               "percussion. minimal, sparse, same instruments from start to end, no new instruments, no build, no "
+               "arrangement changes. {bpm} BPM, 4/4, straight timing, loopable")
+OTHERS = ["xylophone", "piano", "flute", "bells", "synth", "synth lead", "chiptune", "8-bit", "strings", "pads", "guitar", "brass"]
+ALWAYS = "vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio"
+OWN = {1: ["xylophone"], 2: ["piano"], 3: ["flute"], 4: ["bells"], 5: ["synth", "synth lead", "chiptune", "8-bit"], 6: ["flute"]}
 
 # world: name, the lead as Suno should hear it, what to ask for in "Split from Mix", what the world teaches,
 # then its four songs: letter, title, BPM, key, mood, the lead's part (a full sentence)
@@ -65,7 +50,7 @@ WORLDS = [
         ("D", "The Little Recital", 110, "a major key", "grand in a tiny way, a showpiece for a toy piano",
          "that mixes quick single notes with strong two-note chords, ending every phrase on a big chord."),
     ]),
-    ("Toy Ocarina", "clay ocarina, soft, round and breathy", "ocarina (or flute / woodwinds)", "long notes: hold the button for as long as the note sounds", [
+    ("Toy Ocarina", "clay ocarina, soft and round", "ocarina (or flute / woodwinds)", "long notes: hold the button for as long as the note sounds", [
         ("A", "First Breath", 96, "a major key", "calm and warm, like a slow parade far away",
          "of long held notes, each two beats long, with a short breath between them."),
         ("B", "Paper Hat Parade", 100, "a major key", "proud and silly, a parade of paper hats",
@@ -112,11 +97,8 @@ def songs():
     for w, (world, lead, split, teaches, rows) in enumerate(WORLDS, 1):
         for letter, title, bpm, key, mood, part in rows:
             taiko = world == "Festival Taiko"
-            beats = OFF_BEAT if (w == 4 or (w, letter) in ((5, 'B'), (5, 'D'))) else ON_BEAT
-            short = split.split(" (")[0]
-            style = (STYLE_TAIKO if taiko else STYLE).format(key=key, mood=mood, Lead=lead[0].upper() + lead[1:], short=short, part=part, bpm=bpm,
-                                                             beats=beats, backing=BACKING_STAGE if w == 5 else BACKING)
-            exclude = EXCLUDE_TAIKO if taiko else (EXCLUDE if w == 5 else NO_SYNTH + EXCLUDE)
+            style = (STYLE_TAIKO if taiko else STYLE).format(key=key, mood=mood, lead=lead, short=split.split(" (")[0], part=part, bpm=bpm)
+            exclude = ", ".join([o for o in OTHERS if o not in OWN[w]] + (["drum kit", "kick", "snare", "hi-hat"] if taiko else [])) + ", " + ALWAYS
             yield w, world, split, teaches, letter, title, bpm, style, exclude
 
 

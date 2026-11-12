@@ -16,13 +16,13 @@ Teaches: single notes on the beat; the lanes are low, middle and high. Split fro
 Style:
 
 ```
-Toy xylophone with wooden mallets solo instrumental: the xylophone plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major pentatonic key, sunny, gentle and curious, like a first morning at a small shrine. The xylophone is dry and close with no reverb and no echo, playing one clear melody in even eighth notes that step up and down like stairs, one note at a time. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 92 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, soft bass, soft drums. dry, close, no reverb. simple cute melody in even eighth notes that step up and down like stairs, one note at a time. a major pentatonic key, sunny, gentle and curious, like a first morning at a small shrine. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 92 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 1B. Hopscotch (96 BPM; levels 2, 5, 8)
@@ -30,13 +30,13 @@ synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal 
 Style:
 
 ```
-Toy xylophone with wooden mallets solo instrumental: the xylophone plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major pentatonic key, playful and bouncy, like children skipping. The xylophone is dry and close with no reverb and no echo, playing one clear melody in eighth notes with a short rest at the end of every bar, hopping between two neighbouring notes. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 96 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, soft bass, soft drums. dry, close, no reverb. simple cute melody in eighth notes with a short rest at the end of every bar, hopping between two neighbouring notes. a major pentatonic key, playful and bouncy, like children skipping. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 96 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 1C. Acorn Rain (100 BPM; levels 3, 6)
@@ -44,13 +44,13 @@ synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal 
 Style:
 
 ```
-Toy xylophone with wooden mallets solo instrumental: the xylophone plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major key, light and quick, like acorns dropping on a wooden roof. The xylophone is dry and close with no reverb and no echo, playing one clear melody in steady eighth notes that jump between a low bar and a high bar. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 100 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, soft bass, soft drums. dry, close, no reverb. simple cute melody in steady eighth notes that jump between a low bar and a high bar. a major key, light and quick, like acorns dropping on a wooden roof. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 100 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 1D. Sunrise Mallets (104 BPM; level 9, the showpiece)
@@ -58,13 +58,13 @@ synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal 
 Style:
 
 ```
-Toy xylophone with wooden mallets solo instrumental: the xylophone plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major pentatonic key, bright and proud, a small showpiece. The xylophone is dry and close with no reverb and no echo, playing one clear melody in eighth notes with wide leaps between low and high bars, each phrase ending in a quick run of four sixteenth notes. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 104 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, soft bass, soft drums. dry, close, no reverb. simple cute melody in eighth notes with wide leaps between low and high bars, each phrase ending in a quick run of four sixteenth notes. a major pentatonic key, bright and proud, a small showpiece. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 104 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ## World 2: Toy Piano
@@ -76,13 +76,13 @@ Teaches: two buttons at once: a chord on the accents. Split from Mix: ask for **
 Style:
 
 ```
-Toy piano, plinky and bright solo instrumental: the piano plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major key, cheerful and tidy, like a child's first piano lesson. The piano is dry and close with no reverb and no echo, playing one clear melody in eighth notes, with a strong two-note chord on the first beat of every bar. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 100 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo toy piano, plinky and bright, piano trio, only three instruments: piano, soft bass, soft drums. dry, close, no reverb. simple cute melody in eighth notes, with a strong two-note chord on the first beat of every bar. a major key, cheerful and tidy, like a child's first piano lesson. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 100 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 2B. Tiptoe Keys (104 BPM; levels 2, 5, 8)
@@ -90,13 +90,13 @@ synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal 
 Style:
 
 ```
-Toy piano, plinky and bright solo instrumental: the piano plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a minor key, sneaky and funny, like tiptoeing past a sleeping cat. The piano is dry and close with no reverb and no echo, playing one clear melody in soft eighth notes, with a strong two-note chord on beats 1 and 3. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 104 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo toy piano, plinky and bright, piano trio, only three instruments: piano, soft bass, soft drums. dry, close, no reverb. simple cute melody in soft eighth notes, with a strong two-note chord on beats 1 and 3. a minor key, sneaky and funny, like tiptoeing past a sleeping cat. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 104 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 2C. Marble Stairs (108 BPM; levels 3, 6)
@@ -104,13 +104,13 @@ synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal 
 Style:
 
 ```
-Toy piano, plinky and bright solo instrumental: the piano plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major key, lively and rolling, like marbles down a staircase. The piano is dry and close with no reverb and no echo, playing one clear melody of running single eighth notes answered by two-note chord stabs. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 108 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo toy piano, plinky and bright, piano trio, only three instruments: piano, soft bass, soft drums. dry, close, no reverb. simple cute melody of running single eighth notes answered by two-note chord stabs. a major key, lively and rolling, like marbles down a staircase. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 108 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 2D. The Little Recital (110 BPM; level 9, the showpiece)
@@ -118,13 +118,13 @@ synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal 
 Style:
 
 ```
-Toy piano, plinky and bright solo instrumental: the piano plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major key, grand in a tiny way, a showpiece for a toy piano. The piano is dry and close with no reverb and no echo, playing one clear melody that mixes quick single notes with strong two-note chords, ending every phrase on a big chord. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 110 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo toy piano, plinky and bright, piano trio, only three instruments: piano, soft bass, soft drums. dry, close, no reverb. simple cute melody that mixes quick single notes with strong two-note chords, ending every phrase on a big chord. a major key, grand in a tiny way, a showpiece for a toy piano. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 110 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ## World 3: Toy Ocarina
@@ -136,13 +136,13 @@ Teaches: long notes: hold the button for as long as the note sounds. Split from 
 Style:
 
 ```
-Clay ocarina, soft, round and breathy solo instrumental: the ocarina plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major key, calm and warm, like a slow parade far away. The ocarina is dry and close with no reverb and no echo, playing one clear melody of long held notes, each two beats long, with a short breath between them. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 96 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, soft bass, soft drums. dry, close, no reverb. simple cute melody of long held notes, each two beats long, with a short breath between them. a major key, calm and warm, like a slow parade far away. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 96 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 3B. Paper Hat Parade (100 BPM; levels 2, 5, 8)
@@ -150,13 +150,13 @@ synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal 
 Style:
 
 ```
-Clay ocarina, soft, round and breathy solo instrumental: the ocarina plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major key, proud and silly, a parade of paper hats. The ocarina is dry and close with no reverb and no echo, playing one clear melody of long held notes of two to four beats joined by short pickup notes. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 100 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, soft bass, soft drums. dry, close, no reverb. simple cute melody of long held notes of two to four beats joined by short pickup notes. a major key, proud and silly, a parade of paper hats. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 100 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 3C. Kite Call (104 BPM; levels 3, 6)
@@ -164,13 +164,13 @@ synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal 
 Style:
 
 ```
-Clay ocarina, soft, round and breathy solo instrumental: the ocarina plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major pentatonic key, open and breezy, like calling to a kite. The ocarina is dry and close with no reverb and no echo, playing one clear melody with a long note at the start of every bar followed by three short notes. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 104 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, soft bass, soft drums. dry, close, no reverb. simple cute melody with a long note at the start of every bar followed by three short notes. a major pentatonic key, open and breezy, like calling to a kite. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 104 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 3D. The Little Serenade (108 BPM; level 9, the showpiece)
@@ -178,13 +178,13 @@ synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal 
 Style:
 
 ```
-Clay ocarina, soft, round and breathy solo instrumental: the ocarina plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major key, a small proud serenade, a showpiece. The ocarina is dry and close with no reverb and no echo, playing one clear melody of short repeated notes leading into long held notes of a whole bar. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 108 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, soft bass, soft drums. dry, close, no reverb. simple cute melody of short repeated notes leading into long held notes of a whole bar. a major key, a small proud serenade, a showpiece. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 108 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ## World 4: Music Box
@@ -196,13 +196,13 @@ Teaches: off-beats: the notes between the beats. Split from Mix: ask for **music
 Style:
 
 ```
-Wind-up music box with a metal comb solo instrumental: the music box plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major key, tender and sleepy, a lullaby. The music box is dry and close with no reverb and no echo, playing one clear melody in eighth notes where every second note of the tune lands on the off-beat, between the kicks. The kick marks every beat, so the notes between the beats are easy to hear. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 88 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo wind-up music box with a metal comb, music box trio, only three instruments: music box, soft bass, soft drums. dry, close, no reverb. simple cute melody in eighth notes where every second note of the tune lands on the off-beat, between the kicks. a major key, tender and sleepy, a lullaby. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 88 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, piano, flute, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 4B. Off-Beat Ballerina (92 BPM; levels 2, 5, 8)
@@ -210,13 +210,13 @@ synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal 
 Style:
 
 ```
-Wind-up music box with a metal comb solo instrumental: the music box plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a minor key, delicate and a little mysterious, a ballerina turning. The music box is dry and close with no reverb and no echo, playing one clear melody of off-beat eighth notes that land between the kicks, with one note on the first beat of every bar. The kick marks every beat, so the notes between the beats are easy to hear. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 92 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo wind-up music box with a metal comb, music box trio, only three instruments: music box, soft bass, soft drums. dry, close, no reverb. simple cute melody of off-beat eighth notes that land between the kicks, with one note on the first beat of every bar. a minor key, delicate and a little mysterious, a ballerina turning. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 92 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, piano, flute, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 4C. Clockwork Snow (96 BPM; levels 3, 6)
@@ -224,13 +224,13 @@ synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal 
 Style:
 
 ```
-Wind-up music box with a metal comb solo instrumental: the music box plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major key, sparkling and cold, like snow in a glass globe. The music box is dry and close with no reverb and no echo, playing one clear melody of syncopated eighth notes, some held over the bar line. The kick marks every beat, so the notes between the beats are easy to hear. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 96 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo wind-up music box with a metal comb, music box trio, only three instruments: music box, soft bass, soft drums. dry, close, no reverb. simple cute melody of syncopated eighth notes, some held over the bar line. a major key, sparkling and cold, like snow in a glass globe. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 96 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, piano, flute, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 4D. The Glass Carousel (100 BPM; level 9, the showpiece)
@@ -238,13 +238,13 @@ synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal 
 Style:
 
 ```
-Wind-up music box with a metal comb solo instrumental: the music box plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major key, turning and magical, a showpiece. The music box is dry and close with no reverb and no echo, playing one clear melody of flowing syncopated notes, on and off the beat, like a carousel tune. The kick marks every beat, so the notes between the beats are easy to hear. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 100 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo wind-up music box with a metal comb, music box trio, only three instruments: music box, soft bass, soft drums. dry, close, no reverb. simple cute melody of flowing syncopated notes, on and off the beat, like a carousel tune. a major key, turning and magical, a showpiece. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 100 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-synth lead, square wave lead, chiptune melody, 8-bit lead, vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, piano, flute, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ## World 5: Star Stage
@@ -256,13 +256,13 @@ Teaches: everything together, and faster. Split from Mix: ask for **synth lead**
 Style:
 
 ```
-Bright square-wave chiptune synth lead solo instrumental: the synth lead plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major key, excited and shining, the lights coming on. The synth lead is dry and close with no reverb and no echo, playing one clear melody in eighth notes with a long held note at the end of every phrase. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a round sine bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 112 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, soft bass, soft drums. dry, close, no reverb. simple cute melody in eighth notes with a long held note at the end of every phrase. a major key, excited and shining, the lights coming on. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 112 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, piano, flute, bells, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 5B. Neon Lanterns (116 BPM; levels 2, 5, 8)
@@ -270,13 +270,13 @@ vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long
 Style:
 
 ```
-Bright square-wave chiptune synth lead solo instrumental: the synth lead plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a minor key, cool and driving, a night festival. The synth lead is dry and close with no reverb and no echo, playing one clear melody in eighth notes with off-beat accents and a strong two-note chord on the first beat of every bar. The kick marks every beat, so the notes between the beats are easy to hear. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a round sine bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 116 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, soft bass, soft drums. dry, close, no reverb. simple cute melody in eighth notes with off-beat accents and a strong two-note chord on the first beat of every bar. a minor key, cool and driving, a night festival. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 116 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, piano, flute, bells, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 5C. Comet Chase (120 BPM; levels 3, 6)
@@ -284,13 +284,13 @@ vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long
 Style:
 
 ```
-Bright square-wave chiptune synth lead solo instrumental: the synth lead plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a minor key, fast and thrilling, chasing a comet. The synth lead is dry and close with no reverb and no echo, playing one clear melody in fast eighth notes with short bursts of four sixteenth notes. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a round sine bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 120 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, soft bass, soft drums. dry, close, no reverb. simple cute melody in fast eighth notes with short bursts of four sixteenth notes. a minor key, fast and thrilling, chasing a comet. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 120 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, piano, flute, bells, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 5D. The Star Song (124 BPM; level 9, the showpiece)
@@ -298,13 +298,13 @@ vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long
 Style:
 
 ```
-Bright square-wave chiptune synth lead solo instrumental: the synth lead plays the tune, loud and up front, and it is the only melodic instrument. Cute toy-instrument rhythm game music in a major key, triumphant and glittering, the grand finale. The synth lead is dry and close with no reverb and no echo, playing one clear melody that mixes quick runs, off-beat accents, strong two-note chords and long held notes. The kick marks every beat, so the notes between the beats are easy to hear. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing, quiet and low in the mix: a round sine bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, warm pad chords. Constant 124 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, soft bass, soft drums. dry, close, no reverb. simple cute melody that mixes quick runs, off-beat accents, strong two-note chords and long held notes. a major key, triumphant and glittering, the grand finale. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. steady kick on every beat, 124 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
+xylophone, piano, flute, bells, strings, pads, guitar, brass, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ## World 6: Festival Taiko
@@ -316,13 +316,13 @@ Teaches: rolls and speed: the three drums are the three buttons. Split from Mix:
 Style:
 
 ```
-Soft pixel chiptune festival rhythm game instrumental in a minor pentatonic key, steady and proud, a lantern parade at dusk. The lead is a solo set of taiko drums, dry and close with no reverb: a deep low drum, sharp rim clicks and a small high drum, playing a steady festival pattern of deep hits on the beat answered by rim clicks. The pattern is a clear 4-bar phrase that repeats with small variations and starts on the first beat. The taiko is the only percussion: no drum kit, no kick, no snare, no hi-hat. Backing: soft pulse-wave bass on every beat, a quiet bamboo flute melody low in the mix, quiet warm pad chords. Constant 120 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo taiko drums, only three instruments: taiko, soft bass, quiet bamboo flute. dry, close, no reverb: a deep low drum, sharp rim clicks, a small high drum. a steady festival pattern of deep hits on the beat answered by rim clicks. a minor pentatonic key, steady and proud, a lantern parade at dusk. the taiko is the only percussion. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. 120 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-vocals, choir, shouts, vocal chops, drum kit, kick drum, snare, hi-hat, cymbals, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, guitar, strings
+xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, drum kit, kick, snare, hi-hat, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 6B. Bon Dance (124 BPM; levels 2, 5, 8)
@@ -330,13 +330,13 @@ vocals, choir, shouts, vocal chops, drum kit, kick drum, snare, hi-hat, cymbals,
 Style:
 
 ```
-Soft pixel chiptune festival rhythm game instrumental in a major pentatonic key, warm and dancing, a summer bon dance. The lead is a solo set of taiko drums, dry and close with no reverb: a deep low drum, sharp rim clicks and a small high drum, playing a dance pattern of two deep hits and two rim clicks, with a short drum roll at the end of every fourth bar. The pattern is a clear 4-bar phrase that repeats with small variations and starts on the first beat. The taiko is the only percussion: no drum kit, no kick, no snare, no hi-hat. Backing: soft pulse-wave bass on every beat, a quiet bamboo flute melody low in the mix, quiet warm pad chords. Constant 124 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo taiko drums, only three instruments: taiko, soft bass, quiet bamboo flute. dry, close, no reverb: a deep low drum, sharp rim clicks, a small high drum. a dance pattern of two deep hits and two rim clicks, with a short drum roll at the end of every fourth bar. a major pentatonic key, warm and dancing, a summer bon dance. the taiko is the only percussion. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. 124 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-vocals, choir, shouts, vocal chops, drum kit, kick drum, snare, hi-hat, cymbals, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, guitar, strings
+xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, drum kit, kick, snare, hi-hat, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 6C. Thunder Drums (128 BPM; levels 3, 6)
@@ -344,13 +344,13 @@ vocals, choir, shouts, vocal chops, drum kit, kick drum, snare, hi-hat, cymbals,
 Style:
 
 ```
-Soft pixel chiptune festival rhythm game instrumental in a minor key, stormy and exciting, thunder over the shrine. The lead is a solo set of taiko drums, dry and close with no reverb: a deep low drum, sharp rim clicks and a small high drum, playing driving eighth-note patterns that move between the deep drum, the rim and the small drum, with drum rolls. The pattern is a clear 4-bar phrase that repeats with small variations and starts on the first beat. The taiko is the only percussion: no drum kit, no kick, no snare, no hi-hat. Backing: soft pulse-wave bass on every beat, a quiet bamboo flute melody low in the mix, quiet warm pad chords. Constant 128 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo taiko drums, only three instruments: taiko, soft bass, quiet bamboo flute. dry, close, no reverb: a deep low drum, sharp rim clicks, a small high drum. driving eighth-note patterns that move between the deep drum, the rim and the small drum, with drum rolls. a minor key, stormy and exciting, thunder over the shrine. the taiko is the only percussion. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. 128 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-vocals, choir, shouts, vocal chops, drum kit, kick drum, snare, hi-hat, cymbals, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, guitar, strings
+xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, drum kit, kick, snare, hi-hat, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 6D. The Great Matsuri (132 BPM; level 9, the showpiece)
@@ -358,11 +358,11 @@ vocals, choir, shouts, vocal chops, drum kit, kick drum, snare, hi-hat, cymbals,
 Style:
 
 ```
-Soft pixel chiptune festival rhythm game instrumental in a minor pentatonic key, huge and joyful, the grand festival, a showpiece. The lead is a solo set of taiko drums, dry and close with no reverb: a deep low drum, sharp rim clicks and a small high drum, playing a grand solo of fast patterns across all three drums, long rolls and strong hits on two drums at once. The pattern is a clear 4-bar phrase that repeats with small variations and starts on the first beat. The taiko is the only percussion: no drum kit, no kick, no snare, no hi-hat. Backing: soft pulse-wave bass on every beat, a quiet bamboo flute melody low in the mix, quiet warm pad chords. Constant 132 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+solo taiko drums, only three instruments: taiko, soft bass, quiet bamboo flute. dry, close, no reverb: a deep low drum, sharp rim clicks, a small high drum. a grand solo of fast patterns across all three drums, long rolls and strong hits on two drums at once. a minor pentatonic key, huge and joyful, the grand festival, a showpiece. the taiko is the only percussion. minimal, sparse, same instruments from start to end, no new instruments, no build, no arrangement changes. 132 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-vocals, choir, shouts, vocal chops, drum kit, kick drum, snare, hi-hat, cymbals, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, guitar, strings
+xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, drum kit, kick, snare, hi-hat, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
