@@ -14,17 +14,22 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LIMIT = 1000          # the Style field (v4.5 and later; the pilot song confirms it)
 
-STYLE = ("Soft pixel chiptune rhythm game instrumental in {key}, {mood}. One lead instrument only: a solo {lead}, "
-         "dry and close with no reverb and no echo, playing one clear melody {part} {beats} The melody is a simple "
-         "singable 4-bar phrase that repeats with small variations, a low phrase answered "
-         "by a high phrase, and it starts on the first beat. Backing: {backing}, no other melodic instruments. Constant "
-         "{bpm} BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays "
-         "the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.")
+STYLE = ("{Lead} solo instrumental: the {short} plays the tune, loud and up front, and it is the only melodic "
+         "instrument. Cute toy-instrument rhythm game music in {key}, {mood}. The {short} is dry and close with no "
+         "reverb and no echo, playing one clear melody {part} {beats} The melody is a simple singable 4-bar phrase "
+         "that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. "
+         "Backing, quiet and low in the mix: {backing}. Constant {bpm} BPM in 4/4 with no tempo changes, straight even "
+         "timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm "
+         "rounded mix, clean ending on a bar.")
+# (2026-11-12: the first 1A takes opened with "Soft pixel chiptune..." and Suno gave the tune to a synth. The lead
+# now comes first, the word chiptune is gone outside the Star Stage, and synth leads are in the Exclude.)
 ON_BEAT = "The strongest notes fall on the beats."
 OFF_BEAT = "The kick marks every beat, so the notes between the beats are easy to hear."      # the Music Box, and the Star Stage's off-beat songs
-BACKING = "soft pulse-wave bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, quiet warm pad chords"
+BACKING = "a soft round bass, a soft kick on every beat and a snare on beats 2 and 4, warm pad chords"
+BACKING_STAGE = "a round sine bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, warm pad chords"
 EXCLUDE = ("vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, "
            "heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument")
+NO_SYNTH = "synth lead, square wave lead, chiptune melody, 8-bit lead, "       # every world but the Star Stage
 
 # the taiko world: the drums ARE the lead, so the backing has no drum kit
 STYLE_TAIKO = ("Soft pixel chiptune festival rhythm game instrumental in {key}, {mood}. The lead is a solo set of taiko "
@@ -108,9 +113,11 @@ def songs():
         for letter, title, bpm, key, mood, part in rows:
             taiko = world == "Festival Taiko"
             beats = OFF_BEAT if (w == 4 or (w, letter) in ((5, 'B'), (5, 'D'))) else ON_BEAT
-            style = (STYLE_TAIKO if taiko else STYLE).format(key=key, mood=mood, lead=lead, part=part, bpm=bpm, beats=beats,
-                                                             backing=BACKING if w != 5 else BACKING.replace("pulse-wave bass", "round sine bass"))
-            yield w, world, split, teaches, letter, title, bpm, style, (EXCLUDE_TAIKO if taiko else EXCLUDE)
+            short = split.split(" (")[0]
+            style = (STYLE_TAIKO if taiko else STYLE).format(key=key, mood=mood, Lead=lead[0].upper() + lead[1:], short=short, part=part, bpm=bpm,
+                                                             beats=beats, backing=BACKING_STAGE if w == 5 else BACKING)
+            exclude = EXCLUDE_TAIKO if taiko else (EXCLUDE if w == 5 else NO_SYNTH + EXCLUDE)
+            yield w, world, split, teaches, letter, title, bpm, style, exclude
 
 
 def main():
