@@ -179,8 +179,10 @@ it, when they want it, and gives send-offs a reason. The user's other ideas (an 
 second-run branches) wait: traits can't change winning (the skeleton's rule), and new branches need
 new spirits.
 
-**DECIDE E.** The send-off ceremony and the generation mark in v1; blessed spirits as the first
-update. (Or both in v1.)
+**DECIDED E (the user, 2026-11-12).** The send-off ceremony and the generation mark in v1; blessed
+spirits as the first update ("it doesn't affect too much and adds a bit of variety"). Today the
+send-off already exists as a 2 s hold on the pet view (`main_button.gd`, `shrine.sendoff_ring()`):
+what's new is that it counts (the mark) and, later, that it can bring a blessed spirit.
 
 ## 7. What the games pass has to do, game by game
 
@@ -241,3 +243,100 @@ The minutes per try and the fail rates per difficulty · the 3rd-star rate with 
 · whether 15 min between drinks feels right (10 is the fallback) · how many players come back after
 the 8 h and 24 h marks (the care ladder's real test) · the first hour's gaps (never more than 5-6
 minutes without something new).
+
+## 11. The decisions (12 November 2026) and the review
+
+### What the user decided (the page's store, read 2026-11-12)
+
+| | Decision | The user's note |
+|---|---|---|
+| A | Spicy is the races' drink (HEAT); Caffeinated goes to Tummy Tunes (FOCUS) | |
+| B | Two drink tiers, keeping today's icons; the better drink costs 30 | |
+| C | The soft ladder (won't drink at 8 h, dark hokora and streak reset at 24 h, never sickness or regression) | "we could combine with sad / angry face, or use them for something to give dynamism to the app" |
+| D | The tick is "the coolest pieces in the Shop", the note is the brief: **most homes earned, the first ones easily and then harder, maybe one special home sold; 12 homes in total** | (the note wins over the tick) |
+| E | The ceremony and the generation mark in v1, blessed spirits as the first update | decided in chat after the explanation |
+| F | The snack is in (the spirit's own size feeds without evolving) | |
+| G | The spirit asks with an icon in a bubble, never a sentence | decided in chat, 2026-11-11 |
+
+"Keep the rest as specified in the form and eventually change something at the final refinement."
+
+### Does it close? Mostly yes
+
+On paper every clock has a reward and every reward has somewhere to go. The model's eleven checks
+pass with the decisions in (regular player): 26 new things in the first hour and never more than
+6 minutes without one; a new spirit in 91% of the first month's sessions; every game by day 19, the
+collection on day 28, 90% of the stars on day 59, every star on day 79; never more than 100 coins
+idle; the catalogue (1325) against the coins earned (1285). Not feeding costs the powers, never the
+collection, and one offering repairs it.
+
+What is still open, in the order it matters (`tools/design/whatif.py` gives the numbers):
+
+**1. The fourth stage is the thin one (DECIDE H, the user's point, 2026-11-12).** All 15 grown
+spirits of a realm turn into the same two mutants, so the path stops mattering exactly where the
+foods get strange; and of the four exotic foods two are duplicates (the Battery does what the
+Microchip does, the Moon Rock what the Alien Goo does). 15 of 120 spirits come from special foods.
+The proposal: **each exotic food its own mutant, 4 per realm, 20 in all, 130 spirits** (a realm =
+1 Sho, 5 Chu, 15 Dai, 4 mutants, 1 legend = 26). Then finding a new food in a game opens five
+silhouettes in the Tomopedia at once, one per realm: the games feed the collection directly. The
+legends stay one per realm (their rarity is the point).
+
+| `whatif.py stage4` (regular) | spirits | collection complete | special foods bought | sessions with a new spirit, days 2-30 |
+|---|---|---|---|---|
+| today | 120 | day 28 | 120 coins | 91% |
+| 4 mutants per realm, same finds | 130 | day 33 | 265 coins | 91% |
+| ...and 6 more exotic foods as secret prizes | 130 | day 30 | 165 coins | 100% |
+
+So it needs two things besides the tree: **10 more designs** (2 per realm; Fire has three spares in
+the pool: C41, A43, A32) and **about 6 more exotic foods placed in the games** as secret prizes, so
+the new mutants are found rather than bought (the budget is full). The casual player's collection
+moves from day 62 to day 71. The time to decide is now: the realms' sheets are being laid out at 24
+slots (Fire v3 is; the other four aren't started). The Tomopedia's 7th page per
+realm (the specials') would hold five spirits instead of three: to lay out. Alternatives: keep 10; or 4 per realm as an update (the Battery and the Moon
+Rock stay duplicates at launch).
+
+**2. The better drinks compete with the last games.** With the better drink at 30 and bought as
+soon as a gate wants it, the regular player gets the 6th game on day 19 and the casual one the 5th
+on day 48 and the 6th on day 78.
+
+| `whatif.py drinks` | Top Spin (casual) | Tummy Tunes (casual) | Tummy Tunes (regular) |
+|---|---|---|---|
+| as in the model | day 48 | day 78 | day 19 |
+| one better drink at most while a game is still to buy | day 31 | day 47 | day 10 |
+| the better drinks only once every game is owned | day 26 | day 43 | day 8 |
+| the better drink at 20 | day 42 | day 58 | day 17 |
+
+The price isn't the lever, the order is. The rule to build: **the first better drink is met at the
+first world-4 gate (the Shop shows that one), the others come to the Shop once every game is
+owned.** To put in the model with the games pass.
+
+**3. The homes' ladder (D's note).** Twelve homes are in the catalogue (the Forest Hokora is the
+start), eleven to get. Six had a source, five had none (River Shrine, Fire Shrine, Capsule Pod,
+Arcade Cabinet, Bathhouse). A DRAFT for the final refinement, easy first, each from a different
+loop so every loop has a home at its end:
+
+| Home | Source (draft) | Regular player |
+|---|---|---|
+| River Shrine | 20 spirits | first week |
+| Capsule Pod | the eight Lucky Pinch exclusives | week 1-2 |
+| Moon Shrine | 60 spirits | day 13 |
+| Bathhouse | the 14-day streak | day 14 at the earliest |
+| Arcade Cabinet | half of all the stars | day 17 |
+| Tree Hollow | 90 spirits | day 21 |
+| Fire Shrine | Top Spin's Dragon Festival finale | month 1-2 |
+| Golden Temple | every spirit | day 28-30 |
+| Ruined Shrine | Paper Sumo's four seasons | month 2 |
+| Neon Shrine | RC Prix 2177's finale | month 2 |
+| Ramen Stall | the one sold (the user's "maybe one special"): needs ~150 more coins in (the 7th worlds give 162) or the 30-day streak instead | late |
+
+**4. The keen player's ration.** They play with a power on 17% of the time (the regular 41%, the
+casual 62%): a drink every 15 minutes covers a short visit, not a three-hour day. That is the
+ration working, and it is also where a "timer wall" would be felt. Nothing to change on paper; on
+the phone, the levers are the drink every 10 minutes and the better drink's 10 minutes.
+
+**5. The faces (C's note).** Sad from 8 h and asleep in the dark hokora at 24 h belong to the
+ladder. Angry doesn't fit "never punish" as a state, but it works as a reaction (a food it can't
+use, a poke, a lost bout), which is the dynamism asked for. For the animations' revision.
+
+**6. Nothing of loop v2 is built, and the model's players are assumed** (minutes per session,
+skill). The balance above is a model's; section 10 lists what the phone has to confirm.
+
