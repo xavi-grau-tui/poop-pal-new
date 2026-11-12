@@ -70,13 +70,14 @@ tempo). Nothing else is generated until 1A has been played on the phone.
 |---|---|---|---|---|
 | 1 | Toy Xylophone | single notes on the beat | 92-104 | learns that the lanes are low, middle, high |
 | 2 | Toy Piano | chords | 100-110 | two buttons at once on the accents |
-| 3 | Toy Trumpet | long notes | 96-108 | holds the button for as long as the note sounds: a breath |
+| 3 | Toy Ocarina | long notes | 96-108 | holds the button for as long as the note sounds: a breath |
 | 4 | Music Box | off-beats | 88-100 | plays between the beats (slower, because it is the hard one to feel) |
 | 5 | Star Stage (the pixel synth, the toy band behind it) | everything, faster | 112-124 | the finale is the Star Song: Stardust Sugar |
 | 6 | Festival Taiko | rolls and speed | 120-132 | the masters' world: the three drums are the three buttons; the finale gives the Taiko case |
 
 **One change from the October skeleton, to confirm.** It had Toy Drums as world 3 ("holds and
-rolls") and left world 6 open (Toy Trumpet or The Tummy). Here the Trumpet moves to 3 and the
+rolls") and left world 6 open (Toy Trumpet or The Tummy). Here a wind instrument takes 3 (the Toy Ocarina: the user didn't love the trumpet, 2026-11-12; a
+melodica is the alternative) and the
 drums become world 6 as the Festival Taiko. The reasons: a held note is a breath, so it belongs
 to a wind instrument; rolls and speed are the hardest thing and belong to the masters' world; the
 Taiko case and the taiko headband are already the game's planned prizes; and a drum lead is the
@@ -87,7 +88,7 @@ The games' rule holds: levels 7-8 of a world mix in the world before's thing (wo
 charts have chords, and so on), so by the Star Stage nothing is new, only together.
 
 **The look** (the suite's rules, for its own pass): the instrument is the toy and the playfield.
-The three targets are the xylophone's three bars, three piano keys, the trumpet's three valves,
+The three targets are the xylophone's three bars, three piano keys, the ocarina's three holes,
 the music box's comb, three stage pads, the three drums. One place per world with its light, the
 spirit dead centre with its headphones, bar lines falling with the notes so the beat is seen.
 
@@ -142,9 +143,9 @@ parallel with the other games' pass.
 
 ## 7. Open points
 
-- **The six instruments** (section 3): confirm the Trumpet at 3 and the Taiko at 6, or keep the
-  skeleton's drums at 3.
-- **Your Suno plan**: Pro is assumed. Premier opens the Studio route.
+- **The six instruments** (section 3): the Ocarina at 3 and the Taiko at 6, to confirm by ear on
+  their first songs.
+- **Your Suno plan**: Pro (the user, 2026-11-12), so Split from Mix is the route.
 - **The tempos.** The build's background tracks sit at 82-107 BPM and 118 felt too fast there. A
   rhythm game's tempo is its difficulty, so worlds 5 and 6 go to 112-132. If that breaks the
   soundtrack's feel, the alternative is to stay under 112 and get the difficulty from denser charts.

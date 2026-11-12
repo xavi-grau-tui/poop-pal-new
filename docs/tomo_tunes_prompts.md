@@ -127,16 +127,16 @@ Exclude:
 vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
 ```
 
-## World 3: Toy Trumpet
+## World 3: Toy Ocarina
 
-Teaches: long notes: hold the button for as long as the note sounds. Split from Mix: ask for **trumpet**.
+Teaches: long notes: hold the button for as long as the note sounds. Split from Mix: ask for **ocarina (or flute / woodwinds)**.
 
 ### 3A. First Breath (96 BPM; levels 1, 4, 7)
 
 Style:
 
 ```
-Soft pixel chiptune rhythm game instrumental in a major key, calm and warm, like a slow parade far away. One lead instrument only: a solo toy trumpet, soft, round and a little comic, dry and close with no reverb and no echo, playing one clear melody of long held notes, each two beats long, with a short breath between them. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing: soft pulse-wave bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, quiet warm pad chords, no other melodic instruments. Constant 96 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+Soft pixel chiptune rhythm game instrumental in a major key, calm and warm, like a slow parade far away. One lead instrument only: a solo clay ocarina, soft, round and breathy, dry and close with no reverb and no echo, playing one clear melody of long held notes, each two beats long, with a short breath between them. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing: soft pulse-wave bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, quiet warm pad chords, no other melodic instruments. Constant 96 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
 ```
 
 Exclude:
@@ -150,7 +150,7 @@ vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long
 Style:
 
 ```
-Soft pixel chiptune rhythm game instrumental in a major key, proud and silly, a parade of paper hats. One lead instrument only: a solo toy trumpet, soft, round and a little comic, dry and close with no reverb and no echo, playing one clear melody of long held notes of two to four beats joined by short pickup notes. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing: soft pulse-wave bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, quiet warm pad chords, no other melodic instruments. Constant 100 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+Soft pixel chiptune rhythm game instrumental in a major key, proud and silly, a parade of paper hats. One lead instrument only: a solo clay ocarina, soft, round and breathy, dry and close with no reverb and no echo, playing one clear melody of long held notes of two to four beats joined by short pickup notes. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing: soft pulse-wave bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, quiet warm pad chords, no other melodic instruments. Constant 100 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
 ```
 
 Exclude:
@@ -164,7 +164,7 @@ vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long
 Style:
 
 ```
-Soft pixel chiptune rhythm game instrumental in a major pentatonic key, open and breezy, like calling to a kite. One lead instrument only: a solo toy trumpet, soft, round and a little comic, dry and close with no reverb and no echo, playing one clear melody with a long note at the start of every bar followed by three short notes. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing: soft pulse-wave bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, quiet warm pad chords, no other melodic instruments. Constant 104 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+Soft pixel chiptune rhythm game instrumental in a major pentatonic key, open and breezy, like calling to a kite. One lead instrument only: a solo clay ocarina, soft, round and breathy, dry and close with no reverb and no echo, playing one clear melody with a long note at the start of every bar followed by three short notes. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing: soft pulse-wave bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, quiet warm pad chords, no other melodic instruments. Constant 104 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
 ```
 
 Exclude:
@@ -173,12 +173,12 @@ Exclude:
 vocals, choir, vocal chops, swing, shuffle, triplets, tempo change, rubato, long intro, fade in, fade out, heavy reverb, delay, echo, arpeggios, glissando, trills, guitar, strings, second lead instrument
 ```
 
-### 3D. The Little Fanfare (108 BPM; level 9, the showpiece)
+### 3D. The Little Serenade (108 BPM; level 9, the showpiece)
 
 Style:
 
 ```
-Soft pixel chiptune rhythm game instrumental in a major key, a small heroic fanfare, a showpiece. One lead instrument only: a solo toy trumpet, soft, round and a little comic, dry and close with no reverb and no echo, playing one clear melody of short repeated notes leading into long held notes of a whole bar. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing: soft pulse-wave bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, quiet warm pad chords, no other melodic instruments. Constant 108 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
+Soft pixel chiptune rhythm game instrumental in a major key, a small proud serenade, a showpiece. One lead instrument only: a solo clay ocarina, soft, round and breathy, dry and close with no reverb and no echo, playing one clear melody of short repeated notes leading into long held notes of a whole bar. The strongest notes fall on the beats. The melody is a simple singable 4-bar phrase that repeats with small variations, a low phrase answered by a high phrase, and it starts on the first beat. Backing: soft pulse-wave bass, a soft chiptune kick on every beat and a snare on beats 2 and 4, quiet warm pad chords, no other melodic instruments. Constant 108 BPM in 4/4 with no tempo changes, straight even timing with no swing, no breaks, the arrangement stays the same from start to end, narrow dynamics, warm rounded mix, clean ending on a bar.
 ```
 
 Exclude:

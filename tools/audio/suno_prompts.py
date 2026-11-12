@@ -60,14 +60,14 @@ WORLDS = [
         ("D", "The Little Recital", 110, "a major key", "grand in a tiny way, a showpiece for a toy piano",
          "that mixes quick single notes with strong two-note chords, ending every phrase on a big chord."),
     ]),
-    ("Toy Trumpet", "toy trumpet, soft, round and a little comic", "trumpet", "long notes: hold the button for as long as the note sounds", [
+    ("Toy Ocarina", "clay ocarina, soft, round and breathy", "ocarina (or flute / woodwinds)", "long notes: hold the button for as long as the note sounds", [
         ("A", "First Breath", 96, "a major key", "calm and warm, like a slow parade far away",
          "of long held notes, each two beats long, with a short breath between them."),
         ("B", "Paper Hat Parade", 100, "a major key", "proud and silly, a parade of paper hats",
          "of long held notes of two to four beats joined by short pickup notes."),
         ("C", "Kite Call", 104, "a major pentatonic key", "open and breezy, like calling to a kite",
          "with a long note at the start of every bar followed by three short notes."),
-        ("D", "The Little Fanfare", 108, "a major key", "a small heroic fanfare, a showpiece",
+        ("D", "The Little Serenade", 108, "a major key", "a small proud serenade, a showpiece",
          "of short repeated notes leading into long held notes of a whole bar."),
     ]),
     ("Music Box", "wind-up music box with a metal comb", "music box (or bells / glockenspiel)", "off-beats: the notes between the beats", [
