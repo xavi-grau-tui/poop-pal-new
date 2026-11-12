@@ -66,12 +66,32 @@ everything the shrine can become. Light, playful, icons over text, learn by doin
 9. **Before release:** measure on the phone what the model assumes (loop v2, section 10), the
    booklet, Japanese, the release build.
 
-### Ideas for later (not planned)
-- **The app icon shows your spirit** (the user, 2026-11-12). iOS allows it only with icons shipped inside the app
-  (one per spirit, chosen at run time through a small native plugin like the scene one we have), and it shows a
-  system alert at every change. So: not at every evolution, but as a choice ("set as my icon" on a Tomopedia card,
-  or the spirit of the last send-off). A Home Screen widget showing the live spirit and its hunger is the closer
-  fit to the idea, and more work (a native widget extension). Android: possible, clumsier.
+### Decided for later
+- **A Home Screen widget with your spirit** (the user, 2026-11-12, chosen over changing the app icon): the live
+  spirit and whether it is hungry, on the phone's home screen. It needs a native widget extension outside Godot
+  and a small shared file the game writes (the spirit, the last meal's time). The app icon idea is dropped: iOS
+  only swaps between icons shipped in the app and shows an alert at every change.
+
+### Not on the list above yet (found checking the roadmap, 2026-11-12)
+The loop will be built bit by bit (the user, 2026-11-12: it stays on paper for now). These are the things
+"Next, in order" did not name:
+- **The spirits' art is the long pole**: 130 designs in the October style, each with its faces and its fit to the
+  rig. One realm (Fire) is laid out; four are not started.
+- **Real saving in the normal game**: the testing switches are still on (`PetState.FRESH_START_ON_LAUNCH`,
+  `Shop.RESET_ON_LAUNCH`); only the dev launcher's BOOT + PROGRESSION keeps a save. A release needs them off and a
+  save that survives updates.
+- **The paid Apple developer account**: today's installs are a free account's (7 days each). TestFlight needs it.
+- **Logging for the phone test**: tries and stars per level, with and without a power, or the model's
+  assumptions can't be replaced.
+- **The business model**: paid, or free with one purchase that unlocks everything. It decides what is playable
+  before paying, so it touches the loop.
+- **Notifications**: the hungry spirit's needs a native piece and the permission moment.
+- **Teaching the new rules**: the power, the 3rd star's drink, the snack. Nothing of loop v2 has its tutorial.
+- **The name everywhere**: the app is still "Poop Pal" in Xcode and its bundle id (`com.xavigrau.pooppal`); the
+  box says "120+ pals".
+- **The app's size**: the game's data is about 165 MB; the old 8-bit classical MP3s and unused games are in it.
+- **Legal before going public** ("Before release" below): the KamiTomo trademark search, a licence check of every
+  sound, song and font (Suno's terms for the songs included), a privacy policy, the age rating.
 
 ### Which file holds what
 | File | What it is |
