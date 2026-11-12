@@ -31,7 +31,7 @@ import soundfile as sf
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 SR, HOP, NF = 22050, 128, 1024
 FPS = SR / HOP
-BACKING_UNDER = 3.0        # dB: how far under the lead the band sits in the game
+BACKING_UNDER = 4.0        # dB: how far under the lead the band sits in the game, as a phone speaker hears it
 NAMES = 'C C# D D# E F F# G G# A A# B'.split()
 
 
@@ -149,9 +149,61 @@ def lanes_of(midi):
     return lane
 
 
+def phone_loud(x, sr=44100):
+    """loudness as a phone speaker plays it: almost nothing under ~250 Hz"""
+    from scipy import signal
+    y = signal.sosfilt(signal.butter(4, 300, 'hp', fs=sr, output='sos'), x.mean(1) if x.ndim > 1 else x)
+    return float(np.sqrt((y ** 2).mean()) + 1e-9)
+
+
+def balance(lead, back, mix, beats, sr=44100):
+    """The band must carry the song alone when the lead is silent, on a phone (the user, 2026-11-12: "barely
+    hearable", then: "equalized to sound only where it should"). Suno's backing stem is bass and kick: 99% of it under
+    250 Hz, which a phone speaker hardly plays, and the split loses the drums' snap. So the band is rebuilt:
+      1. the backing's bass driven into gentle harmonics (200-800 Hz) so it is heard on a phone;
+      2. the drums' snap from the full song above 1.8 kHz, taken only around the beats (between them the full song
+         carries some xylophone, which must stay silent on a miss);
+      3. the band dipped where the xylophone lives (its own register from the chart), so each has its own space;
+      4. the band set BACKING_UNDER dB under the lead as a phone hears it; the peaks softly limited."""
+    from scipy import signal
+    sos = lambda *a, **k: signal.butter(*a, fs=sr, output='sos', **k)
+    lows, highs = np.zeros_like(back), np.zeros_like(back)
+    gate = np.zeros(len(back))                                             # 1 around each beat, 0 between
+    for b in beats:
+        a, e = int((b - 0.015) * sr), int((b + 0.09) * sr)
+        if 0 <= a and e < len(gate):
+            gate[a:e] = np.maximum(gate[a:e], np.hanning(e - a))
+    for c in range(back.shape[1]):
+        x = signal.sosfilt(sos(2, 35, 'hp'), back[:, c])
+        low = signal.sosfilt(sos(4, 220, 'lp'), x)
+        drive = 4.0 / (np.abs(low).max() + 1e-9)
+        harm = signal.sosfilt(sos(4, [260, 1000], 'bp'), np.tanh(low * drive) / drive - low)
+        snap = signal.sosfilt(sos(4, [1800, 9000], 'bp'), mix[:, c]) * gate * 2.0       # (the drums' snap: the loudest audible part)
+        low = x - signal.sosfilt(sos(4, 300, 'hp'), x)                    # (everything a phone can't play)
+        rest = signal.sosfilt(sos(4, 300, 'hp'), x) + snap
+        rest -= 0.5 * signal.sosfilt(sos(2, [600, 1500], 'bp'), rest)      # the dip: the xylophone's space
+        hi = rest + 2.5 * harm
+        lows[:, c], highs[:, c] = low, hi
+    # only the part a phone can play is raised; the sub-bass stays as Suno made it (headphones still get it). The
+    # band is soft-limited (its kick peaks bend) so the whole thing can stay loud; the gain is found again after it.
+    lead = lead * (0.8 / float(np.abs(lead).max()))
+    limit = lambda y: np.where(np.abs(y) > 0.5, np.sign(y) * (0.5 + 0.3 * np.tanh((np.abs(y) - 0.5) / 0.3)), y)
+    want = phone_loud(lead) * 10 ** (-BACKING_UNDER / 20)
+    g, lg = want / phone_loud(highs), 1.0
+    for _ in range(6):
+        out = limit(lg * lows + g * highs)
+        g *= want / phone_loud(out)
+        lg = min(1.0, 0.6 / (float(np.abs(lows).max()) + 1e-9))
+    out = limit(lg * lows + g * highs)
+    print(f'  (band gain {g:.1f}, lows {lg:.2f}, peak {float(np.abs(out).max()):.2f})')
+    rep = (f'rebuilt (bass harmonics, the beat-gated drum snap, a dip for the lead), {20 * np.log10(phone_loud(lead) / phone_loud(out)):.1f} dB '
+           f'under the lead on a phone speaker (was {20 * np.log10(phone_loud(lead) / phone_loud(back)):.0f} dB)')
+    return lead, out, rep
+
+
 def write_ogg(path, x, sr):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with sf.SoundFile(path, 'w', samplerate=sr, channels=x.shape[1], format='OGG', subtype='VORBIS', compression_level=0.5) as f:
+    with sf.SoundFile(path, 'w', samplerate=sr, channels=x.shape[1], format='OGG', subtype='VORBIS', compression_level=0.1) as f:
         for a in range(0, len(x), 4096):                                   # (one big write crashed libsndfile: loop_track.py)
             f.write(x[a:a + 4096])
 
@@ -193,18 +245,12 @@ def main():
     out = {'id': sid, 'title': title, 'bpm': round(bpm, 2), 'offset': beats[0], 'length': round(length, 2), 'beats': beats, 'charts': charts}
     with open(os.path.join(ROOT, 'data', 'charts', f'tunes_{sid}.json'), 'w') as f:
         json.dump(out, f)
-    # the band has to stand on its own when the lead is silent (the user, 2026-11-12: "barely hearable"): Suno mixes
-    # it far under the lead (1A: 10 dB), so it is raised to BACKING_UNDER dB below the lead, short of clipping
-    st = {name: decode(src, 44100, 2)[:int(length * 44100)] for name, src in (('lead', f_lead), ('backing', f_back))}
-    rms = lambda x: float(np.sqrt((x ** 2).mean()))
-    gain = min(rms(st['lead']) * 10 ** (-BACKING_UNDER / 20) / rms(st['backing']), 0.97 / float(np.abs(st['backing']).max()))
-    st['backing'] = st['backing'] * max(1.0, gain)
-    short = rms(st['lead']) * 10 ** (-BACKING_UNDER / 20) / rms(st['backing'])       # (clipping stopped the raise: the lead comes down the rest)
-    if short > 1.0:
-        st['lead'] = st['lead'] / short
-    for name, x in st.items():
-        write_ogg(os.path.join(ROOT, 'sounds', 'tunes', sid, name + '.ogg'), x, 44100)
-    print(f'  the backing raised {20 * np.log10(max(1.0, gain)):.1f} dB: now {20 * np.log10(rms(st["lead"]) / rms(st["backing"])):.1f} dB under the lead')
+    st = {name: decode(src, 44100, 2)[:int(length * 44100)] for name, src in (('lead', f_lead), ('backing', f_back), ('mix', f_mix))}
+    n = min(len(v) for v in st.values())
+    st = {k: v[:n] for k, v in st.items()}
+    lead2, band, report = balance(st['lead'], st['backing'], st['mix'], beats)
+    write_ogg(os.path.join(ROOT, 'sounds', 'tunes', sid, 'lead.ogg'), lead2, 44100)
+    write_ogg(os.path.join(ROOT, 'sounds', 'tunes', sid, 'backing.ogg'), band, 44100)
     for name in charts:
         click_file(os.path.join(folder, f'check_{name}.wav'), mix, charts[name])
 
@@ -216,6 +262,7 @@ def main():
     print(f'  the beats are where the kick is: {kick_ratio:.1f}x stronger there' + ('' if kick_ratio > 1.3 else '  (WEAK: check the easy chart by ear)'))
     print('  pitches: ' + ' '.join(f'{NAMES[m % 12]}{m // 12 - 1}x{c}>{"LMR"[lane[m]]}' for m, c in sorted(collections.Counter(n[1] for n in notes).items())))
     print(f'  longest silence {gaps.max():.1f} s ({gaps.max() / (4 * beat_len):.1f} bars); holds: {sum(1 for r in rows if r[2] > 0)}')
+    print('  the band: ' + report)
     for name, c in charts.items():
         ls = collections.Counter(n[1] for n in c)
         print(f'  {name:6} {len(c):3d} notes, {len(c) / length:.1f} a second, lanes L/M/R {ls[0]}/{ls[1]}/{ls[2]}')

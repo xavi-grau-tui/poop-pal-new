@@ -1,6 +1,7 @@
 # Tomo Tunes: the plan (12 November 2026)
 
-PROPOSED. The music game (the code's `tummy_tunes.gd`), the sixth game, Caffeinated's FOCUS. This
+THE APPROACH IS DECIDED (the user, 2026-11-12, after the pilot on the phone: "pretty cool", "the approach
+works very well"); the game around it is still to build. The music game (the code's `tummy_tunes.gd`), the sixth game, Caffeinated's FOCUS. This
 is how it plays, the six worlds, the songs, how a Suno song becomes a level, and the build order.
 The prompts are in `docs/tomo_tunes_prompts.md` (made by `tools/audio/suno_prompts.py`).
 
@@ -20,9 +21,10 @@ game make sense, and everything below serves it:
    adds the ones between, hard is everything. What you don't play, the instrument plays for you
    while you're hitting.
 
-## 1. What exists today
+## 1. Where it stands
 
-A working prototype with one song: three lanes under the device's three buttons, notes falling to
+Since 12 November: the pilot song 1A plays in the game the new way (section 6b). Before that, a
+prototype with one song: three lanes under the device's three buttons, notes falling to
 a line, PERFECT within 60 ms and GOOD within 130, a groove meter that fails the song when empty,
 a combo, and sync to the song's real playback position. Its chart comes from
 `tools/design/rhythm_chart.py`, which finds where sounds start in three bands of the WHOLE mix
@@ -40,14 +42,31 @@ exactly the pair this game needs.
 | 1 | you | Generate the song from its prompt (Instrumental on). Keep the take that passes the ear check below. |
 | 2 | you | Get Stems, Split from Mix, ask for the world's instrument. Download the stem, the "everything else" file and the full song. |
 | 3 | you | Drop the three files in `sounds/tunes/incoming/<world><letter>/` (e.g. `1A/`). |
-| 4 | me | `tools/audio/tune_chart.py` (to write, on `rhythm_chart.py` and `loop_track.py`): measures the tempo and the bar lines from the backing, finds every note of the lead stem (its start, its pitch, its length), snaps them to the grid, cuts the best 60-75 s on bar lines, and writes `lead.ogg`, `backing.ogg` and the chart (easy / normal / hard). |
+| 4 | me | `.venv/bin/python tools/audio/tune_chart.py 1A "Wooden Steps"`: finds every note of the lead stem (its start, its pitch, its length), follows the beat grid note by note, sorts the notes into easy / normal / hard, rebuilds the band so a phone can hear it (section 2b), and writes `sounds/tunes/<id>/lead.ogg`, `backing.ogg` and `data/charts/tunes_<id>.json`. (Cutting to 60-75 s on bar lines: to add when a take runs longer.) |
 | 5 | me | The tool also renders a check file: the song with a click on every charted note. If the clicks sit on the tune, the level is right before it is ever played. |
 | 6 | game | Plays the two files as one synchronized stream (Godot's `AudioStreamSynchronized`, in 4.3+; we're on 4.4) and turns the lead's volume down on a miss. |
 
-**Assumed: a Pro plan** (Split from Mix). With Premier there is a cleaner route to try if the
+**The plan is Pro** (the user, 2026-11-12), so Split from Mix is the route. With Premier there is a cleaner route to try if the
 splits bleed: generate the backing alone, then add the lead as its own stem in Studio, in the
 song's tempo and key. Without usable stems the fallback is one file: the chart is still read from
 the lead's register, and a miss ducks the whole song and plays a dull clack.
+
+### 2b. The band has to be heard on a phone
+
+Found on the phone with 1A (the user, twice: "barely hearable"). Suno's "everything else" file was
+99% under 250 Hz, bass and kick, which a phone speaker hardly plays; and the song itself had its
+drums 26 dB under the xylophone, because the prompt asked for "soft drums, minimal". Raising the
+level did not help. Two fixes:
+
+- **The prompt** now asks for a band that is present: a punchy kick, a crisp snare on 2 and 4, a
+  bright shaker on every eighth (all things a phone speaker plays). To check on the next song: the
+  lead must still be the only melody.
+- **The tool rebuilds the band** (`balance()` in `tune_chart.py`): the bass driven into gentle
+  harmonics a phone can play; the drums' snap taken from the full song above 1.8 kHz, only around
+  the beats (between the beats the full song carries some xylophone, which must stay silent on a
+  miss); a dip in the band where the xylophone lives, so each has its own space; only the audible
+  part raised, to 4 dB under the lead as a phone speaker hears it; the peaks softly limited. 1A's
+  band went from 31 dB under the lead on a phone to 4. The constant to turn: `BACKING_UNDER`.
 
 **The ear check for a take** (30 seconds, before spending a split):
 - The beat is steady from the first second to the last. Tap along: you never have to adjust.
@@ -150,10 +169,39 @@ parallel with the other games' pass.
 - **Suno's timing wanders**: steady inside a phrase (6 ms), but tens of ms between phrases, so one fixed grid does
   not fit. `tools/audio/tune_chart.py` follows the grid note by note and a note's time in the chart is its real time
   in the audio. Charts: easy 97 notes (1.4 a second), normal 174 (2.5), hard 186.
-- In the game (`tummy_tunes.gd`, TUNE = "1A", the normal chart): the pair plays as one `AudioStreamSynchronized`, a
-  miss turns the lead down until the next hit. Checked by a 5 s run on the Mac, NOT yet by ear or on the phone.
+- In the game (`tummy_tunes.gd`, TUNE = "1A", the normal chart): the pair plays as one `AudioStreamSynchronized`;
+  the lead goes silent when a note is due and not hit, and comes back on a hit. Played on the phone by the user:
+  "pretty cool", the approach works; the band was too quiet (fixed, section 2b) and the first missed note still
+  sounded (fixed).
 - Still to build: levels and stars, holds and chords, the lanes' look, FOCUS. No holds were found in 1A (a
   xylophone's notes are short), as expected.
+
+## 6c. Decided so far
+
+| Date | Decision |
+|---|---|
+| 2026-11-12 | The approach: the player plays the lead of a Suno song split in two; lanes by pitch; a miss silences the lead while the band plays on |
+| 2026-11-12 | Suno Pro: Split from Mix is the route (one instrument + everything else) |
+| 2026-11-12 | World 3 is the Toy Ocarina (the user didn't love the trumpet); the drums are world 6 as the Festival Taiko |
+| 2026-11-12 | The prompt shape: short tags, the instrument first, a band of three, "no new instruments", the other leads in the Exclude (a long prose prompt let a synth take the tune; a full band passed the lead around) |
+| 2026-11-12 | The band must be heard on a phone: asked for in the prompt and rebuilt by the tool (section 2b) |
+| 2026-11-12 | The lead goes silent the moment a note is due and not hit, not after the miss is judged (the user: "the first note is still heard even if not pressing"); a hit, even late, brings it back |
+
+## 6d. How each new song is made (the workflow)
+
+1. **You:** take the song's prompt from `docs/tomo_tunes_prompts.md`. Suno, Advanced, v6,
+   Instrumental on; Styles and Exclude pasted; the title. 2-4 takes.
+2. **You:** keep the take where the lead plays the tune from start to end, the beat never wavers
+   and the drums are clearly there. 60-75 s is enough.
+3. **You:** on it, "...", Get Stems, Split from Mix, ask for the world's instrument (named in the
+   prompts file). Download the three MP3s as Suno names them.
+4. **You:** put them in `sounds/tunes/incoming/<id>/` (e.g. `1B/`) and tell me.
+5. **Me:** run `tune_chart.py <id> "<title>"`. It refuses nothing yet, it reports: the tempo, the
+   share of notes on the grid, the lanes, the band's level. I listen to the click file
+   (`check_normal.wav`: a click on every charted note) and fix what's off.
+6. **Me:** put it in the game and install it on the phone. **You:** play it and say what's off.
+7. When a song needs a prompt change, it goes into `tools/audio/suno_prompts.py` (never into the
+   generated prompts file), with a comment saying why, so the next songs get it.
 
 ## 7. Open points
 

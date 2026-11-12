@@ -380,3 +380,11 @@ when the first one is won.
   `docs/tomo_tunes_prompts.md`: the 24 Suno prompts, from `tools/audio/suno_prompts.py`. The pilot
   song (1A) comes first.
 
+### Tomo Tunes after the pilot (12 November 2026, evening)
+
+The approach is decided (the user, after playing 1A on the phone: "the approach works very well"):
+the player plays the lead of a Suno song split in two, lanes by pitch, a miss silences the lead
+while the band plays on. Suno Pro; world 3 is the Toy Ocarina, not the trumpet. Everything decided,
+the band fix for phone speakers and the per-song workflow are in `docs/tomo_tunes.md` (sections
+2b, 6b-6d).
+

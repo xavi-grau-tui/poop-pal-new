@@ -16,9 +16,13 @@ LIMIT = 1000          # the Style field (v4.5 and later; the pilot song confirms
 # 2026-11-12, after three tries on 1A: a long prose prompt opening with "chiptune" gave the tune to a synth, and a
 # full band let Suno pass the lead around. What worked (the user: "now it's pure xylophone lead"): SHORT, tags, the
 # instrument first, a band of three, "no new instruments", and every other lead in the Exclude.
-STYLE = ("solo {lead}, {short} trio, only three instruments: {short}, soft bass, soft drums. dry, close, no reverb. "
-         "simple cute melody {part} {key}, {mood}. minimal, sparse, same instruments from start to end, no new "
-         "instruments, no build, no arrangement changes. steady kick on every beat, {bpm} BPM, 4/4, straight timing, loopable")
+STYLE = ("solo {lead}, {short} trio, only three instruments: {short}, warm round bass, crisp drums. dry, close, no "
+         "reverb. simple cute melody {part} {key}, {mood}. the drums are clear and present: punchy kick on every beat, "
+         "crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new "
+         "instruments, no build, no arrangement changes. {bpm} BPM, 4/4, straight timing, loopable")
+# (2026-11-12, after 1A on the phone: "soft bass, soft drums, minimal, sparse" made a band 26 dB under the lead, so the
+# band vanished on a phone speaker when the lead went silent. The drums are now asked for clear and present, with a
+# snare and a shaker that a phone speaker plays. Check this on 1B: the lead must still be the only melody.)
 STYLE_TAIKO = ("solo taiko drums, only three instruments: taiko, soft bass, quiet bamboo flute. dry, close, no reverb: a "
                "deep low drum, sharp rim clicks, a small high drum. {part} {key}, {mood}. the taiko is the only "
                "percussion. minimal, sparse, same instruments from start to end, no new instruments, no build, no "

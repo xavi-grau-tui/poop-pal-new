@@ -21,6 +21,10 @@ const SONG_LEAD := "res://sounds/tunes/%s/lead.ogg"
 const SONG_BACKING := "res://sounds/tunes/%s/backing.ogg"
 const CHART := "res://data/charts/tunes_%s.json"
 const LEAD_MUTED_DB := -60.0
+## The lead goes silent the moment a note is due and hasn't been hit (the user, 2026-11-12: after a stop, the next note
+## still sounded, because a miss is only judged MISS_AFTER later). A hit, even a late one, brings it back.
+const LEAD_ARM := 0.02                 # s before a note's time
+var lead_on := true
 const DIFFICULTY := "normal"
 const LEAD_IN := 2.0                  # silence before the song starts (count-in)
 const FALL_TIME := 1.5                # seconds a note takes from the top to the line
@@ -106,8 +110,8 @@ func _ready() -> void:
 
 func start_game() -> void:
 	super.start_game()
-	if sync:
-		sync.set_sync_stream_volume(1, 0.0)
+	lead_on = false
+	_set_lead(true)
 	_show_banner("Get ready!", 1.4)
 
 # ================================================================== CLOCK / NOTES
@@ -138,6 +142,8 @@ func _process(delta: float) -> void:
 	# move, and miss the ones that went past the line
 	for i in range(live.size() - 1, -1, -1):
 		var n: Dictionary = live[i]
+		if lead_on and t >= n["t"] - LEAD_ARM:          # due and not hit: silent before its sound starts
+			_set_lead(false)
 		var k: float = 1.0 - (n["t"] - t) / FALL_TIME
 		n["node"].position.y = lerpf(TOP_Y, LINE_Y, k)
 		if t - n["t"] > MISS_AFTER:
@@ -200,8 +206,7 @@ func _judge(kind: String, lane: int) -> void:
 		combo_label.text = ""
 		return
 	counts[kind] += 1
-	if sync:                                         # a miss: the instrument goes silent until the next hit
-		sync.set_sync_stream_volume(1, LEAD_MUTED_DB if kind == "miss" else 0.0)
+	_set_lead(kind != "miss")                        # a miss: the instrument stays silent until the next hit
 	_add_groove(GROOVE_GAIN[kind])
 	if kind == "miss":
 		combo = 0
@@ -218,6 +223,12 @@ func _judge(kind: String, lane: int) -> void:
 	tw.tween_interval(0.25)
 	tw.tween_property(judge_label, "modulate:a", 0.0, 0.25)
 	combo_label.text = ("x%d  combo %d" % [1 + mini(combo / 10, 3), combo]) if combo >= 5 else ""
+
+func _set_lead(on: bool) -> void:
+	if on == lead_on or not sync:
+		return
+	lead_on = on
+	sync.set_sync_stream_volume(1, 0.0 if on else LEAD_MUTED_DB)
 
 func _add_groove(d: float) -> void:
 	if finished:
