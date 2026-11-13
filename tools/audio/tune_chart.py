@@ -31,8 +31,8 @@ import soundfile as sf
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 SR, HOP, NF = 22050, 128, 1024
 FPS = SR / HOP
-BACKING_UNDER = 8.0        # dB under the lead, as a phone speaker hears it: the target
-MAX_HARMONICS = 10.0       # the most of the bass's 2nd / 3rd harmonics that may be added to reach it
+BACKING_UNDER = 6.0        # dB under the lead, as a phone speaker hears it: the target
+MAX_HARMONICS = 80.0       # the most of the bass's 2nd / 3rd harmonics that may be added to reach it
 NAMES = 'C C# D D# E F F# G G# A A# B'.split()
 
 
@@ -173,11 +173,17 @@ def balance(lead, back, mix, beats, sr=44100):
         low = signal.sosfilt(sos(4, 250, 'lp'), x)
         pk = float(np.abs(low).max()) + 1e-9
         n = low / pk
-        dry[:, c] = x - 0.6 * signal.sosfilt(sos(2, 110, 'lp'), x)         # the sub-bass down 8 dB: a phone can't play it and it eats the headroom
+        dry[:, c] = (x - 0.9 * signal.sosfilt(sos(2, 130, 'lp'), x)) * 0.7     # the sub-bass nearly out (the user twice: too much sub-bass, hard to hear): the harmonics carry the bass
         harm[:, c] = signal.sosfilt(sos(4, [250, 900], 'bp'), (2 * n * n - 1) + 0.5 * (4 * n ** 3 - 3 * n)) * pk
+    # the kick's harmonics are short peaks that eat the headroom (the pair came out quiet): levelled with a slow
+    # gain (30 ms), which bends no waveform, so loud hits come down and the bass line between them comes up
+    k = int(sr * 0.03)
+    env = np.sqrt(signal.sosfiltfilt(sos(2, 30, 'lp'), (harm ** 2).mean(1)).clip(1e-12))
+    ref = float(np.percentile(env, 60))
+    harm = harm * np.clip((ref / (env + 1e-6)) ** 0.7, 0.15, 3.0)[:, None]
     want = phone_loud(lead) * 10 ** (-BACKING_UNDER / 20)
     g = 0.0                                                                # the harmonics' share: as much as the target needs
-    for h in np.arange(0.0, MAX_HARMONICS + 0.01, 0.25):
+    for h in np.arange(0.0, MAX_HARMONICS + 0.01, 1.0):
         g = h
         if phone_loud(dry + h * harm) >= want:
             break

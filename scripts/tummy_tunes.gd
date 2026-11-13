@@ -57,6 +57,12 @@ var sync: AudioStreamSynchronized     # 0 = the backing, 1 = the lead
 var song_length := 0.0
 var song_started := false
 var clock := -LEAD_IN                 # song time (negative during the count-in)
+## The count-in (the user, 2026-11-13): one bar of metronome before the first note, "tic tac tac tac", at the
+## song's own tempo, so the first note can be hit. The song starts on the beat after the fourth click.
+const COUNT_BEATS := 4
+var count_times: Array[float] = []    # (song time, negative) of each click still to play
+var tick: AudioStreamPlayer
+var tack: AudioStreamPlayer
 var finished := false
 var combo := 0
 var best_combo := 0
@@ -93,6 +99,12 @@ func _ready() -> void:
 			bpm = data["bpm"]
 			beat_offset = data["offset"]
 			song_length = data["length"]
+	var beat := 60.0 / bpm
+	for k in range(COUNT_BEATS, 0, -1):
+		count_times.append(beat_offset - k * beat)
+	clock = count_times[0] - 0.6          # (a breath, then the bar of clicks)
+	tick = _click_player(1760.0)
+	tack = _click_player(1175.0)
 	# the pet screen's music stops; this game plays its own song in sync
 	var mc = get_node_or_null("/root/PoopPal/MusicController")
 	if mc:
@@ -129,6 +141,9 @@ func _process(delta: float) -> void:
 		return
 	if not song_started:
 		clock += delta
+		if not count_times.is_empty() and clock >= count_times[0]:
+			(tick if count_times.size() == COUNT_BEATS else tack).play()
+			count_times.pop_front()
 		if clock >= 0.0:
 			song_started = true
 			song.play()
@@ -223,6 +238,24 @@ func _judge(kind: String, lane: int) -> void:
 	tw.tween_interval(0.25)
 	tw.tween_property(judge_label, "modulate:a", 0.0, 0.25)
 	combo_label.text = ("x%d  combo %d" % [1 + mini(combo / 10, 3), combo]) if combo >= 5 else ""
+
+## A short wooden click at a pitch (the metronome's tic and tac), made here: no file
+func _click_player(hz: float) -> AudioStreamPlayer:
+	var rate := 22050
+	var n := int(rate * 0.05)
+	var data := PackedByteArray()
+	data.resize(n * 2)
+	for i in n:
+		var e := exp(-float(i) / (rate * 0.012))
+		data.encode_s16(i * 2, int(clampf(sin(TAU * hz * i / rate) * e, -1.0, 1.0) * 14000.0))
+	var w := AudioStreamWAV.new()
+	w.format = AudioStreamWAV.FORMAT_16_BITS
+	w.mix_rate = rate
+	w.data = data
+	var pl := AudioStreamPlayer.new()
+	pl.stream = w
+	add_child(pl)
+	return pl
 
 func _set_lead(on: bool) -> void:
 	if on == lead_on or not sync:
