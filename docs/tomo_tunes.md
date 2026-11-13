@@ -188,6 +188,13 @@ parallel with the other games' pass.
 | 2026-11-12 | The band must be heard on a phone: asked for in the prompt and rebuilt by the tool (section 2b) |
 | 2026-11-12 | The lead goes silent the moment a note is due and not hit, not after the miss is judged (the user: "the first note is still heard even if not pressing"); a hit, even late, brings it back |
 
+Added 2026-11-13 (the user, after more play: "how the notes of the lead coincide with the required taps is great"):
+
+| Date | Decision |
+|---|---|
+| 2026-11-13 | A bar of metronome before the first note: tic tac tac tac at the song's own tempo (made in code, `COUNT_BEATS`), so the first note can be hit |
+| 2026-11-13 | The band must not live in the sub-bass. 1A's stem is only bass and kick, so the tool takes the sub-bass nearly out and lets the bass's harmonics carry it, levelled with a slow gain. That is a repair: songs from the new prompt (present drums) should not need it |
+
 ## 6d. How each new song is made (the workflow)
 
 1. **You:** take the song's prompt from `docs/tomo_tunes_prompts.md`. Suno, Advanced, v6,
