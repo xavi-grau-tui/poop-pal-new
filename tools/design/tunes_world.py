@@ -134,7 +134,7 @@ def main():
     # the lanes on the wall: light falling down it, soft at the sides, gone at the top (alpha in 8 steps: pixel art)
     LANE_W = int((edges[top][1] - edges[top][0]) / 3.0) - 6             # the wall's lanes carry on from the tray's
     for k, (name, col) in enumerate(LANES.items()):
-        cx = centre(top, k)
+        cx = centre(bar_row, k)                                         # straight above its bar (the user: the notes fall straight to the keys)
         h = LANE_BOTTOM - LANE_TOP
         y = np.linspace(0, 1, h)[:, None]
         x = np.abs(np.linspace(-1, 1, LANE_W))[None, :]
@@ -149,8 +149,7 @@ def main():
     a = np.round(np.clip(1.0 - d / (g / 2), 0, 1) ** 1.6 * 0.55 * 10) / 10
     im = np.zeros((g, g, 4), np.uint8); im[..., :3] = (255, 246, 214); im[..., 3] = (a * 255).astype(np.uint8)
     Image.fromarray(im, 'RGBA').save(os.path.join(OUT, 'glow.png'))
-    # a note's path: straight down the wall's lane, then along the tray's lane (it narrows away from us) onto its bar
-    layout['lanes_x_top'] = [round(centre(top, k), 2) for k in range(3)]
+    # a note falls straight down onto its bar (following the tray's slanted lane was tried and refused by the user)
     layout['lanes_x'] = [round(centre(bar_row, k), 2) for k in range(3)]
     layout['tray_top'] = top
     layout['bar_y'] = bar_y

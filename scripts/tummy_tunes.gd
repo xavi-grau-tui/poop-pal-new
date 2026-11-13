@@ -54,8 +54,6 @@ const GROOVE_STRAY := -0.04           # pressing when there's no note at all
 const ART := "res://textures/minigames/tunes/xylophone/"
 const PX := 3.0
 var LANE_X := [264.0, 480.0, 693.0]      # on the bars (read from layout.json)
-var LANE_X_TOP := [300.0, 480.0, 660.0]  # down the wall, to the tray's far edge at TRAY_Y
-var TRAY_Y := 600.0
 const LINE_Y := 817.0
 const TOP_Y := 96.0
 const LANE_NAMES := ["low", "mid", "high"]
@@ -117,8 +115,6 @@ func _ready() -> void:
 	layout = JSON.parse_string(lf.get_as_text())
 	for i in 3:
 		LANE_X[i] = layout["lanes_x"][i] * PX
-		LANE_X_TOP[i] = layout["lanes_x_top"][i] * PX
-	TRAY_Y = layout["tray_top"] * PX
 	for c in LANE_NAMES:
 		note_tex.append(load(ART + "note_%s.png" % c))
 	glow_tex = load(ART + "glow.png")
@@ -228,8 +224,7 @@ func _process(delta: float) -> void:
 		if lead_on and t >= n["t"] - LEAD_ARM:          # due and not hit: silent before its sound starts
 			_set_lead(false)
 		var k: float = 1.0 - (n["t"] - t) / FALL_TIME
-		var y := lerpf(TOP_Y, LINE_Y, k)               # down the wall's lane, then along the tray's lane onto the bar
-		n["node"].position = Vector2(lerpf(LANE_X_TOP[n["lane"]], LANE_X[n["lane"]], clampf((y - TRAY_Y) / (LINE_Y - TRAY_Y), 0.0, 1.5)), y)
+		n["node"].position.y = lerpf(TOP_Y, LINE_Y, k)   # straight down onto its bar (the user)
 		if t - n["t"] > MISS_AFTER:
 			_judge("miss", n["lane"])
 			n["node"].queue_free()
@@ -239,7 +234,7 @@ func _process(delta: float) -> void:
 
 func _spawn(time: float, lane: int) -> void:
 	var s := Node2D.new()                           # a wooden bead on a soft glow: the brightest thing on screen
-	s.position = Vector2(LANE_X_TOP[lane], TOP_Y)
+	s.position = Vector2(LANE_X[lane], TOP_Y)
 	for tex in [glow_tex, note_tex[lane]]:
 		var sp := Sprite2D.new()
 		sp.texture = tex

@@ -96,8 +96,9 @@ The full reasons are in `docs/tomo_tunes.md` (sections 2, 6c, 6d).
 What the tool guarantees (don't undo these):
 - easy = notes on the beats, normal = plus the eighths, hard = plus only the quick notes three
   buttons can play (`playable()`).
-- A long take is cut where a phrase ends near the slot's length (A 60 s, B 65, C 70, D 80) and
-  the band rings out one more bar.
+- A take is played WHOLE, with its own ending (the user: "we should play the full song"). Only a
+  take more than 35 s over its slot's length (A 60 s, B 65, C 70, D 80) is cut, where a phrase
+  ends, the band ringing out one more bar. So ask Suno for takes near the slot's length.
 - The band is rebuilt for a phone speaker gently: sub-bass nearly out, the bass's harmonics
   added and levelled. No limiter, no boosted top band (that hissed and clipped).
 
@@ -119,13 +120,13 @@ World 1 (the toy xylophone) is the model. Its brief is `docs/tomo_tunes_art_brie
    the wall and on the bars, the tray's top). The tool, not the designer's art, is responsible for:
    - the three bars at ONE size (`BAR_W`), each centred on its lane (the user's rule);
    - the tray repainted with three equal lanes (`even_tray()`);
-   - the soft lanes on the wall, which carry on from the tray's lanes;
+   - the soft lanes on the wall, straight above the bars;
    - the notes' outline and the glow.
    For a new world, copy the tool's world-1 settings into a table per world rather than a new script.
 3. `scripts/tummy_tunes.gd` reads `layout.json`: `_layer()` places a layer, `_toys()` moves the
    toys on the beat, `_flash()` dips a bar on a press, `_strike()` lights it on a hit,
-   `_set_lead()` dims the room while the instrument is silent. A note falls down the wall's lane,
-   then follows the tray's lane onto its bar.
+   `_set_lead()` dims the room while the instrument is silent. A note falls STRAIGHT down
+   onto its bar (a path that followed the tray's slanted lane was refused by the user).
 4. Run `--import`, take the four screens (section 3), look at them, show the user, then install.
 
 Ask the next worlds' designer for **three bars of the same size and three lanes of the same
@@ -141,5 +142,6 @@ width**: world 1 needed the tool to even them out.
 | The lead still sounded on a missed note | the lead is muted the moment a note is due and unhit, and comes back on a hit |
 | Suno's tempo wanders and a pickup note shifts the grid | `tune_chart.py` follows the grid note by note and picks the best-fitting start (`best_grid()`) |
 | Publishing the decisions page made a second page | always publish with `url` = the original (see the roadmap's file table) |
+| The shrine's weather (rain, its sound) showed over a game | the shrine checks `GameScreen.is_active`; anything living on the pet screen must go quiet inside a game |
 | The phone shows "unavailable" or is locked | retry the install; a failed launch only needs the user to open the app |
 | The editor open during command-line Godot runs can corrupt its UID cache | if the editor floods "Unrecognized UID", restart it; the user accepts installs with the editor open |

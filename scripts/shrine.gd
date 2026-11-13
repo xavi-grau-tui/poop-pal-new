@@ -1118,6 +1118,16 @@ func _rain_step(delta: float) -> void:
 		return
 	_weather_step(delta)
 	var want := rain_now if rain_now > 0 else rain_level
+	# no rain inside a game, neither seen nor heard (the user, 2026-11-13, in Tomo Tunes: "rain sound and effect
+	# shouldn't be there"): it stops at once and comes back, fading in, when the game closes
+	var in_game := GameScreen.is_active
+	_rain_node.visible = not in_game
+	_rain_back.visible = not in_game
+	if in_game:
+		want = 0
+		_rain_k = 0.0
+		_drops.clear()
+		_splash.clear()
 	_rain_k = move_toward(_rain_k, 1.0 if want > 0 else 0.0, delta / 2.0)
 	if _rain_sound:
 		var db := lerpf(-60.0, -26.0 if want >= 2 else -32.0, sqrt(_rain_k))   # (soft, in the background: the user)

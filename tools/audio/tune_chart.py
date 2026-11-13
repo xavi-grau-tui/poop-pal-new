@@ -35,6 +35,7 @@ BACKING_UNDER = 6.0        # dB under the lead, as a phone speaker hears it: the
 MAX_HARMONICS = 80.0       # the most of the bass's 2nd / 3rd harmonics that may be added to reach it
 # a level's longest, by the song's slot in its world: the first songs short, the showpiece the longest (the user,
 # 2026-11-13). TUNE_MAX_LEN=<s> overrides it for one run.
+FULL_UP_TO = 35.0                     # s over the slot's length that a take may run and still be played whole
 LEN_BY_SLOT = {'A': 60.0, 'B': 65.0, 'C': 70.0, 'D': 80.0}
 NAMES = 'C C# D D# E F F# G G# A A# B'.split()
 
@@ -307,6 +308,9 @@ def main():
               'normal': [list(r[:3]) for r in rows if r[3] <= 1],
               'hard': [list(r[:3]) for r in playable(rows, p)]}
     beats = [round(float(t), 3) for t in grid[parity::2] if t < length]
+    # nothing to play in the take's last 0.6 s: an onset found there is the fade-out's noise, not a note
+    charts = {k: [n for n in v if n[0] < length - 0.6] for k, v in charts.items()}
+    rows = [r for r in rows if r[0] < length - 0.6]
     # a long take (Suno's are often over 2 minutes; a level is 60-80 s) ends where a PHRASE ends (the user, 2026-11-13:
     # "the song finishes before it ends": it was cut on the last bar line before MAX_LEN, mid-phrase, with a 0.35 s
     # fade). Now: the bar line near MAX_LEN where the tune lands on the downbeat and then rests, 4-bar phrases first;
@@ -314,7 +318,9 @@ def main():
     MAX_LEN = float(os.environ.get('TUNE_MAX_LEN', LEN_BY_SLOT.get(sid[-1:].upper(), 70.0)))
     tail = 0.0
     bars = beats[::4]
-    if length > MAX_LEN + 6 and len(bars) > 8:
+    # (the user, 2026-11-13, on 1B, 85 s cut to 66: "song 2 doesn't get to the end, we should play the full song":
+    # a take is played WHOLE, with its own ending, unless it runs more than FULL_UP_TO over its slot's length)
+    if length > MAX_LEN + FULL_UP_TO and len(bars) > 8:
         def ending(i):
             b = bars[i]
             lands = bool(np.any(np.abs(times - b) < 0.15))
