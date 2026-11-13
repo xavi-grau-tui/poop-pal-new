@@ -16,7 +16,15 @@ extends BaseMinigame
 ## toy instrument you play) and the backing play as ONE synchronized stream; a miss silences the lead until the next
 ## hit, the band plays on. The chart is the lead's own notes, lanes by pitch (low / middle / high).
 ## (The first prototype's song: "res://sounds/music/Retro Game Console.mp3" + data/charts/retro_game_console.json.)
-const TUNE := "1A"
+## THE TEMPORARY SONG MENU (2026-11-13): the shared level menu lists every song made so far, each three times:
+## easy, normal, hard (levels 1-3 = TUNES[0], 4-6 = TUNES[1] ...). The real worlds' tables come later.
+const TUNES := ["1A", "1B"]
+const CHARTS := ["easy", "normal", "hard"]
+const STAR_2 := 0.85                  # of the notes hit
+const STAR_3 := 0.95
+var tune := "1A"
+var difficulty := "easy"
+var level := 1
 const SONG_LEAD := "res://sounds/tunes/%s/lead.ogg"
 const SONG_BACKING := "res://sounds/tunes/%s/backing.ogg"
 const CHART := "res://data/charts/tunes_%s.json"
@@ -25,7 +33,6 @@ const LEAD_MUTED_DB := -60.0
 ## still sounded, because a miss is only judged MISS_AFTER later). A hit, even a late one, brings it back.
 const LEAD_ARM := 0.02                 # s before a note's time
 var lead_on := true
-const DIFFICULTY := "easy"             # (the pilot: what level 1 will be; "normal" = levels 4-6, "hard" = 7-8)
 const LEAD_IN := 2.0                  # silence before the song starts (count-in)
 const FALL_TIME := 1.5                # seconds a note takes from the top to the line
 
@@ -92,19 +99,6 @@ func _ready() -> void:
 	lcd_font = load("res://fonts/pixChicago.ttf")
 	for c in ["pink", "yellow", "mint"]:
 		note_tex.append(load("res://textures/minigames/splash/ball_%s.png" % c))
-	var f := FileAccess.open(CHART % TUNE, FileAccess.READ)
-	if f:
-		var data = JSON.parse_string(f.get_as_text())
-		if data is Dictionary:
-			notes = data["charts"][DIFFICULTY]
-			bpm = data["bpm"]
-			beat_offset = data["offset"]
-			song_length = data["length"]
-	var beat := 60.0 / bpm
-	var first_note: float = notes[0][0] if not notes.is_empty() else beat_offset
-	for k in range(COUNT_BEATS, 0, -1):
-		count_times.append(first_note - k * beat)
-	clock = count_times[0] - 0.6          # (a breath, then the bar of clicks)
 	tick = _click_player(1760.0)
 	tack = _click_player(1175.0)
 	# the pet screen's music stops; this game plays its own song in sync
@@ -112,15 +106,64 @@ func _ready() -> void:
 	if mc:
 		mc.stop()
 	song = AudioStreamPlayer.new()
-	sync = AudioStreamSynchronized.new()
-	sync.stream_count = 2
-	sync.set_sync_stream(0, load(SONG_BACKING % TUNE))
-	sync.set_sync_stream(1, load(SONG_LEAD % TUNE))
-	song.stream = sync
-	song.finished.connect(_on_song_finished)
 	add_child(song)
 	_create_static_nodes()
 	super._ready()
+
+func uses_levels() -> bool:
+	return true
+
+func level_count() -> int:
+	return TUNES.size() * CHARTS.size()
+
+func world_names() -> Array:
+	return ["Songs (test)"]
+
+func level_backdrop() -> Color:
+	return Color8(150, 110, 150)
+
+## A level = a song on one of its three charts: everything from zero
+func play_level(n: int) -> void:
+	level = clampi(n, 1, level_count())
+	tune = TUNES[(level - 1) / CHARTS.size()]
+	difficulty = CHARTS[(level - 1) % CHARTS.size()]
+	_load_tune()
+	start_game()
+
+func _load_tune() -> void:
+	song.stop()
+	for n in live:
+		n["node"].queue_free()
+	live.clear()
+	notes = []
+	var f := FileAccess.open(CHART % tune, FileAccess.READ)
+	if f:
+		var data = JSON.parse_string(f.get_as_text())
+		if data is Dictionary:
+			notes = data["charts"][difficulty]
+			bpm = data["bpm"]
+			beat_offset = data["offset"]
+			song_length = data["length"]
+	var beat := 60.0 / bpm
+	var first_note: float = notes[0][0] if not notes.is_empty() else beat_offset
+	count_times.clear()
+	for k in range(COUNT_BEATS, 0, -1):
+		count_times.append(first_note - k * beat)
+	clock = count_times[0] - 0.6          # (a breath, then the bar of clicks)
+	next_spawn = 0
+	song_started = false
+	finished = false
+	combo = 0
+	best_combo = 0
+	counts = { "perfect": 0, "good": 0, "miss": 0 }
+	groove = GROOVE_START
+	_draw_groove()
+	combo_label.text = ""
+	sync = AudioStreamSynchronized.new()
+	sync.stream_count = 2
+	sync.set_sync_stream(0, load(SONG_BACKING % tune))
+	sync.set_sync_stream(1, load(SONG_LEAD % tune))
+	song.stream = sync
 
 func start_game() -> void:
 	super.start_game()
@@ -289,13 +332,10 @@ func _fail() -> void:
 	await get_tree().create_timer(0.5).timeout
 	if not is_running:
 		return
-	end_game()
-	if game_over_overlay:
-		var title: Label = game_over_overlay.get_meta("title")
-		title.text = "Lost the groove!"
-		var st: Label = game_over_overlay.get_meta("score_text")
-		st.text = "Score %d   best combo %d" % [score, best_combo]
-		st.add_theme_font_size_override("font_size", 30)
+	finish_level(level, 0)                           # (the result card: RETRY / LEVELS)
+
+func fail_title() -> String:
+	return "Lost the groove!"
 
 func _on_song_finished() -> void:
 	if finished:
@@ -304,15 +344,9 @@ func _on_song_finished() -> void:
 	await get_tree().create_timer(0.6).timeout
 	if not is_running:
 		return
-	var total := maxi(1, counts["perfect"] + counts["good"] + counts["miss"])
-	var acc: float = 100.0 * (counts["perfect"] + 0.5 * counts["good"]) / total
-	end_game()
-	if game_over_overlay:
-		var title: Label = game_over_overlay.get_meta("title")
-		title.text = "Song clear!"
-		var st: Label = game_over_overlay.get_meta("score_text")
-		st.text = "Score %d   %d%%   best combo %d" % [score, int(acc), best_combo]
-		st.add_theme_font_size_override("font_size", 30)
+	song.stop()
+	var hit: float = float(counts["perfect"] + counts["good"]) / maxi(1, notes.size())
+	finish_level(level, 3 if hit >= STAR_3 else (2 if hit >= STAR_2 else 1), 100.0 * hit, false)
 
 func freeze() -> void:
 	super.freeze()

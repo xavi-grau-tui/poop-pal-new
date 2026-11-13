@@ -134,6 +134,51 @@ def follow_grid(times):
     return np.array(place), grid, p
 
 
+def kick_times(back):
+    """where the backing's low drum hits (its beats, when the band has a kick)"""
+    k = flux(back, 30, 200)
+    k /= np.percentile(k, 99) + 1e-9
+    win = int(FPS * 0.3)
+    v = np.lib.stride_tricks.sliding_window_view(np.pad(k, win, mode='edge'), 2 * win + 1)[:len(k)]
+    peak = np.lib.stride_tricks.sliding_window_view(np.pad(k, 6, mode='edge'), 13).max(1) == k
+    idx = np.nonzero(peak & (k > v.mean(1) + 0.8 * v.std(1)) & (k > 0.15))[0]
+    return idx / FPS
+
+
+def place_on(times, grid):
+    """each time's place on a grid of eighths (a float: whole = on it)"""
+    i = np.clip(np.searchsorted(grid, times) - 1, 0, len(grid) - 2)
+    return i + (times - grid[i]) / (grid[i + 1] - grid[i])
+
+
+def best_grid(lead_times, back, length):
+    """The eighth-note grid that the lead's notes fit best, among: the grid followed from the band's kick, and the
+    grid followed from the lead itself starting on each of its first notes (a tune that opens on a pickup put the
+    whole grid half a step off when only its first note was tried: 1B, 2026-11-13)."""
+    def extend(grid, p):
+        g = list(grid[~np.isnan(grid)])
+        while g[0] > 0:
+            g.insert(0, g[0] - p)
+        while g[-1] < length + p:
+            g.append(g[-1] + p)
+        return np.array(g)
+    cands = []
+    kt = kick_times(back)
+    if len(kt) > 16:
+        _, g, p = follow_grid(kt)
+        cands.append(('the kick', extend(g, p)))
+    for k in range(min(8, len(lead_times) - 8)):
+        _, g, p = follow_grid(lead_times[k:])
+        cands.append((f'the lead from its note {k + 1}', extend(g, p)))
+    best = None
+    for name, g in cands:
+        q = place_on(lead_times, g)
+        fit = float((np.abs(q - np.round(q)) < 0.22).mean())
+        if best is None or fit > best[0] + 0.02:
+            best = (fit, name, g)
+    return best
+
+
 def beat_parity(grid, back):
     """which eighths are the beats: where the backing's kick is"""
     kick = flux(back, 30, 200)
@@ -226,7 +271,9 @@ def main():
     length = min(len(lead), len(back)) / SR
     notes = notes_of(lead)
     times = np.array([n[0] for n in notes])
-    place, grid, p = follow_grid(times)
+    fit, grid_from, grid = best_grid(times, back, length)
+    place = place_on(times, grid)
+    p = float(np.median(np.diff(grid)))
     parity, kick_ratio = beat_parity(grid, back)
     bpm = 30.0 / float(np.median(np.diff(grid)))
     lane = lanes_of([n[1] for n in notes])
@@ -270,6 +317,7 @@ def main():
     drift = np.diff(grid)
     print(f'{sid} "{title}": {length:.1f} s, {bpm:.2f} BPM (an eighth {1000 * drift.min():.0f}-{1000 * drift.max():.0f} ms through the song)')
     print(f'  lead: {len(notes)} notes; on a beat {kinds[0]}, between beats {kinds[1]}, finer {kinds[2]} ({100 * (kinds[0] + kinds[1]) / len(notes):.0f}% on the eighth grid)')
+    print(f'  the grid follows {grid_from} ({100 * fit:.0f}% of the notes on it)')
     print(f'  the beats are where the kick is: {kick_ratio:.1f}x stronger there' + ('' if kick_ratio > 1.3 else '  (WEAK: check the easy chart by ear)'))
     print('  pitches: ' + ' '.join(f'{NAMES[m % 12]}{m // 12 - 1}x{c}>{"LMR"[lane[m]]}' for m, c in sorted(collections.Counter(n[1] for n in notes).items())))
     print(f'  longest silence {gaps.max():.1f} s ({gaps.max() / (4 * beat_len):.1f} bars); holds: {sum(1 for r in rows if r[2] > 0)}')
