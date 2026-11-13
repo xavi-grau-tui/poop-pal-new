@@ -74,6 +74,10 @@ var clock := -LEAD_IN                 # song time (negative during the count-in)
 ## song's own tempo, so the first note can be hit. The fourth beat of that bar IS the song's first note (the
 ## user: "to flow better"): three clicks, then the note.
 const COUNT_BEATS := 3
+## Some songs want another count (the user, 2026-11-13, says which, song by song): 1B gets the full
+## "tic tac tac tac" and then its first note.
+const COUNT_BEATS_OF := { "1B": 4 }
+var count_beats := COUNT_BEATS
 var count_times: Array[float] = []    # (song time, negative) of each click still to play
 var tick: AudioStreamPlayer
 var tack: AudioStreamPlayer
@@ -166,7 +170,8 @@ func _load_tune() -> void:
 	var beat := 60.0 / bpm
 	var first_note: float = notes[0][0] if not notes.is_empty() else beat_offset
 	count_times.clear()
-	for k in range(COUNT_BEATS, 0, -1):
+	count_beats = COUNT_BEATS_OF.get(tune, COUNT_BEATS)
+	for k in range(count_beats, 0, -1):
 		count_times.append(first_note - k * beat)
 	clock = count_times[0] - 0.6          # (a breath, then the bar of clicks)
 	next_spawn = 0
@@ -206,7 +211,7 @@ func _process(delta: float) -> void:
 	if not song_started:
 		clock += delta
 		if not count_times.is_empty() and clock >= count_times[0]:
-			(tick if count_times.size() == COUNT_BEATS else tack).play()
+			(tick if count_times.size() == count_beats else tack).play()
 			count_times.pop_front()
 		if clock >= 0.0:
 			song_started = true

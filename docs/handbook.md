@@ -91,7 +91,9 @@ The full reasons are in `docs/tomo_tunes.md` (sections 2, 6c, 6d).
      `incoming/<id>/check_normal.wav` (a click on every charted note).
    - "the beats are where the kick is" under 1.3x: check the easy chart by ear.
    - the band's level: it must end about 6 dB under the lead "as a phone hears it".
-5. Add the id to `TUNES` in `scripts/tummy_tunes.gd`, run `--import`, try it on the Mac, install.
+5. The count-in is 3 clicks and then the first note; the user says, song by song, when a song
+   wants another count: put it in `COUNT_BEATS_OF` in `scripts/tummy_tunes.gd` (1B has 4).
+6. Add the id to `TUNES` in `scripts/tummy_tunes.gd`, run `--import`, try it on the Mac, install.
 
 What the tool guarantees (don't undo these):
 - easy = notes on the beats, normal = plus the eighths, hard = plus only the quick notes three
