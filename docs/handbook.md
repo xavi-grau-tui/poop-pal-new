@@ -135,6 +135,9 @@ Each world also needs its instrument's three wrong notes (a press that is not a 
 instrument to `INSTRUMENTS` in `tools/audio/tune_wrong.py` and run it (the user confirmed it on world 1,
 13 November 2026: the rule for all worlds; played at -11 dB, `WRONG_DB`).
 
+Every world is its OWN PLACE with its OWN PALETTE, in the shared style (the user, on world 2's
+first mock-up: "the aesthetics have to match first world but not be too similar, concepts may
+vary"). Name the place and the palette in the brief, and check the instrument reads as itself.
 Ask the next worlds' designer for **three bars of the same size and three lanes of the same
 width**: world 1 needed the tool to even them out.
 

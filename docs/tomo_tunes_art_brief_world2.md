@@ -72,3 +72,51 @@ HOW IT WILL MOVE
 On every beat the toys bob, rock or wave. A key dips when the player presses it and lights when
 the note is hit. When the player misses, the room dims and the toys nearly stop.
 ```
+
+## Feedback on the first mock-up (2026-11-13)
+
+The user: "pretty nice but maybe too similar to the first one? the aesthetics have to match first
+world but not be too similar, concepts may vary". Our brief had asked for "the same toy-room
+family", which caused it. Also: the instrument read as a bench with cushions, not a piano. The
+message sent back:
+
+```
+TOMO TUNES - WORLD 2, FEEDBACK ON THE MOCK-UP
+
+Thank you: the three equal keys, the straight lanes and the pair of notes falling together are
+exactly right, and the toys (robot, train, cranes, metronome, teddy) are lovely. Keep all of that.
+
+Two things to change, and the first one is our brief's fault:
+
+1. IT IS TOO CLOSE TO WORLD 1. Same wooden room, same plain wall, same window on the left, same
+   orange. Side by side they read as one place at two hours. The worlds must share a STYLE (the
+   soft painted toys, the warm light, the Japanese feel) but each must be its OWN PLACE with its
+   own colours, so the player feels they have travelled. The concept may change freely. For
+   this one:
+   - A different PLACE. For example: a tatami room at dusk with shoji paper screens glowing
+     behind the lanes; or the engawa (the wooden veranda) looking out on a garden at blue hour
+     with fireflies; or an attic under the roof with a round window and the first stars. Your
+     choice, or a better idea of yours.
+   - A different PALETTE. World 1 is cream and orange morning sun. Make this one a cool dusk:
+     blue-violet and soft indigo shadows, with the lantern's warm glow as the accent. The pink,
+     yellow and mint of the keys and notes will stand out even better on it.
+   - A different COMPOSITION. No window on the left wall this time. Let the big shape behind
+     the lanes be something else (the shoji grid, the garden, the roof beams), kept calm and
+     low in contrast where the notes fall.
+
+2. THE INSTRUMENT MUST READ AS A TOY PIANO. Right now it looks like a little sofa with three
+   cushions. Keep the three big coloured keys exactly as they are (size, place, colours), but
+   make the body a toy piano: for example a small upright or baby-grand toy piano seen from the
+   player's side, with a row of small ordinary black and white piano keys painted along its body
+   above or behind the three big keys, a lid, a music stand (empty, no readable notes), little
+   turned legs. One look and it says "piano".
+
+Everything else in the brief stands (the layout, the calm strip at the top, nothing in the
+game's folders). Please send the new mock-up to the same folder as tomo_piano_mockup_v2.png and
+keep the first one.
+```
+
+Rule from this for the next worlds' briefs: say "its own place and its own palette" from the
+start, and name both (suggested: 3 ocarina = outdoors by day, green and sky; 4 music box = a
+winter night, silver and deep blue; 5 star stage = a tiny stage with coloured lights; 6 taiko =
+the festival at night, red lanterns).
