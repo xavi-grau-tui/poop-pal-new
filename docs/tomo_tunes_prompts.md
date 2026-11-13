@@ -16,7 +16,7 @@ Teaches: single notes on the beat; the lanes are low, middle and high. Split fro
 Style:
 
 ```
-solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. simple cute melody in even eighth notes that step up and down like stairs, one note at a time. a major pentatonic key, sunny, gentle and curious, like a first morning at a small shrine. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 92 BPM, 4/4, straight timing, loopable
+solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. very simple nursery-rhyme melody, few notes, lots of repetition, in even eighth notes that step up and down like stairs, one note at a time. a major pentatonic key, sunny, gentle and curious, like a first morning at a small shrine. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 92 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -30,7 +30,7 @@ piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, 
 Style:
 
 ```
-solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. simple cute melody in eighth notes with a short rest at the end of every bar, hopping between two neighbouring notes. a major pentatonic key, playful and bouncy, like children skipping. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 96 BPM, 4/4, straight timing, loopable
+solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. simple cute melody, a little more movement, in eighth notes with a short rest at the end of every bar, hopping between two neighbouring notes. a major pentatonic key, playful and bouncy, like children skipping. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 96 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -44,7 +44,7 @@ piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, 
 Style:
 
 ```
-solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. simple cute melody in steady eighth notes that jump between a low bar and a high bar. a major key, light and quick, like acorns dropping on a wooden roof. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 100 BPM, 4/4, straight timing, loopable
+solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. lively cute melody with more notes and movement, in steady eighth notes that jump between a low bar and a high bar. a major key, light and quick, like acorns dropping on a wooden roof. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 100 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -58,7 +58,7 @@ piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, 
 Style:
 
 ```
-solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. simple cute melody in eighth notes with wide leaps between low and high bars, each phrase ending in a quick run of four sixteenth notes. a major pentatonic key, bright and proud, a small showpiece. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 104 BPM, 4/4, straight timing, loopable
+solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. busy showpiece melody, the liveliest of all, with runs and leaps, in eighth notes with wide leaps between low and high bars, each phrase ending in a quick run of four sixteenth notes. a major pentatonic key, bright and proud, a small showpiece. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 104 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -76,7 +76,7 @@ Teaches: two buttons at once: a chord on the accents. Split from Mix: ask for **
 Style:
 
 ```
-solo toy piano, plinky and bright, piano trio, only three instruments: piano, warm round bass, crisp drums. dry, close, no reverb. simple cute melody in eighth notes, with a strong two-note chord on the first beat of every bar. a major key, cheerful and tidy, like a child's first piano lesson. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 100 BPM, 4/4, straight timing, loopable
+solo toy piano, plinky and bright, piano trio, only three instruments: piano, warm round bass, crisp drums. dry, close, no reverb. very simple nursery-rhyme melody, few notes, lots of repetition, in eighth notes, with a strong two-note chord on the first beat of every bar. a major key, cheerful and tidy, like a child's first piano lesson. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 100 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -90,7 +90,7 @@ xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guit
 Style:
 
 ```
-solo toy piano, plinky and bright, piano trio, only three instruments: piano, warm round bass, crisp drums. dry, close, no reverb. simple cute melody in soft eighth notes, with a strong two-note chord on beats 1 and 3. a minor key, sneaky and funny, like tiptoeing past a sleeping cat. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 104 BPM, 4/4, straight timing, loopable
+solo toy piano, plinky and bright, piano trio, only three instruments: piano, warm round bass, crisp drums. dry, close, no reverb. simple cute melody, a little more movement, in soft eighth notes, with a strong two-note chord on beats 1 and 3. a minor key, sneaky and funny, like tiptoeing past a sleeping cat. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 104 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -104,7 +104,7 @@ xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guit
 Style:
 
 ```
-solo toy piano, plinky and bright, piano trio, only three instruments: piano, warm round bass, crisp drums. dry, close, no reverb. simple cute melody of running single eighth notes answered by two-note chord stabs. a major key, lively and rolling, like marbles down a staircase. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 108 BPM, 4/4, straight timing, loopable
+solo toy piano, plinky and bright, piano trio, only three instruments: piano, warm round bass, crisp drums. dry, close, no reverb. lively cute melody with more notes and movement, of running single eighth notes answered by two-note chord stabs. a major key, lively and rolling, like marbles down a staircase. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 108 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -118,7 +118,7 @@ xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guit
 Style:
 
 ```
-solo toy piano, plinky and bright, piano trio, only three instruments: piano, warm round bass, crisp drums. dry, close, no reverb. simple cute melody that mixes quick single notes with strong two-note chords, ending every phrase on a big chord. a major key, grand in a tiny way, a showpiece for a toy piano. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 110 BPM, 4/4, straight timing, loopable
+solo toy piano, plinky and bright, piano trio, only three instruments: piano, warm round bass, crisp drums. dry, close, no reverb. busy showpiece melody, the liveliest of all, with runs and leaps, that mixes quick single notes with strong two-note chords, ending every phrase on a big chord. a major key, grand in a tiny way, a showpiece for a toy piano. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 110 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -136,7 +136,7 @@ Teaches: long notes: hold the button for as long as the note sounds. Split from 
 Style:
 
 ```
-solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, warm round bass, crisp drums. dry, close, no reverb. simple cute melody of long held notes, each two beats long, with a short breath between them. a major key, calm and warm, like a slow parade far away. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 96 BPM, 4/4, straight timing, loopable
+solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, warm round bass, crisp drums. dry, close, no reverb. very simple nursery-rhyme melody, few notes, lots of repetition, of long held notes, each two beats long, with a short breath between them. a major key, calm and warm, like a slow parade far away. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 96 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -150,7 +150,7 @@ xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guit
 Style:
 
 ```
-solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, warm round bass, crisp drums. dry, close, no reverb. simple cute melody of long held notes of two to four beats joined by short pickup notes. a major key, proud and silly, a parade of paper hats. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 100 BPM, 4/4, straight timing, loopable
+solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, warm round bass, crisp drums. dry, close, no reverb. simple cute melody, a little more movement, of long held notes of two to four beats joined by short pickup notes. a major key, proud and silly, a parade of paper hats. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 100 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -164,7 +164,7 @@ xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guit
 Style:
 
 ```
-solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, warm round bass, crisp drums. dry, close, no reverb. simple cute melody with a long note at the start of every bar followed by three short notes. a major pentatonic key, open and breezy, like calling to a kite. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 104 BPM, 4/4, straight timing, loopable
+solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, warm round bass, crisp drums. dry, close, no reverb. lively cute melody with more notes and movement, with a long note at the start of every bar followed by three short notes. a major pentatonic key, open and breezy, like calling to a kite. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 104 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -178,7 +178,7 @@ xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guit
 Style:
 
 ```
-solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, warm round bass, crisp drums. dry, close, no reverb. simple cute melody of short repeated notes leading into long held notes of a whole bar. a major key, a small proud serenade, a showpiece. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 108 BPM, 4/4, straight timing, loopable
+solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, warm round bass, crisp drums. dry, close, no reverb. busy showpiece melody, the liveliest of all, with runs and leaps, of short repeated notes leading into long held notes of a whole bar. a major key, a small proud serenade, a showpiece. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 108 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -196,7 +196,7 @@ Teaches: off-beats: the notes between the beats. Split from Mix: ask for **music
 Style:
 
 ```
-solo wind-up music box with a metal comb, music box trio, only three instruments: music box, warm round bass, crisp drums. dry, close, no reverb. simple cute melody in eighth notes where every second note of the tune lands on the off-beat, between the kicks. a major key, tender and sleepy, a lullaby. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 88 BPM, 4/4, straight timing, loopable
+solo wind-up music box with a metal comb, music box trio, only three instruments: music box, warm round bass, crisp drums. dry, close, no reverb. very simple nursery-rhyme melody, few notes, lots of repetition, in eighth notes where every second note of the tune lands on the off-beat, between the kicks. a major key, tender and sleepy, a lullaby. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 88 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -210,7 +210,7 @@ xylophone, piano, flute, synth, synth lead, chiptune, 8-bit, strings, pads, guit
 Style:
 
 ```
-solo wind-up music box with a metal comb, music box trio, only three instruments: music box, warm round bass, crisp drums. dry, close, no reverb. simple cute melody of off-beat eighth notes that land between the kicks, with one note on the first beat of every bar. a minor key, delicate and a little mysterious, a ballerina turning. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 92 BPM, 4/4, straight timing, loopable
+solo wind-up music box with a metal comb, music box trio, only three instruments: music box, warm round bass, crisp drums. dry, close, no reverb. simple cute melody, a little more movement, of off-beat eighth notes that land between the kicks, with one note on the first beat of every bar. a minor key, delicate and a little mysterious, a ballerina turning. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 92 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -224,7 +224,7 @@ xylophone, piano, flute, synth, synth lead, chiptune, 8-bit, strings, pads, guit
 Style:
 
 ```
-solo wind-up music box with a metal comb, music box trio, only three instruments: music box, warm round bass, crisp drums. dry, close, no reverb. simple cute melody of syncopated eighth notes, some held over the bar line. a major key, sparkling and cold, like snow in a glass globe. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 96 BPM, 4/4, straight timing, loopable
+solo wind-up music box with a metal comb, music box trio, only three instruments: music box, warm round bass, crisp drums. dry, close, no reverb. lively cute melody with more notes and movement, of syncopated eighth notes, some held over the bar line. a major key, sparkling and cold, like snow in a glass globe. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 96 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -238,7 +238,7 @@ xylophone, piano, flute, synth, synth lead, chiptune, 8-bit, strings, pads, guit
 Style:
 
 ```
-solo wind-up music box with a metal comb, music box trio, only three instruments: music box, warm round bass, crisp drums. dry, close, no reverb. simple cute melody of flowing syncopated notes, on and off the beat, like a carousel tune. a major key, turning and magical, a showpiece. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 100 BPM, 4/4, straight timing, loopable
+solo wind-up music box with a metal comb, music box trio, only three instruments: music box, warm round bass, crisp drums. dry, close, no reverb. busy showpiece melody, the liveliest of all, with runs and leaps, of flowing syncopated notes, on and off the beat, like a carousel tune. a major key, turning and magical, a showpiece. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 100 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -256,7 +256,7 @@ Teaches: everything together, and faster. Split from Mix: ask for **synth lead**
 Style:
 
 ```
-solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, warm round bass, crisp drums. dry, close, no reverb. simple cute melody in eighth notes with a long held note at the end of every phrase. a major key, excited and shining, the lights coming on. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 112 BPM, 4/4, straight timing, loopable
+solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, warm round bass, crisp drums. dry, close, no reverb. very simple nursery-rhyme melody, few notes, lots of repetition, in eighth notes with a long held note at the end of every phrase. a major key, excited and shining, the lights coming on. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 112 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -270,7 +270,7 @@ xylophone, piano, flute, bells, strings, pads, guitar, brass, vocals, choir, orc
 Style:
 
 ```
-solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, warm round bass, crisp drums. dry, close, no reverb. simple cute melody in eighth notes with off-beat accents and a strong two-note chord on the first beat of every bar. a minor key, cool and driving, a night festival. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 116 BPM, 4/4, straight timing, loopable
+solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, warm round bass, crisp drums. dry, close, no reverb. simple cute melody, a little more movement, in eighth notes with off-beat accents and a strong two-note chord on the first beat of every bar. a minor key, cool and driving, a night festival. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 116 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -284,7 +284,7 @@ xylophone, piano, flute, bells, strings, pads, guitar, brass, vocals, choir, orc
 Style:
 
 ```
-solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, warm round bass, crisp drums. dry, close, no reverb. simple cute melody in fast eighth notes with short bursts of four sixteenth notes. a minor key, fast and thrilling, chasing a comet. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 120 BPM, 4/4, straight timing, loopable
+solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, warm round bass, crisp drums. dry, close, no reverb. lively cute melody with more notes and movement, in fast eighth notes with short bursts of four sixteenth notes. a minor key, fast and thrilling, chasing a comet. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 120 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -298,7 +298,7 @@ xylophone, piano, flute, bells, strings, pads, guitar, brass, vocals, choir, orc
 Style:
 
 ```
-solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, warm round bass, crisp drums. dry, close, no reverb. simple cute melody that mixes quick runs, off-beat accents, strong two-note chords and long held notes. a major key, triumphant and glittering, the grand finale. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 124 BPM, 4/4, straight timing, loopable
+solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, warm round bass, crisp drums. dry, close, no reverb. busy showpiece melody, the liveliest of all, with runs and leaps, that mixes quick runs, off-beat accents, strong two-note chords and long held notes. a major key, triumphant and glittering, the grand finale. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 124 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:

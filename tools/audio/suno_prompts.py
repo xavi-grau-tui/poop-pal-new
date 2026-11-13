@@ -17,7 +17,7 @@ LIMIT = 1000          # the Style field (v4.5 and later; the pilot song confirms
 # full band let Suno pass the lead around. What worked (the user: "now it's pure xylophone lead"): SHORT, tags, the
 # instrument first, a band of three, "no new instruments", and every other lead in the Exclude.
 STYLE = ("solo {lead}, {short} trio, only three instruments: {short}, warm round bass, crisp drums. dry, close, no "
-         "reverb. simple cute melody {part} {key}, {mood}. the drums are clear and present: punchy kick on every beat, "
+         "reverb. {level} {part} {key}, {mood}. the drums are clear and present: punchy kick on every beat, "
          "crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new "
          "instruments, no build, no arrangement changes. {bpm} BPM, 4/4, straight timing, loopable")
 # (2026-11-12, after 1A on the phone: "soft bass, soft drums, minimal, sparse" made a band 26 dB under the lead, so the
@@ -27,6 +27,13 @@ STYLE_TAIKO = ("solo taiko drums, only three instruments: taiko, soft bass, quie
                "deep low drum, sharp rim clicks, a small high drum. {part} {key}, {mood}. the taiko is the only "
                "percussion. minimal, sparse, same instruments from start to end, no new instruments, no build, no "
                "arrangement changes. {bpm} BPM, 4/4, straight timing, loopable")
+# How busy the tune is, by its slot in the world (the user, 2026-11-13: the same prompt gave a childish tune and a
+# complicated one; the progression needs a grip). Words alone don't hold Suno: tools/audio/tune_rate.py measures each
+# take before it is split, and the takes are SORTED into the slots by that number.
+LEVEL = {"A": "very simple nursery-rhyme melody, few notes, lots of repetition,",
+         "B": "simple cute melody, a little more movement,",
+         "C": "lively cute melody with more notes and movement,",
+         "D": "busy showpiece melody, the liveliest of all, with runs and leaps,"}
 OTHERS = ["xylophone", "piano", "flute", "bells", "synth", "synth lead", "chiptune", "8-bit", "strings", "pads", "guitar", "brass"]
 ALWAYS = "vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio"
 OWN = {1: ["xylophone"], 2: ["piano"], 3: ["flute"], 4: ["bells"], 5: ["synth", "synth lead", "chiptune", "8-bit"], 6: ["flute"]}
@@ -101,7 +108,7 @@ def songs():
     for w, (world, lead, split, teaches, rows) in enumerate(WORLDS, 1):
         for letter, title, bpm, key, mood, part in rows:
             taiko = world == "Festival Taiko"
-            style = (STYLE_TAIKO if taiko else STYLE).format(key=key, mood=mood, lead=lead, short=split.split(" (")[0], part=part, bpm=bpm)
+            style = (STYLE_TAIKO if taiko else STYLE).format(key=key, mood=mood, lead=lead, short=split.split(" (")[0], part=part, bpm=bpm, level=LEVEL[letter])
             exclude = ", ".join([o for o in OTHERS if o not in OWN[w]] + (["drum kit", "kick", "snare", "hi-hat"] if taiko else [])) + ", " + ALWAYS
             yield w, world, split, teaches, letter, title, bpm, style, exclude
 
