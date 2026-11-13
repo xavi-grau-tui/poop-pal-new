@@ -394,7 +394,14 @@ func _on_song_finished() -> void:
 		return
 	song.stop()
 	var hit: float = float(counts["perfect"] + counts["good"]) / maxi(1, notes.size())
-	finish_level(level, 3 if hit >= STAR_3 else (2 if hit >= STAR_2 else 1), 100.0 * hit, false)
+	var stars := 3 if hit >= STAR_3 else (2 if hit >= STAR_2 else 1)
+	# the applause with the result, bigger with every star (the user, 2026-11-13); tools/audio/applause.py makes it
+	var clap := AudioStreamPlayer.new()
+	clap.stream = load("res://sounds/fx/applause_%d.wav" % stars)
+	add_child(clap)
+	clap.play()
+	clap.finished.connect(clap.queue_free)
+	finish_level(level, stars, 100.0 * hit, false)
 
 func freeze() -> void:
 	super.freeze()
