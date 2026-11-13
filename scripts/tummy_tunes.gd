@@ -46,7 +46,13 @@ const SLOPPY := 0.25                  # a press this close to a note (but outsid
 # Groove meter (0..1). Starts at 80%; empty = fail.
 const GROOVE_START := 0.8
 const GROOVE_GAIN := { "perfect": 0.03, "good": 0.015, "miss": -0.08 }
-const GROOVE_STRAY := -0.04           # pressing when there's no note at all
+const GROOVE_STRAY := -0.07           # pressing when there's no note at all (was -0.04: the user, 2026-11-13, "it should also accelerate losing")
+## A press that is not a hit plays the instrument's WRONG note in that lane's register (the user, 2026-11-13: "a little
+## dissonant sound of the instrument being played, low medium or high"; a trial on world 1, then the rule for every
+## world). Made by tools/audio/tune_wrong.py.
+const WRONG := "res://sounds/tunes/fx/xylophone_wrong_%s.wav"
+const WRONG_DB := -5.0
+var wrong: Array[AudioStreamPlayer] = []
 
 ## World 1's look (2026-11-13): the designer's toy room and xylophone (docs/mockups/tomo_tunes/round1/), made into
 ## pixel layers by tools/design/tunes_world.py: 1 art pixel = 3 on screen. layout.json holds each layer's box.
@@ -122,6 +128,12 @@ func _ready() -> void:
 	for c in LANE_NAMES:
 		note_tex.append(load(ART + "note_%s.png" % c))
 	glow_tex = load(ART + "glow.png")
+	for c in LANE_NAMES:
+		var wp := AudioStreamPlayer.new()
+		wp.stream = load(WRONG % c)
+		wp.volume_db = WRONG_DB
+		add_child(wp)
+		wrong.append(wp)
 	tick = _click_player(1760.0)
 	tack = _click_player(1175.0)
 	# the pet screen's music stops; this game plays its own song in sync
@@ -268,12 +280,14 @@ func _press(lane: int) -> void:
 			best = i
 	if best < 0 or best_d > SLOPPY:
 		if next_spawn > 0:
+			wrong[lane].play()
 			_judge("stray", lane)                    # (no penalty during the count-in)                        # no note there: mashing costs groove
 		return
 	var n: Dictionary = live[best]
 	live.remove_at(best)
 	var node: Node2D = n["node"]
 	if best_d > GOOD:                                # too early / too late: that note is lost
+		wrong[lane].play()
 		_judge("miss", lane)
 		var tf := create_tween()
 		tf.tween_property(node, "modulate", Color(0.4, 0.3, 0.35, 0.0), 0.2)

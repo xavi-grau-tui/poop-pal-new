@@ -131,6 +131,10 @@ World 1 (the toy xylophone) is the model. Its brief is `docs/tomo_tunes_art_brie
    onto its bar (a path that followed the tray's slanted lane was refused by the user).
 4. Run `--import`, take the four screens (section 3), look at them, show the user, then install.
 
+Each world also needs its instrument's three wrong notes (a press that is not a hit): add the
+instrument to `INSTRUMENTS` in `tools/audio/tune_wrong.py` and run it (a trial on world 1 since
+13 November 2026; the rule for all worlds once the user confirms it).
+
 Ask the next worlds' designer for **three bars of the same size and three lanes of the same
 width**: world 1 needed the tool to even them out.
 
