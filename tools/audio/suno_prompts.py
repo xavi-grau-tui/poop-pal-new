@@ -34,11 +34,11 @@ STYLE_TAIKO = ("solo taiko drums, only three instruments: taiko, soft bass, quie
 # notes, space and repetition; the STYLE stays a cool, laid-back game tune, like the build's lo-fi soundtrack.)
 # (later the same day: "lo-fi" and "catchy hook" brought busier tunes and syncopated rhythms. Now the RHYTHM is
 # spelled out: notes on the beat, plain and even; worlds 1-3 exclude syncopation.)
-LEVEL = {"A": "a calm mellow riff of few notes, every note on the beat, long gaps between phrases, the same short phrase repeated, plain even rhythm,",
-         "B": "a calm mellow riff, notes on the beat with a few between, the same short phrase repeated, plain even rhythm,",
+LEVEL = {"A": "a slow simple melody in quarter notes and half notes only, one note per beat, four beats to the bar, the same short phrase repeated, plain even rhythm,",
+         "B": "a simple melody in quarter notes with a few eighth notes, the same short phrase repeated, plain even rhythm,",
          "C": "a brighter melody with more notes and movement, plain even rhythm,",
          "D": "a busy showpiece melody, the liveliest of all, with runs and leaps,"}
-PLAIN_RHYTHM = "syncopation, off-beat rhythm, "       # worlds 1-3: the off-beat is world 4's new thing
+PLAIN_RHYTHM = "syncopation, off-beat rhythm, sixteenth notes, fast runs, "       # worlds 1-3: the off-beat is world 4's new thing
 OTHERS = ["xylophone", "piano", "flute", "bells", "synth", "synth lead", "chiptune", "8-bit", "strings", "pads", "guitar", "brass"]
 ALWAYS = "nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio"
 OWN = {1: ["xylophone"], 2: ["piano"], 3: ["flute"], 4: ["bells"], 5: ["synth", "synth lead", "chiptune", "8-bit"], 6: ["flute"]}

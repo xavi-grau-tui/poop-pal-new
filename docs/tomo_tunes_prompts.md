@@ -16,13 +16,13 @@ Teaches: single notes on the beat; the lanes are low, middle and high. Split fro
 Style:
 
 ```
-solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. a calm mellow riff of few notes, every note on the beat, long gaps between phrases, the same short phrase repeated, plain even rhythm, stepping up and down like stairs, one note at a time. a major pentatonic key, sunny, warm and easygoing, a first morning at a small shrine. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 92 BPM, 4/4, straight timing, loopable
+solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. a slow simple melody in quarter notes and half notes only, one note per beat, four beats to the bar, the same short phrase repeated, plain even rhythm, stepping up and down like stairs, one note at a time. a major pentatonic key, sunny, warm and easygoing, a first morning at a small shrine. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 92 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-syncopation, off-beat rhythm, piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
+syncopation, off-beat rhythm, sixteenth notes, fast runs, piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 1B. Hopscotch (96 BPM; levels 2, 5, 8)
@@ -30,13 +30,13 @@ syncopation, off-beat rhythm, piano, flute, bells, synth, synth lead, chiptune, 
 Style:
 
 ```
-solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. a calm mellow riff, notes on the beat with a few between, the same short phrase repeated, plain even rhythm, in eighth notes with a short rest at the end of every bar, hopping between two neighbouring notes. a major pentatonic key, playful and bouncy, light on its feet. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 96 BPM, 4/4, straight timing, loopable
+solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. a simple melody in quarter notes with a few eighth notes, the same short phrase repeated, plain even rhythm, in eighth notes with a short rest at the end of every bar, hopping between two neighbouring notes. a major pentatonic key, playful and bouncy, light on its feet. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 96 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-syncopation, off-beat rhythm, piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
+syncopation, off-beat rhythm, sixteenth notes, fast runs, piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 1C. Acorn Rain (100 BPM; levels 3, 6)
@@ -50,7 +50,7 @@ solo toy xylophone with wooden mallets, xylophone trio, only three instruments: 
 Exclude:
 
 ```
-syncopation, off-beat rhythm, piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
+syncopation, off-beat rhythm, sixteenth notes, fast runs, piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 1D. Sunrise Mallets (104 BPM; level 9, the showpiece)
@@ -64,7 +64,7 @@ solo toy xylophone with wooden mallets, xylophone trio, only three instruments: 
 Exclude:
 
 ```
-syncopation, off-beat rhythm, piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
+syncopation, off-beat rhythm, sixteenth notes, fast runs, piano, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ## World 2: Toy Piano
@@ -76,13 +76,13 @@ Teaches: two buttons at once: a chord on the accents. Split from Mix: ask for **
 Style:
 
 ```
-solo toy piano, plinky and bright, piano trio, only three instruments: piano, warm round bass, crisp drums. dry, close, no reverb. a calm mellow riff of few notes, every note on the beat, long gaps between phrases, the same short phrase repeated, plain even rhythm, in eighth notes, with a strong two-note chord on the first beat of every bar. a major key, cheerful and tidy, a sunny afternoon. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 100 BPM, 4/4, straight timing, loopable
+solo toy piano, plinky and bright, piano trio, only three instruments: piano, warm round bass, crisp drums. dry, close, no reverb. a slow simple melody in quarter notes and half notes only, one note per beat, four beats to the bar, the same short phrase repeated, plain even rhythm, in eighth notes, with a strong two-note chord on the first beat of every bar. a major key, cheerful and tidy, a sunny afternoon. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 100 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-syncopation, off-beat rhythm, xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
+syncopation, off-beat rhythm, sixteenth notes, fast runs, xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 2B. Tiptoe Keys (104 BPM; levels 2, 5, 8)
@@ -90,13 +90,13 @@ syncopation, off-beat rhythm, xylophone, flute, bells, synth, synth lead, chiptu
 Style:
 
 ```
-solo toy piano, plinky and bright, piano trio, only three instruments: piano, warm round bass, crisp drums. dry, close, no reverb. a calm mellow riff, notes on the beat with a few between, the same short phrase repeated, plain even rhythm, in soft eighth notes, with a strong two-note chord on beats 1 and 3. a minor key, sneaky and funny, like tiptoeing past a sleeping cat. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 104 BPM, 4/4, straight timing, loopable
+solo toy piano, plinky and bright, piano trio, only three instruments: piano, warm round bass, crisp drums. dry, close, no reverb. a simple melody in quarter notes with a few eighth notes, the same short phrase repeated, plain even rhythm, in soft eighth notes, with a strong two-note chord on beats 1 and 3. a minor key, sneaky and funny, like tiptoeing past a sleeping cat. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 104 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-syncopation, off-beat rhythm, xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
+syncopation, off-beat rhythm, sixteenth notes, fast runs, xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 2C. Marble Stairs (108 BPM; levels 3, 6)
@@ -110,7 +110,7 @@ solo toy piano, plinky and bright, piano trio, only three instruments: piano, wa
 Exclude:
 
 ```
-syncopation, off-beat rhythm, xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
+syncopation, off-beat rhythm, sixteenth notes, fast runs, xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 2D. The Little Recital (110 BPM; level 9, the showpiece)
@@ -124,7 +124,7 @@ solo toy piano, plinky and bright, piano trio, only three instruments: piano, wa
 Exclude:
 
 ```
-syncopation, off-beat rhythm, xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
+syncopation, off-beat rhythm, sixteenth notes, fast runs, xylophone, flute, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ## World 3: Toy Ocarina
@@ -136,13 +136,13 @@ Teaches: long notes: hold the button for as long as the note sounds. Split from 
 Style:
 
 ```
-solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, warm round bass, crisp drums. dry, close, no reverb. a calm mellow riff of few notes, every note on the beat, long gaps between phrases, the same short phrase repeated, plain even rhythm, of long held notes, each two beats long, with a short breath between them. a major key, calm and warm, like a slow parade far away. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 96 BPM, 4/4, straight timing, loopable
+solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, warm round bass, crisp drums. dry, close, no reverb. a slow simple melody in quarter notes and half notes only, one note per beat, four beats to the bar, the same short phrase repeated, plain even rhythm, of long held notes, each two beats long, with a short breath between them. a major key, calm and warm, like a slow parade far away. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 96 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-syncopation, off-beat rhythm, xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
+syncopation, off-beat rhythm, sixteenth notes, fast runs, xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 3B. Paper Hat Parade (100 BPM; levels 2, 5, 8)
@@ -150,13 +150,13 @@ syncopation, off-beat rhythm, xylophone, piano, bells, synth, synth lead, chiptu
 Style:
 
 ```
-solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, warm round bass, crisp drums. dry, close, no reverb. a calm mellow riff, notes on the beat with a few between, the same short phrase repeated, plain even rhythm, of long held notes of two to four beats joined by short pickup notes. a major key, proud and silly, a parade of paper hats. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 100 BPM, 4/4, straight timing, loopable
+solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina, warm round bass, crisp drums. dry, close, no reverb. a simple melody in quarter notes with a few eighth notes, the same short phrase repeated, plain even rhythm, of long held notes of two to four beats joined by short pickup notes. a major key, proud and silly, a parade of paper hats. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 100 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
 
 ```
-syncopation, off-beat rhythm, xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
+syncopation, off-beat rhythm, sixteenth notes, fast runs, xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 3C. Kite Call (104 BPM; levels 3, 6)
@@ -170,7 +170,7 @@ solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina
 Exclude:
 
 ```
-syncopation, off-beat rhythm, xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
+syncopation, off-beat rhythm, sixteenth notes, fast runs, xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ### 3D. The Little Serenade (108 BPM; level 9, the showpiece)
@@ -184,7 +184,7 @@ solo clay ocarina, soft and round, ocarina trio, only three instruments: ocarina
 Exclude:
 
 ```
-syncopation, off-beat rhythm, xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
+syncopation, off-beat rhythm, sixteenth notes, fast runs, xylophone, piano, bells, synth, synth lead, chiptune, 8-bit, strings, pads, guitar, brass, nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio
 ```
 
 ## World 4: Music Box
@@ -196,7 +196,7 @@ Teaches: off-beats: the notes between the beats. Split from Mix: ask for **music
 Style:
 
 ```
-solo wind-up music box with a metal comb, music box trio, only three instruments: music box, warm round bass, crisp drums. dry, close, no reverb. a calm mellow riff of few notes, every note on the beat, long gaps between phrases, the same short phrase repeated, plain even rhythm, in eighth notes where every second note of the tune lands on the off-beat, between the kicks. a major key, tender and dreamy, late at night. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 88 BPM, 4/4, straight timing, loopable
+solo wind-up music box with a metal comb, music box trio, only three instruments: music box, warm round bass, crisp drums. dry, close, no reverb. a slow simple melody in quarter notes and half notes only, one note per beat, four beats to the bar, the same short phrase repeated, plain even rhythm, in eighth notes where every second note of the tune lands on the off-beat, between the kicks. a major key, tender and dreamy, late at night. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 88 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -210,7 +210,7 @@ xylophone, piano, flute, synth, synth lead, chiptune, 8-bit, strings, pads, guit
 Style:
 
 ```
-solo wind-up music box with a metal comb, music box trio, only three instruments: music box, warm round bass, crisp drums. dry, close, no reverb. a calm mellow riff, notes on the beat with a few between, the same short phrase repeated, plain even rhythm, of off-beat eighth notes that land between the kicks, with one note on the first beat of every bar. a minor key, delicate and a little mysterious, a ballerina turning. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 92 BPM, 4/4, straight timing, loopable
+solo wind-up music box with a metal comb, music box trio, only three instruments: music box, warm round bass, crisp drums. dry, close, no reverb. a simple melody in quarter notes with a few eighth notes, the same short phrase repeated, plain even rhythm, of off-beat eighth notes that land between the kicks, with one note on the first beat of every bar. a minor key, delicate and a little mysterious, a ballerina turning. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 92 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -256,7 +256,7 @@ Teaches: everything together, and faster. Split from Mix: ask for **synth lead**
 Style:
 
 ```
-solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, warm round bass, crisp drums. dry, close, no reverb. a calm mellow riff of few notes, every note on the beat, long gaps between phrases, the same short phrase repeated, plain even rhythm, in eighth notes with a long held note at the end of every phrase. a major key, excited and shining, the lights coming on. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 112 BPM, 4/4, straight timing, loopable
+solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, warm round bass, crisp drums. dry, close, no reverb. a slow simple melody in quarter notes and half notes only, one note per beat, four beats to the bar, the same short phrase repeated, plain even rhythm, in eighth notes with a long held note at the end of every phrase. a major key, excited and shining, the lights coming on. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 112 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
@@ -270,7 +270,7 @@ xylophone, piano, flute, bells, strings, pads, guitar, brass, nursery rhyme, chi
 Style:
 
 ```
-solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, warm round bass, crisp drums. dry, close, no reverb. a calm mellow riff, notes on the beat with a few between, the same short phrase repeated, plain even rhythm, in eighth notes with off-beat accents and a strong two-note chord on the first beat of every bar. a minor key, cool and driving, a night festival. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 116 BPM, 4/4, straight timing, loopable
+solo bright square-wave chiptune synth lead, synth lead trio, only three instruments: synth lead, warm round bass, crisp drums. dry, close, no reverb. a simple melody in quarter notes with a few eighth notes, the same short phrase repeated, plain even rhythm, in eighth notes with off-beat accents and a strong two-note chord on the first beat of every bar. a minor key, cool and driving, a night festival. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 116 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:

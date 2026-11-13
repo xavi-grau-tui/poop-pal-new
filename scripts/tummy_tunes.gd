@@ -25,7 +25,7 @@ const LEAD_MUTED_DB := -60.0
 ## still sounded, because a miss is only judged MISS_AFTER later). A hit, even a late one, brings it back.
 const LEAD_ARM := 0.02                 # s before a note's time
 var lead_on := true
-const DIFFICULTY := "normal"
+const DIFFICULTY := "easy"             # (the pilot: what level 1 will be; "normal" = levels 4-6, "hard" = 7-8)
 const LEAD_IN := 2.0                  # silence before the song starts (count-in)
 const FALL_TIME := 1.5                # seconds a note takes from the top to the line
 
