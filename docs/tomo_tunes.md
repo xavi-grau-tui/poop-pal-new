@@ -195,10 +195,14 @@ Added 2026-11-13 (the user, after more play: "how the notes of the lead coincide
 | 2026-11-13 | A bar of metronome before the first note: tic tac tac tac at the song's own tempo (made in code, `COUNT_BEATS`), so the first note can be hit |
 | 2026-11-13 | The band must not live in the sub-bass. 1A's stem is only bass and kick, so the tool takes the sub-bass nearly out and lets the bass's harmonics carry it, levelled with a slow gain. That is a repair: songs from the new prompt (present drums) should not need it |
 
+| 2026-11-13 | The tune's difficulty is chosen by measuring, not by hoping: the same prompt gives simpler and busier tunes (the user). Each prompt now says how busy its slot is (A a nursery rhyme ... D the showpiece), and `tools/audio/tune_rate.py` rates every take BEFORE the split (notes a second, pitches, jumps, quick notes, one score). A world's four songs are the takes sorted by that score, whatever prompt made them |
+
 ## 6d. How each new song is made (the workflow)
 
 1. **You:** take the song's prompt from `docs/tomo_tunes_prompts.md`. Suno, Advanced, v6,
    Instrumental on; Styles and Exclude pasted; the title. 2-4 takes.
+1b. **Me (or you):** `.venv/bin/python tools/audio/tune_rate.py <the takes' MP3s>`: the takes in order of how busy
+   their tune is. The simplest good take is the world's song A, the busiest its D.
 2. **You:** keep the take where the lead plays the tune from start to end, the beat never wavers
    and the drums are clearly there. 60-75 s is enough.
 3. **You:** on it, "...", Get Stems, Split from Mix, ask for the world's instrument (named in the
