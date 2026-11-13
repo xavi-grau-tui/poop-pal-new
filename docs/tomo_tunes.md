@@ -199,6 +199,10 @@ Added 2026-11-13 (the user, after more play: "how the notes of the lead coincide
 
 | 2026-11-13 | A level's length by its slot: song A about 60 s, B 65, C 70, the showpiece D 80. Suno's takes are often over 2 minutes: the tool cuts them there, on a bar line, with a short fade (`LEN_BY_SLOT`) |
 
+| 2026-11-13 | The game lists its songs in the shared level menu, each on easy, normal and hard (temporary: `TUNES` in `tummy_tunes.gd`); stars: 85% and 95% of the notes hit. Two songs in: 1A (59.6 s) and 1B (63.6 s, a busier take: 3.7 notes a second on hard) |
+| 2026-11-13 | The beat grid is the one the tune fits best, tried from the band's kick and from each of the tune's first notes (1B opens on a pickup, which had put its whole grid half a step off) |
+| 2026-11-13 | World 1's art: the designer's mock-up approved and delivered as 20 layers (`docs/mockups/tomo_tunes/round1/`). To do on our side before it goes in: the coloured bands on the wall (in `xylophone.png`) don't line up with the bars, so the lanes are drawn by the game; the game's lanes move to the bars' centres (x 505, 995, 1430 of 1900) |
+
 ## 6d. How each new song is made (the workflow)
 
 1. **You:** take the song's prompt from `docs/tomo_tunes_prompts.md`. Suno, Advanced, v6,
