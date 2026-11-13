@@ -18,7 +18,7 @@ extends BaseMinigame
 ## (The first prototype's song: "res://sounds/music/Retro Game Console.mp3" + data/charts/retro_game_console.json.)
 ## THE TEMPORARY SONG MENU (2026-11-13): the shared level menu lists every song made so far, each three times:
 ## easy, normal, hard (levels 1-3 = TUNES[0], 4-6 = TUNES[1] ...). The real worlds' tables come later.
-const TUNES := ["1A", "1B"]
+const TUNES := ["1A", "1B", "2A"]
 const CHARTS := ["easy", "normal", "hard"]
 const STAR_2 := 0.85                  # of the notes hit
 const STAR_3 := 0.95
@@ -50,7 +50,8 @@ const GROOVE_STRAY := -0.07           # pressing when there's no note at all (wa
 ## A press that is not a hit plays the instrument's WRONG note in that lane's register (the user, 2026-11-13: "a little
 ## dissonant sound of the instrument being played, low medium or high"; a trial on world 1, then the rule for every
 ## world). Made by tools/audio/tune_wrong.py.
-const WRONG := "res://sounds/tunes/fx/xylophone_wrong_%s.wav"
+const WRONG := "res://sounds/tunes/fx/%s_wrong_%s.wav"
+const INSTRUMENT_OF := { "1": "xylophone", "2": "piano" }   # by the song's world (its id's first character)
 const WRONG_DB := -11.0               # (was -5: the user, "a bit less loud")
 var wrong: Array[AudioStreamPlayer] = []
 
@@ -131,7 +132,6 @@ func _ready() -> void:
 	glow_tex = load(ART + "glow.png")
 	for c in LANE_NAMES:
 		var wp := AudioStreamPlayer.new()
-		wp.stream = load(WRONG % c)
 		wp.volume_db = WRONG_DB
 		add_child(wp)
 		wrong.append(wp)
@@ -188,6 +188,8 @@ func _load_tune() -> void:
 		count_times.append(first_note - k * beat)
 	clock = count_times[0] - 0.6          # (a breath, then the bar of clicks)
 	next_spawn = 0
+	for i in 3:                                      # the wrong notes of this song's instrument
+		wrong[i].stream = load(WRONG % [INSTRUMENT_OF.get(tune.left(1), "xylophone"), LANE_NAMES[i]])
 	song_started = false
 	played = 0.0
 	finished = false

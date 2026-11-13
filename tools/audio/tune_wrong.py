@@ -21,6 +21,8 @@ SR = 44100
 INSTRUMENTS = {
     'xylophone': {'partials': [(1.0, 1.0, 0.10), (3.0, 0.45, 0.05), (6.1, 0.22, 0.025)], 'knock': 0.5,
                   'lanes': {'low': 67, 'mid': 76, 'high': 83}},          # G4, E5, B5: the middle of each lane in songs 1A and 1B
+    'piano': {'partials': [(1.0, 1.0, 0.16), (2.0, 0.5, 0.09), (3.0, 0.2, 0.06), (5.4, 0.18, 0.03)], 'knock': 0.25,
+              'lanes': {'low': 67, 'mid': 75, 'high': 82}},              # a toy piano's tines: G4, D#5, A#5 (the middle of each lane in 2A)
 }
 
 

@@ -95,6 +95,10 @@ The full reasons are in `docs/tomo_tunes.md` (sections 2, 6c, 6d).
    wants another count: put it in `COUNT_BEATS_OF` in `scripts/tummy_tunes.gd` (1B has 4).
 6. Add the id to `TUNES` in `scripts/tummy_tunes.gd`, run `--import`, try it on the Mac, install.
 
+   - "the grid follows": the tune's own notes, or "the band's beats" (taken when the tune is too
+     busy or swung to give the grid itself; "swung: the off-beat at 0.65" is a jazzy tune).
+   - "chords heard" (worlds 2 and 5): a first, rough detector. Listen to `check_hard.wav`.
+
 What the tool guarantees (don't undo these):
 - easy = notes on the beats, normal = plus the eighths, hard = plus only the quick notes three
   buttons can play (`playable()`).

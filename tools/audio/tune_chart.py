@@ -36,6 +36,7 @@ MAX_HARMONICS = 80.0       # the most of the bass's 2nd / 3rd harmonics that may
 # a level's longest, by the song's slot in its world: the first songs short, the showpiece the longest (the user,
 # 2026-11-13). TUNE_MAX_LEN=<s> overrides it for one run.
 FULL_UP_TO = 35.0                     # s over the slot's length that a take may run and still be played whole
+WITH_CHORDS = {'2': True, '5': True}  # the worlds whose songs have chords (the toy piano, the star stage)
 LEN_BY_SLOT = {'A': 60.0, 'B': 65.0, 'C': 70.0, 'D': 80.0}
 NAMES = 'C C# D D# E F F# G G# A A# B'.split()
 
@@ -95,13 +96,31 @@ def notes_of(lead, lo=250.0, hi=9000.0):
             seg = np.pad(seg, (0, n_fft - len(seg)))
         sp = np.abs(np.fft.rfft(seg * np.hanning(n_fft), n_fft * 2))
         hz = f[sel][np.argmax(sp[sel])]
+        second = second_pitch(sp[sel], f[sel], hz)
         end = keep[k + 1] / FPS if k + 1 < len(keep) else len(lead) / SR
         e = env[a:int(end * SR)]
         pk = e[:int(0.05 * SR)].max() if len(e) else 0.0
         below = np.nonzero(e < 0.25 * pk)[0]
         length = (below[0] / SR if len(below) else end - t)
-        out.append((round(t, 3), int(round(69 + 12 * np.log2(hz / 440))), round(float(length), 3), float(fl[i])))
+        out.append((round(t, 3), int(round(69 + 12 * np.log2(hz / 440))), round(float(length), 3), float(fl[i]), second))
     return out
+
+
+def second_pitch(sp, f, hz):
+    """A chord's other note at this onset, as MIDI, or None: the strongest peak that is not the first note's own
+    overtone (or the note it is an overtone of), 3 to 16 semitones away, at least 0.45 of its level."""
+    top = sp.max()
+    loc = np.nonzero((sp[1:-1] > sp[:-2]) & (sp[1:-1] >= sp[2:]) & (sp[1:-1] > 0.45 * top))[0] + 1
+    best = None
+    for i in loc:
+        semis = 12 * np.log2(f[i] / hz)
+        if abs(semis) < 3 or abs(semis) > 16:
+            continue
+        if any(abs(semis - 12 * np.log2(h)) < 0.7 for h in (2, 3, 4, 5, 1 / 2, 1 / 3, 1 / 4)):
+            continue
+        if best is None or sp[i] > sp[best]:
+            best = i
+    return None if best is None else int(round(69 + 12 * np.log2(f[best] / 440)))
 
 
 def follow_grid(times):
@@ -178,6 +197,64 @@ def best_grid(lead_times, back, length):
         if best is None or fit > best[0] + 0.02:
             best = (fit, name, g)
     return best
+
+
+def band_beats(back, bpm0):
+    """The band's beats, tracked through the whole song (dynamic programming on the backing's onsets, Ellis 2007),
+    for a tempo near bpm0. For tunes too busy or too loose to give the grid themselves (2A, a jazzy toy piano,
+    2026-11-13: the grid followed from its own notes held only 54% of them)."""
+    o = flux(back, 30, 9000)
+    o = o / (o.std() + 1e-9)
+    P0 = 60.0 / bpm0 * FPS
+    lags = np.arange(int(P0 * 0.85), int(P0 * 1.15) + 1)
+    oc = o - o.mean()
+    P = int(lags[int(np.argmax([float((oc[:-l] * oc[l:]).sum()) for l in lags]))])
+    n = len(o)
+    score, prev = o.copy(), -np.ones(n, int)
+    lo, hi = int(P * 0.5), int(P * 2)
+    for t in range(hi, n):
+        cand = np.arange(t - hi, t - lo)
+        sc = score[cand] - 100.0 * np.log((t - cand) / P) ** 2
+        j = int(np.argmax(sc))
+        score[t], prev[t] = o[t] + sc[j], cand[j]
+    t = int(np.argmax(score[-hi:])) + n - hi
+    beats = []
+    while t >= 0:
+        beats.append(t)
+        t = prev[t]
+    return np.array(beats[::-1]) / FPS
+
+
+def swing_grid(lead_times, back, bpm0, length):
+    """An eighth-note grid from the band's beats, with the off-beat where THIS tune puts it: in the middle (0.5,
+    straight) or later (about 0.65: swing, a jazzy tune). Returns (fit, swing, grid); grid[0::2] are the beats."""
+    beats = list(band_beats(back, bpm0))
+    b = float(np.median(np.diff(beats)))
+    while beats[0] > 0:
+        beats.insert(0, beats[0] - b)
+    while beats[-1] < length + b:
+        beats.append(beats[-1] + b)
+    beats = np.array(beats)
+    def phase(bt):
+        i = np.clip(np.searchsorted(bt, lead_times) - 1, 0, len(bt) - 2)
+        return (lead_times - bt[i]) / (bt[i + 1] - bt[i]), bt[i + 1] - bt[i]
+    ph, ln = phase(beats)
+    w = (ph + 0.5) % 1.0 - 0.5                                       # the tune's notes around the beat: its own "on the beat"
+    near = np.abs(w) < 0.12
+    if near.sum() > 8:
+        beats = beats + float(np.median(w[near] * ln[near]))
+        ph, ln = phase(beats)
+    off = ph[(ph > 0.35) & (ph < 0.8)]
+    swing = float(np.median(off)) if len(off) > 12 else 0.5
+    if abs(swing - 0.5) < 0.06:
+        swing = 0.5
+    grid = np.empty(2 * len(beats) - 1)
+    grid[0::2] = beats
+    grid[1::2] = beats[:-1] + swing * np.diff(beats)
+    q = place_on(lead_times, grid)
+    step = np.where((np.floor(q).astype(int) % 2) == 0, swing, 1.0 - swing) * 2      # (this eighth's length, in straight eighths)
+    fit = float((np.abs(q - np.round(q)) * step < 0.22).mean())
+    return fit, swing, grid
 
 
 def beat_parity(grid, back):
@@ -293,20 +370,49 @@ def main():
     notes = notes_of(lead)
     times = np.array([n[0] for n in notes])
     fit, grid_from, grid = best_grid(times, back, length)
+    swing = 0.5
+    fit2, swing2, grid2 = swing_grid(times, back, 30.0 / float(np.median(np.diff(grid))), length)
+    use_band = fit2 > fit + 0.05                 # (the tune's own grid stays when it fits about as well: 1A, 1B)
+    if use_band:
+        fit, swing, grid = fit2, swing2, grid2
+        grid_from = "the band's beats" + (f', swung: the off-beat at {swing:.2f} of the beat' if swing != 0.5 else '')
+    p = float(np.median(np.diff(grid[0::2]))) / 2.0 if use_band else float(np.median(np.diff(grid)))    # a straight eighth
     place = place_on(times, grid)
-    p = float(np.median(np.diff(grid)))
-    parity, kick_ratio = beat_parity(grid, back)
-    bpm = 30.0 / float(np.median(np.diff(grid)))
+    if use_band:
+        parity, kick_ratio = 0, beat_parity(grid, back)[1]
+    else:
+        parity, kick_ratio = beat_parity(grid, back)
+    bpm = 30.0 / p
     lane = lanes_of([n[1] for n in notes])
     beat_len = 2 * p
     rows = []                                                              # (t, lane, hold length, kind) kind: 0 beat, 1 eighth, 2 finer
-    for (t, m, ln, _), q in zip(notes, place):
+    chords = []                                                            # (t, the other lane): only on the beats, the accents
+    for (t, m, ln, _, m2), q in zip(notes, place):
         off = abs(q - round(q))
+        if swing != 0.5:                                                   # (in seconds the same tolerance, whichever eighth it falls in)
+            off *= 2 * (swing if int(np.floor(q)) % 2 == 0 else 1.0 - swing)
         kind = 2 if off > 0.22 else (0 if (int(round(q)) - parity) % 2 == 0 else 1)
         rows.append((t, lane[m], round(ln, 3) if ln >= beat_len else 0.0, kind))
+        if m2 is not None and kind == 0:
+            near = min(lane, key=lambda x: abs(x - m2))
+            l2 = lane[near]
+            if l2 == lane[m]:                                              # both in one lane: the neighbour on the second note's side
+                l2 = lane[m] + (1 if m2 > m else -1)
+                l2 = l2 if 0 <= l2 <= 2 else lane[m] - (l2 - lane[m])
+            chords.append((t, l2))
+    # The chords (world 2's new thing: two buttons at once): a second note at the same time in another lane. Easy
+    # gets one at most every 4 beats, normal every 2, hard all of them.
+    def with_chords(chart, every):
+        have, out, last = {round(n[0], 3) for n in chart}, list(chart), -99.0
+        for t, l2 in chords:
+            if round(t, 3) in have and t - last >= every * beat_len - 0.05:
+                out.append([t, l2, 0.0]); last = t
+        return sorted(out, key=lambda n: (n[0], n[1]))
     charts = {'easy': [list(r[:3]) for r in rows if r[3] == 0],
               'normal': [list(r[:3]) for r in rows if r[3] <= 1],
               'hard': [list(r[:3]) for r in playable(rows, p)]}
+    if WITH_CHORDS.get(sid[:1], False):
+        charts = {'easy': with_chords(charts['easy'], 4), 'normal': with_chords(charts['normal'], 2), 'hard': with_chords(charts['hard'], 0)}
     beats = [round(float(t), 3) for t in grid[parity::2] if t < length]
     # nothing to play in the take's last 0.6 s: an onset found there is the fade-out's noise, not a note
     charts = {k: [n for n in v if n[0] < length - 0.6] for k, v in charts.items()}
@@ -366,6 +472,7 @@ def main():
     print(f'  the beats are where the kick is: {kick_ratio:.1f}x stronger there' + ('' if kick_ratio > 1.3 else '  (WEAK: check the easy chart by ear)'))
     print('  pitches: ' + ' '.join(f'{NAMES[m % 12]}{m // 12 - 1}x{c}>{"LMR"[lane[m]]}' for m, c in sorted(collections.Counter(n[1] for n in notes).items())))
     print(f'  longest silence {gaps.max():.1f} s ({gaps.max() / (4 * beat_len):.1f} bars); holds: {sum(1 for r in rows if r[2] > 0)}')
+    print(f'  chords heard on the beats: {len(chords)}' + (f'; in the charts: easy {sum(1 for i in range(1, len(charts["easy"])) if charts["easy"][i][0] == charts["easy"][i - 1][0])}, normal {sum(1 for i in range(1, len(charts["normal"])) if charts["normal"][i][0] == charts["normal"][i - 1][0])}, hard {sum(1 for i in range(1, len(charts["hard"])) if charts["hard"][i][0] == charts["hard"][i - 1][0])}' if WITH_CHORDS.get(sid[:1], False) else ' (not charted in this world)'))
     if cut_note:
         print(cut_note)
     print('  the band: ' + report)
