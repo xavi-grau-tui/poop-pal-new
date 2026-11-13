@@ -120,7 +120,7 @@ def second_pitch(sp, f, hz):
             continue
         if best is None or sp[i] > sp[best]:
             best = i
-    return None if best is None else int(round(69 + 12 * np.log2(f[best] / 440)))
+    return None if best is None else (int(round(69 + 12 * np.log2(f[best] / 440))), float(sp[best] / top))    # (the note, how sure: its level against the first)
 
 
 def follow_grid(times):
@@ -394,25 +394,51 @@ def main():
         kind = 2 if off > 0.22 else (0 if (int(round(q)) - parity) % 2 == 0 else 1)
         rows.append((t, lane[m], round(ln, 3) if ln >= beat_len else 0.0, kind))
         if m2 is not None and kind == 0:
+            m2, sure = m2
             near = min(lane, key=lambda x: abs(x - m2))
             l2 = lane[near]
             if l2 == lane[m]:                                              # both in one lane: the neighbour on the second note's side
                 l2 = lane[m] + (1 if m2 > m else -1)
                 l2 = l2 if 0 <= l2 <= 2 else lane[m] - (l2 - lane[m])
-            chords.append((t, l2))
+            chords.append((t, l2, sure))
     # The chords (world 2's new thing: two buttons at once): a second note at the same time in another lane. Easy
     # gets one at most every 4 beats, normal every 2, hard all of them.
-    def with_chords(chart, every):
+    def with_chords(chart, every, sure_min=0.0):
         have, out, last = {round(n[0], 3) for n in chart}, list(chart), -99.0
-        for t, l2 in chords:
-            if round(t, 3) in have and t - last >= every * beat_len - 0.05:
+        for t, l2, sure in chords:
+            if round(t, 3) in have and sure >= sure_min and t - last >= every * beat_len - 0.05:
                 out.append([t, l2, 0.0]); last = t
         return sorted(out, key=lambda n: (n[0], n[1]))
-    charts = {'easy': [list(r[:3]) for r in rows if r[3] == 0],
+    # Easy follows the TUNE, not only the beats (the user, 2026-11-13, on 2A, a swung tune with more notes between
+    # the beats than on them: "easy mode does not correspond a lot with the actual notes"): the notes on the beats,
+    # plus a note between beats wherever the tune has nothing on the beats around it (0.75 of a beat each side).
+    # In a SYNCOPATED tune (more notes between the beats than on them: 2A, jazzy and swung) the ear follows the notes
+    # the tune LANDS on, wherever they fall. There, easy = the notes that ring longest before the next one, on the
+    # beat or between, never closer than 0.8 of a beat. Other tunes keep the beats (1A and 1B, as approved).
+    on_beat = [r[0] for r in rows if r[3] == 0]
+    grid_rows = [r for r in rows if r[3] <= 1]
+    if sum(1 for r in rows if r[3] == 1) > len(on_beat):
+        nxt = [grid_rows[i + 1][0] - r[0] if i + 1 < len(grid_rows) else 2 * beat_len for i, r in enumerate(grid_rows)]
+        order = sorted(range(len(grid_rows)), key=lambda i: -(min(nxt[i], 2 * beat_len) + (0.15 * beat_len if grid_rows[i][3] == 0 else 0.0)))
+        picked = []
+        for i in order:
+            if all(abs(grid_rows[i][0] - grid_rows[j][0]) >= 0.8 * beat_len for j in picked):
+                picked.append(i)
+        easy = [grid_rows[i] for i in sorted(picked)]
+        easy_how = 'the notes the tune lands on (a syncopated tune)'
+    else:
+        easy, last = [], -9.0
+        for r in rows:
+            if r[3] == 0:
+                easy.append(r); last = r[0]
+            elif r[3] == 1 and r[0] - last >= 0.75 * beat_len and not any(0 < b - r[0] < 0.75 * beat_len for b in on_beat):
+                easy.append(r); last = r[0]
+        easy_how = 'the notes on the beats'
+    charts = {'easy': [list(r[:3]) for r in easy],
               'normal': [list(r[:3]) for r in rows if r[3] <= 1],
               'hard': [list(r[:3]) for r in playable(rows, p)]}
     if WITH_CHORDS.get(sid[:1], False):
-        charts = {'easy': with_chords(charts['easy'], 4), 'normal': with_chords(charts['normal'], 2), 'hard': with_chords(charts['hard'], 0)}
+        charts = {'easy': with_chords(charts['easy'], 4, 0.7), 'normal': with_chords(charts['normal'], 2), 'hard': with_chords(charts['hard'], 0)}
     beats = [round(float(t), 3) for t in grid[parity::2] if t < length]
     # nothing to play in the take's last 0.6 s: an onset found there is the fade-out's noise, not a note
     charts = {k: [n for n in v if n[0] < length - 0.6] for k, v in charts.items()}
@@ -473,6 +499,7 @@ def main():
     print('  pitches: ' + ' '.join(f'{NAMES[m % 12]}{m // 12 - 1}x{c}>{"LMR"[lane[m]]}' for m, c in sorted(collections.Counter(n[1] for n in notes).items())))
     print(f'  longest silence {gaps.max():.1f} s ({gaps.max() / (4 * beat_len):.1f} bars); holds: {sum(1 for r in rows if r[2] > 0)}')
     print(f'  chords heard on the beats: {len(chords)}' + (f'; in the charts: easy {sum(1 for i in range(1, len(charts["easy"])) if charts["easy"][i][0] == charts["easy"][i - 1][0])}, normal {sum(1 for i in range(1, len(charts["normal"])) if charts["normal"][i][0] == charts["normal"][i - 1][0])}, hard {sum(1 for i in range(1, len(charts["hard"])) if charts["hard"][i][0] == charts["hard"][i - 1][0])}' if WITH_CHORDS.get(sid[:1], False) else ' (not charted in this world)'))
+    print(f'  easy plays {easy_how}')
     if cut_note:
         print(cut_note)
     print('  the band: ' + report)

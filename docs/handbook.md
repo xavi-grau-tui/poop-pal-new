@@ -100,7 +100,7 @@ The full reasons are in `docs/tomo_tunes.md` (sections 2, 6c, 6d).
    - "chords heard" (worlds 2 and 5): a first, rough detector. Listen to `check_hard.wav`.
 
 What the tool guarantees (don't undo these):
-- easy = notes on the beats, normal = plus the eighths, hard = plus only the quick notes three
+- easy = notes on the beats (in a syncopated tune: the notes the tune lands on), normal = plus the eighths, hard = plus only the quick notes three
   buttons can play (`playable()`).
 - A take is played WHOLE, with its own ending (the user: "we should play the full song"). Only a
   take more than 35 s over its slot's length (A 60 s, B 65, C 70, D 80) is cut, where a phrase
@@ -135,8 +135,9 @@ World 1 (the toy xylophone) is the model. Its brief is `docs/tomo_tunes_art_brie
    onto its bar (a path that followed the tray's slanted lane was refused by the user).
 4. Run `--import`, take the four screens (section 3), look at them, show the user, then install.
 
-Each world also needs its instrument's three wrong notes (a press that is not a hit): add the
-instrument to `INSTRUMENTS` in `tools/audio/tune_wrong.py` and run it (the user confirmed it on world 1,
+Each world also needs its instrument's three wrong notes (a press that is not a hit), cut from
+the REAL instrument: add `'<instrument>': '<a song id>'` to `FROM_STEM` in
+`tools/audio/tune_wrong.py`, the instrument to `INSTRUMENT_OF` in `tummy_tunes.gd`, and run it (the user confirmed it on world 1,
 13 November 2026: the rule for all worlds; played at -11 dB, `WRONG_DB`).
 
 Every world is its OWN PLACE with its OWN PALETTE, in the shared style (the user, on world 2's
