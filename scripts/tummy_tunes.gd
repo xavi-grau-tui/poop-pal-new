@@ -58,8 +58,9 @@ var song_length := 0.0
 var song_started := false
 var clock := -LEAD_IN                 # song time (negative during the count-in)
 ## The count-in (the user, 2026-11-13): one bar of metronome before the first note, "tic tac tac tac", at the
-## song's own tempo, so the first note can be hit. The song starts on the beat after the fourth click.
-const COUNT_BEATS := 4
+## song's own tempo, so the first note can be hit. The fourth beat of that bar IS the song's first note (the
+## user: "to flow better"): three clicks, then the note.
+const COUNT_BEATS := 3
 var count_times: Array[float] = []    # (song time, negative) of each click still to play
 var tick: AudioStreamPlayer
 var tack: AudioStreamPlayer
@@ -100,8 +101,9 @@ func _ready() -> void:
 			beat_offset = data["offset"]
 			song_length = data["length"]
 	var beat := 60.0 / bpm
+	var first_note: float = notes[0][0] if not notes.is_empty() else beat_offset
 	for k in range(COUNT_BEATS, 0, -1):
-		count_times.append(beat_offset - k * beat)
+		count_times.append(first_note - k * beat)
 	clock = count_times[0] - 0.6          # (a breath, then the bar of clicks)
 	tick = _click_player(1760.0)
 	tack = _click_player(1175.0)
