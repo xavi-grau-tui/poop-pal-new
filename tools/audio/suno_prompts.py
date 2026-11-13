@@ -30,21 +30,23 @@ STYLE_TAIKO = ("solo taiko drums, only three instruments: taiko, soft bass, quie
 # How busy the tune is, by its slot in the world (the user, 2026-11-13: the same prompt gave a childish tune and a
 # complicated one; the progression needs a grip). Words alone don't hold Suno: tools/audio/tune_rate.py measures each
 # take before it is split, and the takes are SORTED into the slots by that number.
-LEVEL = {"A": "very simple nursery-rhyme melody, few notes, lots of repetition,",
-         "B": "simple cute melody, a little more movement,",
-         "C": "lively cute melody with more notes and movement,",
-         "D": "busy showpiece melody, the liveliest of all, with runs and leaps,"}
+# (2026-11-13, later: "very simple nursery-rhyme melody" and "cute" gave kindergarten songs: the user. EASY is few
+# notes, space and repetition; the STYLE stays a cool, laid-back game tune, like the build's lo-fi soundtrack.)
+LEVEL = {"A": "a relaxed catchy hook, few notes with space between them, lots of repetition, laid-back lo-fi game tune,",
+         "B": "a relaxed catchy hook with a little more movement, laid-back lo-fi game tune,",
+         "C": "a lively catchy melody with more notes and movement, upbeat game tune,",
+         "D": "a busy showpiece melody, the liveliest of all, with runs and leaps, upbeat game tune,"}
 OTHERS = ["xylophone", "piano", "flute", "bells", "synth", "synth lead", "chiptune", "8-bit", "strings", "pads", "guitar", "brass"]
-ALWAYS = "vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio"
+ALWAYS = "nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio"
 OWN = {1: ["xylophone"], 2: ["piano"], 3: ["flute"], 4: ["bells"], 5: ["synth", "synth lead", "chiptune", "8-bit"], 6: ["flute"]}
 
 # world: name, the lead as Suno should hear it, what to ask for in "Split from Mix", what the world teaches,
 # then its four songs: letter, title, BPM, key, mood, the lead's part (a full sentence)
 WORLDS = [
     ("Toy Xylophone", "toy xylophone with wooden mallets", "xylophone", "single notes on the beat; the lanes are low, middle and high", [
-        ("A", "Wooden Steps", 92, "a major pentatonic key", "sunny, gentle and curious, like a first morning at a small shrine",
+        ("A", "Wooden Steps", 92, "a major pentatonic key", "sunny, warm and easygoing, a first morning at a small shrine",
          "in even eighth notes that step up and down like stairs, one note at a time."),
-        ("B", "Hopscotch", 96, "a major pentatonic key", "playful and bouncy, like children skipping",
+        ("B", "Hopscotch", 96, "a major pentatonic key", "playful and bouncy, light on its feet",
          "in eighth notes with a short rest at the end of every bar, hopping between two neighbouring notes."),
         ("C", "Acorn Rain", 100, "a major key", "light and quick, like acorns dropping on a wooden roof",
          "in steady eighth notes that jump between a low bar and a high bar."),
@@ -52,7 +54,7 @@ WORLDS = [
          "in eighth notes with wide leaps between low and high bars, each phrase ending in a quick run of four sixteenth notes."),
     ]),
     ("Toy Piano", "toy piano, plinky and bright", "piano", "two buttons at once: a chord on the accents", [
-        ("A", "Plink Plonk", 100, "a major key", "cheerful and tidy, like a child's first piano lesson",
+        ("A", "Plink Plonk", 100, "a major key", "cheerful and tidy, a sunny afternoon",
          "in eighth notes, with a strong two-note chord on the first beat of every bar."),
         ("B", "Tiptoe Keys", 104, "a minor key", "sneaky and funny, like tiptoeing past a sleeping cat",
          "in soft eighth notes, with a strong two-note chord on beats 1 and 3."),
@@ -72,7 +74,7 @@ WORLDS = [
          "of short repeated notes leading into long held notes of a whole bar."),
     ]),
     ("Music Box", "wind-up music box with a metal comb", "music box (or bells / glockenspiel)", "off-beats: the notes between the beats", [
-        ("A", "Wind-Up Lullaby", 88, "a major key", "tender and sleepy, a lullaby",
+        ("A", "Wind-Up Dream", 88, "a major key", "tender and dreamy, late at night",
          "in eighth notes where every second note of the tune lands on the off-beat, between the kicks."),
         ("B", "Off-Beat Ballerina", 92, "a minor key", "delicate and a little mysterious, a ballerina turning",
          "of off-beat eighth notes that land between the kicks, with one note on the first beat of every bar."),
