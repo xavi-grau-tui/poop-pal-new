@@ -53,7 +53,19 @@
   41,
   39
  ],
+ "mallet": [
+  174,
+  225,
+  36,
+  43
+ ],
  "bar_low": [
+  55,
+  261,
+  62,
+  23
+ ],
+ "bar_low_lit": [
   55,
   261,
   62,
@@ -65,20 +77,14 @@
   62,
   23
  ],
- "bar_high": [
-  200,
-  261,
-  62,
-  23
- ],
- "bar_low_lit": [
-  55,
-  261,
-  62,
-  23
- ],
  "bar_mid_lit": [
   128,
+  261,
+  62,
+  23
+ ],
+ "bar_high": [
+  200,
   261,
   62,
   23
@@ -113,12 +119,6 @@
   22,
   22
  ],
- "mallet": [
-  174,
-  225,
-  36,
-  43
- ],
  "lane_low": [
   63,
   34,
@@ -141,6 +141,17 @@
   86.25,
   158.8,
   231.34
+ ],
+ "frame": "xylophone",
+ "layers": [
+  "toy_kokeshi_bench",
+  "toy_kokeshi",
+  "toy_daruma",
+  "toy_ball",
+  "toy_maneki",
+  "toy_maneki_paw",
+  "toy_top",
+  "mallet"
  ],
  "tray_top": 202,
  "bar_y": 272

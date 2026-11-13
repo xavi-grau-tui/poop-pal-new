@@ -58,7 +58,13 @@ var wrong: Array[AudioStreamPlayer] = []
 ## World 1's look (2026-11-13): the designer's toy room and xylophone (docs/mockups/tomo_tunes/round1/), made into
 ## pixel layers by tools/design/tunes_world.py: 1 art pixel = 3 on screen. layout.json holds each layer's box.
 ## The lanes are the bars' centres; a note is due when it sits on its bar.
-const ART := "res://textures/minigames/tunes/xylophone/"
+const ART_OF := "res://textures/minigames/tunes/%s/"   # by the instrument (INSTRUMENT_OF)
+var ART := ""
+var world_now := ""                   # the instrument whose room is built
+## The score band moves aside where a world's art hangs something in the top right corner (the piano's paper cranes)
+const HUD_SHIFT := { "piano": -125.0 }
+var hud: Node2D
+var world_root: Node2D                # everything of the world's look, under the HUD
 const PX := 3.0
 var LANE_X := [264.0, 480.0, 693.0]      # on the bars (read from layout.json)
 const LINE_Y := 817.0
@@ -123,13 +129,6 @@ var _touch_lane := {}                 # touch index -> lane
 
 func _ready() -> void:
 	lcd_font = load("res://fonts/pixChicago.ttf")
-	var lf := FileAccess.open(ART + "layout.json", FileAccess.READ)
-	layout = JSON.parse_string(lf.get_as_text())
-	for i in 3:
-		LANE_X[i] = layout["lanes_x"][i] * PX
-	for c in LANE_NAMES:
-		note_tex.append(load(ART + "note_%s.png" % c))
-	glow_tex = load(ART + "glow.png")
 	for c in LANE_NAMES:
 		var wp := AudioStreamPlayer.new()
 		wp.volume_db = WRONG_DB
@@ -188,8 +187,10 @@ func _load_tune() -> void:
 		count_times.append(first_note - k * beat)
 	clock = count_times[0] - 0.6          # (a breath, then the bar of clicks)
 	next_spawn = 0
+	var instrument: String = INSTRUMENT_OF.get(tune.left(1), "xylophone")
+	_build_world(instrument)
 	for i in 3:                                      # the wrong notes of this song's instrument
-		wrong[i].stream = load(WRONG % [INSTRUMENT_OF.get(tune.left(1), "xylophone"), LANE_NAMES[i]])
+		wrong[i].stream = load(WRONG % [instrument, LANE_NAMES[i]])
 	song_started = false
 	played = 0.0
 	finished = false
@@ -501,21 +502,59 @@ func _read_keys() -> void:
 
 # ================================================================== NODES / FX
 
-func _create_static_nodes() -> void:
+## How each moving layer of a world is pinned: "base" turns and squashes about the middle of its foot, "top" hangs
+## from the middle of its top, "centre" about its middle. Layers not named here stay still.
+const PIVOTS := {
+	"toy_kokeshi": "base", "toy_daruma": "base", "toy_ball": "base", "toy_maneki": "base", "toy_maneki_paw": "base", "toy_top": "base",
+	"metronome_needle": "base", "tea_steam": "base", "record_arm": "centre", "record": "centre",
+	"crane_1": "top", "crane_2": "top", "crane_3": "top", "lantern": "top", "lantern_glow": "centre",
+}
+
+## The world's look (its instrument's room), built when a song of another world is loaded. The layers and their order
+## come from the world's layout.json (tools/design/tunes_world.py).
+func _build_world(instrument: String) -> void:
+	if instrument == world_now:
+		return
+	world_now = instrument
+	if dim_tween:
+		dim_tween.kill()
+	ART = ART_OF % instrument
+	for c in world_root.get_children():
+		c.queue_free()
+	lanes.clear()
+	bars.clear()
+	bar_tex.clear()
+	toys.clear()
+	note_tex.clear()
+	live.clear()
+	layout = JSON.parse_string(FileAccess.open(ART + "layout.json", FileAccess.READ).get_as_text())
+	for i in 3:
+		LANE_X[i] = layout["lanes_x"][i] * PX
+	for c in LANE_NAMES:
+		note_tex.append(load(ART + "note_%s.png" % c))
+	glow_tex = load(ART + "glow.png")
 	room = Node2D.new()
-	add_child(room)
+	world_root.add_child(room)
 	_layer("room", room)
 	for c in LANE_NAMES:
 		lanes.append(_layer("lane_" + c, room))
-	_layer("xylophone", room)
-	_layer("toy_kokeshi_bench", room)
-	for t in ["toy_kokeshi", "toy_daruma", "toy_ball", "toy_maneki", "toy_maneki_paw", "toy_top"]:
-		toys[t] = _layer(t, room, true)
+	_layer(layout["frame"], room)
+	for t in layout["layers"]:
+		if t == "mallet":
+			continue                                 # (delivered, not used yet)
+		toys[t] = _layer(t, room, PIVOTS.get(t, ""))
 	for c in LANE_NAMES:
 		bar_tex.append([load(ART + "bar_%s.png" % c), load(ART + "bar_%s_lit.png" % c)])
-		bars.append(_layer("bar_" + c, self))
+		bars.append(_layer("bar_" + c, world_root))
 	notes_layer = Node2D.new()
-	add_child(notes_layer)
+	world_root.add_child(notes_layer)
+	if hud:
+		hud.position.x = HUD_SHIFT.get(instrument, 0.0)
+
+func _create_static_nodes() -> void:
+	world_root = Node2D.new()
+	add_child(world_root)
+	_build_world("xylophone")
 	# the pal with headphones on, dancing to the beat in the top-left corner
 	var frames: SpriteFrames = PetState.build_sprite_frames() if PetState.has_poop() else null
 	if frames:
@@ -558,6 +597,11 @@ func _create_static_nodes() -> void:
 	groove_box.add_child(groove_fill)
 	_draw_groove()
 	score_label = _make_label(box.position + Vector2(6, 0), box.size - Vector2(18, 0), 36, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
+	hud = Node2D.new()                               # the score and the groove meter: one piece, so a world can move it
+	add_child(hud)
+	for n in [frame, box, groove_box, score_label]:
+		n.reparent(hud)
+	hud.position.x = HUD_SHIFT.get(world_now, 0.0)
 	combo_label = _make_label(Vector2(0, 110), Vector2(PLAY_WIDTH, 50), 30, HORIZONTAL_ALIGNMENT_CENTER, Color8(255, 236, 140))
 	judge_label = _make_label(Vector2(0, LINE_Y - 110), Vector2(220, 50), 32, HORIZONTAL_ALIGNMENT_CENTER, Color.WHITE)
 	judge_label.add_theme_color_override("font_outline_color", OUTLINE)
@@ -569,7 +613,7 @@ func _create_static_nodes() -> void:
 	banner.modulate.a = 0.0
 
 ## A layer of the world's art at its place. based: its pivot at the middle of its base (a toy that rocks or squashes).
-func _layer(layer: String, parent: Node, based := false) -> Sprite2D:
+func _layer(layer: String, parent: Node, pivot := "") -> Sprite2D:
 	var box: Array = layout[layer]
 	var sp := Sprite2D.new()
 	sp.texture = load(ART + layer + ".png")
@@ -577,9 +621,10 @@ func _layer(layer: String, parent: Node, based := false) -> Sprite2D:
 	sp.centered = false
 	sp.scale = Vector2(PX, PX)
 	sp.position = Vector2(box[0], box[1]) * PX
-	if based:
-		sp.offset = Vector2(-box[2] / 2.0, -box[3])
-		sp.position = Vector2(box[0] + box[2] / 2.0, box[1] + box[3]) * PX
+	if pivot != "":
+		var py: float = { "base": box[3], "top": 0.0, "centre": box[3] / 2.0 }[pivot]
+		sp.offset = Vector2(-box[2] / 2.0, -py)
+		sp.position = Vector2(box[0] + box[2] / 2.0, box[1] + py) * PX
 	sp.set_meta("home", sp.position)
 	parent.add_child(sp)
 	return sp
@@ -636,12 +681,25 @@ func _toys(x: float, ph: float) -> void:
 	var side := sin(PI * x)                        # flips every beat
 	var land := pow(1.0 - ph, 3.0)                 # 1 on the beat, gone before the next
 	var sq := land * 0.07 * a
-	toys["toy_kokeshi"].scale = Vector2(1.0 + sq, 1.0 - sq) * PX
-	toys["toy_maneki"].scale = Vector2(1.0 + sq * 0.6, 1.0 - sq * 0.6) * PX
-	toys["toy_daruma"].rotation = side * 0.1 * a
-	toys["toy_ball"].position.y = toys["toy_ball"].get_meta("home").y - sin(PI * ph) * 12.0 * a
-	toys["toy_maneki_paw"].rotation = side * 0.22 * a
-	toys["toy_top"].rotation = sin(PI * x * 0.5) * 0.12 * a
+	if world_now == "xylophone":
+		toys["toy_kokeshi"].scale = Vector2(1.0 + sq, 1.0 - sq) * PX
+		toys["toy_maneki"].scale = Vector2(1.0 + sq * 0.6, 1.0 - sq * 0.6) * PX
+		toys["toy_daruma"].rotation = side * 0.1 * a
+		toys["toy_ball"].position.y = toys["toy_ball"].get_meta("home").y - sin(PI * ph) * 12.0 * a
+		toys["toy_maneki_paw"].rotation = side * 0.22 * a
+		toys["toy_top"].rotation = sin(PI * x * 0.5) * 0.12 * a
+	elif world_now == "piano":
+		# an evening room: the metronome keeps the beat, the cranes and the lantern sway, the steam and the lantern's
+		# light breathe, the record's arm rides the groove
+		toys["metronome_needle"].rotation = side * 0.42 * maxf(a, 0.25)
+		for i in 3:
+			toys["crane_%d" % (i + 1)].rotation = sin(PI * x * 0.5 + i * 1.1) * 0.16 * a
+		toys["lantern"].rotation = sin(PI * x * 0.25) * 0.035 * a
+		toys["lantern_glow"].modulate.a = 0.55 + 0.45 * land * a
+		toys["tea_steam"].scale = Vector2(1.0 + 0.12 * side * a, 1.0 + 0.1 * sin(PI * ph) * a) * PX
+		toys["tea_steam"].modulate.a = 0.55 + 0.3 * sin(PI * ph)
+		toys["record_arm"].rotation = sin(PI * x * 0.5) * 0.05 * a
+		toys["record"].position.y = toys["record"].get_meta("home").y + (1.0 if ph < 0.5 else 0.0) * PX * a
 
 func _sync_headphones() -> void:
 	var path := "res://textures/pet/accessories/headphones/%s-%d.png" % [PetState.form_id, pal.frame + 1]

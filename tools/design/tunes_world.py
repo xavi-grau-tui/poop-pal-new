@@ -17,30 +17,37 @@ import numpy as np
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SRC = os.path.join(ROOT, 'docs', 'mockups', 'tomo_tunes', 'round1')
-OUT = os.path.join(ROOT, 'textures', 'minigames', 'tunes', 'xylophone')
+SRC = OUT = ''                        # (set per world in build())
+# A world = its instrument. src: the designer's round; frame: the instrument's body; bars: what the designer called
+# the three bars (they are written as bar_* for every world); even: the tool makes the bars one size and repaints
+# the tray with equal lanes (world 1 only: from world 2 on the designer delivers them equal); still / move: the
+# other layers, back to front, the ones that stay and the ones the game moves; soft: faint layers (steam, a glow)
+# that keep their weaker pixels.
+WORLDS = {
+    'xylophone': dict(src='round1', frame='xylophone', bars='bar', even=True, wall_cut=1172, soft=[],
+                      layers=['toy_kokeshi_bench', 'toy_kokeshi', 'toy_daruma', 'toy_ball', 'toy_maneki', 'toy_maneki_paw', 'toy_top', 'mallet']),
+    'piano': dict(src='round2', frame='piano', bars='key', even=False, wall_cut=0, soft=['lantern_glow', 'tea_steam'],
+                  layers=['lantern_glow', 'record_player', 'record', 'record_arm', 'tea', 'tea_steam', 'metronome', 'metronome_needle',
+                          'cranes_bar', 'crane_1', 'crane_2', 'crane_3', 'lantern']),
+}
 W, H = 317, 316                       # 950 x 948 on screen at x3
-WALL_CUT = 1172                       # xylophone.png above this row = the misaligned wall bands
-LAYERS = ['room', 'xylophone', 'toy_kokeshi_bench', 'toy_kokeshi', 'toy_daruma', 'toy_ball', 'toy_maneki', 'toy_maneki_paw',
-          'toy_top', 'bar_low', 'bar_mid', 'bar_high', 'bar_low_lit', 'bar_mid_lit', 'bar_high_lit',
-          'note_low', 'note_mid', 'note_high', 'note_gold', 'mallet']
 OUTLINE = (74, 44, 32)
 LANES = {'low': (246, 150, 180), 'mid': (250, 206, 110), 'high': (150, 220, 190)}   # the wall lanes' colours
 BAR_W = 62                            # art px: the three bars at ONE size (the user, 2026-11-13); the designer's were 90, 66 and 53
 LANE_TOP, LANE_BOTTOM = 34, 196       # art px: the wall above the tray
 
 
-def small(name):
-    """the layer at the game's size: premultiplied box filter, hard alpha"""
+def small(name, wall_cut=0, cut=0.5):
+    """the layer at the game's size: premultiplied box filter, hard alpha (a pixel is in from `cut` of full)"""
     im = np.asarray(Image.open(os.path.join(SRC, name + '.png')).convert('RGBA')).astype(np.float32) / 255.0
-    if name == 'xylophone':
-        im = im.copy(); im[:WALL_CUT, :, 3] = 0.0
+    if wall_cut:                                   # (world 1: the frame's misaligned bands on the wall, above this row)
+        im = im.copy(); im[:wall_cut, :, 3] = 0.0
     a = im[..., 3:4]
     pre = Image.fromarray((np.concatenate([im[..., :3] * a, a], 2) * 255).astype(np.uint8), 'RGBA').resize((W, H), Image.BOX)
     p = np.asarray(pre).astype(np.float32) / 255.0
     al = p[..., 3:4]
     rgb = np.where(al > 0.001, p[..., :3] / np.maximum(al, 0.001), 0.0)
-    return np.clip(rgb, 0, 1), (al[..., 0] >= 0.5)
+    return np.clip(rgb, 0, 1), (al[..., 0] >= cut)
 
 
 NOTE = 18                             # art px across, before its outline (the user, 2026-11-13: "slightly smaller"; it was 22)
@@ -124,19 +131,41 @@ def same_size(rgb, mask, cx):
 
 
 def main():
+    for world, cfg in WORLDS.items():
+        build(world, cfg)
+
+
+def build(world, cfg):
+    global SRC, OUT
+    SRC = os.path.join(ROOT, 'docs', 'mockups', 'tomo_tunes', cfg['src'])
+    OUT = os.path.join(ROOT, 'textures', 'minigames', 'tunes', world)
     os.makedirs(OUT, exist_ok=True)
-    got = {n: small(n) for n in LAYERS}
-    rgb, mask, edges = even_tray(*got['xylophone'])
-    got['xylophone'] = (rgb, mask)
-    top = min(edges)
-    bar_y = int(np.nonzero(got['bar_mid'][1].any(1))[0].mean())            # the row the bars lie on
-    centre = lambda y, k: edges[y][0] + (edges[y][1] - edges[y][0]) * (2 * k + 1) / 6.0
-    bar_row = min(max(edges), bar_y)
-    for n in LAYERS:
-        if n.startswith('note_'):
-            got[n] = outlined(*outlined(*bead(n)))       # the outline twice: 2 art px (the user: "a bit more of outline")
-        if n.startswith('bar_'):
-            got[n] = same_size(*got[n], centre(bar_row, ['low', 'mid', 'high'].index(n.split('_')[1])))
+    frame = cfg['frame']
+    got = {'room': small('room'), frame: small(frame, cfg['wall_cut'])}
+    for n in cfg['layers']:
+        got[n] = small(n, cut=0.22 if n in cfg['soft'] else 0.5)
+    for lane in ('low', 'mid', 'high'):
+        for lit in ('', '_lit'):
+            got[f'bar_{lane}{lit}'] = small(f"{cfg['bars']}_{lane}{lit}")
+    for n in ('note_low', 'note_mid', 'note_high', 'note_gold'):
+        got[n] = outlined(*outlined(*bead(n)))           # the outline twice: 2 art px (the user: "a bit more of outline")
+    rows = np.nonzero(got['bar_mid'][1].any(1))[0]
+    bar_y = int(rows.mean())                                               # the row the bars lie on
+    if cfg['even']:
+        rgb, mask, edges = even_tray(*got[frame])
+        got[frame] = (rgb, mask)
+        top = min(edges)
+        bar_row = min(max(edges), bar_y)
+        centre = lambda k: edges[bar_row][0] + (edges[bar_row][1] - edges[bar_row][0]) * (2 * k + 1) / 6.0
+        lane_w = int((edges[top][1] - edges[top][0]) / 3.0) - 6
+        for n in list(got):
+            if n.startswith('bar_'):
+                got[n] = same_size(*got[n], centre(['low', 'mid', 'high'].index(n.split('_')[1])))
+    else:                                                                  # the designer's bars are already equal and in place
+        bar_cx = [float(np.nonzero(got[f"bar_{lane}"][1].any(0))[0].mean()) + 0.5 for lane in ('low', 'mid', 'high')]
+        centre = lambda k: bar_cx[k]
+        top = int(np.nonzero(got[frame][1].any(1))[0].min())
+        lane_w = 47
     layout = {}
     for n, (rgb, mask) in got.items():
         # each layer keeps its own few colours (a palette shared by the whole world went to the room's browns and
@@ -151,10 +180,10 @@ def main():
         im.crop(box).save(os.path.join(OUT, n + '.png'))
         layout[n] = [box[0], box[1], box[2] - box[0], box[3] - box[1]]
     # the lanes on the wall: light falling down it, soft at the sides, gone at the top (alpha in 8 steps: pixel art)
-    LANE_W = int((edges[top][1] - edges[top][0]) / 3.0) - 6             # the wall's lanes carry on from the tray's
+    LANE_W = lane_w
     for k, (name, col) in enumerate(LANES.items()):
-        cx = centre(bar_row, k)                                         # straight above its bar (the user: the notes fall straight to the keys)
-        h = LANE_BOTTOM - LANE_TOP
+        cx = centre(k)                                         # straight above its bar (the user: the notes fall straight to the keys)
+        h = min(LANE_BOTTOM, top) - LANE_TOP
         y = np.linspace(0, 1, h)[:, None]
         x = np.abs(np.linspace(-1, 1, LANE_W))[None, :]
         a = (0.10 + 0.42 * y ** 1.4) * np.clip((1.0 - x) / 0.16, 0, 1) ** 0.7
@@ -169,7 +198,9 @@ def main():
     im = np.zeros((g, g, 4), np.uint8); im[..., :3] = (255, 246, 214); im[..., 3] = (a * 255).astype(np.uint8)
     Image.fromarray(im, 'RGBA').save(os.path.join(OUT, 'glow.png'))
     # a note falls straight down onto its bar (following the tray's slanted lane was tried and refused by the user)
-    layout['lanes_x'] = [round(centre(bar_row, k), 2) for k in range(3)]
+    layout['lanes_x'] = [round(centre(k), 2) for k in range(3)]
+    layout['frame'] = frame
+    layout['layers'] = cfg['layers']
     layout['tray_top'] = top
     layout['bar_y'] = bar_y
     with open(os.path.join(OUT, 'layout.json'), 'w') as f:

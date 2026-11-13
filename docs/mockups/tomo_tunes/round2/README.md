@@ -1,17 +1,27 @@
-# Tomo Tunes — World 2 toy piano mock-up
+# Tomo Tunes, World 2: approved piano mock-up layers
 
-`tomo_piano_mockup.png` is the original Step 1 review painting at 1900 × 1896. `tomo_piano_mockup_v2.png` is the revised review painting; both are mock-ups, not game layers.
+`layers_assembled_preview.png` is a composite made from the delivered layers. The approved composition is `tomo_piano_mockup_v3.png`; the layers preserve its blue-hour tatami room, dark piano, record player, tea, metronome, cranes, and lantern. The separate cutouts and empty room/piano were painted with ImageGen, then registered and cut to the approved composition.
 
-`tomo_piano_mockup_v3.png` is the quieter evening revision: the robot, train and teddy are gone; a record player and steaming tea sit at the room's edges. The metronome, cranes, lantern, shoji room, three play keys and four falling notes remain. The piano body is polished dark red-brown wood with restrained gold trim and no painted flowers. The room behind the removed toys was repainted in the ImageGen edit. This is still a review mock-up; no layers have been made from it yet.
+## Canvas and placement
 
-The v2 painting moves the game to a tatami music room at blue hour. A full-width, subdued shoji screen replaces the orange wall and left window, and one lantern supplies the warm accent. The instrument is now a small upright toy piano with a lid, empty music rest, ordinary miniature keyboard and turned legs. The three large pink, yellow and mint play keys, falling-note chord and toys remain.
+- All 25 game layers are transparent RGBA PNGs on the same **1900 × 1896** canvas. Keep their canvas origin when drawing them.
+- `room_overscan.png` is **2060 × 2056**; its central rectangle, starting at (80, 80), matches `room.png` pixel for pixel. Its outer 80 px is extended for tilt.
+- `key_low`, `key_mid`, and `key_high` are each **370 × 140** in their registered layers, centered at **(517, 1635)**, **(953, 1635)**, and **(1388, 1635)**. The lit keys use the same silhouettes and positions.
+- Each note occupies **130 × 130** in its registered layer. They have no motion trails.
 
-The room is a different corner of the house at late afternoon: a dusk window, long shadows, a lit paper lantern, and a quiet wall behind the straight note paths. The toys are a wind-up robot, wooden train, metronome, music-loving teddy and paper-crane mobile. The toy piano has three equal pink, yellow and mint keys. Pink and mint notes appear together at the same height, with a yellow note lower down and a smaller gold note above. The notes are wooden beads with no painted motion streaks.
+## Layer order, back to front
 
-Made with the built-in ImageGen tool. Prompt set: paint a square companion to the approved World 1 xylophone scene in a quieter evening room; place three same-size front-facing toy-piano keys beneath three straight note paths; keep the central wall clear and show a simultaneous two-note chord; edit the notes to smooth wooden beads; add one higher gold note. The selected generated painting was resized to the requested review dimensions. Exact key registration will be set during the layer pass after review.
+1. `room.png` or `room_overscan.png` (with the latter offset by −80, −80)
+2. `lantern_glow.png` (animate opacity)
+3. `piano.png` (body, small keys, lid, and stand; no large coloured keys)
+4. `record_player.png`, `record.png`, `record_arm.png`
+5. `tea.png`, `tea_steam.png`
+6. `metronome.png`, `metronome_needle.png`
+7. `cranes_bar.png`, `crane_1.png`, `crane_2.png`, `crane_3.png`
+8. `lantern.png`
+9. `key_low.png`, `key_mid.png`, `key_high.png` (swap with the corresponding `_lit` file on hits)
+10. `note_low.png`, `note_mid.png`, `note_high.png`, `note_gold.png` (move these during play)
 
-The v2 revision used the built-in ImageGen tool, with the original mock-up as the edit target. Prompt set: preserve the play keys, aligned notes and toys; replace the room with a cool dusk shoji-and-tatami setting; repaint the body as an unmistakable toy piano; keep the central note area calm and the lantern as the warm accent. The selected square painting was resized to 1900 × 1896 for review.
+Each movable prop is whole on its own layer; its background is present in `room.png`. The record, tonearm, steam, metronome needle, and cranes can move independently. `cranes_bar.png` contains the mobile's stick and strings.
 
-The v3 revision used the built-in ImageGen tool with v2 as the edit target. Prompt set: preserve the dusk room, notes, keys, metronome, cranes and lantern; remove the robot, train and teddy; add one record player and one cup of tea at the edges; refinish the piano in dark polished wood and thin gold trim. The selected square painting was resized to 1900 × 1896 for review.
-
-No game files were changed.
+No game assets or install scripts were changed.

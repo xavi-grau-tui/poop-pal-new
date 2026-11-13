@@ -2,7 +2,7 @@ extends Node2D
 ## QA: Tomo Tunes' look in the real game. Starts song 1 through the level menu, hits every note for 8 s, then stops
 ## pressing (so the miss and the dimmed room show), and saves four screens (950 x 948) as look_<name>.png.
 ##
-##   Godot --path . --windowed --always-on-top --resolution 1000x1000 --audio-driver Dummy res://tools/qa/preview.tscn -- script=res://tools/qa/tunes_look.gd dir=/abs/folder wait=40
+##   Godot --path . --windowed --always-on-top --resolution 1000x1000 --audio-driver Dummy res://tools/qa/preview.tscn -- script=res://tools/qa/tunes_look.gd dir=/abs/folder level=1 wait=40
 func _dir() -> String:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("dir="):
@@ -16,6 +16,15 @@ func _ready() -> void:
 	g = load("res://scenes/minigames/tummy_tunes.tscn").instantiate()
 	add_child(g)
 	await get_tree().create_timer(0.4).timeout
+	var level := 1                                 # level=N: the menu's Nth entry (7 = the piano song on easy)
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("level="):
+			level = int(arg.substr(6))
+	for i in level - 1:                            # a tap moves to the next entry
+		g.on_main_button_pressed()
+		await get_tree().create_timer(0.1).timeout
+		g.on_main_button_released()
+		await get_tree().create_timer(0.25).timeout
 	g.on_main_button_pressed()
 	await get_tree().create_timer(1.6).timeout
 	g.on_main_button_released()

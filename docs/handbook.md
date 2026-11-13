@@ -121,7 +121,9 @@ World 1 (the toy xylophone) is the model. Its brief is `docs/tomo_tunes_art_brie
    transparent layers on the same 1900 x 1896 canvas: `room`, the instrument's frame, three
    bars and their `_lit` twins, the toys (anything that moves on its own layer, like the cat's
    paw), four notes, plus a README.
-2. `.venv/bin/python tools/design/tunes_world.py` makes
+2. Add the world to `WORLDS` in `tools/design/tunes_world.py` (its round's folder, the instrument's
+   frame layer, what the designer called the bars, the other layers back to front, the faint ones).
+   `.venv/bin/python tools/design/tunes_world.py` makes
    `textures/minigames/tunes/<world>/*.png` and `layout.json` (each layer's box, the lanes' x at
    the wall and on the bars, the tray's top). The tool, not the designer's art, is responsible for:
    - the three bars at ONE size (`BAR_W`), each centred on its lane (the user's rule);
@@ -129,7 +131,10 @@ World 1 (the toy xylophone) is the model. Its brief is `docs/tomo_tunes_art_brie
    - the soft lanes on the wall, straight above the bars;
    - the notes' outline and the glow.
    For a new world, copy the tool's world-1 settings into a table per world rather than a new script.
-3. `scripts/tummy_tunes.gd` reads `layout.json`: `_layer()` places a layer, `_toys()` moves the
+3. In `scripts/tummy_tunes.gd`: the instrument in `INSTRUMENT_OF`, each moving layer's pivot in
+   `PIVOTS`, its movement in `_toys()` (a branch per world), and `HUD_SHIFT` if the art puts
+   something under the score band (tell the designer to keep the top right corner free).
+   The script reads `layout.json`: `_layer()` places a layer, `_toys()` moves the
    toys on the beat, `_flash()` dips a bar on a press, `_strike()` lights it on a hit,
    `_set_lead()` dims the room while the instrument is silent. A note falls STRAIGHT down
    onto its bar (a path that followed the tray's slanted lane was refused by the user).
