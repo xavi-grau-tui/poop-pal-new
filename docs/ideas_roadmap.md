@@ -134,6 +134,7 @@ The loop will be built bit by bit (the user, 2026-11-12: it stays on paper for n
 | File | What it is |
 |---|---|
 | `docs/ideas_roadmap.md` (this) | the current picture, then every older note and each game's detail |
+| `docs/handbook.md` | HOW the work is done: the standing rules, the commands, the art standard, the recipes (a song, a world's art), the traps. Read it before working |
 | `docs/loop_v2.md` | the loop as decided: clocks, drinks as powers, care, coins, generations, every cycle in one checklist, the decisions and the review |
 | `docs/games_pass.md` | the stars and powers contract for the six games and the order of the pass |
 | `docs/tomo_tunes.md`, `docs/tomo_tunes_prompts.md` | the music game: the approach, the worlds, the workflow per song; the 24 Suno prompts |

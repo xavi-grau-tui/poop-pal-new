@@ -25,8 +25,9 @@ LAYERS = ['room', 'xylophone', 'toy_kokeshi_bench', 'toy_kokeshi', 'toy_daruma',
           'toy_top', 'bar_low', 'bar_mid', 'bar_high', 'bar_low_lit', 'bar_mid_lit', 'bar_high_lit',
           'note_low', 'note_mid', 'note_high', 'note_gold', 'mallet']
 OUTLINE = (74, 44, 32)
-LANES = {'low': (505, (246, 150, 180)), 'mid': (995, (250, 206, 110)), 'high': (1430, (150, 220, 190))}   # the bars' centres (painted px)
-LANE_W, LANE_TOP, LANE_BOTTOM = 46, 34, 196       # art px: the wall above the tray
+LANES = {'low': (246, 150, 180), 'mid': (250, 206, 110), 'high': (150, 220, 190)}   # the wall lanes' colours
+BAR_W = 62                            # art px: the three bars at ONE size (the user, 2026-11-13); the designer's were 90, 66 and 53
+LANE_TOP, LANE_BOTTOM = 34, 196       # art px: the wall above the tray
 
 
 def small(name):
@@ -51,12 +52,74 @@ def outlined(rgb, mask):
     return rgb, grown
 
 
+def even_tray(rgb, mask):
+    """The xylophone's tray repainted with three EQUAL lanes (the user, 2026-11-13: "the keys should be the same size
+    and the note lanes more aligned with those"; the designer's lanes were 3 different widths). The outer rails, the
+    front beam and the corner blocks stay as painted; between the rails, row by row, the tray is split in thirds
+    with two wooden dividers. Returns the picture and, per row, the tray's inner left and right edge."""
+    rgb = rgb.copy()
+    px = rgb * 255
+    paint = np.array([[249, 192, 190], [250, 214, 142], [203, 224, 188]], np.float32)       # the three lanes as painted
+    d = np.abs(px[:, :, None, :] - paint[None, None]).sum(3)
+    which = d.argmin(2)
+    near = mask & (d.min(2) < 30)
+    pink, mint = near & (which == 0), near & (which == 2)       # (the yellow is too close to the wood's highlights to find edges with)
+    lane = pink | mint | (near & (which == 1))
+    cols = [np.median(rgb[near & (which == k)], 0) for k in range(3)]
+    seen = [y for y in range(H) if pink[y].sum() > 30 and mint[y].sum() > 30]
+    fl = np.polyfit(seen, [np.nonzero(pink[y])[0].min() for y in seen], 1)        # the tray's inner left edge, row by row
+    fr = np.polyfit(seen, [np.nonzero(mint[y])[0].max() + 1 for y in seen], 1)    # and its inner right edge
+    rows = list(range(seen[0], seen[-1] + 1))
+    wood = rgb[mask & ~lane]
+    lum = wood.sum(1)
+    tone = [np.median(wood[(lum >= np.percentile(lum, a)) & (lum <= np.percentile(lum, b))], 0) for a, b in ((85, 99), (45, 70), (8, 25))]
+    edges = {}
+    for y in rows:
+        L, R = float(np.polyval(fl, y)), float(np.polyval(fr, y))
+        edges[y] = (L, R)
+        half = 2.6 + 1.6 * (y - rows[0]) / (rows[-1] - rows[0])                              # a divider is wider near us
+        for x in range(int(np.ceil(L)), int(R)):
+            u = (x + 0.5 - L) / (R - L)
+            c = cols[min(2, int(u * 3))]
+            for k in (1, 2):
+                off = x + 0.5 - (L + (R - L) * k / 3.0)
+                if abs(off) <= half:
+                    c = tone[0] if off < -half + 1.2 else (tone[2] if off > half - 1.5 else tone[1])
+                elif half < off <= half + 1.5:
+                    c = c * 0.88                                                                # its shadow on the lane
+            rgb[y, x] = c
+            mask[y, x] = True
+    return rgb, mask, edges
+
+
+def same_size(rgb, mask, cx):
+    """a bar at BAR_W, centred on cx: its two ends kept (the pegs), the middle cut or stretched"""
+    xs = np.nonzero(mask.any(0))[0]; x0, x1 = xs.min(), xs.max() + 1
+    cap = min(20, (x1 - x0) // 2 - 2)
+    mid = x0 + cap + (np.arange(BAR_W - 2 * cap) * (x1 - x0 - 2 * cap) / (BAR_W - 2 * cap)).astype(int)
+    cols = np.concatenate([np.arange(x0, x0 + cap), mid, np.arange(x1 - cap, x1)])
+    cut = lambda a: a[:, cols]
+    out, om = np.zeros_like(rgb), np.zeros_like(mask)
+    left = int(round(cx - BAR_W / 2))
+    out[:, left:left + BAR_W] = cut(rgb)
+    om[:, left:left + BAR_W] = cut(mask)
+    return out, om
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     got = {n: small(n) for n in LAYERS}
+    rgb, mask, edges = even_tray(*got['xylophone'])
+    got['xylophone'] = (rgb, mask)
+    top = min(edges)
+    bar_y = int(np.nonzero(got['bar_mid'][1].any(1))[0].mean())            # the row the bars lie on
+    centre = lambda y, k: edges[y][0] + (edges[y][1] - edges[y][0]) * (2 * k + 1) / 6.0
+    bar_row = min(max(edges), bar_y)
     for n in LAYERS:
         if n.startswith('note_'):
             got[n] = outlined(*got[n])
+        if n.startswith('bar_'):
+            got[n] = same_size(*got[n], centre(bar_row, ['low', 'mid', 'high'].index(n.split('_')[1])))
     layout = {}
     for n, (rgb, mask) in got.items():
         # each layer keeps its own few colours (a palette shared by the whole world went to the room's browns and
@@ -69,7 +132,9 @@ def main():
         im.crop(box).save(os.path.join(OUT, n + '.png'))
         layout[n] = [box[0], box[1], box[2] - box[0], box[3] - box[1]]
     # the lanes on the wall: light falling down it, soft at the sides, gone at the top (alpha in 8 steps: pixel art)
-    for name, (cx, col) in LANES.items():
+    LANE_W = int((edges[top][1] - edges[top][0]) / 3.0) - 6             # the wall's lanes carry on from the tray's
+    for k, (name, col) in enumerate(LANES.items()):
+        cx = centre(top, k)
         h = LANE_BOTTOM - LANE_TOP
         y = np.linspace(0, 1, h)[:, None]
         x = np.abs(np.linspace(-1, 1, LANE_W))[None, :]
@@ -77,14 +142,18 @@ def main():
         a = np.round(a * 16) / 16
         im = np.zeros((h, LANE_W, 4), np.uint8); im[..., :3] = col; im[..., 3] = (a * 255).astype(np.uint8)
         Image.fromarray(im, 'RGBA').save(os.path.join(OUT, f'lane_{name}.png'))
-        layout[f'lane_{name}'] = [round(cx / 6) - LANE_W // 2, LANE_TOP, LANE_W, h]
+        layout[f'lane_{name}'] = [int(round(cx - LANE_W / 2)), LANE_TOP, LANE_W, h]
     # the glow behind a falling note
     g = 40
     d = np.hypot(*np.meshgrid(np.arange(g) - g / 2 + 0.5, np.arange(g) - g / 2 + 0.5))
     a = np.round(np.clip(1.0 - d / (g / 2), 0, 1) ** 1.6 * 0.55 * 10) / 10
     im = np.zeros((g, g, 4), np.uint8); im[..., :3] = (255, 246, 214); im[..., 3] = (a * 255).astype(np.uint8)
     Image.fromarray(im, 'RGBA').save(os.path.join(OUT, 'glow.png'))
-    layout['lanes_x'] = [round(c / 6) for c, _ in LANES.values()]
+    # a note's path: straight down the wall's lane, then along the tray's lane (it narrows away from us) onto its bar
+    layout['lanes_x_top'] = [round(centre(top, k), 2) for k in range(3)]
+    layout['lanes_x'] = [round(centre(bar_row, k), 2) for k in range(3)]
+    layout['tray_top'] = top
+    layout['bar_y'] = bar_y
     with open(os.path.join(OUT, 'layout.json'), 'w') as f:
         json.dump(layout, f, indent=1)
     print(f'{len(got)} layers + 3 lanes + glow -> {os.path.relpath(OUT, ROOT)}')
