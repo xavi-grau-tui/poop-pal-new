@@ -33,6 +33,7 @@ SR, HOP, NF = 22050, 128, 1024
 FPS = SR / HOP
 BACKING_UNDER = 6.0        # dB under the lead, as a phone speaker hears it: the target
 MAX_HARMONICS = 80.0       # the most of the bass's 2nd / 3rd harmonics that may be added to reach it
+MAX_LEN = float(os.environ.get('TUNE_MAX_LEN', 72.0))      # s: a level's longest
 NAMES = 'C C# D D# E F F# G G# A A# B'.split()
 
 
@@ -237,12 +238,24 @@ def main():
               'normal': [list(r[:3]) for r in rows if r[3] <= 1],
               'hard': [list(r[:3]) for r in rows]}
     beats = [round(float(t), 3) for t in grid[parity::2] if t < length]
+    # a long take (Suno's are often over 2 minutes; a level is 60-75 s): the song ends on the last bar line before
+    # MAX_LEN, counted in bars of 4 from the first beat, with a short fade. Its start is the song's start.
+    if length > MAX_LEN + 6:
+        bars = [t for t in beats[::4] if t <= MAX_LEN]
+        length = bars[-1] if len(bars) > 8 else MAX_LEN
+        beats = [t for t in beats if t < length]
+        charts = {k: [n for n in v if n[0] < length - 0.15] for k, v in charts.items()}
+        rows = [r for r in rows if r[0] < length - 0.15]
+        cut_note = f'  cut to {length:.1f} s ({len(bars) - 1} bars) from {min(len(lead), len(back)) / SR:.0f} s'
+    else:
+        cut_note = ''
     out = {'id': sid, 'title': title, 'bpm': round(bpm, 2), 'offset': beats[0], 'length': round(length, 2), 'beats': beats, 'charts': charts}
     with open(os.path.join(ROOT, 'data', 'charts', f'tunes_{sid}.json'), 'w') as f:
         json.dump(out, f)
     st = {name: decode(src, 44100, 2)[:int(length * 44100)] for name, src in (('lead', f_lead), ('backing', f_back), ('mix', f_mix))}
-    n = min(len(v) for v in st.values())
-    st = {k: v[:n] for k, v in st.items()}
+    n = min(min(len(v) for v in st.values()), int(length * 44100))
+    fade = np.ones(n); k = int(0.35 * 44100); fade[-k:] = np.linspace(1, 0, k) if cut_note else 1.0
+    st = {k2: v[:n] * fade[:, None] for k2, v in st.items()}
     lead2, band, report = balance(st['lead'], st['backing'], st['mix'], beats)
     write_ogg(os.path.join(ROOT, 'sounds', 'tunes', sid, 'lead.ogg'), lead2, 44100)
     write_ogg(os.path.join(ROOT, 'sounds', 'tunes', sid, 'backing.ogg'), band, 44100)
@@ -257,6 +270,8 @@ def main():
     print(f'  the beats are where the kick is: {kick_ratio:.1f}x stronger there' + ('' if kick_ratio > 1.3 else '  (WEAK: check the easy chart by ear)'))
     print('  pitches: ' + ' '.join(f'{NAMES[m % 12]}{m // 12 - 1}x{c}>{"LMR"[lane[m]]}' for m, c in sorted(collections.Counter(n[1] for n in notes).items())))
     print(f'  longest silence {gaps.max():.1f} s ({gaps.max() / (4 * beat_len):.1f} bars); holds: {sum(1 for r in rows if r[2] > 0)}')
+    if cut_note:
+        print(cut_note)
     print('  the band: ' + report)
     for name, c in charts.items():
         ls = collections.Counter(n[1] for n in c)

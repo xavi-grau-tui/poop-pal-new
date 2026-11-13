@@ -32,10 +32,13 @@ STYLE_TAIKO = ("solo taiko drums, only three instruments: taiko, soft bass, quie
 # take before it is split, and the takes are SORTED into the slots by that number.
 # (2026-11-13, later: "very simple nursery-rhyme melody" and "cute" gave kindergarten songs: the user. EASY is few
 # notes, space and repetition; the STYLE stays a cool, laid-back game tune, like the build's lo-fi soundtrack.)
-LEVEL = {"A": "a relaxed catchy hook, few notes with space between them, lots of repetition, laid-back lo-fi game tune,",
-         "B": "a relaxed catchy hook with a little more movement, laid-back lo-fi game tune,",
-         "C": "a lively catchy melody with more notes and movement, upbeat game tune,",
-         "D": "a busy showpiece melody, the liveliest of all, with runs and leaps, upbeat game tune,"}
+# (later the same day: "lo-fi" and "catchy hook" brought busier tunes and syncopated rhythms. Now the RHYTHM is
+# spelled out: notes on the beat, plain and even; worlds 1-3 exclude syncopation.)
+LEVEL = {"A": "a calm mellow riff of few notes, every note on the beat, long gaps between phrases, the same short phrase repeated, plain even rhythm,",
+         "B": "a calm mellow riff, notes on the beat with a few between, the same short phrase repeated, plain even rhythm,",
+         "C": "a brighter melody with more notes and movement, plain even rhythm,",
+         "D": "a busy showpiece melody, the liveliest of all, with runs and leaps,"}
+PLAIN_RHYTHM = "syncopation, off-beat rhythm, "       # worlds 1-3: the off-beat is world 4's new thing
 OTHERS = ["xylophone", "piano", "flute", "bells", "synth", "synth lead", "chiptune", "8-bit", "strings", "pads", "guitar", "brass"]
 ALWAYS = "nursery rhyme, children's song, lullaby, vocals, choir, orchestra, build-up, drop, breakdown, key change, tempo change, swing, reverb, delay, arpeggio"
 OWN = {1: ["xylophone"], 2: ["piano"], 3: ["flute"], 4: ["bells"], 5: ["synth", "synth lead", "chiptune", "8-bit"], 6: ["flute"]}
@@ -111,7 +114,7 @@ def songs():
         for letter, title, bpm, key, mood, part in rows:
             taiko = world == "Festival Taiko"
             style = (STYLE_TAIKO if taiko else STYLE).format(key=key, mood=mood, lead=lead, short=split.split(" (")[0], part=part, bpm=bpm, level=LEVEL[letter])
-            exclude = ", ".join([o for o in OTHERS if o not in OWN[w]] + (["drum kit", "kick", "snare", "hi-hat"] if taiko else [])) + ", " + ALWAYS
+            exclude = (PLAIN_RHYTHM if w <= 3 else "") + ", ".join([o for o in OTHERS if o not in OWN[w]] + (["drum kit", "kick", "snare", "hi-hat"] if taiko else [])) + ", " + ALWAYS
             yield w, world, split, teaches, letter, title, bpm, style, exclude
 
 
