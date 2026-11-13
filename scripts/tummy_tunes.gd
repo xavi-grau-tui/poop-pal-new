@@ -51,7 +51,7 @@ const GROOVE_STRAY := -0.07           # pressing when there's no note at all (wa
 ## dissonant sound of the instrument being played, low medium or high"; a trial on world 1, then the rule for every
 ## world). Made by tools/audio/tune_wrong.py.
 const WRONG := "res://sounds/tunes/fx/xylophone_wrong_%s.wav"
-const WRONG_DB := -5.0
+const WRONG_DB := -11.0               # (was -5: the user, "a bit less loud")
 var wrong: Array[AudioStreamPlayer] = []
 
 ## World 1's look (2026-11-13): the designer's toy room and xylophone (docs/mockups/tomo_tunes/round1/), made into
