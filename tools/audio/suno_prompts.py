@@ -48,7 +48,7 @@ OWN = {1: ["xylophone"], 2: ["piano"], 3: ["flute"], 4: ["bells"], 5: ["synth", 
 WORLDS = [
     ("Toy Xylophone", "toy xylophone with wooden mallets", "xylophone", "single notes on the beat; the lanes are low, middle and high", [
         ("A", "Wooden Steps", 92, "a major pentatonic key", "sunny, warm and easygoing, a first morning at a small shrine",
-         "in even eighth notes that step up and down like stairs, one note at a time."),
+         "stepping up and down like stairs, one note at a time."),
         ("B", "Hopscotch", 96, "a major pentatonic key", "playful and bouncy, light on its feet",
          "in eighth notes with a short rest at the end of every bar, hopping between two neighbouring notes."),
         ("C", "Acorn Rain", 100, "a major key", "light and quick, like acorns dropping on a wooden roof",

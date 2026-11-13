@@ -16,7 +16,7 @@ Teaches: single notes on the beat; the lanes are low, middle and high. Split fro
 Style:
 
 ```
-solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. a calm mellow riff of few notes, every note on the beat, long gaps between phrases, the same short phrase repeated, plain even rhythm, in even eighth notes that step up and down like stairs, one note at a time. a major pentatonic key, sunny, warm and easygoing, a first morning at a small shrine. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 92 BPM, 4/4, straight timing, loopable
+solo toy xylophone with wooden mallets, xylophone trio, only three instruments: xylophone, warm round bass, crisp drums. dry, close, no reverb. a calm mellow riff of few notes, every note on the beat, long gaps between phrases, the same short phrase repeated, plain even rhythm, stepping up and down like stairs, one note at a time. a major pentatonic key, sunny, warm and easygoing, a first morning at a small shrine. the drums are clear and present: punchy kick on every beat, crisp snare on 2 and 4, a bright shaker on every eighth. same instruments from start to end, no new instruments, no build, no arrangement changes. 92 BPM, 4/4, straight timing, loopable
 ```
 
 Exclude:
