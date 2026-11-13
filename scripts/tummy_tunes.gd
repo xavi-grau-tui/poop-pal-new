@@ -75,6 +75,7 @@ var song: AudioStreamPlayer
 var sync: AudioStreamSynchronized     # 0 = the backing, 1 = the lead
 var song_length := 0.0
 var song_started := false
+var played := 0.0                     # seconds since the song started, by the frame clock (the fallback for its end)
 var clock := -LEAD_IN                 # song time (negative during the count-in)
 ## The count-in (the user, 2026-11-13): one bar of metronome before the first note, "tic tac tac tac", at the
 ## song's own tempo, so the first note can be hit. The fourth beat of that bar IS the song's first note (the
@@ -188,6 +189,7 @@ func _load_tune() -> void:
 	clock = count_times[0] - 0.6          # (a breath, then the bar of clicks)
 	next_spawn = 0
 	song_started = false
+	played = 0.0
 	finished = false
 	combo = 0
 	best_combo = 0
@@ -229,8 +231,15 @@ func _process(delta: float) -> void:
 			song_started = true
 			song.play()
 	var t := _song_time()
-	if song_started and not finished and song_length > 0.0 and t > song_length + 0.3:
-		_on_song_finished()                          # (a synchronized stream's own end isn't relied on)
+	# The song is over when its time is up OR when the player has stopped on its own. (The user, 2026-11-13: "when
+	# song is finished menu doesn't appear": a take played whole ends exactly at song_length, the player stops, its
+	# position reads 0 again, and the time was never "up".)
+	if song_started:
+		played += delta
+		if not finished and (t > song_length + 0.3 or (played > 1.0 and not song.playing) or played > song_length + 1.5):
+			_on_song_finished()
+		if not song.playing:
+			t = maxf(t, played)                         # (so the last notes still pass and are judged)
 	# spawn notes FALL_TIME before they're due
 	while next_spawn < notes.size() and notes[next_spawn][0] - t <= FALL_TIME:
 		_spawn(notes[next_spawn][0], int(notes[next_spawn][1]))

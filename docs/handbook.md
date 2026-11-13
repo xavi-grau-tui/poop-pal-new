@@ -149,5 +149,7 @@ width**: world 1 needed the tool to even them out.
 | Suno's tempo wanders and a pickup note shifts the grid | `tune_chart.py` follows the grid note by note and picks the best-fitting start (`best_grid()`) |
 | Publishing the decisions page made a second page | always publish with `url` = the original (see the roadmap's file table) |
 | The shrine's weather (rain, its sound) showed over a game | the shrine checks `GameScreen.is_active`; anything living on the pet screen must go quiet inside a game |
+| A song played to its very end never showed its result (a stopped player's position reads 0) | never wait on `get_playback_position()` alone: also end on `not playing` and on a frame clock; test the END of a song with `tools/qa/tunes_end.gd` |
+| A shell line waiting on the keyboard (`cat > file` with no input) hangs a whole run | never leave a command that reads stdin |
 | The phone shows "unavailable" or is locked | retry the install; a failed launch only needs the user to open the app |
 | The editor open during command-line Godot runs can corrupt its UID cache | if the editor floods "Unrecognized UID", restart it; the user accepts installs with the editor open |

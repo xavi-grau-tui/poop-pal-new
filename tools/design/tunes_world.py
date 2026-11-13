@@ -43,6 +43,23 @@ def small(name):
     return np.clip(rgb, 0, 1), (al[..., 0] >= 0.5)
 
 
+NOTE = 18                             # art px across, before its outline (the user, 2026-11-13: "slightly smaller"; it was 22)
+
+
+def bead(name):
+    """a note at NOTE art px, from its painted 130 px cutout, in the middle of an empty canvas"""
+    im = Image.open(os.path.join(SRC, name + '.png')).convert('RGBA')
+    im = np.asarray(im.crop(im.getbbox())).astype(np.float32) / 255.0
+    a = im[..., 3:4]
+    pre = Image.fromarray((np.concatenate([im[..., :3] * a, a], 2) * 255).astype(np.uint8), 'RGBA').resize((NOTE, NOTE), Image.BOX)
+    p = np.asarray(pre).astype(np.float32) / 255.0
+    rgb, mask = np.zeros((H, W, 3), np.float32), np.zeros((H, W), bool)
+    y, x = H // 2, W // 2
+    rgb[y:y + NOTE, x:x + NOTE] = np.clip(p[..., :3] / np.maximum(p[..., 3:4], 0.001), 0, 1)
+    mask[y:y + NOTE, x:x + NOTE] = p[..., 3] >= 0.5
+    return rgb, mask
+
+
 def outlined(rgb, mask):
     """a 1 px dark outline around the shape (grows the mask)"""
     m = np.pad(mask, 1)
@@ -117,7 +134,7 @@ def main():
     bar_row = min(max(edges), bar_y)
     for n in LAYERS:
         if n.startswith('note_'):
-            got[n] = outlined(*got[n])
+            got[n] = outlined(*outlined(*bead(n)))       # the outline twice: 2 art px (the user: "a bit more of outline")
         if n.startswith('bar_'):
             got[n] = same_size(*got[n], centre(bar_row, ['low', 'mid', 'high'].index(n.split('_')[1])))
     layout = {}
@@ -127,6 +144,8 @@ def main():
         k = 56 if n == 'room' else (12 if n.startswith('note_') else 20)
         own = Image.fromarray((rgb[mask][None] * 255).astype(np.uint8), 'RGB').quantize(k, method=Image.MEDIANCUT, dither=Image.NONE)
         q = np.asarray(Image.fromarray((rgb * 255).astype(np.uint8), 'RGB').quantize(palette=own, dither=Image.NONE).convert('RGB'))
+        if n.startswith('note_'):
+            q = q.copy(); q[mask & (np.abs(rgb * 255 - np.array(OUTLINE)).sum(2) < 2)] = OUTLINE
         im = Image.fromarray(np.dstack([q, mask.astype(np.uint8) * 255]), 'RGBA')
         box = im.getbbox()
         im.crop(box).save(os.path.join(OUT, n + '.png'))
