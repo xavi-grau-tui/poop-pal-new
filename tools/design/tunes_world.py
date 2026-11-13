@@ -26,7 +26,7 @@ SRC = OUT = ''                        # (set per world in build())
 WORLDS = {
     'xylophone': dict(src='round1', frame='xylophone', bars='bar', even=True, wall_cut=1172, soft=[],
                       layers=['toy_kokeshi_bench', 'toy_kokeshi', 'toy_daruma', 'toy_ball', 'toy_maneki', 'toy_maneki_paw', 'toy_top', 'mallet']),
-    'piano': dict(src='round2', frame='piano', bars='key', even=False, wall_cut=0, colours=28, soft=['lantern_glow', 'tea_steam'],
+    'piano': dict(src='round2', frame='piano', bars='key', even=False, wall_cut=0, colours=28, halo=('lantern', 'lantern_glow'), soft=['lantern_glow', 'tea_steam'],
                   layers=['lantern_glow', 'record_player', 'record', 'record_arm', 'tea', 'tea_steam', 'metronome', 'metronome_needle',
                           'cranes_bar', 'crane_1', 'crane_2', 'crane_3', 'lantern'],
                   # The ornaments re-placed and enlarged by us (the user, 2026-11-13: "ornaments should be better
@@ -225,6 +225,26 @@ def build(world, cfg):
         im = np.zeros((h, LANE_W, 4), np.uint8); im[..., :3] = col; im[..., 3] = (a * 255).astype(np.uint8)
         Image.fromarray(im, 'RGBA').save(os.path.join(OUT, f'lane_{name}.png'))
         layout[f'lane_{name}'] = [int(round(cx - LANE_W / 2)), LANE_TOP, LANE_W, h]
+    # A lamp's light, made here to fit the lamp (the user, 2026-11-13, on the piano's lantern: "the light effect on
+    # the lantern should be more adapted to the lantern"; the painted glow was an off-centre patch cut by the
+    # canvas's edge): a round halo centred on the lamp's bright paper that hugs it, strongest at its edge, in its own colour.
+    if cfg.get('halo'):
+        lamp, name = cfg['halo']
+        rgb, mask = got[lamp]
+        lit = mask & (rgb[..., 0] > 0.8) & (rgb[..., 1] > 0.55)
+        ys, xs = np.nonzero(lit)
+        cy, cx0 = float(ys.mean()), float(xs.mean())
+        r_lamp = (xs.max() - xs.min() + 1) / 2.0
+        size = int(round(r_lamp * 2 * 1.75)) // 2 * 2
+        col = np.clip(np.median(rgb[lit], 0) * 255 * 1.08, 0, 255).astype(np.uint8)
+        d = np.hypot(*np.meshgrid(np.arange(size) - size / 2 + 0.5, np.arange(size) - size / 2 + 0.5))
+        # it hugs the lamp: strong right at the paper's edge, gone at 1.75 times its radius
+        a = np.clip((size / 2 - d) / (size / 2 - r_lamp * 0.9), 0, 1) ** 1.7 * 0.85
+        a = np.round(a * 12) / 12
+        im = np.zeros((size, size, 4), np.uint8); im[..., :3] = col; im[..., 3] = (a * 255).astype(np.uint8)
+        Image.fromarray(im, 'RGBA').save(os.path.join(OUT, name + '.png'))
+        layout[name] = [int(round(cx0 - size / 2)), int(round(cy - size / 2)), size, size]
+        layout['halo'] = [lamp, name]
     # the glow behind a falling note
     g = 40
     d = np.hypot(*np.meshgrid(np.arange(g) - g / 2 + 0.5, np.arange(g) - g / 2 + 0.5))

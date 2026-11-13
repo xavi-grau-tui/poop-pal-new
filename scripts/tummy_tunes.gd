@@ -61,9 +61,6 @@ var wrong: Array[AudioStreamPlayer] = []
 const ART_OF := "res://textures/minigames/tunes/%s/"   # by the instrument (INSTRUMENT_OF)
 var ART := ""
 var world_now := ""                   # the instrument whose room is built
-## The score band moves aside where a world's art hangs something in the top right corner (the piano's paper cranes)
-const HUD_SHIFT := { "piano": -125.0 }
-var hud: Node2D
 var world_root: Node2D                # everything of the world's look, under the HUD
 const PX := 3.0
 var LANE_X := [264.0, 480.0, 693.0]      # on the bars (read from layout.json)
@@ -100,8 +97,11 @@ var combo := 0
 var best_combo := 0
 var counts := { "perfect": 0, "good": 0, "miss": 0 }
 var groove := GROOVE_START
-var groove_fill: ColorRect
-var groove_box: ColorRect
+const GROOVE_W := 420.0
+var groove_fill: Panel
+var groove_fill_style: StyleBoxFlat
+var groove_shine: ColorRect
+var groove_box: Panel
 
 var lcd_font: Font
 var note_tex: Array[Texture2D] = []
@@ -379,8 +379,11 @@ func _add_groove(d: float) -> void:
 func _draw_groove() -> void:
 	if not groove_fill:
 		return
-	groove_fill.size.x = (groove_box.size.x - 8) * groove
-	groove_fill.color = Color8(214, 120, 130) if groove < 0.3 else (Color8(250, 206, 110) if groove < 0.6 else Color8(150, 200, 120))
+	var w := (groove_box.size.x - 10) * groove
+	groove_fill.visible = w >= 24.0                  # (a pill narrower than its round ends would look broken)
+	groove_fill.size.x = maxf(w, 24.0)
+	groove_shine.size.x = maxf(groove_fill.size.x - 16.0, 0.0)
+	groove_fill_style.bg_color = Color8(214, 120, 130) if groove < 0.3 else (Color8(250, 206, 110) if groove < 0.6 else Color8(150, 200, 120))
 
 ## The groove ran out: the record scratches to a stop and the game ends.
 func _fail() -> void:
@@ -543,13 +546,21 @@ func _build_world(instrument: String) -> void:
 		if t == "mallet":
 			continue                                 # (delivered, not used yet)
 		toys[t] = _layer(t, room, PIVOTS.get(t, ""))
+	if layout.has("halo"):                           # a lamp's light hangs on the lamp: behind it, swinging with it
+		var lamp: Sprite2D = toys[layout["halo"][0]]
+		var halo: Sprite2D = toys[layout["halo"][1]]
+		var at := halo.position
+		halo.get_parent().remove_child(halo)
+		lamp.add_child(halo)
+		halo.show_behind_parent = true
+		halo.scale = Vector2.ONE
+		halo.position = (at - lamp.position) / PX
+		halo.set_meta("home", halo.position)
 	for c in LANE_NAMES:
 		bar_tex.append([load(ART + "bar_%s.png" % c), load(ART + "bar_%s_lit.png" % c)])
 		bars.append(_layer("bar_" + c, world_root))
 	notes_layer = Node2D.new()
 	world_root.add_child(notes_layer)
-	if hud:
-		hud.position.x = HUD_SHIFT.get(instrument, 0.0)
 
 func _create_static_nodes() -> void:
 	world_root = Node2D.new()
@@ -570,39 +581,34 @@ func _create_static_nodes() -> void:
 		pal.add_child(headphones)
 		pal.frame_changed.connect(_sync_headphones)
 		_sync_headphones()
-	var frame := ColorRect.new()
-	frame.color = Color(0, 0, 0)
-	frame.position = Vector2(PLAY_WIDTH - 245, 24)
-	frame.size = Vector2(205, 70)
-	add_child(frame)
-	var box := ColorRect.new()
-	box.color = Color(0.65, 0.72, 0.6)
-	box.position = frame.position + Vector2(5, 5)
-	box.size = frame.size - Vector2(10, 10)
-	add_child(box)
-	# groove meter under the score
-	groove_box = ColorRect.new()
-	groove_box.color = Color(0, 0, 0)
-	groove_box.position = Vector2(frame.position.x, frame.position.y + frame.size.y + 10)
-	groove_box.size = Vector2(frame.size.x, 26)
+	# No score on screen (the user, 2026-11-13: the score won't matter: the stars come from the notes hit). The groove
+	# meter alone, centred at the top, a rounded pill: an outline, a dark track, the fill.
+	score_label = _make_label(Vector2.ZERO, Vector2.ZERO, 8, HORIZONTAL_ALIGNMENT_RIGHT, Color.WHITE)
+	score_label.visible = false
+	groove_box = Panel.new()
+	groove_box.position = Vector2((PLAY_WIDTH - GROOVE_W) / 2.0, 30)
+	groove_box.size = Vector2(GROOVE_W, 34)
+	groove_box.add_theme_stylebox_override("panel", _pill(OUTLINE, 17))
 	add_child(groove_box)
-	var groove_bg := ColorRect.new()
-	groove_bg.color = Color(0.3, 0.2, 0.28)
-	groove_bg.position = Vector2(4, 4)
-	groove_bg.size = groove_box.size - Vector2(8, 8)
-	groove_box.add_child(groove_bg)
-	groove_fill = ColorRect.new()
-	groove_fill.position = Vector2(4, 4)
-	groove_fill.size = Vector2(0, groove_box.size.y - 8)
+	var track := Panel.new()
+	track.position = Vector2(5, 5)
+	track.size = groove_box.size - Vector2(10, 10)
+	track.add_theme_stylebox_override("panel", _pill(Color(0.22, 0.15, 0.2), 12))
+	groove_box.add_child(track)
+	groove_fill = Panel.new()
+	groove_fill.position = Vector2(5, 5)
+	groove_fill.size = Vector2(0, groove_box.size.y - 10)
+	groove_fill_style = _pill(Color8(150, 200, 120), 12)
+	groove_fill.add_theme_stylebox_override("panel", groove_fill_style)
 	groove_box.add_child(groove_fill)
+	var shine := ColorRect.new()                     # a thin light line along the fill's top: a bit of gloss
+	shine.color = Color(1, 1, 1, 0.28)
+	shine.position = Vector2(8, 3)
+	shine.size = Vector2(0, 3)
+	groove_fill.add_child(shine)
+	groove_shine = shine
 	_draw_groove()
-	score_label = _make_label(box.position + Vector2(6, 0), box.size - Vector2(18, 0), 36, HORIZONTAL_ALIGNMENT_RIGHT, Color(0.2, 0.15, 0.05))
-	hud = Node2D.new()                               # the score and the groove meter: one piece, so a world can move it
-	add_child(hud)
-	for n in [frame, box, groove_box, score_label]:
-		n.reparent(hud)
-	hud.position.x = HUD_SHIFT.get(world_now, 0.0)
-	combo_label = _make_label(Vector2(0, 110), Vector2(PLAY_WIDTH, 50), 30, HORIZONTAL_ALIGNMENT_CENTER, Color8(255, 236, 140))
+	combo_label = _make_label(Vector2(0, 70), Vector2(PLAY_WIDTH, 50), 28, HORIZONTAL_ALIGNMENT_CENTER, Color8(255, 236, 140))
 	judge_label = _make_label(Vector2(0, LINE_Y - 110), Vector2(220, 50), 32, HORIZONTAL_ALIGNMENT_CENTER, Color.WHITE)
 	judge_label.add_theme_color_override("font_outline_color", OUTLINE)
 	judge_label.add_theme_constant_override("outline_size", 10)
@@ -611,6 +617,12 @@ func _create_static_nodes() -> void:
 	banner.add_theme_color_override("font_outline_color", OUTLINE)
 	banner.add_theme_constant_override("outline_size", 14)
 	banner.modulate.a = 0.0
+
+static func _pill(col: Color, r: int) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = col
+	sb.set_corner_radius_all(r)
+	return sb
 
 ## A layer of the world's art at its place. based: its pivot at the middle of its base (a toy that rocks or squashes).
 func _layer(layer: String, parent: Node, pivot := "") -> Sprite2D:
@@ -700,8 +712,8 @@ func _toys(x: float, ph: float) -> void:
 			c.position.y = c.get_meta("home").y - sin(PI * ph) * 9.0 * a * mine
 			c.rotation = side * 0.2 * a * (1.0 if i % 2 == 0 else -1.0)
 		toys["lantern"].rotation = side * 0.07 * a
-		toys["lantern_glow"].modulate.a = 0.45 + 0.55 * land * a
-		toys["lantern_glow"].scale = Vector2.ONE * PX * (1.0 + 0.12 * land * a)
+		toys["lantern_glow"].modulate.a = 0.7 + 0.3 * land * a         # its light swells on the beat
+		toys["lantern_glow"].scale = Vector2.ONE * (1.0 + 0.1 * land * a)
 		toys["tea"].scale = Vector2(1.0 + sq, 1.0 - sq) * PX
 		toys["tea_steam"].scale = Vector2(1.0 + 0.18 * side * a, 1.0 + 0.22 * sin(PI * ph) * a) * PX
 		toys["tea_steam"].modulate.a = 0.5 + 0.4 * sin(PI * ph)
