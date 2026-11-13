@@ -120,3 +120,40 @@ Rule from this for the next worlds' briefs: say "its own place and its own palet
 start, and name both (suggested: 3 ocarina = outdoors by day, green and sky; 4 music box = a
 winter night, silver and deep blue; 5 star stage = a tiny stage with coloured lights; 6 taiko =
 the festival at night, red lanterns).
+
+## Feedback on the second mock-up (2026-11-13)
+
+`tomo_piano_mockup_v2.png`: the blue-hour tatami room and the upright toy piano. The user: "the toys
+in the background are maybe not needed. metronome is cool and origamis are cool, but this song is
+more jazzy. not everything has to be childish. xylophone will be the most childish one". The
+message sent back:
+
+```
+TOMO TUNES - WORLD 2, FEEDBACK ON MOCK-UP V2
+
+This is the place: the blue-hour tatami room, the shoji with the garden's shadows, the lantern.
+And it reads as a piano now. Keep the room, the light, the palette, the three keys, the notes.
+
+One change of direction: THIS WORLD IS MORE GROWN-UP. Its music turned out jazzy, an evening
+tune, and only world 1 (the xylophone) is the childish one. So:
+
+1. TAKE OUT THE TOYS: the robot, the train and the teddy bear. Paint the floor and the wall
+   behind them.
+2. KEEP the metronome, the origami cranes and the lantern: they are perfect.
+3. IN THEIR PLACE, two or three calm, evening, "listening to music" things that can move on a
+   beat. Ideas, your choice: a small record player with a turning record; a cup of tea with
+   steam rising; a cat asleep on a cushion whose tail flicks; a bonsai or a vase with one branch
+   that sways; an incense stick with a thin line of smoke; a second, smaller lantern on the
+   floor. Fewer things than before is fine: this room should feel quiet and a little elegant.
+4. THE PIANO a touch less nursery: keep its shape, the small black and white keys and the
+   music stand, but make it a darker, polished wood (deep red-brown or black lacquer with a
+   thin gold line) and drop or soften the painted pink flowers. Still small and charming, but
+   an instrument more than a toy. The three big keys stay exactly as they are.
+
+Everything else stands. Please send it as tomo_piano_mockup_v3.png in the same folder, keeping
+v1 and v2. If v3 is approved, the layers follow as in the brief, with one layer per thing that
+moves (the record, the steam, the tail, the metronome's needle, the cranes).
+```
+
+Rule from this: the worlds are not all childish. World 1 is the nursery; from world 2 on the rooms
+grow up with the music.
