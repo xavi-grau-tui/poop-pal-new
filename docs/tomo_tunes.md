@@ -202,6 +202,8 @@ Added 2026-11-13 (the user, after more play: "how the notes of the lead coincide
 | 2026-11-13 | The game lists its songs in the shared level menu, each on easy, normal and hard (temporary: `TUNES` in `tummy_tunes.gd`); stars: 85% and 95% of the notes hit. Two songs in: 1A (59.6 s) and 1B (63.6 s, a busier take: 3.7 notes a second on hard) |
 | 2026-11-13 | The beat grid is the one the tune fits best, tried from the band's kick and from each of the tune's first notes (1B opens on a pickup, which had put its whole grid half a step off) |
 | 2026-11-13 | World 1's art: the designer's mock-up approved and delivered as 20 layers (`docs/mockups/tomo_tunes/round1/`). To do on our side before it goes in: the coloured bands on the wall (in `xylophone.png`) don't line up with the bars, so the lanes are drawn by the game; the game's lanes move to the bars' centres (x 505, 995, 1430 of 1900) |
+| 2026-11-13 | A cut song ends where a phrase ends (the user: "the song finishes before it ends"): the tool picks the bar line near the slot's length where the tune lands and rests, 4-bar phrases first; that downbeat is the last note to play, the band rings out over one more bar. 1A is now 64.9 s, 1B 66.2 s |
+| 2026-11-13 | The hard chart is the normal chart plus only the quick notes three buttons can play (the user: "the hard sometimes gets too hard"): a quick note stays as a two-thumb roll into a note on the neighbouring lane, never under 0.1 s, at most one every two beats (`playable()`). 1B hard: 236 notes to 193. The pixel size for world 1's art: 3 (the user) |
 
 ## 6d. How each new song is made (the workflow)
 

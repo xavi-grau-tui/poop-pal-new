@@ -263,6 +263,26 @@ def click_file(path, mix, chart):
         w.writeframes((np.clip(y, -1, 1) * 32767).astype(np.int16).tobytes())
 
 
+def playable(rows, p):
+    """The hard chart: the normal chart plus the tune's quick notes that three buttons can play (the user, 2026-11-13:
+    "the hard sometimes gets too hard": 1B had 57 gaps under 0.2 s, mostly a quick pickup 0.11 s before a grid note,
+    often several in a row). A quick note (off the eighth grid) stays only as a two-thumb roll INTO a note on another,
+    neighbouring lane, with room before it, never under 0.1 s, and at most one every two beats."""
+    keep, last_quick = [], -9.0
+    for i, r in enumerate(rows):
+        if r[3] < 2 or not keep:
+            keep.append(r)
+            continue
+        nxt = next((x for x in rows[i + 1:] if x[3] < 2), None)
+        if r[0] - keep[-1][0] < 0.5 * p or r[0] - last_quick < 4 * p:
+            continue
+        if nxt and (nxt[0] - r[0] < 0.1 or (nxt[0] - r[0] < 0.75 * p and abs(r[1] - nxt[1]) != 1)):
+            continue
+        last_quick = r[0]
+        keep.append(r)
+    return keep
+
+
 def main():
     sid, title = sys.argv[1], (sys.argv[2] if len(sys.argv) > 2 else sys.argv[1])
     folder = os.path.join(ROOT, 'sounds', 'tunes', 'incoming', sid)
@@ -285,18 +305,31 @@ def main():
         rows.append((t, lane[m], round(ln, 3) if ln >= beat_len else 0.0, kind))
     charts = {'easy': [list(r[:3]) for r in rows if r[3] == 0],
               'normal': [list(r[:3]) for r in rows if r[3] <= 1],
-              'hard': [list(r[:3]) for r in rows]}
+              'hard': [list(r[:3]) for r in playable(rows, p)]}
     beats = [round(float(t), 3) for t in grid[parity::2] if t < length]
-    # a long take (Suno's are often over 2 minutes; a level is 60-75 s): the song ends on the last bar line before
-    # MAX_LEN, counted in bars of 4 from the first beat, with a short fade. Its start is the song's start.
+    # a long take (Suno's are often over 2 minutes; a level is 60-80 s) ends where a PHRASE ends (the user, 2026-11-13:
+    # "the song finishes before it ends": it was cut on the last bar line before MAX_LEN, mid-phrase, with a 0.35 s
+    # fade). Now: the bar line near MAX_LEN where the tune lands on the downbeat and then rests, 4-bar phrases first;
+    # that downbeat is the last note to play, and the band rings out over one more bar.
     MAX_LEN = float(os.environ.get('TUNE_MAX_LEN', LEN_BY_SLOT.get(sid[-1:].upper(), 70.0)))
-    if length > MAX_LEN + 6:
-        bars = [t for t in beats[::4] if t <= MAX_LEN]
-        length = bars[-1] if len(bars) > 8 else MAX_LEN
-        beats = [t for t in beats if t < length]
-        charts = {k: [n for n in v if n[0] < length - 0.15] for k, v in charts.items()}
-        rows = [r for r in rows if r[0] < length - 0.15]
-        cut_note = f'  cut to {length:.1f} s ({len(bars) - 1} bars) from {min(len(lead), len(back)) / SR:.0f} s'
+    tail = 0.0
+    bars = beats[::4]
+    if length > MAX_LEN + 6 and len(bars) > 8:
+        def ending(i):
+            b = bars[i]
+            lands = bool(np.any(np.abs(times - b) < 0.15))
+            after = times[times > b + 0.15]
+            rest = min((after[0] - b) if len(after) else 9.0, 2 * beat_len)
+            return rest / beat_len + (1.0 if lands else 0.0) + (1.0 if i % 4 == 0 else 0.0) - abs(b - MAX_LEN) / 20.0
+        cand = [i for i in range(8, len(bars)) if MAX_LEN - 9 <= bars[i] <= MAX_LEN + 3 and bars[i] + 4 * beat_len < length]
+        i = max(cand, key=ending) if cand else max(j for j in range(len(bars)) if bars[j] <= MAX_LEN)
+        end, tail = bars[i], 4 * beat_len
+        full = length
+        length = end + tail
+        beats = [t for t in beats if t <= end + 0.01]
+        charts = {k: [n for n in v if n[0] < end + 0.15] for k, v in charts.items()}
+        rows = [r for r in rows if r[0] < end + 0.15]
+        cut_note = f'  ends on bar {i} at {end:.1f} s (score {ending(i):.1f} of 5) and rings out to {length:.1f} s, from {full:.0f} s'
     else:
         cut_note = ''
     out = {'id': sid, 'title': title, 'bpm': round(bpm, 2), 'offset': beats[0], 'length': round(length, 2), 'beats': beats, 'charts': charts}
@@ -304,8 +337,14 @@ def main():
         json.dump(out, f)
     st = {name: decode(src, 44100, 2)[:int(length * 44100)] for name, src in (('lead', f_lead), ('backing', f_back), ('mix', f_mix))}
     n = min(min(len(v) for v in st.values()), int(length * 44100))
-    fade = np.ones(n); k = int(0.35 * 44100); fade[-k:] = np.linspace(1, 0, k) if cut_note else 1.0
-    st = {k2: v[:n] * fade[:, None] for k2, v in st.items()}
+    if cut_note:                                   # the band fades over the last bar; the tune's last note rings a beat, so no unplayed note sounds
+        e = int((length - tail) * 44100)
+        band_fade = np.ones(n); band_fade[e:] = np.linspace(1, 0, n - e) ** 1.5
+        k = min(n - e, int(1.5 * beat_len * 44100)); k0 = e + int(0.12 * 44100)
+        lead_fade = np.ones(n); lead_fade[k0:] = 0.0; lead_fade[k0:e + k] = np.linspace(1, 0, e + k - k0) ** 2
+        st = {k2: v[:n] * (lead_fade if k2 == 'lead' else band_fade)[:, None] for k2, v in st.items()}
+    else:
+        st = {k2: v[:n] for k2, v in st.items()}
     lead2, band, report = balance(st['lead'], st['backing'], st['mix'], beats)
     write_ogg(os.path.join(ROOT, 'sounds', 'tunes', sid, 'lead.ogg'), lead2, 44100)
     write_ogg(os.path.join(ROOT, 'sounds', 'tunes', sid, 'backing.ogg'), band, 44100)
