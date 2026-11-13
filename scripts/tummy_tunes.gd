@@ -369,31 +369,34 @@ const SPEAKER_LANE := 1 if ConsoleLayout.NEW_BUTTONS else 0
 const MAIN_LANE := 0 if ConsoleLayout.NEW_BUTTONS else 1
 
 func on_main_button_pressed() -> void:
-	if is_game_over:
-		super.on_main_button_pressed()
+	if intro_active():
+		dismiss_intro()
+		return
+	if is_game_over or level_menu_open():
+		super.on_main_button_pressed()             # (the level menu and its result card)
 		return
 	if not _touch_mode:
 		_press(MAIN_LANE)
 
 func on_forward_button_down() -> void:
-	if not is_game_over and not _touch_mode:
+	if not is_game_over and not _touch_mode and not level_menu_open():
 		_press(2)
 
 func on_forward_button_pressed() -> void:
-	if is_game_over:
-		super.on_forward_button_pressed()
+	if is_game_over or level_menu_open():
+		super.on_forward_button_pressed()          # (the level menu's next world)
 
 ## The speaker button is a lane in this game (sound_button.gd routes it here instead of muting)
 func on_sound_button_pressed() -> void:
-	if not is_game_over and not _touch_mode:
+	if not is_game_over and not _touch_mode and not level_menu_open():
 		_press(SPEAKER_LANE)
 
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventScreenTouch):
 		return
 	_touch_mode = true
-	if is_game_over:
-		return
+	if is_game_over or level_menu_open() or not is_running:
+		return                                       # (menus: the buttons work as buttons)
 	if event.pressed:
 		var lane := _lane_at(event.position)
 		if lane >= 0:
