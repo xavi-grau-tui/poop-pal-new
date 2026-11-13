@@ -506,7 +506,7 @@ func _read_keys() -> void:
 ## from the middle of its top, "centre" about its middle. Layers not named here stay still.
 const PIVOTS := {
 	"toy_kokeshi": "base", "toy_daruma": "base", "toy_ball": "base", "toy_maneki": "base", "toy_maneki_paw": "base", "toy_top": "base",
-	"metronome_needle": "base", "tea_steam": "base", "record_arm": "centre", "record": "centre",
+	"metronome_needle": "base", "metronome": "base", "tea": "base", "tea_steam": "base", "record_player": "base", "record_arm": "centre", "record": "centre",
 	"crane_1": "top", "crane_2": "top", "crane_3": "top", "lantern": "top", "lantern_glow": "centre",
 }
 
@@ -691,15 +691,24 @@ func _toys(x: float, ph: float) -> void:
 	elif world_now == "piano":
 		# an evening room: the metronome keeps the beat, the cranes and the lantern sway, the steam and the lantern's
 		# light breathe, the record's arm rides the groove
-		toys["metronome_needle"].rotation = side * 0.42 * maxf(a, 0.25)
-		for i in 3:
-			toys["crane_%d" % (i + 1)].rotation = sin(PI * x * 0.5 + i * 1.1) * 0.16 * a
-		toys["lantern"].rotation = sin(PI * x * 0.25) * 0.035 * a
-		toys["lantern_glow"].modulate.a = 0.55 + 0.45 * land * a
-		toys["tea_steam"].scale = Vector2(1.0 + 0.12 * side * a, 1.0 + 0.1 * sin(PI * ph) * a) * PX
-		toys["tea_steam"].modulate.a = 0.55 + 0.3 * sin(PI * ph)
-		toys["record_arm"].rotation = sin(PI * x * 0.5) * 0.05 * a
-		toys["record"].position.y = toys["record"].get_meta("home").y + (1.0 if ph < 0.5 else 0.0) * PX * a
+		# Everything keeps the beat, as plainly as world 1's toys (the user, 2026-11-13: "move more at the rhythm").
+		toys["metronome_needle"].rotation = side * 0.45 * maxf(a, 0.25)
+		toys["metronome"].scale = Vector2(1.0 + sq * 0.5, 1.0 - sq * 0.5) * PX
+		for i in 3:                                      # the cranes hop in turn, one per beat, and sway
+			var c: Sprite2D = toys["crane_%d" % (i + 1)]
+			var mine := 1.0 if int(floorf(x)) % 3 == i else 0.35
+			c.position.y = c.get_meta("home").y - sin(PI * ph) * 9.0 * a * mine
+			c.rotation = side * 0.2 * a * (1.0 if i % 2 == 0 else -1.0)
+		toys["lantern"].rotation = side * 0.07 * a
+		toys["lantern_glow"].modulate.a = 0.45 + 0.55 * land * a
+		toys["lantern_glow"].scale = Vector2.ONE * PX * (1.0 + 0.12 * land * a)
+		toys["tea"].scale = Vector2(1.0 + sq, 1.0 - sq) * PX
+		toys["tea_steam"].scale = Vector2(1.0 + 0.18 * side * a, 1.0 + 0.22 * sin(PI * ph) * a) * PX
+		toys["tea_steam"].modulate.a = 0.5 + 0.4 * sin(PI * ph)
+		toys["record_player"].scale = Vector2(1.0 + sq * 0.8, 1.0 - sq * 0.8) * PX       # it thumps like a speaker
+		toys["record"].position.y = toys["record"].get_meta("home").y - (land * 2.0 * a) * PX
+		toys["record_arm"].position.y = toys["record_arm"].get_meta("home").y - (land * 3.0 * a) * PX
+		toys["record_arm"].rotation = side * 0.08 * a
 
 func _sync_headphones() -> void:
 	var path := "res://textures/pet/accessories/headphones/%s-%d.png" % [PetState.form_id, pal.frame + 1]

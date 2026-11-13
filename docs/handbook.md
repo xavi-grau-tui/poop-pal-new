@@ -150,6 +150,11 @@ first mock-up: "the aesthetics have to match first world but not be too similar,
 vary"). Name the place and the palette in the brief, and check the instrument reads as itself.
 Not every world is childish: world 1 is the nursery, and from world 2 on the rooms grow up with
 the music (the user, on world 2's second mock-up: "not everything has to be childish").
+A world's ornaments must match world 1's toys: about as big (35 to 60 art pixels), spread on BOTH
+sides of the lanes, each moving plainly on the beat (hop, squash, swing). If the painting has
+them small or bunched, re-place and enlarge them with `groups` in `WORLDS` (the tool scales from
+the big painting, so bigger means more detail), and ask the next designer for it up front.
+
 Ask the next worlds' designer for **three bars of the same size and three lanes of the same
 width**: world 1 needed the tool to even them out.
 

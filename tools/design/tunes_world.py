@@ -26,9 +26,19 @@ SRC = OUT = ''                        # (set per world in build())
 WORLDS = {
     'xylophone': dict(src='round1', frame='xylophone', bars='bar', even=True, wall_cut=1172, soft=[],
                       layers=['toy_kokeshi_bench', 'toy_kokeshi', 'toy_daruma', 'toy_ball', 'toy_maneki', 'toy_maneki_paw', 'toy_top', 'mallet']),
-    'piano': dict(src='round2', frame='piano', bars='key', even=False, wall_cut=0, soft=['lantern_glow', 'tea_steam'],
+    'piano': dict(src='round2', frame='piano', bars='key', even=False, wall_cut=0, colours=28, soft=['lantern_glow', 'tea_steam'],
                   layers=['lantern_glow', 'record_player', 'record', 'record_arm', 'tea', 'tea_steam', 'metronome', 'metronome_needle',
-                          'cranes_bar', 'crane_1', 'crane_2', 'crane_3', 'lantern']),
+                          'cranes_bar', 'crane_1', 'crane_2', 'crane_3', 'lantern'],
+                  # The ornaments re-placed and enlarged by us (the user, 2026-11-13: "ornaments should be better
+                  # distributed, move more at the rhythm and with a bit more of quality, targeting the xylophone
+                  # levels": as painted they were small and all but one on the right). A group moves as one:
+                  # (its layers, scale, which point of the group is pinned, where that point goes in painted px,
+                  # mirrored). Bigger = more art pixels each, so more detail.
+                  groups=[(['lantern', 'lantern_glow'], 1.2, 'top-left', (0, 400), True),          # to the left wall
+                          (['cranes_bar', 'crane_1', 'crane_2', 'crane_3'], 1.3, 'top-right', (1892, 0), False),
+                          (['metronome', 'metronome_needle'], 1.3, 'bottom-centre', (1722, 1322), False),
+                          (['tea', 'tea_steam'], 1.4, 'bottom-centre', (1745, 1640), False),
+                          (['record_player', 'record', 'record_arm'], 1.15, 'bottom-left', (4, 1560), False)]),
 }
 W, H = 317, 316                       # 950 x 948 on screen at x3
 OUTLINE = (74, 44, 32)
@@ -37,9 +47,32 @@ BAR_W = 62                            # art px: the three bars at ONE size (the 
 LANE_TOP, LANE_BOTTOM = 34, 196       # art px: the wall above the tray
 
 
-def small(name, wall_cut=0, cut=0.5):
+def placed(groups):
+    """the layers of the re-placed groups, each as a painted-size RGBA image at its new place"""
+    out = {}
+    for names, scale, pin, to, mirror in groups:
+        ims = {n: Image.open(os.path.join(SRC, n + '.png')).convert('RGBA') for n in names}
+        if mirror:
+            ims = {n: im.transpose(Image.FLIP_LEFT_RIGHT) for n, im in ims.items()}
+        boxes = [im.getbbox() for im in ims.values()]
+        x0, y0, x1, y1 = min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes)
+        ax = {'left': x0, 'centre': (x0 + x1) / 2, 'right': x1}[pin.split('-')[1]]
+        ay = {'top': y0, 'bottom': y1}[pin.split('-')[0]]
+        for n, im in ims.items():
+            a = np.asarray(im).astype(np.float32) / 255.0
+            pre = Image.fromarray((np.concatenate([a[..., :3] * a[..., 3:4], a[..., 3:4]], 2) * 255).astype(np.uint8), 'RGBA')
+            big = pre.resize((int(round(im.width * scale)), int(round(im.height * scale))), Image.LANCZOS)
+            canvas = Image.new('RGBA', im.size, (0, 0, 0, 0))
+            canvas.paste(big, (int(round(to[0] - ax * scale)), int(round(to[1] - ay * scale))))
+            c = np.asarray(canvas).astype(np.float32) / 255.0
+            al = c[..., 3:4]
+            out[n] = np.concatenate([np.where(al > 0.001, c[..., :3] / np.maximum(al, 0.001), 0.0), al], 2)
+    return out
+
+
+def small(name, wall_cut=0, cut=0.5, given=None):
     """the layer at the game's size: premultiplied box filter, hard alpha (a pixel is in from `cut` of full)"""
-    im = np.asarray(Image.open(os.path.join(SRC, name + '.png')).convert('RGBA')).astype(np.float32) / 255.0
+    im = given if given is not None else np.asarray(Image.open(os.path.join(SRC, name + '.png')).convert('RGBA')).astype(np.float32) / 255.0
     if wall_cut:                                   # (world 1: the frame's misaligned bands on the wall, above this row)
         im = im.copy(); im[:wall_cut, :, 3] = 0.0
     a = im[..., 3:4]
@@ -142,8 +175,9 @@ def build(world, cfg):
     os.makedirs(OUT, exist_ok=True)
     frame = cfg['frame']
     got = {'room': small('room'), frame: small(frame, cfg['wall_cut'])}
+    moved = placed(cfg.get('groups', []))
     for n in cfg['layers']:
-        got[n] = small(n, cut=0.22 if n in cfg['soft'] else 0.5)
+        got[n] = small(n, cut=0.22 if n in cfg['soft'] else 0.5, given=moved.get(n))
     for lane in ('low', 'mid', 'high'):
         for lit in ('', '_lit'):
             got[f'bar_{lane}{lit}'] = small(f"{cfg['bars']}_{lane}{lit}")
@@ -170,7 +204,7 @@ def build(world, cfg):
     for n, (rgb, mask) in got.items():
         # each layer keeps its own few colours (a palette shared by the whole world went to the room's browns and
         # turned the pink and mint bars orange): the room 56, a toy or a bar 20, a note 12
-        k = 56 if n == 'room' else (12 if n.startswith('note_') else 20)
+        k = 56 if n == 'room' else (12 if n.startswith('note_') else cfg.get('colours', 20))
         own = Image.fromarray((rgb[mask][None] * 255).astype(np.uint8), 'RGB').quantize(k, method=Image.MEDIANCUT, dither=Image.NONE)
         q = np.asarray(Image.fromarray((rgb * 255).astype(np.uint8), 'RGB').quantize(palette=own, dither=Image.NONE).convert('RGB'))
         if n.startswith('note_'):
