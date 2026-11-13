@@ -33,7 +33,9 @@ SR, HOP, NF = 22050, 128, 1024
 FPS = SR / HOP
 BACKING_UNDER = 6.0        # dB under the lead, as a phone speaker hears it: the target
 MAX_HARMONICS = 80.0       # the most of the bass's 2nd / 3rd harmonics that may be added to reach it
-MAX_LEN = float(os.environ.get('TUNE_MAX_LEN', 72.0))      # s: a level's longest
+# a level's longest, by the song's slot in its world: the first songs short, the showpiece the longest (the user,
+# 2026-11-13). TUNE_MAX_LEN=<s> overrides it for one run.
+LEN_BY_SLOT = {'A': 60.0, 'B': 65.0, 'C': 70.0, 'D': 80.0}
 NAMES = 'C C# D D# E F F# G G# A A# B'.split()
 
 
@@ -240,6 +242,7 @@ def main():
     beats = [round(float(t), 3) for t in grid[parity::2] if t < length]
     # a long take (Suno's are often over 2 minutes; a level is 60-75 s): the song ends on the last bar line before
     # MAX_LEN, counted in bars of 4 from the first beat, with a short fade. Its start is the song's start.
+    MAX_LEN = float(os.environ.get('TUNE_MAX_LEN', LEN_BY_SLOT.get(sid[-1:].upper(), 70.0)))
     if length > MAX_LEN + 6:
         bars = [t for t in beats[::4] if t <= MAX_LEN]
         length = bars[-1] if len(bars) > 8 else MAX_LEN

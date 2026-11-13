@@ -197,6 +197,8 @@ Added 2026-11-13 (the user, after more play: "how the notes of the lead coincide
 
 | 2026-11-13 | The tune's difficulty is chosen by measuring, not by hoping: the same prompt gives simpler and busier tunes (the user). Each prompt now says how busy its slot is (A a nursery rhyme ... D the showpiece), and `tools/audio/tune_rate.py` rates every take BEFORE the split (notes a second, pitches, jumps, quick notes, one score). A world's four songs are the takes sorted by that score, whatever prompt made them |
 
+| 2026-11-13 | A level's length by its slot: song A about 60 s, B 65, C 70, the showpiece D 80. Suno's takes are often over 2 minutes: the tool cuts them there, on a bar line, with a short fade (`LEN_BY_SLOT`) |
+
 ## 6d. How each new song is made (the workflow)
 
 1. **You:** take the song's prompt from `docs/tomo_tunes_prompts.md`. Suno, Advanced, v6,
