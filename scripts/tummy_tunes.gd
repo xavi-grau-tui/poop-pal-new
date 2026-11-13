@@ -48,10 +48,16 @@ const GROOVE_START := 0.8
 const GROOVE_GAIN := { "perfect": 0.03, "good": 0.015, "miss": -0.08 }
 const GROOVE_STRAY := -0.04           # pressing when there's no note at all
 
-const LANE_X := [215.0, 475.0, 735.0]
-const LANE_W := 190.0
-const LINE_Y := 820.0
-const TOP_Y := 120.0
+## World 1's look (2026-11-13): the designer's toy room and xylophone (docs/mockups/tomo_tunes/round1/), made into
+## pixel layers by tools/design/tunes_world.py: 1 art pixel = 3 on screen. layout.json holds each layer's box.
+## The lanes are the bars' centres; a note is due when it sits on its bar.
+const ART := "res://textures/minigames/tunes/xylophone/"
+const PX := 3.0
+const LANE_X := [252.0, 498.0, 714.0]
+const LINE_Y := 817.0
+const TOP_Y := 96.0
+const LANE_NAMES := ["low", "mid", "high"]
+const DIMMED := Color(0.66, 0.6, 0.74)     # the room while the instrument is silent (a miss)
 const LANE_COLORS := [Color8(246, 150, 180), Color8(250, 206, 110), Color8(150, 220, 190)]
 const OUTLINE := Color8(74, 44, 32)
 const PAL_POS := Vector2(130, 82)
@@ -81,10 +87,18 @@ var groove_box: ColorRect
 
 var lcd_font: Font
 var note_tex: Array[Texture2D] = []
-var targets: Array[Sprite2D] = []
+var glow_tex: Texture2D
+var layout := {}
+var room: Node2D                      # the room, the wall's lanes, the xylophone's frame and the toys: dims on a miss
+var notes_layer: Node2D
+var lanes: Array[Sprite2D] = []
+var bars: Array[Sprite2D] = []
+var bar_tex: Array = []               # [plain, lit] per lane
+var toys := {}                        # name -> Sprite2D, pivot at its base
+var dim_tween: Tween
+var liveliness := 1.0                 # how much the toys move: 1 with the instrument sounding, little without
 var bpm := 120.0
 var beat_offset := 0.0
-var lane_flash: Array[ColorRect] = []
 var score_label: Label
 var combo_label: Label
 var judge_label: Label
@@ -97,8 +111,11 @@ var _touch_lane := {}                 # touch index -> lane
 
 func _ready() -> void:
 	lcd_font = load("res://fonts/pixChicago.ttf")
-	for c in ["pink", "yellow", "mint"]:
-		note_tex.append(load("res://textures/minigames/splash/ball_%s.png" % c))
+	var lf := FileAccess.open(ART + "layout.json", FileAccess.READ)
+	layout = JSON.parse_string(lf.get_as_text())
+	for c in LANE_NAMES:
+		note_tex.append(load(ART + "note_%s.png" % c))
+	glow_tex = load(ART + "glow.png")
 	tick = _click_player(1760.0)
 	tack = _click_player(1175.0)
 	# the pet screen's music stops; this game plays its own song in sync
@@ -214,13 +231,15 @@ func _process(delta: float) -> void:
 	score_label.text = str(score)
 
 func _spawn(time: float, lane: int) -> void:
-	var s := Sprite2D.new()
-	s.texture = note_tex[lane]
-	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	s.scale = Vector2(5, 5)
+	var s := Node2D.new()                           # a wooden bead on a soft glow: the brightest thing on screen
 	s.position = Vector2(LANE_X[lane], TOP_Y)
-	add_child(s)
-	move_child(s, targets[0].get_index())          # under the targets / HUD
+	for tex in [glow_tex, note_tex[lane]]:
+		var sp := Sprite2D.new()
+		sp.texture = tex
+		sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sp.scale = Vector2(PX, PX)
+		s.add_child(sp)
+	notes_layer.add_child(s)
 	live.append({ "t": time, "lane": lane, "node": s })
 
 # ================================================================== HITS
@@ -246,7 +265,7 @@ func _press(lane: int) -> void:
 		return
 	var n: Dictionary = live[best]
 	live.remove_at(best)
-	var node: Sprite2D = n["node"]
+	var node: Node2D = n["node"]
 	if best_d > GOOD:                                # too early / too late: that note is lost
 		_judge("miss", lane)
 		var tf := create_tween()
@@ -254,8 +273,9 @@ func _press(lane: int) -> void:
 		tf.tween_callback(node.queue_free)
 		return
 	_judge("perfect" if best_d <= PERFECT else "good", lane)
+	_strike(lane)
 	var tw := create_tween()
-	tw.tween_property(node, "scale", Vector2(8, 8), 0.1)
+	tw.tween_property(node, "scale", Vector2(1.6, 1.6), 0.1)
 	tw.parallel().tween_property(node, "modulate:a", 0.0, 0.12)
 	tw.tween_callback(node.queue_free)
 
@@ -307,6 +327,13 @@ func _set_lead(on: bool) -> void:
 		return
 	lead_on = on
 	sync.set_sync_stream_volume(1, 0.0 if on else LEAD_MUTED_DB)
+	if room:                                         # the room dims while the instrument is silent
+		if dim_tween:
+			dim_tween.kill()
+		dim_tween = create_tween()
+		if not on:
+			dim_tween.tween_interval(0.14)               # (the lead is cut a moment before every note: only a real miss dims)
+		dim_tween.tween_property(room, "modulate", Color.WHITE if on else DIMMED, 0.1 if on else 0.3)
 
 func _add_groove(d: float) -> void:
 	if finished:
@@ -436,36 +463,20 @@ func _read_keys() -> void:
 # ================================================================== NODES / FX
 
 func _create_static_nodes() -> void:
-	var bg := ColorRect.new()
-	bg.color = Color8(120, 70, 110)                  # a dim, cosy stage
-	bg.size = Vector2(PLAY_WIDTH, PLAY_HEIGHT)
-	add_child(bg)
-	for i in 3:
-		var lane := ColorRect.new()
-		lane.color = Color(LANE_COLORS[i].r, LANE_COLORS[i].g, LANE_COLORS[i].b, 0.12)
-		lane.position = Vector2(LANE_X[i] - LANE_W / 2.0, 0)
-		lane.size = Vector2(LANE_W, PLAY_HEIGHT)
-		add_child(lane)
-		var flash := ColorRect.new()
-		flash.color = Color(LANE_COLORS[i].r, LANE_COLORS[i].g, LANE_COLORS[i].b, 0.0)
-		flash.position = lane.position
-		flash.size = lane.size
-		add_child(flash)
-		lane_flash.append(flash)
-	var line := ColorRect.new()
-	line.color = Color8(250, 244, 214, 140)
-	line.position = Vector2(LANE_X[0] - LANE_W / 2.0, LINE_Y - 3)
-	line.size = Vector2(LANE_X[2] - LANE_X[0] + LANE_W, 6)
-	add_child(line)
-	# targets: hollow rings on the line, one per lane
-	for i in 3:
-		var r := Sprite2D.new()
-		r.texture = _ring_texture(LANE_COLORS[i])
-		r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		r.scale = Vector2(5, 5)
-		r.position = Vector2(LANE_X[i], LINE_Y)
-		add_child(r)
-		targets.append(r)
+	room = Node2D.new()
+	add_child(room)
+	_layer("room", room)
+	for c in LANE_NAMES:
+		lanes.append(_layer("lane_" + c, room))
+	_layer("xylophone", room)
+	_layer("toy_kokeshi_bench", room)
+	for t in ["toy_kokeshi", "toy_daruma", "toy_ball", "toy_maneki", "toy_maneki_paw", "toy_top"]:
+		toys[t] = _layer(t, room, true)
+	for c in LANE_NAMES:
+		bar_tex.append([load(ART + "bar_%s.png" % c), load(ART + "bar_%s_lit.png" % c)])
+		bars.append(_layer("bar_" + c, self))
+	notes_layer = Node2D.new()
+	add_child(notes_layer)
 	# the pal with headphones on, dancing to the beat in the top-left corner
 	var frames: SpriteFrames = PetState.build_sprite_frames() if PetState.has_poop() else null
 	if frames:
@@ -518,22 +529,53 @@ func _create_static_nodes() -> void:
 	banner.add_theme_constant_override("outline_size", 14)
 	banner.modulate.a = 0.0
 
+## A layer of the world's art at its place. based: its pivot at the middle of its base (a toy that rocks or squashes).
+func _layer(layer: String, parent: Node, based := false) -> Sprite2D:
+	var box: Array = layout[layer]
+	var sp := Sprite2D.new()
+	sp.texture = load(ART + layer + ".png")
+	sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sp.centered = false
+	sp.scale = Vector2(PX, PX)
+	sp.position = Vector2(box[0], box[1]) * PX
+	if based:
+		sp.offset = Vector2(-box[2] / 2.0, -box[3])
+		sp.position = Vector2(box[0] + box[2] / 2.0, box[1] + box[3]) * PX
+	sp.set_meta("home", sp.position)
+	parent.add_child(sp)
+	return sp
+
+## A press: the lane's light jumps and the bar dips, hit or not
 func _flash(lane: int) -> void:
-	var f := lane_flash[lane]
-	f.color.a = 0.35
-	create_tween().tween_property(f, "color:a", 0.0, 0.18)
-	var r := targets[lane]
+	var l := lanes[lane]
+	l.modulate = Color(1.7, 1.7, 1.7)
+	create_tween().tween_property(l, "modulate", Color.WHITE, 0.2)
+	var b := bars[lane]
+	var home: Vector2 = b.get_meta("home")
 	var tw := create_tween()
-	tw.tween_property(r, "scale", Vector2(6, 6), 0.05)
-	tw.tween_property(r, "scale", Vector2(5, 5), 0.1)
+	tw.tween_property(b, "position:y", home.y + 6.0, 0.04)
+	tw.tween_property(b, "position:y", home.y, 0.1)
+
+## A note hit: its bar lights up for a moment
+func _strike(lane: int) -> void:
+	var b := bars[lane]
+	b.texture = bar_tex[lane][1]
+	var stamp := Time.get_ticks_msec()
+	b.set_meta("lit", stamp)
+	await get_tree().create_timer(0.16).timeout
+	if is_instance_valid(b) and b.get_meta("lit") == stamp:
+		b.texture = bar_tex[lane][0]
 
 ## Dance: hop on every beat, sway left/right on alternate beats, squash on landing.
 ## The bigger the combo, the wilder the moves.
 func _dance(t: float) -> void:
-	if not pal:
-		return
 	var x := (t - beat_offset) * bpm / 60.0       # in beats
 	var ph := x - floorf(x)
+	_toys(x, ph)
+	if not pal:
+		if groove_box:
+			groove_box.modulate.a = 1.0 if groove >= 0.3 or ph < 0.5 else 0.45
+		return
 	var amp := (0.6 + 0.2 * mini(combo / 10, 3)) * (0.4 + 0.6 * minf(1.0, groove / 0.5))   # combo up = wilder, groove low = sluggish
 	if finished:
 		amp = 0.0
@@ -546,21 +588,25 @@ func _dance(t: float) -> void:
 	pal.rotation = sway * 0.16 * amp
 	pal.scale = pal.get_meta("base") * Vector2(1.0 + squash, 1.0 - squash)
 
+## The toys keep the beat: the kokeshi and the cat bob, the daruma rocks, the ball hops, the paw waves, the top leans.
+## With the instrument silent (a miss) they nearly stop; they stand still before the song and after it.
+func _toys(x: float, ph: float) -> void:
+	var want := 0.0 if (finished or not song_started) else (1.0 if lead_on else 0.2)
+	liveliness = lerpf(liveliness, want, 0.15)
+	var a := liveliness
+	var side := sin(PI * x)                        # flips every beat
+	var land := pow(1.0 - ph, 3.0)                 # 1 on the beat, gone before the next
+	var sq := land * 0.07 * a
+	toys["toy_kokeshi"].scale = Vector2(1.0 + sq, 1.0 - sq) * PX
+	toys["toy_maneki"].scale = Vector2(1.0 + sq * 0.6, 1.0 - sq * 0.6) * PX
+	toys["toy_daruma"].rotation = side * 0.1 * a
+	toys["toy_ball"].position.y = toys["toy_ball"].get_meta("home").y - sin(PI * ph) * 12.0 * a
+	toys["toy_maneki_paw"].rotation = side * 0.22 * a
+	toys["toy_top"].rotation = sin(PI * x * 0.5) * 0.12 * a
+
 func _sync_headphones() -> void:
 	var path := "res://textures/pet/accessories/headphones/%s-%d.png" % [PetState.form_id, pal.frame + 1]
 	headphones.texture = load(path) if ResourceLoader.exists(path) else null
-
-static func _ring_texture(col: Color) -> Texture2D:
-	var n := 15
-	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
-	for y in n:
-		for x in n:
-			var d := Vector2(x + 0.5 - n / 2.0, y + 0.5 - n / 2.0).length()
-			if d <= 7.0 and d >= 5.4:
-				img.set_pixel(x, y, Color8(46, 30, 40))
-			elif d < 5.4 and d >= 4.0:
-				img.set_pixel(x, y, col)
-	return ImageTexture.create_from_image(img)
 
 func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
 	var l := Label.new()
