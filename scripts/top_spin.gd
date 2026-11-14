@@ -1308,6 +1308,8 @@ func _check_match_end() -> void:
 			_finish_tutorial()
 	if not player.alive:
 		phase = Phase.RESULT
+		if qa_autopilot:                              # (tools/qa: the match's result, for the difficulty sweeps)
+			print("QA spin %d (%s) LOST at %.1f rivals left %d" % [level, WORLDS[world], match_t, rivals_left.size()])
 		_show_banner("KNOCKED OUT", 1.2)
 		_after(1.6, func():
 			_spend_boosts()
@@ -1326,6 +1328,8 @@ func _check_match_end() -> void:
 		return
 	var spin_left := player.spin
 	var stars := 1 + (1 if spin_left >= 40.0 else 0) + (1 if spin_left >= 70.0 else 0)
+	if qa_autopilot:
+		print("QA spin %d (%s) stars %d spin %.0f time %.1f" % [level, WORLDS[world], stars, spin_left, match_t])
 	_sfx("res://sounds/fx/unlock_ding.wav", -8.0)
 	Input.vibrate_handheld(60)
 	_show_banner("WIN!", 1.0)

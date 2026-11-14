@@ -1742,6 +1742,8 @@ func _check_finish() -> void:
 	state = State.CLEAR
 	vel = Vector2.ZERO
 	var stars := _stars_now()
+	if qa_autopilot:                              # (tools/qa: the level's result, for the difficulty sweeps)
+		print("QA maze %d (%s) stars %d time %.1f par %.0f falls %d route %d" % [level, WORLDS[world], stars, level_time, par, falls, path_cells.size()])
 	_sfx("res://sounds/fx/water-pouring-98795.mp3", -12.0, 1.4)
 	Input.vibrate_handheld(60)
 	# flushed: a splash of light out of the swirl, confetti over the board
@@ -2131,6 +2133,8 @@ func _splash_save(at: Vector2) -> bool:
 
 ## The last heart broke: the level is over (its result card: Out of lives!, retry from the start)
 func _out_of_lives() -> void:
+	if qa_autopilot:
+		print("QA maze %d (%s) OUT OF LIVES at %.1f par %.0f route %d" % [level, WORLDS[world], level_time, par, path_cells.size()])
 	_show_banner("Out of lives!", 0.9)
 	_sfx("res://sounds/fx/error.mp3", -10.0)
 	get_tree().create_timer(1.3).timeout.connect(func():

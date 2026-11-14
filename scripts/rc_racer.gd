@@ -251,6 +251,43 @@ var slow_t := 0.0                      # (focus: the slow-motion left)
 var place := 1                         # the race's position (Grand Prix)
 var qa_autopilot := false              # (tools/qa: the car drives itself, for screenshots)
 var qa_hands_off := false              # (tools/qa hands=off: nobody steers)
+## QA: a pretend PLAYER on top of the autopilot (tools/qa human=K: 0 the clean drive, 1 about a regular player,
+## 2 a clumsy one), for the difficulty sweeps (docs/core_review.md): eyes a moment behind the toy (QA_REACT s x
+## K) and, now and then, a LAPSE: the thumbs freeze for a moment, so the toy keeps doing what it was doing
+## (straight on into a corner, or turning too long). How often a lapse ends off the road is how forgiving the
+## course is. Seeded by the level and qa_seed (seed=N), so a run can be repeated. Uncalibrated: it shows which
+## levels are harder than which, not how often a real player fails.
+## (A first try that also pressed like two buttons, a turn all or nothing, fell off every course in two seconds:
+## the autopilot's steering is a real player's taps averaged, so it stays as it is between lapses.)
+var qa_human := 0.0
+var qa_seed := 0
+const QA_REACT := 0.03
+const QA_LAPSE_EVERY := 7.0            # seconds between lapses at human=1
+var _qa_rng: RandomNumberGenerator
+var _qa_queue: Array = []              # [time, the autopilot's wish], waiting out the reaction time
+var _qa_now := 0.0
+var _qa_lapse := 0.0
+var _qa_last := 0.0
+
+func _qa_human_turn(wish: float, delta: float) -> float:
+	if _qa_rng == null:
+		_qa_rng = RandomNumberGenerator.new()
+		_qa_rng.seed = level * 7919 + qa_seed * 104729 + 13
+		_qa_queue.clear()
+		_qa_now = 0.0
+		_qa_lapse = 0.0
+		_qa_last = 0.0
+	_qa_now += delta
+	_qa_queue.append([_qa_now, wish])
+	while _qa_queue.size() > 1 and float(_qa_queue[1][0]) <= _qa_now - QA_REACT * qa_human:
+		_qa_queue.pop_front()
+	if _qa_lapse > 0.0:
+		_qa_lapse -= delta
+		return _qa_last
+	if _qa_rng.randf() < delta * qa_human / QA_LAPSE_EVERY:
+		_qa_lapse = _qa_rng.randf_range(0.2, 0.45)
+	_qa_last = _qa_queue[0][1]
+	return _qa_last
 var world_no := 0                      # which world (0 Garden, 1 Lagoon, 2 Sky...)
 var course_seed := 1                   # what this level's course grows from: its number before the worlds were
 									   # reordered (2026-10-18), so every course stays the one it was balanced on
@@ -2042,6 +2079,7 @@ func start_game() -> void:
 
 func play_level(n: int) -> void:
 	super.start_game()
+	_qa_rng = null                           # (tools/qa human=K: a fresh pretend player for every level)
 	_begin(n)
 
 func _begin(n: int) -> void:
@@ -4951,6 +4989,8 @@ func _drive(delta_real: float) -> void:
 	var turn := (1.0 if _held(1) else 0.0) - (1.0 if _held(0) else 0.0)
 	if qa_autopilot:
 		turn = 0.0 if qa_hands_off else _autopilot()
+		if qa_human > 0.0:
+			turn = _qa_human_turn(turn, delta)
 	var grip := 0.88 if rain else 1.0                                # (the rain: a wet road)
 	if air_t > 0.0:
 		grip *= 0.3                                                  # (in the air: hardly any steering)

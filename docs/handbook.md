@@ -158,6 +158,25 @@ the big painting, so bigger means more detail), and ask the next designer for it
 Ask the next worlds' designer for **three bars of the same size and three lanes of the same
 width**: world 1 needed the tool to even them out.
 
+## 6b. Recipe: measuring a game's difficulty
+
+Never tune a level by feel alone: play it with the autopilot and read the table.
+
+1. `python3 tools/qa/sweep.py <game>` plays the game's 54 levels headless (1-4 minutes) and prints a
+   table: each level's stars, the tries that failed, the seconds, how far under the par. Games:
+   `prix`, `prix2`, `sumo skill=1|2`, `spin`, `maze`. `python3 tools/qa/sweep.py all` remakes
+   `docs/difficulty_measured.md` (about half an hour).
+2. A CLEAN autopilot only tells a level's length, its par's margin and whether it can be finished.
+   What a person finds hard needs a PRETEND PLAYER: the autopilot with a person's mistakes. Pal Prix
+   has one (`human=1 runs=5`; `qa_human` in `scripts/rc_racer.gd`: lapses, the thumbs freeze for a
+   moment). A first try that pressed like two buttons fell off every course: keep the autopilot's
+   steering and add only the lapses. The other games need theirs (`docs/core_review.md`, step 0).
+3. A game prints one line per level when `qa_autopilot` is on (`print("QA race ...")`); `sweep.py`
+   reads those lines (its `PATTERNS`). A new game or a new number: add the print and a pattern.
+4. Set a level's marks with the contract's loop (`docs/games_pass.md`, section 3), then confirm on
+   the phone. A pretend player is not calibrated: read its table as a shape (this world harder than
+   that one), never as "a player fails 40% of the time".
+
 ## 7. Traps met so far
 
 | Trap | What to do |
@@ -171,5 +190,7 @@ width**: world 1 needed the tool to even them out.
 | The shrine's weather (rain, its sound) showed over a game | the shrine checks `GameScreen.is_active`; anything living on the pet screen must go quiet inside a game |
 | A song played to its very end never showed its result (a stopped player's position reads 0) | never wait on `get_playback_position()` alone: also end on `not playing` and on a frame clock; test the END of a song with `tools/qa/tunes_end.gd` |
 | A shell line waiting on the keyboard (`cat > file` with no input) hangs a whole run | never leave a command that reads stdin |
+| A rule the model assumes but the game doesn't enforce (the meal wait, skipped by a send-off) | when a number comes from `pacing.py`, check the code enforces the rule behind it |
+| The model and the game count different things (six games against seven) | after adding a game, a prize or a price, put it in `pacing.py` the same day |
 | The phone shows "unavailable" or is locked | retry the install; a failed launch only needs the user to open the app |
 | The editor open during command-line Godot runs can corrupt its UID cache | if the editor floods "Unrecognized UID", restart it; the user accepts installs with the editor open |

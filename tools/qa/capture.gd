@@ -12,6 +12,8 @@ extends Node
 ##   out=DIR       where the PNGs go (default user://qa)
 ##   boost=B:L     the pal has boost B (splash, fizz, focus, sturdy, lucky) at level L before each level
 ##   skill=N       the autopilot's skill, where a game has one (Paper Sumo: 1 or 2)
+##   human=K       (Pal Prix) a pretend player on the autopilot: 0 the clean drive, 1 a regular player, 2 a
+##                 clumsy one; seed=N another run of the same player (the difficulty sweeps: docs/core_review.md)
 ##   home=H        the spirit's home: hokora (the default, the forest frame), first (the first hokora
 ##                 model; also shrine=1) or gut; hour=H the shrine's sky at that time of day
 ##   unlock=all    start like ALL UNLOCKED (every item owned, a random pal)
@@ -153,6 +155,10 @@ func _run() -> void:
 				g.qa_hands_off = true                          # (hands=off: nobody steers)
 			if "qa_skill" in g and args.has("skill"):
 				g.qa_skill = int(args["skill"])
+			if "qa_human" in g and args.has("human"):
+				g.qa_human = float(args["human"])              # (human=K: a pretend player's mistakes on the autopilot)
+				g.qa_seed = int(args.get("seed", "0"))
+				g._qa_rng = null
 			if "qa_depth_tilt" in g and args.has("depth"):
 				g.qa_depth_tilt = Vector2(float(str(args["depth"]).get_slice(",", 0)), float(str(args["depth"]).get_slice(",", 1)))   # (depth=x,y: a pretend tilt)
 			if args.get("intro", "") == "1" and g.has_method("_show_intro"):

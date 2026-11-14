@@ -83,9 +83,26 @@ the homes' ladder · the send-off's ceremony and the generation mark · the star
 6. **Real saving** in the normal game.
 Then what a release needs around them ("Not on the list above yet", below).
 
+### The core review (2026-11-14): the base is good, seven things to fix or decide
+`docs/core_review.md`: the rules read in the code, the model rerun, every level that an autopilot can
+play measured (`docs/difficulty_measured.md`, `tools/qa/sweep.py`). Almost all of the core stays as
+built. What it found: (1) a send-off resets the meal clock, so every wait can be skipped (the model's
+91% of sessions with a new spirit becomes 13-23%); (2) a send-off also drops the drink's effect, which
+would set collecting against playing once drinks are powers; (3) the model leaves out Pal Prix 2177:
+1134 stars, not 972, and about 300 coins more than the catalogue, so the budget is not full; (4) Pal
+Prix 2177's key is a masters' finale; (5) Pal Prix's 3rd star (no crash) can't be HEAT's; (6) Pal
+Prix's boat worlds are walls for a player who slips (9.4 and 7.2 stars of 27 against 23 in the car
+and plane worlds), and Paper Sumo's world 2 is harder than its world 3; (7) the first drink comes at
+minute 15, so the "3rd star needs the power" rule should start at world 2. Five decisions wait for
+the user (its section 6). Splash Hoops, Tilt Maze and Top Spin could not be measured: they need a
+pretend player first.
+
 ### Next, in order
-1. **Tomo Tunes pilot** (S): the user's verdict on 1A's sound; then song 1B from the new prompt
-   (present drums) to confirm the recipe before the other 22.
+0. **Close the leaks and build the measuring kit** (S-M; `docs/core_review.md`, section 5): the
+   send-off and the meal clock (after the user's decision), the 7th game in the model, a pretend
+   player in every game so the stars' marks are set by measuring, logging for the phone.
+1. **Tomo Tunes** goes on beside this on its own plan (`docs/tomo_tunes.md`: three songs and two
+   worlds' art are in; the user set it aside on 2026-11-14 to review the core).
 2. **The shared work of the new loop** (M, needs the user's go): the power in `pet_state.gd`, six
    drinks in two tiers, the HUD's power icon, the 3rd star wearing its drink, gates by the game's
    own drink, the Shop's rule for the better drinks, the model in step.
@@ -134,6 +151,7 @@ The loop will be built bit by bit (the user, 2026-11-12: it stays on paper for n
 | File | What it is |
 |---|---|
 | `docs/ideas_roadmap.md` (this) | the current picture, then every older note and each game's detail |
+| `docs/core_review.md`, `docs/difficulty_measured.md` | the core reviewed against the code on 14 November 2026: what stays, the seven findings, the plan's step 0, five decisions; and every level's measured result (made by `tools/qa/sweep.py`) |
 | `docs/handbook.md` | HOW the work is done: the standing rules, the commands, the art standard, the recipes (a song, a world's art), the traps. Read it before working |
 | `docs/loop_v2.md` | the loop as decided: clocks, drinks as powers, care, coins, generations, every cycle in one checklist, the decisions and the review |
 | `docs/games_pass.md` | the stars and powers contract for the six games and the order of the pass |
