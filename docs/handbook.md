@@ -160,20 +160,37 @@ width**: world 1 needed the tool to even them out.
 
 ## 6b. Recipe: measuring a game's difficulty
 
-Never tune a level by feel alone: play it with the autopilot and read the table.
+Never tune a level by feel alone: play it with the pretend players and read the table.
 
-1. `python3 tools/qa/sweep.py <game>` plays the game's 54 levels headless (1-4 minutes) and prints a
-   table: each level's stars, the tries that failed, the seconds, how far under the par. Games:
-   `prix`, `prix2`, `sumo skill=1|2`, `spin`, `maze`. `python3 tools/qa/sweep.py all` remakes
-   `docs/difficulty_measured.md` (about half an hour).
-2. A CLEAN autopilot only tells a level's length, its par's margin and whether it can be finished.
-   What a person finds hard needs a PRETEND PLAYER: the autopilot with a person's mistakes. Pal Prix
-   has one (`human=1 runs=5`; `qa_human` in `scripts/rc_racer.gd`: lapses, the thumbs freeze for a
-   moment). A first try that pressed like two buttons fell off every course: keep the autopilot's
-   steering and add only the lapses. The other games need theirs (`docs/core_review.md`, step 0).
-3. A game prints one line per level when `qa_autopilot` is on (`print("QA race ...")`); `sweep.py`
-   reads those lines (its `PATTERNS`). A new game or a new number: add the print and a pattern.
-4. Set a level's marks with the contract's loop (`docs/games_pass.md`, section 3), then confirm on
+1. `python3 tools/qa/sweep.py <game>` plays the game's 54 levels headless and prints a table: each
+   level's stars, the tries that failed, the seconds, how far under the par. Games: `hoops`, `maze`,
+   `prix`, `prix2`, `spin` (add `human=1 runs=5` for the regular player), `sumo skill=1|2 runs=3`.
+   1-4 minutes a run (Splash Hoops about 20: its player thinks ahead). `python3 tools/qa/sweep.py all
+   keep=DIR` remakes `docs/difficulty_measured.md` (about two hours; with `keep=` a run already in DIR
+   is read back, not played again).
+2. Every game but Tomo Tunes has a CLEAN player (no mistakes of its own: a level's length, its par's
+   margin, whether it can be finished at all) and a REGULAR one (`human=1`: the clean one with a
+   person's mistakes on top, seeded by `seed=N`). The top of `tools/qa/sweep.py` says what each is.
+   Each lives at the end of its game's script, under "QA (development only)", off unless tools/qa
+   turns it on (`qa_autopilot`, `qa_human`, `qa_seed`; `tools/qa/capture.gd` sets them).
+3. How the players were made, to copy for a new game: a physics game thinks ahead with its own rules
+   (Splash Hoops: each press tried on a copy of the tank, `_qa_try`, with a guard in the few functions
+   that would move something on screen); a board game follows a flow map to its goal (Tilt Maze:
+   Dijkstra over a 14 px grid, walls and holes dear, `_qa_flow`); a fighting game gets rules by hand
+   (Top Spin, the weakest: a floor). The regular player: the hand's late (a queue of what it wanted,
+   read QA_REACT x K s late), lapses (the hand frozen 0.2-0.6 s), gentler corrections (or the late hand
+   wobbles), more care after a mistake, and patience (it leans harder when the ball doesn't come).
+   Keep the clean player's steering and only ADD mistakes: a first Pal Prix try that pressed like two
+   buttons fell off every course.
+4. A game prints one line per level when `qa_autopilot` is on (`print("QA race ...")`); `sweep.py`
+   reads those lines (its `PATTERNS`). A new game or a new number: add the print and a pattern. Extra
+   lines (`QA fall`, `QA hit`, `QA crash`, `QA out`) say why a try failed; never leave a debug print
+   that fires every frame: `shoot.sh` stops at LINES_OUT lines and the run dies with it.
+5. Seed the game's own randomness in QA (`seed(level * 31 + qa_seed)` when the player starts), or two
+   runs of the same level differ (Paper Sumo isn't seeded yet: read three runs).
+6. A level the clean player can't finish is a finding, not a player to fix: look at why first (Tilt
+   Maze's magnets in Space pinned the pal for good: a game bug).
+7. Set a level's marks with the contract's loop (`docs/games_pass.md`, section 3), then confirm on
    the phone. A pretend player is not calibrated: read its table as a shape (this world harder than
    that one), never as "a player fails 40% of the time".
 
@@ -182,6 +199,8 @@ Never tune a level by feel alone: play it with the autopilot and read the table.
 | Trap | What to do |
 |---|---|
 | Two tweens on the same property fight (the room stayed dim) | keep the tween in a variable and `kill()` it before starting the next |
+| `var x := o.spin` with `o` from an untyped array (`tops.filter(...)`): "Cannot infer the type", and the whole script fails to load | give the type: `var x: float = o.spin` |
+| Two QA runs at once: each `shoot.sh` backs up the test save and puts it back, and the two can cross | copy the save folder yourself before running several, and put it back at the end |
 | A game's button handlers swallowed the level menu's presses | forward to `super` when `is_game_over or level_menu_open()` |
 | `play_level()` called directly leaves the level menu drawn on top | in QA, start through the menu: press the main button, wait 1.6 s, release |
 | The lead still sounded on a missed note | the lead is muted the moment a note is due and unhit, and comes back on a hit |

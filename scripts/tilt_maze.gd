@@ -181,8 +181,7 @@ var ball_pos := Vector2.ZERO
 var vel := Vector2.ZERO
 var bump_cooldown := 0.0
 var hit_t := 0.0                      # after an enemy's hit: the hop back (in the air), then the blink
-var qa_autopilot := false             # (tools/qa: the ball rolls itself along the route, for screenshots)
-var _qa_step := 0
+var qa_autopilot := false             # (tools/qa: the pretend player rolls the ball, see QA at the end)
 const HIT_HOP := 0.35                 # the hop: over any hole
 const HIT_BLINK := 1.2                # ...then a blink: no enemy hurts it
 const KNOCK := 560.0                  # how hard it's knocked back, px/s
@@ -369,7 +368,7 @@ func _build_level() -> void:
 	level_time = 0.0
 	falls = 0
 	hit_t = 0.0
-	_qa_step = 0
+	_qa_rng = null                       # (tools/qa: a fresh pretend player for every level)
 	reset_lives()
 	marbles_taken = 0
 	splash_used = false
@@ -1765,6 +1764,8 @@ func _check_finish() -> void:
 ## Into a hole: a heart breaks, back on the last marble taken (the clock keeps going, the no-fall
 ## star is gone); the last heart: the level is over
 func _fall_into(h: Vector2) -> void:
+	if qa_autopilot:
+		print("QA fall %d: hole at %.1f s, %d marbles" % [level, level_time, marbles_taken])
 	if _splash_save(h):
 		return
 	state = State.FALLING
@@ -2070,6 +2071,9 @@ func _check_hazards() -> void:
 ## it meanwhile, so it can get past) and a heart breaks (a splashy pal's water heart first); the no-
 ## fall star is gone; the last heart: the level is over
 func _hit(from: Vector2) -> void:
+	if qa_autopilot:
+		var by := blockers.filter(func(b): return (b["pos"] as Vector2).distance_to(from) < 1.0).map(func(b): return b["kind"])
+		print("QA hit %d: %s at %.1f s" % [level, by[0] if by.size() > 0 else "?", level_time])
 	var away := ball_pos - from
 	if away.length() < 1.0:
 		away = -vel if vel.length() > 1.0 else Vector2.UP
@@ -2200,15 +2204,7 @@ func _sensor_tilt() -> Vector2:
 
 func _read_tilt() -> Vector2:
 	if qa_autopilot and not path_cells.is_empty():
-		# (QA only: towards the next cell of the route, gently)
-		var best := _qa_step
-		for i in range(maxi(0, _qa_step - 2), mini(path_cells.size(), _qa_step + 4)):
-			if _cell_center(path_cells[i]).distance_to(ball_pos) < _cell_center(path_cells[best]).distance_to(ball_pos):
-				best = i
-		_qa_step = best
-		var target := _cell_center(path_cells[mini(best + 1, path_cells.size() - 1)])
-		var want := (target - ball_pos).limit_length(120.0) / 120.0 * 0.55
-		return (want - vel / 900.0).limit_length(1.0)
+		return _qa_tilt()                          # (tools/qa: the pretend player's hand)
 	var t := Vector2.ZERO
 	if _has_tilt_sensor():
 		t = _sensor_tilt() * TILT_GAIN
@@ -2280,3 +2276,413 @@ func _sfx(path: String, volume_db: float, max_time := 0.0, pitch := 1.0) -> void
 		get_tree().create_timer(max_time).timeout.connect(func():
 			if is_instance_valid(sfx):
 				sfx.queue_free())
+
+# ================================================================== QA (development only)
+
+## A pretend PLAYER for the difficulty sweeps (tools/qa/sweep.py maze; docs/core_review.md, step 0), off unless
+## tools/qa turns it on (qa_autopilot). It rolls the pal like a careful player: a map of the board that flows to its
+## next marble (then the trapdoor) round the walls and wide of the holes (_qa_flow), a hand that steers towards a
+## point a little ahead on it, slower into the turns and near a hole, leaning against the currents and the magnets;
+## and it reads the enemies' clocks (the duck, the rat, a flame, a meteor) a moment ahead along its way: it passes on
+## the free side, waits, or backs off. The pegs and the valves are doors: it pushes on until they open.
+## human=K (0 the clean player, 1 about a regular one): its hand QA_REACT x K s late, shaky, now and then a lapse
+## (the tilt held as it was), only part of the push leaned against, and a shorter look at the enemies.
+## Seeded by the level and seed=N. Uncalibrated: it says which levels are harder than which.
+var qa_human := 0.0
+var qa_seed := 0
+var _qa_rng: RandomNumberGenerator
+var _qa_cost := PackedFloat32Array()    # QA_N x QA_N: what a spot costs to roll over (INF: a wall or a hole's edge)
+var _qa_dist := PackedFloat32Array()    # ...and what it costs from there to the goal
+var _qa_goal := Vector2.INF
+var _qa_queue: Array = []               # [time, tilt], waiting out the reaction time
+var _qa_now := 0.0
+var _qa_lapse := 0.0
+var _qa_last := Vector2.ZERO
+var _qa_shake := Vector2.ZERO
+var _qa_slide := 0.0                    # (pinned by a magnet: the way it slides out along the wall, 1 / -1)
+var _qa_threat := Vector2.INF          # (where the enemy it's dodging will be)
+var _qa_more := Vector2.ZERO            # (leaning harder: the speed it lacks, summed and fading)
+var _qa_falls := 0                      # (the falls it has had: each one makes it slower, _qa_care)
+var _qa_care := 1.0
+var _qa_best := INF                     # (the nearest it has been to its goal, on the flow map)
+var _qa_since := 0.0                    # ...and how long ago
+const QA_STUCK := 15.0
+const QA_CELL := 14.0                   # the flow map's grid, px (a quarter of a tile)
+const QA_N := 64                        # (the board, 896 px, in QA_CELL)
+const QA_DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1),
+	Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)]
+const QA_CRUISE := 430.0                # px/s on a straight
+const QA_CORNER := 190.0                # ...into a right-angle turn
+const QA_CAREFUL := 200.0               # ...beside a hole
+const QA_GAIN := 5.0                    # how hard the hand corrects the speed (1/s)
+const QA_PATIENCE := 3.0                # how fast it leans harder when the ball lags (1/s²)
+const QA_LOOK := 1.2                    # seconds it reads the enemies ahead
+const QA_LANE := 32.0                   # px to one side of its way, to pass an enemy
+const QA_REACT := 0.15
+const QA_SHAKE := 0.1
+const QA_LAPSE_EVERY := 6.0             # seconds between lapses at human=1
+
+func _qa_tilt() -> Vector2:
+	var delta := get_process_delta_time()
+	if _qa_rng == null:
+		_qa_rng = RandomNumberGenerator.new()
+		_qa_rng.seed = level * 7919 + qa_seed * 104729 + 13
+		_qa_cost = _qa_cost_map(HOLE_FALL_R + 12.0)
+		_qa_goal = Vector2.INF
+		_qa_queue.clear()
+		_qa_now = 0.0
+		_qa_lapse = 0.0
+		_qa_last = Vector2.ZERO
+		_qa_shake = Vector2.ZERO
+		_qa_slide = 0.0
+		_qa_best = INF
+		_qa_since = 0.0
+		_qa_falls = 0
+		_qa_care = 1.0
+		_qa_more = Vector2.ZERO
+	if falls != _qa_falls:
+		# back after a fall or a hit: its hand starts afresh, and like a person it takes more care from now on
+		_qa_falls = falls
+		_qa_care = maxf(0.55, _qa_care * 0.8)
+		_qa_queue.clear()
+		_qa_lapse = 0.0
+		_qa_more = Vector2.ZERO
+	var goal := finish_pos
+	for cp in checkpoints:
+		if not cp["taken"]:
+			goal = cp["pos"]
+			break
+	if goal != _qa_goal:
+		_qa_goal = goal
+		_qa_dist = _qa_flow(goal, _qa_cost)
+		if _qa_dist[_qa_index(ball_pos)] == INF:        # (a hole's berth shuts the way: a narrower one)
+			_qa_dist = _qa_flow(goal, _qa_cost_map(HOLE_FALL_R + 3.0))
+		_qa_best = INF
+	# no nearer to the goal for QA_STUCK s (pinned for good): the level is over for it, said as such
+	var left := _qa_dist[_qa_nearest_open(_qa_index(ball_pos)) if _qa_dist[_qa_index(ball_pos)] == INF else _qa_index(ball_pos)]
+	if left < _qa_best - 1.0:
+		_qa_best = left
+		_qa_since = 0.0
+	else:
+		_qa_since += delta
+		if _qa_since > QA_STUCK:
+			print("QA maze %d (%s) STUCK at %.1f par %.0f route %d pull %.0f tilt %.0f marbles %d" % [level, WORLDS[world], level_time, par,
+				path_cells.size(), _qa_push().length(), accel, marbles_taken])
+			state = State.CLEAR
+			finish_level(level, 0, level_time)
+			return Vector2.ZERO
+	var want := _qa_hand()
+	if qa_human <= 0.0:
+		return want
+	_qa_now += delta
+	_qa_queue.append([_qa_now, want])
+	while _qa_queue.size() > 1 and float(_qa_queue[1][0]) <= _qa_now - QA_REACT * qa_human:
+		_qa_queue.pop_front()
+	if _qa_lapse > 0.0:
+		_qa_lapse -= delta
+		return _qa_last
+	if _qa_rng.randf() < delta * qa_human / QA_LAPSE_EVERY:
+		_qa_lapse = _qa_rng.randf_range(0.2, 0.45)
+	var wobble := Vector2(_qa_rng.randf_range(-1.0, 1.0), _qa_rng.randf_range(-1.0, 1.0)) * QA_SHAKE * qa_human
+	_qa_shake = _qa_shake.lerp(wobble, minf(1.0, delta * 4.0))
+	_qa_last = ((_qa_queue[0][1] as Vector2) + _qa_shake).limit_length(1.0)
+	return _qa_last
+
+## The hand: towards a point a little ahead on the flow map, at a speed for the turn coming
+func _qa_hand() -> Vector2:
+	var here := _qa_index(ball_pos)
+	if _qa_dist[here] == INF:
+		here = _qa_nearest_open(here)
+	var way := _qa_way(here, 40)
+	var by_hole := false
+	for h in holes:
+		if ball_pos.distance_to(h["pos"]) < 100.0:
+			by_hole = true
+	var ahead := 3 if by_hole else 5                 # (beside a hole: it keeps closer to its way, no cut corners)
+	var aim: Vector2 = _qa_goal if way.size() <= ahead else way[ahead]
+	var far: Vector2 = _qa_goal if way.size() < 13 else way[12]
+	var to := aim - ball_pos
+	var dir := to.normalized() if to.length() > 1.0 else Vector2.ZERO
+	var turn := 0.0
+	if to.length() > 1.0 and (far - aim).length() > 1.0:
+		turn = absf(to.angle_to(far - aim))
+	var grip := sqrt(accel / ACCEL) * (1.0 - 0.25 * qa_human)   # (low gravity, a person: slower; it stops less quickly)
+	var speed := lerpf(QA_CRUISE, QA_CORNER, clampf(turn / (PI / 2.0), 0.0, 1.0)) * grip * _qa_care
+	if by_hole:
+		speed = minf(speed, QA_CAREFUL * grip * _qa_care)
+	var go := _qa_enemies(way, speed)               # (side offset, how: 1 go, 0 wait, -1 back off)
+	if go.y > 0.0 and go.x != 0.0:
+		var side := Vector2(-dir.y, dir.x)
+		dir = (aim + side * go.x - ball_pos).normalized()
+	elif go.y < 0.0 and _qa_threat.x < INF and (ball_pos - _qa_threat).dot(dir) > 0.0:
+		go.y = 1.0                                   # (backing off: away from the enemy, whichever way that is)
+	var v_want := dir * speed * go.y
+	var drag := friction + (GOO_DRAG if _in_goo() else 0.0)
+	var push := _qa_push()
+	if push.length() < accel * 0.7:
+		_qa_slide = 0.0
+	elif (push.length() > accel * 0.9 and vel.length() < 60.0) or _qa_slide != 0.0:
+		# a pull it can't beat head on (a magnet, in low gravity): it slides out along the wall instead, one way
+		# until it's free (the way the flow map leans)
+		var away := -push.normalized()
+		var side := Vector2(-away.y, away.x)
+		if _qa_slide == 0.0:
+			_qa_slide = 1.0 if side.dot(dir) >= 0.0 else -1.0
+		return (side * _qa_slide * 0.95 + away * 0.3).limit_length(1.0)
+	var lean := vel * drag - push * (1.0 - 0.4 * qa_human)
+	var gain := QA_GAIN / (1.0 + 0.6 * qa_human)     # (a person's late hand corrects more gently, or it would wobble)
+	# ...and leans harder the longer the ball lags (a current against it, a magnet holding it); not while it waits
+	var dt := get_process_delta_time()
+	_qa_more = (_qa_more * (1.0 - 1.5 * dt) + (v_want - vel) * QA_PATIENCE * dt).limit_length(accel * 0.6)
+	if go.y == 0.0:
+		_qa_more = Vector2.ZERO
+	return (((v_want - vel) * gain + lean + _qa_more) / accel).limit_length(1.0)
+
+## What the board does to the ball here (mirrors _apply_forces): the holes' pull, the currents, the magnets
+func _qa_push() -> Vector2:
+	var f := Vector2.ZERO
+	for h in holes:
+		var d: Vector2 = h["pos"] - ball_pos
+		var l := d.length()
+		if l < HOLE_R + 6.0 and l > 0.001:
+			f += d / l * HOLE_PULL * (1.0 - l / (HOLE_R + 6.0))
+	for c in currents:
+		if (c["rect"] as Rect2).has_point(ball_pos):
+			f += (c["dir"] as Vector2) * CURRENT_PUSH
+	for m in magnets:
+		var d2 := m - ball_pos
+		var l2 := d2.length()
+		if l2 < MAGNET_R and l2 > 0.001:
+			f += d2 / l2 * MAGNET_PULL * (1.0 - l2 / MAGNET_R)
+	return f
+
+## The enemies a moment ahead along its way (rolling on at about its speed): Vector2(the side to pass on, px;
+## 1 go / 0 wait where it is / -1 back off, where it stands will be hit)
+func _qa_enemies(way: Array, speed: float) -> Vector2:
+	if blockers.is_empty():
+		return Vector2(0.0, 1.0)
+	var look := QA_LOOK * (1.0 - 0.35 * qa_human)
+	var s := maxf(vel.length(), speed * 0.7)
+	for lane in [0.0, -QA_LANE, QA_LANE]:
+		if not _qa_hit_ahead(way, s, look, lane):
+			return Vector2(lane, 1.0)
+	return Vector2(0.0, -1.0 if _qa_hit_ahead([], 0.0, look, 0.0) else 0.0)
+
+## Would an enemy hit it, rolling along `way` at `s` px/s (or standing still: an empty way), `lane` px to its side?
+func _qa_hit_ahead(way: Array, s: float, look: float, lane: float) -> bool:
+	var t := 0.0
+	while t <= look:
+		var p := _qa_along(way, s * t)
+		if lane != 0.0 and way.size() > 1:
+			var d: Vector2 = (_qa_along(way, s * t + 20.0) - p)
+			if d.length() > 0.1:
+				p += Vector2(-d.y, d.x).normalized() * lane
+		for bl in blockers:
+			var e := _qa_enemy_at(bl, t)
+			if not e.is_empty() and p.distance_to(e[0]) < float(e[1]) + 10.0:
+				_qa_threat = e[0]
+				return true
+		t += 0.1
+	return false
+
+## An enemy s seconds from now (its clock read ahead; mirrors _update_blockers and _check_hazards, keep in sync):
+## [where, how close hurts], or [] if it can't hurt then
+func _qa_enemy_at(bl: Dictionary, s: float) -> Array:
+	var t: float = bl["t"] + s
+	match bl["kind"]:
+		"duck":
+			var ph := fposmod(t, DUCK_CYCLE)
+			var f := 0.0
+			if ph < DUCK_REST:
+				f = 0.0
+			elif ph < DUCK_REST + DUCK_CROSS:
+				f = smoothstep(0.0, 1.0, (ph - DUCK_REST) / DUCK_CROSS)
+			elif ph < DUCK_REST * 2.0 + DUCK_CROSS:
+				f = 1.0
+			else:
+				f = 1.0 - smoothstep(0.0, 1.0, (ph - DUCK_REST * 2.0 - DUCK_CROSS) / DUCK_CROSS)
+			return [(bl["a"] as Vector2).lerp(bl["b"], f), MOVER_R * 0.75 + BALL_R * 0.7]
+		"rat":
+			var a: Vector2 = bl["a"]
+			var b: Vector2 = bl["b"]
+			var leg := a.distance_to(b) / 170.0
+			var cyc := fposmod(t, RAT_HIDE + (leg + 0.4) * 2.0)
+			if cyc < RAT_HIDE:
+				return []
+			var c2 := cyc - RAT_HIDE
+			var f := c2 / leg if c2 < leg else (1.0 if c2 < leg + 0.4 else 1.0 - (c2 - leg - 0.4) / leg)
+			return [a.lerp(b, clampf(f, 0.0, 1.0)), MOVER_R * 0.75 + BALL_R * 0.7]
+		"fire":
+			var ph := fposmod(t, FIRE_CYCLE)
+			return [bl["pos"], PEG_R + BALL_R * 0.4] if ph >= 0.6 and ph < 1.6 else []
+		"meteor":
+			var ph := fposmod(t, METEOR_CYCLE)
+			return [bl["pos"], METEOR_R + BALL_R * 0.4] if ph >= 0.9 and ph < 1.15 else []
+	return []
+
+## The point `d` px along a way that starts at the ball (an empty way: where the ball is)
+func _qa_along(way: Array, d: float) -> Vector2:
+	var p := ball_pos
+	for q in way:
+		var l := p.distance_to(q)
+		if d <= l:
+			return p.lerp(q, d / l) if l > 0.001 else p
+		d -= l
+		p = q
+	return p
+
+## The way on from a spot, down the flow map: up to n points (each spot's lowest neighbour)
+func _qa_way(from: int, n: int) -> Array:
+	var out: Array = []
+	var i := from
+	for k in n:
+		var x := i % QA_N
+		var y := i / QA_N
+		var best := i
+		var best_d := _qa_dist[i]
+		for d in QA_DIRS:
+			var nx := x + d.x
+			var ny := y + d.y
+			if nx < 0 or ny < 0 or nx >= QA_N or ny >= QA_N:
+				continue
+			var ni := ny * QA_N + nx
+			if _qa_dist[ni] < best_d:
+				best_d = _qa_dist[ni]
+				best = ni
+		if best == i:
+			break
+		i = best
+		out.append(_qa_point(i))
+	return out
+
+func _qa_index(p: Vector2) -> int:
+	var i := clampi(int((p.x - ORIGIN.x) / QA_CELL), 0, QA_N - 1)
+	var j := clampi(int((p.y - ORIGIN.y) / QA_CELL), 0, QA_N - 1)
+	return j * QA_N + i
+
+func _qa_point(i: int) -> Vector2:
+	return ORIGIN + (Vector2(i % QA_N, i / QA_N) + Vector2(0.5, 0.5)) * QA_CELL
+
+## The nearest spot the flow map reaches (the ball pushed against a wall or into a hole's berth)
+func _qa_nearest_open(i: int) -> int:
+	var x := i % QA_N
+	var y := i / QA_N
+	var best := i
+	var best_d := INF
+	for r in range(1, 6):
+		for dy in range(-r, r + 1):
+			for dx in range(-r, r + 1):
+				var nx := x + dx
+				var ny := y + dy
+				if nx < 0 or ny < 0 or nx >= QA_N or ny >= QA_N:
+					continue
+				var ni := ny * QA_N + nx
+				if _qa_dist[ni] < INF and dx * dx + dy * dy < best_d:
+					best_d = dx * dx + dy * dy
+					best = ni
+		if best != i:
+			return best
+	return i
+
+## What each spot costs to roll over: a wall's edge or a hole's berth can't be crossed, the middle of a corridor is
+## cheapest, the side away from a hole cheaper than the side by it
+func _qa_cost_map(berth: float) -> PackedFloat32Array:
+	var cost := PackedFloat32Array()
+	cost.resize(QA_N * QA_N)
+	for j in QA_N:
+		for i in QA_N:
+			var p := _qa_point(j * QA_N + i)
+			var wall := _qa_wall_dist(p)
+			var c := INF
+			if wall >= BALL_R + 2.0:
+				c = 1.0 + 1.5 * maxf(0.0, BALL_R + 30.0 - wall) / 30.0
+				for h in holes:
+					var d: float = p.distance_to(h["base"]) - (DRIFT_R if h["drift"] else 0.0)
+					if d < berth:
+						c = INF
+						break
+					c += 6.0 * maxf(0.0, 72.0 - d) / 40.0
+				for m in magnets:                        # (a magnet's side of a corridor: dearer, more so in low gravity)
+					var pull := MAGNET_PULL * maxf(0.0, 1.0 - p.distance_to(m) / MAGNET_R)
+					c += 4.0 * maxf(0.0, pull / accel - 0.4)
+			cost[j * QA_N + i] = c
+	return cost
+
+func _qa_wall_dist(p: Vector2) -> float:
+	var t := ((p - ORIGIN) / TILE).floor()
+	var best := INF
+	for dy in range(-1, 2):
+		for dx in range(-1, 2):
+			var tx := int(t.x) + dx
+			var ty := int(t.y) + dy
+			if _is_wall_tile(tx, ty):
+				var r := Rect2(ORIGIN + Vector2(tx, ty) * TILE, Vector2(TILE, TILE))
+				best = minf(best, p.distance_to(p.clamp(r.position, r.end)))
+	return best
+
+## The cost from every spot to the goal (Dijkstra over the cost map, 8 ways, no cutting a wall's corner)
+func _qa_flow(goal: Vector2, cost: PackedFloat32Array) -> PackedFloat32Array:
+	var dist := PackedFloat32Array()
+	dist.resize(QA_N * QA_N)
+	dist.fill(INF)
+	var g := _qa_index(goal)
+	dist[g] = 0.0
+	var heap_c := PackedFloat32Array([0.0])          # (a binary heap: cost, spot)
+	var heap_i := PackedInt32Array([g])
+	while heap_c.size() > 0:
+		var c0 := heap_c[0]
+		var i0 := heap_i[0]
+		var last := heap_c.size() - 1
+		heap_c[0] = heap_c[last]
+		heap_i[0] = heap_i[last]
+		heap_c.resize(last)
+		heap_i.resize(last)
+		var k := 0
+		while true:
+			var l := 2 * k + 1
+			if l >= last:
+				break
+			var m := l
+			if l + 1 < last and heap_c[l + 1] < heap_c[l]:
+				m = l + 1
+			if heap_c[m] >= heap_c[k]:
+				break
+			var tc := heap_c[k]
+			heap_c[k] = heap_c[m]
+			heap_c[m] = tc
+			var ti := heap_i[k]
+			heap_i[k] = heap_i[m]
+			heap_i[m] = ti
+			k = m
+		if c0 > dist[i0]:
+			continue
+		var x := i0 % QA_N
+		var y := i0 / QA_N
+		for d in QA_DIRS:
+			var nx := x + d.x
+			var ny := y + d.y
+			if nx < 0 or ny < 0 or nx >= QA_N or ny >= QA_N:
+				continue
+			var ni := ny * QA_N + nx
+			if cost[ni] == INF:
+				continue
+			if d.x != 0 and d.y != 0 and (cost[y * QA_N + nx] == INF or cost[ny * QA_N + x] == INF):
+				continue
+			var nc := c0 + (1.4142 if d.x != 0 and d.y != 0 else 1.0) * cost[ni]
+			if nc < dist[ni]:
+				dist[ni] = nc
+				heap_c.append(nc)
+				heap_i.append(ni)
+				var u := heap_c.size() - 1
+				while u > 0:
+					var pu := (u - 1) / 2
+					if heap_c[pu] <= heap_c[u]:
+						break
+					var tc2 := heap_c[u]
+					heap_c[u] = heap_c[pu]
+					heap_c[pu] = tc2
+					var ti2 := heap_i[u]
+					heap_i[u] = heap_i[pu]
+					heap_i[pu] = ti2
+					u = pu
+	return dist

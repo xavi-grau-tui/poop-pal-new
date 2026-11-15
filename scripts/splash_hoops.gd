@@ -407,7 +407,7 @@ static func life_material(look: Dictionary) -> ShaderMaterial:
 ## came back): out, a spray of drops thrown up and a small ring on the line; back in, a splash ring and
 ## drops falling round it. The line moves with the panel (the 3D tilt). Only the look: the physics stay.
 func _surface_fx(b: Dictionary) -> void:
-	if surface_px < 0.0 or not b.has("prev"):
+	if _qa_sim or surface_px < 0.0 or not b.has("prev"):
 		return
 	var line := tank_back.position.y + surface_px * S
 	var was_under: bool = (b["prev"] as Vector2).y > line
@@ -482,6 +482,7 @@ func _build_level() -> void:
 	cups.clear()
 	glows.clear()
 	rng.seed = 4271 * level + 3
+	_qa_rng = null                                   # (tools/qa: a fresh pretend player for every level)
 	_apply_theme(_world())
 	_reset_storm()
 
@@ -603,6 +604,8 @@ func _set_cup_pos(c: Dictionary, p: Vector2) -> void:
 	p.x = clampf(p.x, TANK_L + CUP_W / 2.0, TANK_R - CUP_W / 2.0)
 	c["pos"] = p
 	c["rim"] = p.y - CUP_H / 2.0 + 12.0
+	if _qa_sim:
+		return                                         # (the pretend player thinking ahead: nothing moves)
 	c["net"].position = p
 	c["rim_node"].position = p
 	c["label"].position = p + Vector2(-45, -CUP_H / 2.0 - 34)
@@ -768,6 +771,8 @@ func _process(delta: float) -> void:
 	_depth_3d()
 	if not is_running:
 		return
+	if qa_autopilot and state == State.PLAY:
+		_qa_play(delta)                                # (tools/qa: the pretend player's thumbs)
 	_update_jets(delta)
 	_update_bubbles(delta)
 	_update_glows(delta)
@@ -818,14 +823,7 @@ func _update_jets(delta: float) -> void:
 	_key_jets = [Input.is_key_pressed(KEY_LEFT) or Input.is_key_pressed(KEY_A), Input.is_key_pressed(KEY_RIGHT) or Input.is_key_pressed(KEY_D)]
 	for i in 2:
 		var j: Dictionary = jets[i]
-		var want := 0.0
-		if j["held"] or _key_jets[i] or i in _touch_jets.values():
-			j["hold_time"] += delta
-			want = clampf(1.0 - (j["hold_time"] - PUMP_TIME) / 0.4, 0.0, 1.0)   # pump runs dry
-		else:
-			j["hold_time"] = 0.0
-		var rate := 14.0 if want > j["power"] else 5.0
-		j["power"] = move_toward(j["power"], want, rate * delta)
+		_pump_step(j, j["held"] or _key_jets[i] or i in _touch_jets.values(), delta)
 		if j["power"] > 0.05 and rng.randf() < j["power"] * delta * 40.0:
 			_spawn_bubble(Vector2(j["x"] + rng.randf_range(-10, 10), FLOOR_Y - 20))
 	# both pumps on: bubbles swirl in from both sides towards the middle
@@ -833,6 +831,18 @@ func _update_jets(delta: float) -> void:
 	if both > 0.2 and rng.randf() < both * delta * 30.0:
 		var side := -1.0 if rng.randf() < 0.5 else 1.0
 		_spawn_bubble(Vector2(CENTER_X + side * rng.randf_range(160, 260), rng.randf_range(420, 640)), -side * rng.randf_range(160, 260))
+
+## A pump's power over a moment, held or not: it rises fast, runs dry after PUMP_TIME held, falls
+## slowly when let go (also the pretend player's, thinking ahead: _qa_try)
+func _pump_step(j: Dictionary, on: bool, delta: float) -> void:
+	var want := 0.0
+	if on:
+		j["hold_time"] += delta
+		want = clampf(1.0 - (j["hold_time"] - PUMP_TIME) / 0.4, 0.0, 1.0)   # pump runs dry
+	else:
+		j["hold_time"] = 0.0
+	var rate := 14.0 if want > j["power"] else 5.0
+	j["power"] = move_toward(j["power"], want, rate * delta)
 
 func _jet_force(p: Vector2, v: Vector2) -> Vector2:
 	var f := Vector2.ZERO
@@ -980,6 +990,9 @@ func _bounce_off_point(b: Dictionary, q: Vector2, r: float) -> void:
 
 func _fill_cup(_b: Dictionary, c: Dictionary) -> void:
 	c["full"] = true
+	if _qa_sim:
+		_qa_hit = minf(_qa_hit, _qa_t)                 # (the pretend player thinking ahead: only noted)
+		return
 	# in: sparkles and a ring of light off the basket, in its plastic's colour
 	var at: Vector2 = (c["rim_node"] as Node2D).position
 	fx.sparkle(at, 12, Color8(255, 236, 160), 1.0)
@@ -1001,6 +1014,9 @@ func _fill_cup(_b: Dictionary, c: Dictionary) -> void:
 func _level_clear() -> void:
 	state = State.CLEAR
 	var stars := _stars_now()
+	if qa_autopilot:                                   # (tools/qa/sweep.py reads this line; par = the 2nd star's mark, gold the 3rd's)
+		print("QA hoops %d (%s) stars %d time %.1f par %.0f gold %.0f presses %d" % [level, WORLDS[_world()], stars,
+			_level_time() - time_left, _level_time() * (1.0 - STAR_2), _level_time() * (1.0 - STAR_3), _qa_presses])
 	_show_banner("Clear!", 1.1)
 	for i in 3:
 		fx.confetti(Vector2(160.0 + i * 316.0, BAND_Y + 60.0), 12, [theme["rim"][0], Color8(255, 214, 90), Color(1, 1, 1), Color8(140, 220, 255)])
@@ -1014,6 +1030,9 @@ func _level_clear() -> void:
 ## The clock ran out before the last basket
 func _time_up() -> void:
 	state = State.CLEAR
+	if qa_autopilot:
+		print("QA hoops %d (%s) TIME UP baskets %d of %d par %.0f presses %d" % [level, WORLDS[_world()],
+			cups.filter(func(q): return q["full"]).size(), cups.size(), _level_time() * (1.0 - STAR_2), _qa_presses])
 	_release_pumps()
 	_spend_fizz()
 	_play_error_sound()
@@ -1706,3 +1725,155 @@ func end_game() -> void:
 	jets[0]["held"] = false
 	jets[1]["held"] = false
 	super.end_game()        # (its overlay is added last, so it covers the baskets)
+
+# ================================================================== QA (development only)
+
+## A pretend PLAYER for the difficulty sweeps (tools/qa/sweep.py hoops; docs/core_review.md, step 0), off unless
+## tools/qa turns it on. The game is physics, so it thinks ahead with the game's own rules: whenever its hands are
+## free it tries every press it knows (one pump or both, held QA_HOLDS / QA_BOTH long) on a copy of the tank
+## (_qa_try: the same _physics, nothing on screen moves) and plays the one that fills a basket soonest. When none
+## does, it waits for a better moment (a basket coming round); after QA_RESTLESS s of nothing it plays the press
+## that brings a ball nearest an empty basket's mouth. It doesn't foresee the pufferfish or the next gust.
+## human=K (0 the clean player, 1 about a regular one): it presses QA_REACT x K s after deciding, holds a little
+## long or short, looks less often, sometimes picks a worse press that also works, and now and then hesitates.
+## Seeded by the level and seed=N. Uncalibrated: it says which levels are harder than which.
+var qa_autopilot := false
+var qa_human := 0.0
+var qa_seed := 0
+var _qa_rng: RandomNumberGenerator
+var _qa_sim := false                    # (thinking ahead: _fill_cup, _surface_fx and _set_cup_pos only note)
+var _qa_t := 0.0                        # (the copy's clock)
+var _qa_hit := INF                      # (the copy: when its first basket was filled)
+var _qa_press := [false, false]         # the pumps it holds now
+var _qa_hold := 0.0                     # how much longer
+var _qa_next := {}                      # a press decided, waiting out the reaction time: { press, hold, at }
+var _qa_wait := 0.0                     # seconds to the next look
+var _qa_idle := 0.0                     # seconds since its last press
+var _qa_presses := 0
+const QA_HOLDS := [0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 1.0]
+const QA_BOTH := [0.5, 0.8, 1.1, 1.4]
+const QA_AHEAD := 1.8                   # seconds it watches the copy after the press ends
+const QA_STEP := 1.0 / 240.0            # the copy's physics step (the game's: 4 steps a frame)
+const QA_THINK := 0.15                  # seconds between looks
+const QA_RESTLESS := 0.8
+const QA_REACT := 0.25
+const QA_LAPSE_EVERY := 8.0             # seconds between hesitations at human=1
+
+func _qa_play(delta: float) -> void:
+	if _qa_rng == null:
+		_qa_rng = RandomNumberGenerator.new()
+		_qa_rng.seed = level * 7919 + qa_seed * 104729 + 13
+		seed(level * 31 + qa_seed)                     # (the jets' and knobs' own randomness: a run repeats)
+		_qa_press = [false, false]
+		_qa_hold = 0.0
+		_qa_next = {}
+		_qa_wait = 0.3
+		_qa_idle = 0.0
+		_qa_presses = 0
+	if _qa_hold > 0.0:
+		_qa_hold -= delta
+		if _qa_hold <= 0.0:
+			_qa_press = [false, false]
+			_qa_wait = QA_THINK
+	elif not _qa_next.is_empty():
+		_qa_next["at"] -= delta
+		if _qa_next["at"] <= 0.0:
+			_qa_press = _qa_next["press"]
+			_qa_hold = _qa_next["hold"]
+			_qa_next = {}
+			_qa_idle = 0.0
+			_qa_presses += 1
+	else:
+		_qa_idle += delta
+		_qa_wait -= delta
+		if _qa_wait <= 0.0:
+			_qa_wait = QA_THINK * (1.0 + qa_human)
+			if qa_human > 0.0 and _qa_rng.randf() < QA_THINK * qa_human / QA_LAPSE_EVERY * 4.0:
+				_qa_wait += _qa_rng.randf_range(0.4, 1.0)
+			var pick := _qa_choose()
+			if not pick.is_empty():
+				var hold: float = pick["hold"]
+				if qa_human > 0.0:
+					hold = maxf(0.08, hold * (1.0 + _qa_rng.randfn(0.0, 0.15 * qa_human)))
+				_qa_next = { "press": pick["press"], "hold": hold, "at": QA_REACT * qa_human }
+	jets[0]["held"] = _qa_press[0]
+	jets[1]["held"] = _qa_press[1]
+
+## Every press it knows, tried on a copy: the one that fills a basket soonest (or none yet)
+func _qa_choose() -> Dictionary:
+	if _qa_try([false, false], 0.0).x < INF:
+		_qa_idle = 0.0
+		return {}                                      # (a ball already on its way in: it watches)
+	var tries: Array = []
+	for i in 2:
+		for h in QA_HOLDS:
+			tries.append({ "press": [i == 0, i == 1], "hold": h })
+	for h in QA_BOTH:
+		tries.append({ "press": [true, true], "hold": h })
+	var hits: Array = []
+	var near := {}
+	var near_d := INF
+	for tr in tries:
+		var r := _qa_try(tr["press"], tr["hold"])
+		tr["hit"] = r.x
+		if r.x < INF:
+			hits.append(tr)
+		if r.y < near_d:
+			near_d = r.y
+			near = tr
+	if not hits.is_empty():
+		hits.sort_custom(func(a, b): return a["hit"] < b["hit"])
+		if qa_human > 0.0 and hits.size() > 1 and _qa_rng.randf() < 0.3 * qa_human:
+			return hits[_qa_rng.randi_range(1, hits.size() - 1)]   # (a press that works, not the best)
+		return hits[0]
+	if _qa_idle > QA_RESTLESS * (1.0 + qa_human) and (_qa_idle > 4.0 or _qa_quiet()):
+		return near
+	return {}
+
+## Every ball back down by the pumps (a person waits for that before a shot that only gets closer)
+func _qa_quiet() -> bool:
+	for b in balls:
+		if (b["vel"] as Vector2).length() > 60.0 or (b["pos"] as Vector2).y < floor_at(b["pos"].x) - BALL_R - 40.0:
+			return false
+	return true
+
+## One press on a copy of the tank: (seconds until a basket is filled or INF, how near a ball came to an empty
+## basket's mouth)
+func _qa_try(press: Array, hold: float) -> Vector2:
+	var keep_balls := balls
+	var keep_cups := cups
+	var keep_diver := diver
+	var keep_jets := jets
+	var copy_balls: Array[Dictionary] = []
+	for b in keep_balls:
+		copy_balls.append(b.duplicate())
+	var copy_cups: Array[Dictionary] = []
+	for c in keep_cups:
+		copy_cups.append(c.duplicate())
+	balls = copy_balls
+	cups = copy_cups
+	diver = keep_diver.duplicate()
+	jets = [keep_jets[0].duplicate(), keep_jets[1].duplicate()]
+	_qa_sim = true
+	_qa_hit = INF
+	_qa_t = 0.0
+	var near := INF
+	var ahead := hold + QA_AHEAD
+	while _qa_t < ahead and _qa_hit == INF:
+		for i in 2:
+			_pump_step(jets[i], press[i] and _qa_t < hold, QA_STEP)
+		_move_cups(QA_STEP)
+		_physics(QA_STEP)
+		_qa_t += QA_STEP
+		for c in cups:
+			if c["full"]:
+				continue
+			var mouth: Vector2 = c["pos"] + Vector2(0.0, RIM_LINE_Y - BALL_R)
+			for b in balls:
+				near = minf(near, (b["pos"] as Vector2).distance_to(mouth))
+	_qa_sim = false
+	balls = keep_balls
+	cups = keep_cups
+	diver = keep_diver
+	jets = keep_jets
+	return Vector2(_qa_hit, near)

@@ -506,6 +506,7 @@ func _level_data() -> Dictionary:
 
 func _start_match() -> void:
 	loop = 0
+	_qa_rng = null                                   # (tools/qa: a fresh pretend player for every match)
 	C = C_TUT if tut != Tut.NONE else C_FULL         # (the tutorial's bowl is smaller and lower)
 	R = R_TUT if tut != Tut.NONE else R_FULL
 	world = clampi((level - 1) / GameData.LEVELS_PER_WORLD, 0, WORLDS.size() - 1)
@@ -1273,6 +1274,8 @@ func _topple(t: Top) -> void:
 		_float_text("SPUN OUT!", t.pos + Vector2(0, -70))
 
 func _ring_out(t: Top) -> void:
+	if qa_autopilot and t.is_player:
+		print("QA out %d: through a way out at %.1f s" % [level, match_t])
 	if t.is_player and _splash_save():
 		return
 	t.alive = false
@@ -1571,43 +1574,176 @@ func _rim_sides() -> Array[Sprite2D]:
 		out.append(sp)
 	return out
 
-## QA only (tools/qa sets it): plays by itself to check the levels and the effects: winds on the
-## gold, drops on a rival, dashes at the nearest one now and then, guards when one flashes
+## A pretend PLAYER for the difficulty sweeps (tools/qa/sweep.py spin; docs/core_review.md, step 0), off unless
+## tools/qa turns it on (qa_autopilot). It winds on the gold and stops near 100, drops on a rival (the opening hit),
+## then fights like a player who knows the bowl: it keeps away from the ways out, gets behind a rival on the line
+## from a way out and dashes it through (a ring-out), dashes for damage up close, and guards just as a flashing
+## rival's dash lands (the perfect guard). It steers with the tilt (_read_tilt), which moves the rivals a little too.
+## human=K (0 the clean player, 1 about a regular one): its presses on the dial a little off the gold's middle, its
+## hand QA_REACT x K s late, its guard early or late, its dashes now and then off, and now and then a lapse.
+## Seeded by the level and seed=N. Uncalibrated: it says which levels are harder than which.
 var qa_autopilot := false
-var _qa_t := 0.0
+var qa_human := 0.0
+var qa_seed := 0
+var _qa_rng: RandomNumberGenerator
+var _qa_tilt := Vector2.ZERO           # the tilt its hand holds (what _read_tilt gives)
+var _qa_queue: Array = []              # [time, tilt], waiting out the reaction time
+var _qa_now := 0.0
+var _qa_lapse := 0.0
+var _qa_zone := -1.0                   # (winding: the gold zone it's pressing on...)
+var _qa_off := 0.0                     # (...and how far off its middle it will press)
+var _qa_stop := 96.0                   # (winding: when it's done)
+var _qa_guard := 0.0                   # how long its guard stays up
+var _qa_guard_err := 0.0               # (how early, or late, it guards this time)
+var _qa_dash_wait := 0.0               # (a person sees the chance a moment after it's there)
+const QA_REACT := 0.2
+const QA_LAPSE_EVERY := 6.0            # seconds between lapses at human=1
+const QA_SAFE := 120.0                 # px from the rim: nearer than this by a way out, it heads back in
+
 func _qa_play(delta: float) -> void:
-	_qa_t -= delta
+	if _qa_rng == null:
+		_qa_rng = RandomNumberGenerator.new()
+		_qa_rng.seed = level * 7919 + qa_seed * 104729 + 13
+		seed(level * 31 + qa_seed)                     # (the rivals' own randomness: a run repeats)
+		_qa_queue.clear()
+		_qa_now = 0.0
+		_qa_lapse = 0.0
+		_qa_zone = -1.0
+		_qa_stop = 96.0 - _qa_rng.randf_range(0.0, 12.0) * qa_human
+		_qa_guard = 0.0
+		_qa_dash_wait = 0.0
+		_qa_tilt = Vector2.ZERO
 	match phase:
 		Phase.WIND:
-			if wind_jam <= 0.0 and absf(angle_difference(needle, zone)) < ZONE_HALF * 0.5:
+			if zone != _qa_zone:                       # (a new gold zone: where on it this press will land)
+				_qa_zone = zone
+				_qa_off = _qa_rng.randfn(0.0, 0.16 * qa_human) if qa_human > 0.0 else 0.0
+			var d := angle_difference(zone + _qa_off, needle)
+			if wind_jam <= 0.0 and d >= 0.0 and d < 0.15:
 				_wind_pull()
-			if wind_spin >= 96.0:
+			if wind_spin >= _qa_stop:
 				_forward_down()
 				_forward_up()
 		Phase.DROP:
+			_qa_tilt = Vector2.ZERO
 			if not dropping:
 				var best: Top = null
 				for o in tops:
-					if o != player and o.alive and (best == null or o.pos.distance_to(C) < best.pos.distance_to(C)):
+					if o != player and o.alive and not o.prize and (best == null or o.pos.distance_to(C) < best.pos.distance_to(C)):
 						best = o
 				if best:
-					aim = C + (best.pos - C).limit_length(R - 80.0)
+					var miss := Vector2(_qa_rng.randfn(0.0, 45.0), _qa_rng.randfn(0.0, 45.0)) * qa_human
+					aim = C + (best.pos + miss - C).limit_length(R - 80.0)
 				_drop()
 		Phase.BATTLE:
 			if not player.alive:
+				_qa_tilt = Vector2.ZERO
 				return
-			var threat := false
-			for o in tops:
-				if o != player and o.alive and o.windup > 0.0 and o.windup < 0.22:
-					threat = true
-			if threat and not player.braced:
-				player.braced = true
-				player.brace_t = 0.0
-			elif not threat and player.braced and player.brace_t > 0.35:
-				player.braced = false
-			if not player.braced and _qa_t <= 0.0 and player.spin > 20.0:
-				_player_dash()
-				_qa_t = randf_range(0.7, 1.2)
+			var want := _qa_battle(delta)
+			if qa_human <= 0.0:
+				_qa_tilt = want
+				return
+			_qa_now += delta
+			_qa_queue.append([_qa_now, want])
+			while _qa_queue.size() > 1 and float(_qa_queue[1][0]) <= _qa_now - QA_REACT * qa_human:
+				_qa_queue.pop_front()
+			if _qa_lapse > 0.0:
+				_qa_lapse -= delta
+				return                                 # (a lapse: the hand holds what it held)
+			if _qa_rng.randf() < delta * qa_human / QA_LAPSE_EVERY:
+				_qa_lapse = _qa_rng.randf_range(0.3, 0.6)
+			_qa_tilt = _qa_queue[0][1]
+
+## The fight: guards, dashes, and the tilt it wants
+func _qa_battle(delta: float) -> Vector2:
+	var rivals := tops.filter(func(t): return t != player and t.alive and not t.prize)
+	if rivals.is_empty():
+		return Vector2.ZERO
+	# its guard: up just as a flashing rival's dash lands (a person: a little early or late)
+	if player.braced:
+		_qa_guard -= delta
+		if _qa_guard <= 0.0:
+			_forward_up()
+	else:
+		for o in rivals:
+			if o.windup <= 0.0:
+				continue
+			var lands: float = o.windup + maxf(0.0, o.pos.distance_to(player.pos) - player.r - o.r) / DASH_SPEED
+			if lands < 0.12 + _qa_guard_err:
+				_forward_down()
+				_qa_guard = 0.45
+				_qa_guard_err = _qa_rng.randfn(0.0, 0.08 * qa_human) if qa_human > 0.0 else 0.0
+				break
+	# the rival to go for: the one a dash can most easily put through a way out
+	var me := player.pos
+	var target: Top = null
+	var exit := Vector2.ZERO
+	var best := INF
+	for o in rivals:
+		var out: Vector2 = C + Vector2.from_angle(_qa_nearest_gap((o.pos - C).angle())) * R if not gap_angles.is_empty() else o.pos
+		var score: float = o.pos.distance_to(out) + 0.6 * me.distance_to(o.pos) + (300.0 if o.style == "wall" else 0.0)   # (walls last)
+		if score < best:
+			best = score
+			target = o
+			exit = out
+	# where to be: behind it on the line from that way out (in from the rim), unless it's by a way out itself
+	var spot := target.pos
+	if exit != target.pos:
+		spot = target.pos + (target.pos - exit).normalized() * 120.0
+	if (spot - C).length() > R - QA_SAFE:
+		spot = C + (spot - C).limit_length(R - QA_SAFE)
+	var off := me - C
+	if off.length() > R - QA_SAFE and not gap_angles.is_empty() and absf(angle_difference(off.angle(), _qa_nearest_gap(off.angle()))) < gap_half * 2.5:
+		spot = C                                     # (by a way out: back to the middle first)
+	if qa_human > 0.0:
+		spot += Vector2(_qa_rng.randfn(0.0, 1.0), _qa_rng.randfn(0.0, 1.0)) * 30.0 * qa_human
+	# the dash: through it towards a way out it's near, or up close at a weaker one that isn't guarding; never
+	# while a rival is about to dash (that's for the guard: head on, a dash costs both a lot), never at a guard,
+	# never itself out of the bowl
+	var to := target.pos - me
+	var lined := exit != target.pos and to.length() > 1.0 and absf(to.angle_to(exit - target.pos)) < 0.5 \
+		and target.pos.distance_to(exit) < (120.0 if target.style == "wall" else 210.0)   # (a wall guards: only right by the way out)
+	var weaker: bool = target.style in ["rookie", "charger"] and target.spin <= player.spin * 1.2
+	var coming := rivals.any(func(o): return o.windup > 0.0)
+	var chance := ((lined and to.length() < 220.0) or (weaker and to.length() < 130.0)) and not target.braced and not coming \
+		and to.length() > player.r + target.r * 0.5          # (not while it sits on it: which way would it go?)
+	if chance and not player.braced and player.spin > 20.0 and player.dash_cd <= 0.0 and not _qa_dash_self_out(to.normalized()):
+		_qa_dash_wait += delta
+		if _qa_dash_wait >= QA_REACT * qa_human:
+			var aim_dir := to
+			if qa_human > 0.0:
+				aim_dir = to.rotated(_qa_rng.randfn(0.0, 0.2 * qa_human))
+			_dash(player, aim_dir)
+			_qa_dash_wait = 0.0
+	else:
+		_qa_dash_wait = 0.0
+	# the tilt: to the spot, steadied; what the bowl, its drift and the whirlpool do taken off
+	var m := player.mass * (BRACE_MASS if player.braced else 1.0)
+	var want := (spot - me) * 5.0 - player.vel * 3.0
+	want -= -off * BOWL
+	if off.length() > 1.0:
+		want -= Vector2(-off.y, off.x).normalized() * DRIFT * player.dir * clampf(player.spin / 100.0, 0.2, 1.0)
+	if flushing > 0.0 and off.length() > 1.0:
+		want -= -off.normalized() * 520.0 + Vector2(off.y, -off.x).normalized() * 380.0
+	return (want * m / TILT_ACCEL).limit_length(1.0)
+
+func _qa_nearest_gap(a: float) -> float:
+	var best := a
+	var bd := INF
+	for g in gap_angles:
+		var d := absf(angle_difference(a, g))
+		if d < bd:
+			bd = d
+			best = g
+	return best
+
+## Would a dash this way carry it out through a way out?
+func _qa_dash_self_out(dir: Vector2) -> bool:
+	for d in [100.0, 200.0, 290.0]:                 # (a dash carries it about this far before the bowl turns it)
+		var off: Vector2 = player.pos + dir * d - C
+		if off.length() > R - 50.0 and _in_gap(off.angle()):
+			return true
+	return false
 
 ## A small shake (and a tiny freeze) for a big moment
 func _kick(amount: float, freeze := 0.0) -> void:
@@ -1988,6 +2124,8 @@ func _sensor_tilt() -> Vector2:
 	return -v if INVERT_TILT else v
 
 func _read_tilt() -> Vector2:
+	if qa_autopilot:
+		return _qa_tilt                              # (tools/qa: the pretend player's hand)
 	var t := Vector2.ZERO
 	if _has_tilt_sensor():
 		t = _sensor_tilt() * TILT_GAIN

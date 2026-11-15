@@ -257,6 +257,39 @@ var held := [false, false]
 var _touch := {}
 var qa_autopilot := false              # (tools/qa: it drives itself)
 var qa_hands_off := false              # (tools/qa hands=off: nobody steers)
+## QA: a pretend PLAYER on top of the autopilot (tools/qa human=K: 0 the clean drive, 1 about a regular player), for
+## the difficulty sweeps (docs/core_review.md), the same as Pal Prix's (scripts/rc_racer.gd): eyes a moment behind
+## the craft (QA_REACT s x K) and, now and then, a LAPSE: the thumbs freeze for a moment, the craft keeps doing what
+## it was doing. Seeded by the level and qa_seed (seed=N). Uncalibrated: which levels are harder than which.
+var qa_human := 0.0
+var qa_seed := 0
+const QA_REACT := 0.03
+const QA_LAPSE_EVERY := 7.0            # seconds between lapses at human=1
+var _qa_rng: RandomNumberGenerator
+var _qa_queue: Array = []              # [time, the autopilot's wish], waiting out the reaction time
+var _qa_now := 0.0
+var _qa_lapse := 0.0
+var _qa_last := 0.0
+
+func _qa_human_turn(wish: float, delta: float) -> float:
+	if _qa_rng == null:
+		_qa_rng = RandomNumberGenerator.new()
+		_qa_rng.seed = level * 7919 + qa_seed * 104729 + 13
+		_qa_queue.clear()
+		_qa_now = 0.0
+		_qa_lapse = 0.0
+		_qa_last = 0.0
+	_qa_now += delta
+	_qa_queue.append([_qa_now, wish])
+	while _qa_queue.size() > 1 and float(_qa_queue[1][0]) <= _qa_now - QA_REACT * qa_human:
+		_qa_queue.pop_front()
+	if _qa_lapse > 0.0:
+		_qa_lapse -= delta
+		return _qa_last
+	if _qa_rng.randf() < delta * qa_human / QA_LAPSE_EVERY:
+		_qa_lapse = _qa_rng.randf_range(0.2, 0.45)
+	_qa_last = _qa_queue[0][1]
+	return _qa_last
 var _passed_gates := 0
 var _last_turn := 0.0
 var _sfx_cd := 0.0
@@ -487,6 +520,7 @@ func _begin(n: int) -> void:
 	aurora.visible = world_no == 3
 	speed_lines.tint = Color8(220, 230, 255) if world_no >= 4 else Color(1, 1, 1)
 	_qa_start_at()
+	_qa_rng = null                           # (tools/qa human=K: a fresh pretend player for every level)
 	_place_craft()
 	_follow(1.0)
 	_refresh_hud()
@@ -1356,6 +1390,8 @@ func _drive(delta_real: float) -> void:
 	var turn := (1.0 if _held(1) else 0.0) - (1.0 if _held(0) else 0.0)
 	if qa_autopilot:
 		turn = 0.0 if qa_hands_off else _autopilot()
+		if qa_human > 0.0:
+			turn = _qa_human_turn(turn, delta)
 	_last_turn = turn
 	# the speed it wants: its form's, the boost on top; a wall, a bump hold it back
 	var grip: float = GRIP[form]
